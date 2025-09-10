@@ -32,3 +32,4 @@ export { default as RawMaterialOpeningStockApi } from "./RawMaterialOpeningStock
 
 export { default as CertificateMaster } from "./CertificateMasterService";
 export { default as purchaseInwardEntryApi } from "./PurchaseInwardEntry";
+export { default as styleMasterApi } from "./StyleMasterService";

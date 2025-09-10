@@ -50,7 +50,7 @@ const Mastertable = ({
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
-  
+
   return (
     <div className="row w-full mx-auto">
       <div className="text-xs col-12 px-0 bg-[f1f1f0] bg-opacity-15 rounded-lg border shadow-md">
@@ -205,8 +205,8 @@ const Mastertable = ({
                                 {/* Delete */}
                                 <button
                                   onClick={() => {
-                                    onDataClick(dataObj?.id);
-                                    deleteData();
+                                    // onDataClick(dataObj?.id);
+                                    deleteData(dataObj?.id);
                                   }}
                                   className="text-red-800 flex items-center gap-1 mx-2 px-2 py-1.5 bg-red-50 rounded"
                                 >

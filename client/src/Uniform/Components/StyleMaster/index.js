@@ -1,52 +1,38 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React from "react";
+import { Check, Plus } from "lucide-react";
+import Modal from "../../../UiComponents/Modal";
 import secureLocalStorage from "react-secure-storage";
+import Mastertable from "../../../Basic/components/MasterTable/Mastertable";
 import {
-  useGetStyleMasterQuery,
-  useGetStyleMasterByIdQuery,
   useAddStyleMasterMutation,
-  useUpdateStyleMasterMutation,
   useDeleteStyleMasterMutation,
+  useGetStyleMasterQuery,
+  useUpdateStyleMasterMutation,
+  useGetStyleMasterByIdQuery,
 } from "../../../redux/uniformService/StyleMasterService";
-import { useGetProcessMasterQuery } from "../../../redux/uniformService/ProcessMasterService";
-import { useGetPanelMasterQuery } from "../../../redux/uniformService/PanelMasterService";
-import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
-import FormHeader from "../../../Basic/components/FormHeader";
-import FormReport from "../../../Basic/components/FormReportTemplate";
-import { toast } from "react-toastify";
-import {
-  TextInput,
-  CheckBox,
-  MultiSelectDropdown,
-  DropdownInput,
-} from "../../../Inputs";
-import ReportTemplate from "../../../Basic/components/ReportTemplate";
-import {
-  dropDownListObject,
-  multiSelectOption,
-} from "../../../Utils/contructObject";
+import Swal from "sweetalert2";
+import { TextInput, ToggleButton, ReusableTable } from "../../../Inputs";
+import { statusDropdown } from "../../../Utils/DropdownData";
+import { useState, useCallback, useEffect } from "react";
 
-// import { useGetSizeTemplateQuery } from "../../../redux/ErpServices/SizeTemplateMasterServices";
-import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
-
-const MODEL = "Style Master";
-
-export default function Form() {
+const StyleMaster = () => {
   const [form, setForm] = useState(false);
   const [readOnly, setReadOnly] = useState(false);
   const [id, setId] = useState("");
   const [name, setName] = useState("");
-  const [styleCode, setStyleCode] = useState("");
-
+  const [sku, setSku] = useState("");
   const [active, setActive] = useState(true);
-  const [panelId, setPanelId] = useState([]);
   const [searchValue, setSearchValue] = useState("");
+
+  const [addData] = useAddStyleMasterMutation();
+  const [updateData] = useUpdateStyleMasterMutation();
+  const [removeData] = useDeleteStyleMasterMutation();
 
   const params = {
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
     ),
   };
-
   const {
     data: allData,
     isLoading,
@@ -57,73 +43,29 @@ export default function Form() {
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetStyleMasterByIdQuery(id, { skip: !id });
-  const [selectedAddons, setSelectedAddons] = useState([]);
-
-  const [addData] = useAddStyleMasterMutation();
-  const [updateData] = useUpdateStyleMasterMutation();
-  const [removeData] = useDeleteStyleMasterMutation();
-  const { data: panelData } = useGetPanelMasterQuery({ params });
-
-  const { data: process } = useGetProcessMasterQuery({ params });
-
-
-  const syncFormWithDb = useCallback(
-    (data) => {
-      if (id) setReadOnly(true);
-      setName(data?.name ? data.name : "");
-      setPanelId(data?.StylePanel ? data?.StylePanel : [])
-      setStyleCode(data?.styleCode ? data?.styleCode : "");
-      setActive(id ? (data?.active ? data.active : false) : true);
-    },
-    [id]
-  );
-
-  console.log(id, "idddd")
-
-  useEffect(() => {
-    syncFormWithDb(singleData?.data);
-  }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
   const data = {
     id,
-    //  panelId,
-
-    name,
-    styleCode,
-
+    sku,
     active,
-
+    name,
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
     ),
   };
 
   const validateData = (data) => {
-    if (data.name) {
+    if (data.name && data.sku) {
       return true;
     }
     return false;
   };
-
-  const handleSubmitCustom = async (callback, data, text) => {
-    try {
-      let returnData;
-      if (text === "Updated") {
-        returnData = await callback({ id, body: data }).unwrap();
-      } else {
-        returnData = await callback(data).unwrap();
-      }
-      setId(returnData.data.id);
-      toast.success(text + "Successfully");
-    } catch (error) {
-      console.log("handle");
-    }
-  };
-
   const saveData = () => {
     if (!validateData(data)) {
-      toast.info("Please fill all required fields...!", {
-        position: "top-center",
+      Swal.fire({
+        title: "Please fill all required fields...!",
+        icon: "success",
+        timer: 1000,
       });
       return;
     }
@@ -136,22 +78,6 @@ export default function Form() {
       handleSubmitCustom(addData, data, "Added");
     }
   };
-
-  const deleteData = async () => {
-    if (id) {
-      if (!window.confirm("Are you sure to delete...?")) {
-        return;
-      }
-      try {
-        await removeData(id);
-        setId("");
-        toast.success("Deleted Successfully");
-      } catch (error) {
-        toast.error("something went wrong");
-      }
-    }
-  };
-
   const handleKeyDown = (event) => {
     let charCode = String.fromCharCode(event.which).toLowerCase();
     if ((event.ctrlKey || event.metaKey) && charCode === "s") {
@@ -160,11 +86,24 @@ export default function Form() {
     }
   };
 
+  const syncFormWithDb = useCallback(
+    (data) => {
+      // if (id) setReadOnly(true);
+      setName(data?.name ? data.name : "");
+
+      setSku(data?.sku ? data?.sku : "");
+      setActive(id ? (data?.active ? data.active : false) : true);
+    },
+    [id]
+  );
+
+  useEffect(() => {
+    syncFormWithDb(singleData?.data);
+  }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
   const onNew = () => {
     setId("");
     setForm(true);
-    setSearchValue("");
     syncFormWithDb(undefined);
     setReadOnly(false);
   };
@@ -174,170 +113,273 @@ export default function Form() {
     setForm(true);
   }
 
-  const tableHeaders = ["Name", "Status"];
-  const tableDataNames = ["dataObj.name", "dataObj.active ? ACTIVE : INACTIVE"];
+  const tableHeaders = [
+    "S.NO",
+    "SKU",
+    "Name",
+    "Status",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+  ];
 
-  if (!form)
-    return (
-      <ReportTemplate
-        heading={MODEL}
-        tableHeaders={tableHeaders}
-        tableDataNames={tableDataNames}
-        loading={isLoading || isFetching}
-        setForm={setForm}
-        data={allData?.data ? allData?.data : []}
-        onClick={onDataClick}
-        onNew={onNew}
-        searchValue={searchValue}
-        setSearchValue={setSearchValue}
-      />
-    );
-  console.log(panelId, "panel");
-  const handlePanelIdChange = (id, index) => {
-    setPanelId((prev) => {
-      const updatedPanelData = [...prev];
-      updatedPanelData[index] = { panelId: id, selectedAddons: [] };
-      return updatedPanelData;
-    });
+  // const columns = [
+  //   {
+  //     header: "S.No",
+  //     accessor: (item, index) => parseInt(index) + parseInt(1),
+  //     className: "font-medium text-gray-900 text-center w-[10px] py-1",
+  //     search: "",
+  //   },
+  //   {
+  //     header: "SKU",
+  //     accessor: (item) => item.name,
+  //     className: "font-medium text-gray-900 text-center w-[130px]  py-1  px-2",
+  //     search: "SKU",
+  //     value: serachDate,
+  //     setValue: setSearchDate,
+  //   },
+  //   {
+  //     header: "Customer",
+  //     accessor: (item) => item.Party?.name,
+  //     className: "font-medium text-gray-900 w-[500px]  py-1  px-2",
+  //     search: "Customer",
+  //     value: searchCustomer,
+  //     setValue: setSearchCustomer,
+  //   },
+  // ];
+
+  const tableDataNames = [
+    "index+1",
+    "dataObj.sku",
+    "dataObj.name",
+    "dataObj.active ? ACTIVE : INACTIVE",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+  ];
+
+  const deleteData = async (id) => {
+    if (id) {
+      if (!window.confirm("Are you sure to delete...?")) {
+        return;
+      }
+      try {
+        let deldata = await removeData(id).unwrap();
+        // if (deldata?.statusCode == 1) {
+        //     toast.error(deldata?.message)
+        //     return
+        // }
+        setId("");
+        Swal.fire({
+          title: "Deleted" + "  " + "Successfully",
+          icon: "success",
+          draggable: true,
+          timer: 1000,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          },
+        });
+
+        setForm(false);
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Submission error",
+          text: error.data?.message || "Something went wrong!",
+        });
+      }
+    }
   };
 
-  const handleAddonChange = (e, addon, panelIndex) => {
-    const isChecked = e.target.checked;
-
-    setPanelId((prev) => {
-      const updatedPanelData = [...prev];
-      const selectedAddons = updatedPanelData[panelIndex]?.selectedAddons || [];
-      const updatedAddons = isChecked
-        ? [...selectedAddons, addon.id]
-        : selectedAddons.filter((a) => a !== addon.id);
-
-      updatedPanelData[panelIndex] = {
-        ...updatedPanelData[panelIndex],
-        selectedAddons: updatedAddons,
-      };
-
-      return updatedPanelData;
-    });
+  const handleSubmitCustom = async (callback, data, text) => {
+    try {
+      let returnData;
+      if (text === "Updated") {
+        returnData = await callback({ id, body: data }).unwrap();
+      } else {
+        returnData = await callback(data).unwrap();
+      }
+      setId(returnData.data.id);
+      // toast.success(text + "Successfully");
+      Swal.fire({
+        title: text + "  " + "Successfully",
+        icon: "success",
+        draggable: true,
+        timer: 1000,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+      setForm(false);
+    } catch (error) {
+      console.log("handle");
+    }
   };
-
-  // const panelSelections = panelId.map(({ panelId, selectedAddons }) => ({
-  //   panelId,
-  //   selectedAddons,
-  // }));
 
   return (
-    <div
-      onKeyDown={handleKeyDown}
-      className="md:items-start md:justify-items-center grid h-full bg-theme"
-    >
-      {console.log(singleData, "singledata")}
-
-      <div className="flex flex-col frame w-full h-full">
-        <FormHeader
-          onNew={onNew}
-          onClose={() => {
-            setForm(false);
-            setSearchValue("");
-          }}
-          model={MODEL}
-          saveData={saveData}
+    <div onKeyDown={handleKeyDown}>
+      <div className="w-full flex justify-between mb-2 items-center px-0.5">
+        <h5 className="my-1">Style Master</h5>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => {
+              setForm(true);
+              onNew();
+            }}
+            className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+          >
+            <Plus size={16} />
+            Add New Style
+          </button>
+        </div>
+      </div>
+      <div className="w-full flex items-start">
+        <Mastertable
+          header={"Style list"}
+          searchValue={searchValue}
+          setSearchValue={setSearchValue}
+          onDataClick={onDataClick}
+          // setOpenTable={setOpenTable}
+          tableHeaders={tableHeaders}
           setReadOnly={setReadOnly}
           deleteData={deleteData}
-          childRecord={0}
+          tableDataNames={tableDataNames}
+          data={allData?.data}
+          loading={isLoading || isFetching}
         />
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-x-2 overflow-clip w-full">
-          <div className="col-span-3 border overflow-auto">
-            <div className="col-span-3">
-              <div className="mr-1 md:ml-2 flex gap-5 min-h-80">
-                <fieldset className="frame w-full flex flex-col gap-x-5">
-                  <legend className="sub-heading">Style Info</legend>
-                  <div className="grid grid-cols-2">
-                    <TextInput
-                      name="Item Name"
-                      type="text"
-                      value={name}
-                      setValue={setName}
-                      required={true}
-                      readOnly={readOnly}
-                    />
+      </div>
+      {/* <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <ReusableTable
+          columns={columns}
+          data={orderData?.data || []}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          itemsPerPage={10}
+        />
+      </div> */}
 
-                    <TextInput
-                      name="Style code"
-                      type="text"
-                      value={styleCode}
-                      setValue={setStyleCode}
-                      required={true}
-                      readOnly={readOnly}
-                    />
+      {form && (
+        <Modal
+          isOpen={form}
+          form={form}
+          widthClass={"w-[30%] max-w-6xl h-[50vh]"}
+          onClose={() => {
+            setForm(false);
+          }}
+        >
+          <div className="h-full flex flex-col bg-[f1f1f0]">
+            <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                  {id
+                    ? !readOnly
+                      ? "Edit Style  "
+                      : "Style Master "
+                    : "Add New Style "}
+                </h2>
+              </div>
+              <div className="flex gap-2">
+                <div>
+                  {readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForm(false);
+                        setSearchValue("");
+                        setId(false);
+                      }}
+                      className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={saveData}
+                      className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                        border border-green-600 flex items-center gap-1 text-xs"
+                    >
+                      <Check size={14} />
+                      {id ? "Update" : "Save"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto p-3">
+              <div className="grid grid-cols-1  gap-3  h-full">
+                <div className="lg:col-span- space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                    <fieldset className=" rounded mt-2">
+                      <div className="">
+                        <div className="flex justify-between">
+                          <div>
+                            <div className="mb-3">
+                              <TextInput
+                                name="SKU / Style code"
+                                type="text"
+                                value={name}
+                                setValue={setName}
+                                required={true}
+                                readOnly={readOnly}
+                              />
+                            </div>
+                            <div className="mb-3">
+                              <TextInput
+                                name="Alias Name"
+                                type="text"
+                                value={sku}
+                                setValue={setSku}
+                                required={true}
+                                readOnly={readOnly}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mb-5">
+                          <ToggleButton
+                            name="Status"
+                            options={statusDropdown}
+                            value={active}
+                            setActive={setActive}
+                            required={true}
+                            readOnly={readOnly}
+                          />
+                        </div>
+                      </div>
+                    </fieldset>
                   </div>
-
-                  <div className="grid grid-cols-2">
-                    <CheckBox
-                      name="Active"
-                      value={active}
-                      setValue={setActive}
-                    />
-                  </div>
-
-
-                  {/* <div className="grid grid-cols-4 gap-4">
-                  {panelData?.data?.map((item, index) => (
-    <div key={index} className="p-4 bg-white rounded-lg shadow-lg mb-4">
-      <DropdownInput
-        name="Panel"
-        options={dropDownListObject(
-          panelData?.data?.filter((item) => item.active),
-          "name",
-          "id"
-        )}
-        value={panelId[index]?.panelId || ""}
-        setValue={(id) => handlePanelIdChange(id, index)}
-        required={true}
-        readOnly={readOnly}
-      />
-
-      <ul className="space-y-3">
-        {process?.data?.map((addon, addonIndex) => (
-          <li key={addonIndex} className="flex items-center space-x-3">
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                className="mr-2 h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                disabled={readOnly}
-                onChange={(e) => handleAddonChange(e, addon, index)}
-                checked={panelId[index]?.selectedAddons?.includes(addon.id) || false}
-              />
-              <span className="text-gray-700 text-xs hover:text-green-600 transition duration-300">
-                {addon.name}
-              </span>
-            </label>
-          </li>
-        ))}
-      </ul>
-    </div>
-  ))}
-                  </div> */}
-
-
-
-
-                </fieldset>
+                </div>
               </div>
             </div>
           </div>
-          <div className="frame hidden md:block overflow-x-hidden">
-            <FormReport
-              searchValue={searchValue}
-              setSearchValue={setSearchValue}
-              setId={setId}
-              tableHeaders={tableHeaders}
-              tableDataNames={tableDataNames}
-              data={allData?.data ? allData?.data : []}
-              loading={isLoading || isFetching}
-            />
-          </div>
-        </div>
-      </div>
+        </Modal>
+      )}
     </div>
   );
-}
+};
+
+export default StyleMaster;

@@ -65,6 +65,7 @@ model Company {
   EmployeSubCategory  EmployeSubCategory[]
   PayComponents       PayComponents[]
   CompanyPaycode      CompanyPaycode[]
+  Style               Style[]
 }
 
 model Subscription {
@@ -1402,7 +1403,7 @@ model CompanyPaycode {
 
 model PayDetails {
   id               Int            @id @default(autoincrement())
-  companyPaycode   CompanyPaycode @relation(fields: [companyPayCodeId], references: [id] , onDelete: Cascade)
+  companyPaycode   CompanyPaycode @relation(fields: [companyPayCodeId], references: [id], onDelete: Cascade)
   companyPayCodeId Int
   payComponent     PayComponents  @relation(fields: [payComponentId], references: [id])
   payComponentId   Int
@@ -1410,4 +1411,13 @@ model PayDetails {
   pf               String?
   esi              String?
   pickFrom         String?
+}
+
+model Style {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  sku       String?
+  active    Boolean?
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
 }

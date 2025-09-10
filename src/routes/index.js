@@ -45,3 +45,4 @@ export { default as employeeSubCategory } from "./employeeSubCategory.route.js";
 export { default as payfrequency } from "./payFrequency.route.js";
 export { default as payComponents } from "./payComponents.route.js";
 export { default as companyPaycode } from "./companyPayCode.route.js";
+export { default as style } from "./style.routes.js";
