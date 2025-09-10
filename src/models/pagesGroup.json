@@ -1,0 +1,62 @@
+[
+    {
+        "id": 1,
+        "type": "Masters",
+        "name": "COMMON",
+        "active": true
+    },
+    {
+        "id": 2,
+        "type": "Masters",
+        "name": "COMMON",
+        "active": true
+    },
+    {
+        "id": 3,
+        "type": "Masters",
+        "name": "YARN",
+        "active": true
+    },
+    {
+        "id": 4,
+        "type": "Masters",
+        "name": "FABRIC",
+        "active": true
+    },
+    {
+        "id": 5,
+        "type": "Masters",
+        "name": "ACCESSORY",
+        "active": true
+    },
+    {
+        "id": 6,
+        "type": "Transactions",
+        "name": "PURCHASE ORDER",
+        "active": true
+    },
+    {
+        "id": 7,
+        "type": "Reports",
+        "name": "YARN REPORTS",
+        "active": true
+    },
+    {
+        "id": 8,
+        "type": "Reports",
+        "name": "STOCK REPORTS",
+        "active": true
+    },
+    {
+        "id": 9,
+        "type": "Transactions",
+        "name": "PROCESS",
+        "active": true
+    },
+    {
+        "id": 10,
+        "type": "Reports",
+        "name": "PRINT-FORMAT",
+        "active": true
+    }
+]

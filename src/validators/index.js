@@ -1,0 +1,1 @@
+export {default as billEntryValidation} from "./billEntry.validator.js"

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `shift` ADD COLUMN `from` VARCHAR(191) NULL,
+    ADD COLUMN `to` VARCHAR(191) NULL;

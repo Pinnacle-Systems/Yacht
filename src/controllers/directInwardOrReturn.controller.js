@@ -1,0 +1,123 @@
+import { Prisma } from '@prisma/client'
+
+import {
+    get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove,
+    getDirectItems as _getDirectItems, getPoItemsandDirectInwardItems as _getPoItemsandDirectInwardItems, getDirectItemById as _getDirectItemById
+} from '../services/directInwardOrReturn.service.js';
+
+async function get(req, res, next) {
+    try {
+        res.json(await _get(req));
+        console.log(res.statusCode);
+    } catch (err) {
+        console.error(`Error `, err.message);
+    }
+}
+
+export async function getDirectItems(req, res, next) {
+    try {
+        res.json(await _getDirectItems(req));
+        console.log(res.statusCode);
+    } catch (err) {
+        console.error(`Error `, err.message);
+    }
+}
+
+export async function getDirectItemById(req, res, next) {
+    try {
+        res.json(await _getDirectItemById(req.params.id, req.params.purchaseInwardReturnId, req.params.stockId, req.params.storeId, req.params.billEntryId));
+        console.log(res.statusCode);
+    } catch (err) {
+        console.error(`Error `, err.message);
+    }
+}
+
+export async function getPoItemsandDirectInwardItems(req, res, next) {
+    try {
+        res.json(await _getPoItemsandDirectInwardItems(req));
+        console.log(res.statusCode);
+    } catch (err) {
+        console.error(`Error `, err.message);
+    }
+}
+
+async function getOne(req, res, next) {
+    try {
+        res.json(await _getOne(req.params.id));
+        console.log(res.statusCode);
+    } catch (err) {
+        console.error(`Error`, err.message);
+    }
+}
+
+async function getSearch(req, res, next) {
+    try {
+        res.json(await _getSearch(req));
+        console.log(res.statusCode);
+    } catch (err) {
+        console.error(`Error`, err.message);
+    }
+}
+
+async function create(req, res, next) {
+    try {
+        res.json(await _create(req.body));
+        console.log(res.statusCode);
+    } catch (error) {
+        console.error(`Error`, (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message);
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+                res.statusCode = 200;
+                res.json({ statusCode: 1, message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists` })
+                console.log(res.statusCode)
+            }
+        } else {
+            res.json({ statusCode: 1, message: (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message })
+        }
+    }
+}
+
+async function update(req, res, next) {
+    try {
+        res.json(await _update(req.params.id, req.body));
+        console.log(res.statusCode);
+    } catch (error) {
+        console.error(`Error`, (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message);
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+                res.statusCode = 200;
+                res.json({ statusCode: 1, message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists` })
+                console.log(res.statusCode)
+            }
+        } else {
+            res.json({ statusCode: 1, message: (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message })
+        }
+    }
+}
+
+async function remove(req, res, next) {
+    try {
+        res.json(await _remove(req.params.id));
+        console.log(res.statusCode);
+    } catch (error) {
+        if (error.code === 'P2025') {
+            res.statusCode = 200;
+            res.json({ statusCode: 1, message: `Record Not Found` })
+            console.log(res.statusCode)
+        }
+        else if (error.code === "P2003") {
+            res.statusCode = 200;
+            res.json({ statusCode: 1, message: "Child record Exists" })
+        }
+        console.error(`Error`, (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message);
+    }
+}
+
+export {
+    get,
+    getOne,
+    getSearch,
+    create,
+    update,
+    remove
+};

@@ -1,0 +1,354 @@
+[
+    {
+        "id": 1,
+        "name": "COUNTRY MASTER",
+        "link": "COUNTRYMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    },
+    {
+        "id": 2,
+        "name": "EMPLOYEE MASTER",
+        "link": "EMPLOYEEMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    },
+    {
+        "id": 3,
+        "name": "STATE MASTER",
+        "link": "STATEMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    },
+    {
+        "id": 4,
+        "name": "CITY MASTER",
+        "link": "CITYMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    },
+    {
+        "id": 5,
+        "name": "DEPARTMENT MASTER",
+        "link": "DEPARTMENTMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    },
+    {
+        "id": 6,
+        "name": "USERS & ROLES",
+        "link": "/USERSANDROLES",
+        "type": "AdminAccess",
+        "active": true,
+        "pageGroupId": null
+    },
+    {
+        "id": 7,
+        "name": "FIN YEAR MASTER",
+        "link": "FINYEARMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    },
+    {
+        "id": 8,
+        "name": "EMPLOYEE CATEGORY MASTER",
+        "link": "EMPLOYEECATEGORYREPORT",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    },
+    {
+        "id": 9,
+        "name": "CONTROL PANEL",
+        "link": "/CONTROLPANEL",
+        "type": "AdminAccess",
+        "active": true,
+        "pageGroupId": null
+    },
+    {
+        "id": 10,
+        "name": "PARTY CATEGORY MASTER",
+        "link": "PARTYCATEGORYMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    },
+    {
+        "id": 11,
+        "name": "CURRENCY MASTER",
+        "link": "CURRENCYMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    },
+    {
+        "id": 12,
+        "name": "PARTY MASTER",
+        "link": "PARTYMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    },
+    {
+        "id": 13,
+        "name": "CONTENT MASTER",
+        "link": "CONTENTMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 3
+    },
+    {
+        "id": 14,
+        "name": "YARN TYPE MASTER",
+        "link": "YARNTYPEMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 3
+    },
+    {
+        "id": 15,
+        "name": "COUNTS MASTER",
+        "link": "COUNTSMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 3
+    },
+    {
+        "id": 16,
+        "name": "YARN BLEND MASTER",
+        "link": "YARNBLENDMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 3
+    },
+    {
+        "id": 17,
+        "name": "YARN MASTER",
+        "link": "YARNMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 3
+    },
+    {
+        "id": 18,
+        "name": "FABRIC TYPE MASTER",
+        "link": "FABRICTYPEMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 4
+    },
+    {
+        "id": 19,
+        "name": "FABRIC MASTER",
+        "link": "FABRICMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 4
+    },
+    {
+        "id": 20,
+        "name": "ACCESSORY GROUP MASTER",
+        "link": "ACCESSORYGROUPMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 5
+    },
+    {
+        "id": 21,
+        "name": "ACCESSORY ITEM MASTER",
+        "link": "ACCESSORYITEMMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 5
+    },
+    {
+        "id": 22,
+        "name": "ACCESSORY MASTER",
+        "link": "ACCESSORYMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 5
+    },
+    {
+        "id": 23,
+        "name": "COLOR MASTER",
+        "link": "COLOR MASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    },
+    {
+        "id": 24,
+        "name": "PURCHASE ORDER",
+        "link": "PURCHASE ORDER",
+        "type": "Transactions",
+        "active": true,
+        "pageGroupId": 6
+    },
+    {
+        "id": 25,
+        "name": "UNIT OF MEASUREMRNT MASTER",
+        "link": "UNIT OF MEASUREMRNT MASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    },
+    {
+        "id": 26,
+        "name": "PAY TERM MASTER",
+        "link": "PAY TERM MASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    },
+    {
+        "id": 27,
+        "name": "TAX TERM MASTER",
+        "link": "TAX TERM MASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    },
+    {
+        "id": 28,
+        "name": "TAX TEMPLATE",
+        "link": "TAX TEMPLATE",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    },
+    {
+        "id": 29,
+        "name": "GSM MASTER",
+        "link": "GSM MASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 4
+    },
+    {
+        "id": 30,
+        "name": "GAUGE MASTER",
+        "link": "GAUGE MASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 4
+    },
+    {
+        "id": 31,
+        "name": "LOOP LENGTH MASTER",
+        "link": "LOOP LENGTH MASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 4
+    },
+    {
+        "id": 32,
+        "name": "DIA MASTER",
+        "link": "DIA MASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 4
+    },
+    {
+        "id": 33,
+        "name": "DESIGN MASTER",
+        "link": "DESIGN MASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 4
+    },
+    {
+        "id": 34,
+        "name": "SIZE MASTER",
+        "link": "SIZE MASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    },
+    {
+        "id": 35,
+        "name": "PURCHASE INWARD/RETURN",
+        "link": "PURCHASE INWARD/RETURN",
+        "type": "Transactions",
+        "active": true,
+        "pageGroupId": 6
+    },
+    {
+        "id": 36,
+        "name": "PURCHASE ORDER CANCEL",
+        "link": "PURCHASE ORDER CANCEL",
+        "type": "Transactions",
+        "active": true,
+        "pageGroupId": 6
+    },
+    {
+        "id": 37,
+        "name": "PURCHASE REGISTRY",
+        "link": "PURCHASE REGISTRY",
+        "type": "Reports",
+        "active": true,
+        "pageGroupId": 7
+    },
+    {
+        "id": 38,
+        "name": "STOCK REGISTRY",
+        "link": "STOCKREGISTRY",
+        "type": "Reports",
+        "active": true,
+        "pageGroupId": 8
+    },
+    {
+        "id": 39,
+        "name": "LOCATION MASTER",
+        "link": "LOCATION MASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    },
+    {
+        "id": 40,
+        "name": "STYLE MASTER",
+        "link": "STYLEMASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    },
+    {
+        "id": 41,
+        "name": "PROCESS DELIVERY",
+        "link": "PROCESS DELIVERY",
+        "type": "Transactions",
+        "active": true,
+        "pageGroupId": 9
+    },
+    {
+        "id": 42,
+        "name": "PROCESS INWARD",
+        "link": "PROCESS INWARD",
+        "type": "Transactions",
+        "active": true,
+        "pageGroupId": 9
+    },
+    {
+        "id": 44,
+        "name": "PROCESS MASTER",
+        "link": "PROCESS MASTER",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    },
+    {
+        "id": 46,
+        "name": "TERMS AND CONDITION",
+        "link": "TERMSANDCONDITION",
+        "type": "Masters",
+        "active": true,
+        "pageGroupId": 2
+    }
+]

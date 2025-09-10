@@ -1,0 +1,1413 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Page {
+  id          Int          @id @default(autoincrement())
+  name        String
+  link        String?
+  type        PageType
+  RoleOnPage  RoleOnPage[]
+  active      Boolean      @default(true)
+  PageGroup   PageGroup?   @relation(fields: [pageGroupId], references: [id])
+  pageGroupId Int?
+}
+
+model Company {
+  id                  Int                   @id @default(autoincrement())
+  companyId           String                @unique @default(uuid())
+  name                String
+  code                String?
+  gstNo               String?
+  panNo               String?
+  contactName         String?
+  contactMobile       BigInt
+  contactEmail        String?
+  bankName            String?
+  accNo               String?
+  branchName          String?
+  ifscCode            String?
+  branch              Branch[]
+  country             Country[]
+  active              Boolean               @default(true)
+  Department          Department[]
+  Role                Role[]
+  Subscription        Subscription[]
+  finYear             FinYear[]
+  PartyCategory       PartyCategory[]
+  Currency            Currency[]
+  Party               Party[]
+  Hsn                 Hsn[]
+  PayTerm             PayTerm[]
+  TaxTerm             TaxTerm[]
+  TaxTemplate         TaxTemplate[]
+  Location            Location[]
+  TermsAndConditions  TermsAndConditions[]
+  OrderImport         OrderImport[]
+  LineMaster          LineMaster[]
+  Color               Color[]
+  unitOfMeasurement   UnitOfMeasurement[]
+  PartyMasterNew      PartyMasterNew[]
+  Designation         Designation[]
+  Shift               Shift[]
+  ShiftCommonTemplate ShiftCommonTemplate[]
+  ShiftTemplate       ShiftTemplate[]
+  PayFrequency        PayFrequency[]
+  EmployeSubCategory  EmployeSubCategory[]
+  PayComponents       PayComponents[]
+  CompanyPaycode      CompanyPaycode[]
+}
+
+model Subscription {
+  id        Int      @id @default(autoincrement())
+  Company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId Int
+  validFrom DateTime
+  expireAt  DateTime
+  code      String
+  maxUsers  Int
+}
+
+model Branch {
+  id                  Int                   @id @default(autoincrement())
+  branchName          String
+  branchCode          String?
+  contactName         String?
+  contactMobile       BigInt
+  contactEmail        String?
+  company             Company               @relation(fields: [companyId], references: [id])
+  companyId           Int
+  active              Boolean               @default(true)
+  EmployeeCategory    EmployeeCategory[]
+  UserOnBranch        UserOnBranch[]
+  Employee            Employee[]
+  idPrefix            String?
+  idSequence          String?
+  tempPrefix          String?
+  tempSequence        String?
+  prefixCategory      PrefixCategory?
+  address             String?
+  gstNo               String?
+  panNo               String?
+  order               order[]
+  po                  Po[]
+  OrderImport         OrderImport[]
+  purchaseInwardEntry purchaseInwardEntry[]
+  SampleEntry         SampleEntry[]
+  poAttachments       poAttachments[]
+  Shift               Shift[]
+  ShiftCommonTemplate ShiftCommonTemplate[]
+  ShiftTemplate       ShiftTemplate[]
+  PayFrequency        PayFrequency[]
+  EmployeSubCategory  EmployeSubCategory[]
+  PayComponents       PayComponents[]
+  CompanyPaycode      CompanyPaycode[]
+}
+
+model UserOnBranch {
+  id       Int    @id @default(autoincrement())
+  Branch   Branch @relation(fields: [branchId], references: [id])
+  branchId Int
+  User     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   Int
+}
+
+model Role {
+  id          Int          @id @default(autoincrement())
+  name        String
+  company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId   Int
+  User        User[]
+  RoleOnPage  RoleOnPage[]
+  active      Boolean      @default(true)
+  defaultRole Boolean      @default(false)
+  order       order[]
+
+  @@unique([companyId, name])
+}
+
+model RoleOnPage {
+  id     Int     @id @default(autoincrement())
+  role   Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId Int
+  page   Page    @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  pageId Int
+  read   Boolean @default(false)
+  create Boolean @default(false)
+  edit   Boolean @default(false)
+  delete Boolean @default(false)
+
+  @@unique([roleId, pageId])
+}
+
+model User {
+  id                           Int                   @id @default(autoincrement())
+  username                     String?               @unique
+  email                        String?
+  passKey                      String?
+  Employee                     Employee?             @relation(fields: [employeeId], references: [id])
+  password                     String
+  role                         Role?                 @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId                       Int?
+  otp                          String?
+  active                       Boolean?              @default(true)
+  isAdmin                      Boolean?              @default(false)
+  UserOnBranch                 UserOnBranch[]
+  employeeId                   Int?
+  partyType                    String?
+  userType                     String?
+  partyCreatedBy               Party[]               @relation(name: "createdBy")
+  partyUpdatedBy               Party[]               @relation(name: "updatedBy")
+  EmployeeCreatedBy            Employee[]            @relation(name: "createdBy")
+  EmployeeUpdatedBy            Employee[]            @relation(name: "updatedBy")
+  TermsAndConditionsCreatedBy  TermsAndConditions[]  @relation(name: "createdBy")
+  TermsAndConditionsUpdateBy   TermsAndConditions[]  @relation(name: "updatedBy")
+  BillEntryCreatedBy           BillEntry[]           @relation(name: "createdBy")
+  BillEntryUpdatedBy           BillEntry[]           @relation(name: "updatedBy")
+  orderEntryCreatedBy          order[]               @relation(name: "createdBy")
+  orderEntryUpdatedBy          order[]               @relation(name: "updatedBy")
+  pocreatedBy                  Po[]                  @relation(name: "createdBy")
+  poUpdatedBy                  Po[]                  @relation(name: "updatedBy")
+  emailcreatedBy               Email[]               @relation(name: "createdBy")
+  emailUpdatedBy               Email[]               @relation(name: "updatedBy")
+  order                        order[]
+  OrderImport                  OrderImport[]         @relation(name: "createdBy")
+  OrderImportUpdateBy          OrderImport[]         @relation(name: "updatedBy")
+  Attachments                  Attachments[]         @relation(name: "createdBy")
+  AttachmentsUpdatedBy         Attachments[]         @relation(name: "updatedBy")
+  MailTransaction              MailTransaction[]     @relation(name: "createdBy")
+  MailTransactionUpdatedBy     MailTransaction[]     @relation(name: "updatedBy")
+  user                         MailTransaction[]     @relation(name: "user")
+  purchaseInwardEntryCreatedBy purchaseInwardEntry[] @relation(name: "createdBy")
+  purchaseInwardEntryUpdatedBy purchaseInwardEntry[] @relation(name: "updatedBy")
+  PartyMasterNewCreatedBy      PartyMasterNew[]      @relation(name: "createdBy")
+  PartyMasterNewUpdatedBy      PartyMasterNew[]      @relation(name: "updatedBy")
+  SampleEntryCreatedBy         SampleEntry[]         @relation(name: "createdBy")
+  SampleEntryUpdatedBy         SampleEntry[]         @relation(name: "updatedBy")
+  poAttachementsCreatedBy      poAttachments[]       @relation(name: "createdBy")
+  poAttachementsupdatedBy      poAttachments[]       @relation(name: "updatedBy")
+  ShiftCreatedBy               Shift[]               @relation(name: "createdBy")
+  ShiftupdatedBy               Shift[]               @relation(name: "updatedBy")
+  ShiftCommonTemplateCreatedBy ShiftCommonTemplate[] @relation(name: "createdBy")
+  ShiftCommonTemplateupdatedBy ShiftCommonTemplate[] @relation(name: "updatedBy")
+  ShiftTemplateCreatedBy       ShiftTemplate[]       @relation(name: "createdBy")
+  ShiftTemplateupdatedBy       ShiftTemplate[]       @relation(name: "updatedBy")
+  PayFrequencyCreatedBy        PayFrequency[]        @relation(name: "createdBy")
+  PayFrequencyupdatedBy        PayFrequency[]        @relation(name: "updatedBy")
+  ShiftTemplateItemsCreatedBy  ShiftTemplateItems[]  @relation(name: "createdBy")
+  ShiftTemplateItemsupdatedBy  ShiftTemplateItems[]  @relation(name: "updatedBy")
+  PayComponentsCreatedBy       PayComponents[]       @relation(name: "createdBy")
+  PayComponentsupdatedBy       PayComponents[]       @relation(name: "updatedBy")
+  CompanyPaycodeCreatedBy      CompanyPaycode[]      @relation(name: "createdBy")
+  CompanyPaycodeupdatedBy      CompanyPaycode[]      @relation(name: "updatedBy")
+}
+
+model Employee {
+  id                 Int       @id @default(autoincrement())
+  firstName          String?
+  employeeType       String?
+  middleName         String?
+  lastName           String?
+  email              String?   @unique
+  fatherName         String?
+  motherName         String?
+  gender             String?
+  disability         String?
+  identificationMark String?
+  dob                DateTime?
+  bloodGroup         String?
+  height             String?
+  weight             String?
+  maritalStatus      String?
+  joiningDate        DateTime?
+  payCategory        String?
+
+  pf               String?
+  esi              String?
+  salary           String?
+  aadharNo         String?
+  panNo            String?
+  esiNo            String?
+  pfNo             String?
+  uanNo            String?
+  salaryMethod     String?
+  religion         String?
+  idNumber         String?
+  permanentAddress String?
+  permanentVillage String?
+  permanentPincode String?
+  permanentMobile  String?
+
+  presentAddress String?
+  presentVillage String?
+  presentPincode String?
+  presentMobile  String?
+
+  shiftTemplate      ShiftTemplate? @relation(fields: [shiftTemplateId], references: [id])
+  shiftTemplateId    Int?
+  department         Department?    @relation(fields: [departmentId], references: [id])
+  departmentId       Int?
+  designation        Designation?   @relation(fields: [designationId], references: [id])
+  designationId      Int?
+  permanentCity      City?          @relation("permanentCityId", fields: [permanentCityId], references: [id])
+  permanentCityId    Int?
+  presentCity        City?          @relation("presentCityId", fields: [presentCityId], references: [id])
+  presentCityId      Int?
+  presentCountry     Country?       @relation("PresentCountryId", fields: [presentCountryId], references: [id])
+  presentCountryId   Int?
+  permanentCountry   Country?       @relation("PermanentCountryId", fields: [permanentCountryId], references: [id])
+  permanentCountryId Int?
+  presentState       State?         @relation("PresentStateId", fields: [presentStateId], references: [id])
+  presentStateId     Int?
+  permanentState     State?         @relation("PermanentStateId", fields: [permanentStateId], references: [id])
+  permanentStateId   Int?
+
+  Branch                   Branch?                    @relation(fields: [branchId], references: [id])
+  branchId                 Int?
+  EmployeeCategory         EmployeeCategory?          @relation(fields: [employeeCategoryId], references: [id])
+  employeeCategoryId       Int?
+  createdBy                User?                      @relation("createdBy", fields: [createdById], references: [id])
+  createdById              Int?
+  updatedBy                User?                      @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById              Int?
+  User                     User[]
+  EmployeeBankDetails      EmployeeBankDetails[]
+  EmployeeEducationdetails EmployeeEducationDetails[]
+  EmployeeFamilyDetails    EmployeeFamilyDetails[]
+}
+
+model EmployeeBankDetails {
+  id            Int       @id @default(autoincrement())
+  employee      Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId    Int?
+  bankName      String?
+  branchName    String?
+  accountNumber String?
+  ifscCode      String?
+}
+
+model EmployeeEducationDetails {
+  id              Int       @id @default(autoincrement())
+  employee        Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId      Int?
+  courseName      String?
+  universityName  String?
+  institutionName String?
+  yearOfPass      String?
+}
+
+model EmployeeFamilyDetails {
+  id           Int       @id @default(autoincrement())
+  employee     Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId   Int?
+  name         String?
+  dob          DateTime?
+  age          Int?
+  relationShip String?
+  occupation   String?
+  nominee      String?
+}
+
+model FinYear {
+  id           Int            @id @default(autoincrement())
+  from         DateTime
+  to           DateTime
+  Company      Company?       @relation(fields: [companyId], references: [id])
+  companyId    Int?
+  active       Boolean        @default(true)
+  code         String?
+  PayFrequency PayFrequency[]
+}
+
+model EmployeeCategory {
+  id                  Int                   @id @default(autoincrement())
+  name                String
+  code                String
+  Branch              Branch?               @relation(fields: [branchId], references: [id])
+  branchId            Int?
+  active              Boolean               @default(true)
+  defaultCategory     Boolean               @default(false)
+  Employee            Employee[]
+  ShiftCommonTemplate ShiftCommonTemplate[]
+  EmployeSubCategory  EmployeSubCategory[]
+}
+
+model Country {
+  id                    Int        @id @default(autoincrement())
+  name                  String
+  code                  String
+  state                 State[]
+  active                Boolean    @default(true)
+  Company               Company    @relation(fields: [companyId], references: [id])
+  companyId             Int
+  employeePresentCity   Employee[] @relation(name: "PresentCountryId")
+  employeePermanentCity Employee[] @relation(name: "PermanentCountryId")
+}
+
+model State {
+  id                     Int        @id @default(autoincrement())
+  name                   String
+  code                   String
+  gstNo                  String
+  country                Country    @relation(fields: [countryId], references: [id])
+  countryId              Int
+  city                   City[]
+  active                 Boolean    @default(true)
+  employeePresentState   Employee[] @relation(name: "PresentStateId")
+  employeePermanentState Employee[] @relation(name: "PermanentStateId")
+}
+
+model City {
+  id              Int              @id @default(autoincrement())
+  name            String?
+  code            String?
+  state           State            @relation(fields: [stateId], references: [id])
+  stateId         Int
+  active          Boolean?         @default(true)
+  doctorLocalCity Employee[]       @relation(name: "permanentCityId")
+  doctorPermCity  Employee[]       @relation(name: "presentCityId")
+  Party           Party[]
+  PartyMasterNew  PartyMasterNew[]
+}
+
+model Department {
+  id          Int           @id @default(autoincrement())
+  name        String
+  code        String
+  active      Boolean       @default(true)
+  doctor      Employee[]    @relation()
+  Company     Company       @relation(fields: [companyId], references: [id])
+  companyId   Int
+  Designation Designation[]
+}
+
+enum PageType {
+  Masters
+  Transactions
+  Reports
+  AdminAccess
+}
+
+model PageGroup {
+  id     Int      @id @default(autoincrement())
+  type   PageType
+  name   String
+  Page   Page[]
+  active Boolean  @default(true)
+}
+
+enum PrefixCategory {
+  Default
+  Specific
+}
+
+enum BloodGroup {
+  AP
+  BP
+  AN
+  BN
+  ABP
+  ABN
+  OP
+  ON
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  SEPARATED
+}
+
+model PartyCategory {
+  id        Int      @id @default(autoincrement())
+  name      String
+  code      String
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+  active    Boolean  @default(true)
+}
+
+model Currency {
+  id             Int              @id @default(autoincrement())
+  name           String
+  code           String?
+  Company        Company?         @relation(fields: [companyId], references: [id])
+  companyId      Int?
+  active         Boolean          @default(true)
+  Party          Party[]
+  PartyMasterNew PartyMasterNew[]
+}
+
+model Party {
+  id                        Int                         @id @default(autoincrement())
+  name                      String
+  code                      String?
+  aliasName                 String?
+  displayName               String?
+  address                   String?                     @db.Text
+  image                     Bytes?                      @db.LongBlob
+  City                      City?                       @relation(fields: [cityId], references: [id])
+  cityId                    Int?
+  pincode                   Int?
+  panNo                     String?
+  tinNo                     String?
+  cstNo                     String?
+  cstDate                   DateTime?                   @db.Date
+  cinNo                     String?
+  faxNo                     String?
+  email                     String?
+  website                   String?
+  contactPersonName         String?
+  gstNo                     String?
+  Currency                  Currency?                   @relation(fields: [currencyId], references: [id])
+  currencyId                Int?
+  costCode                  String?
+  active                    Boolean?                    @default(true)
+  contactMobile             BigInt?                     @default(0)
+  Company                   Company?                    @relation(fields: [companyId], references: [id])
+  companyId                 Int?
+  yarn                      Boolean?                    @default(false)
+  fabric                    Boolean?                    @default(false)
+  accessoryGroup            Boolean?                    @default(false)
+  createdAt                 DateTime?                   @default(now())
+  updatedAt                 DateTime?                   @updatedAt
+  createdBy                 User?                       @relation("createdBy", fields: [createdById], references: [id])
+  createdById               Int?
+  updatedBy                 User?                       @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById               Int?
+  priceTemplateId           Int?
+  isSupplier                Boolean?                    @default(false)
+  isClient                  Boolean?                    @default(false)
+  isIgst                    Boolean?                    @default(false)
+  isVendor                  Boolean?                    @default(false)
+  partyType                 String?
+  mobileNumber              String?
+  BillEntry                 BillEntry[]
+  mailId                    String?
+  Manufacture               order[]                     @relation(name: "Manufacture")
+  Vendor                    order[]                     @relation(name: "Vendor")
+  sender                    MailTransaction[]           @relation(name: "sender")
+  receiver                  MailTransaction[]           @relation(name: "receiver")
+  PartyBranch               PartyBranch[]
+  PartyBranchContactDetails PartyBranchContactDetails[]
+  customer                  order[]                     @relation(name: "customer")
+  supplier                  order[]                     @relation(name: "supplier")
+  SupplierPo                Po[]                        @relation(name: "SupplierPo")
+  CustomerPo                Po[]                        @relation(name: "CustomerPo")
+  SampleEntry               SampleEntry[]               @relation(name: "supplier")
+}
+
+model PartyBranch {
+  id                        Int                         @id @default(autoincrement())
+  branchName                String?
+  branchCode                String?
+  branchContact             String?
+  branchEmail               String?                     @db.LongText
+  Party                     Party?                      @relation(fields: [partyId], references: [id])
+  partyId                   Int?
+  active                    Boolean                     @default(true)
+  branchAddress             String?                     @db.LongText
+  partyShippingAddress      PartyShippingAddress[]
+  partyContactDetails       PartyContactDetails[]
+  PartyBranchContactDetails PartyBranchContactDetails[]
+}
+
+model PartyShippingAddress {
+  id            Int          @id @default(autoincrement())
+  PartyBranch   PartyBranch? @relation(fields: [partyBranchId], references: [id])
+  partyBranchId Int?
+  address       String?      @db.LongText
+  aliasName     String?      @db.LongText
+}
+
+model PartyContactDetails {
+  id                Int          @id @default(autoincrement())
+  contactPersonName String?
+  mobileNo          String?
+  email             String?
+  PartyBranch       PartyBranch? @relation(fields: [partyBranchId], references: [id], onDelete: Cascade)
+  partyBranchId     Int?
+}
+
+model PartyBranchContactDetails {
+  id                Int          @id @default(autoincrement())
+  contactPersonName String?
+  mobileNo          Int?
+  email             String?
+  branchName        String?
+  branchCode        String?
+  branchAddress     String?
+  Party             Party?       @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  partyId           Int?
+  PartyBranch       PartyBranch? @relation(fields: [partyBranchId], references: [id])
+  partyBranchId     Int?
+}
+
+model Hsn {
+  id        Int      @id @default(autoincrement())
+  name      String
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+  active    Boolean  @default(true)
+}
+
+model PayTerm {
+  id             Int              @id @default(autoincrement())
+  name           String
+  days           Int
+  Company        Company          @relation(fields: [companyId], references: [id])
+  companyId      Int
+  active         Boolean          @default(true)
+  BillEntry      BillEntry[]
+  partyMasterNew PartyMasterNew[]
+}
+
+model TaxTerm {
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  isPoWise           Boolean              @default(false)
+  Company            Company              @relation(fields: [companyId], references: [id])
+  companyId          Int
+  active             Boolean              @default(true)
+  TaxTemplateDetails TaxTemplateDetails[]
+}
+
+model TaxTemplate {
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  Company            Company              @relation(fields: [companyId], references: [id])
+  companyId          Int
+  active             Boolean              @default(true)
+  TaxTemplateDetails TaxTemplateDetails[]
+}
+
+model TaxTemplateDetails {
+  id            Int         @id @default(autoincrement())
+  TaxTemplate   TaxTemplate @relation(fields: [taxTemplateId], references: [id], onDelete: Cascade)
+  taxTemplateId Int
+  TaxTerm       TaxTerm     @relation(fields: [taxTermId], references: [id])
+  taxTermId     Int
+  displayName   String
+  value         String?
+  amount        String?
+}
+
+model Location {
+  id          Int     @id @default(autoincrement())
+  storeName   String
+  isFabric    Boolean @default(true)
+  isYarn      Boolean @default(true)
+  isAccessory Boolean @default(true)
+  isGarments  Boolean @default(true)
+  active      Boolean @default(true)
+  Company     Company @relation(fields: [companyId], references: [id])
+  companyId   Int
+
+  BillEntry BillEntry[]
+}
+
+model TermsAndConditions {
+  id              Int      @id @default(autoincrement())
+  description     String   @db.LongText
+  Company         Company  @relation(fields: [companyId], references: [id])
+  companyId       Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdBy       User     @relation("createdBy", fields: [createdById], references: [id])
+  createdById     Int
+  updatedBy       User?    @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById     Int?
+  active          Boolean  @default(true)
+  isPurchaseOrder Boolean  @default(false)
+}
+
+model BillEntry {
+  id                 Int       @id @default(autoincrement())
+  Store              Location? @relation(fields: [storeId], references: [id])
+  supplier           Party     @relation(fields: [supplierId], references: [id])
+  supplierId         Int
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  createdBy          User      @relation("createdBy", fields: [createdById], references: [id])
+  createdById        Int
+  updatedBy          User?     @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById        Int?
+  branchId           Int
+  active             Boolean   @default(true)
+  storeId            Int?
+  docId              String
+  PayTerm            PayTerm?  @relation(fields: [payTermId], references: [id])
+  payTermId          Int?
+  taxTemplateId      Int?
+  partyBillNo        String?
+  netBillValue       Int?
+  discountValue      Float?    @default(0)
+  partyBillDate      DateTime? @db.Date
+  isProcessBillEntry Boolean   @default(false)
+  isDirect           Boolean?  @default(true)
+}
+
+enum PaymentType {
+  AgainstBill
+  Advance
+}
+
+enum PaymentMode {
+  Check
+  Online
+  Upi
+  Cash
+  Credit
+  NEFT
+  RDGS
+  IMVS
+  IMPS
+}
+
+model order {
+  id                   Int       @id @default(autoincrement())
+  Branch               Branch?   @relation(fields: [branchId], references: [id])
+  branchId             Int?
+  createdAt            DateTime? @default(now())
+  updatedAt            DateTime? @updatedAt
+  createdBy            User?     @relation("createdBy", fields: [createdById], references: [id])
+  createdById          Int?
+  updatedBy            User?     @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById          Int?
+  docId                String?
+  orderdate            DateTime?
+  customer             Party?    @relation("customer", fields: [customerId], references: [id], onDelete: Cascade)
+  customerId           Int?
+  supplier             Party?    @relation("supplier", fields: [supplierId], references: [id], onDelete: Cascade)
+  supplierId           Int?
+  customerAddress      String?
+  supplierAddress      String?
+  poNumber             String?
+  isDeleted            Boolean   @default(false)
+  User                 User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId               Int?
+  isApproval           Boolean   @default(false)
+  buyerGmail           String?
+  Manufacture          Party?    @relation("Manufacture", fields: [manufactureId], references: [id])
+  manufactureId        Int?
+  Vendor               Party?    @relation("Vendor", fields: [vendorId], references: [id])
+  vendorId             Int?
+  excelFineName        String?
+  isSave               Boolean?
+  excessQty            Float?
+  netAmount            Float?
+  deliverydate         DateTime?
+  isApproved           String?
+  isMailSent           Boolean?
+  poSentForApproval    Boolean?
+  docDate              DateTime?
+  poStatus             String?
+  approvalstatusReason String?
+  tagType              String?
+  isPurchased          Boolean?
+  userRole             Role?     @relation(fields: [userRoleId], references: [id], onDelete: Cascade)
+  userRoleId           Int?
+
+  Email               Email[]
+  orderBillItems      orderBillItems[]
+  attachments         Attachments[]
+  manufacturerMailId  String?
+  mailTransaction     MailTransaction[]
+  po                  Po[]
+  proformaImage       String?               @db.Text
+  purchaseInwardEntry purchaseInwardEntry[]
+}
+
+model orderBillItems {
+  id           Int         @id @default(autoincrement())
+  order        order?      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId      Int?
+  fabCode      String?
+  isPurchased  Boolean?
+  subGrid      SubGrid[]
+  styleSheet   StyleSheet? @relation(fields: [styleSheetId], references: [id])
+  styleSheetId Int?
+  poGrid       poGrid[]
+}
+
+model SubGrid {
+  id                Int                @id @default(autoincrement())
+  orderBillItems    orderBillItems?    @relation(fields: [orderBillItemsId], references: [id], onDelete: Cascade)
+  orderBillItemsId  Int?
+  fabType           String?
+  fiberContent      String?
+  weightGSM         String?
+  widthFinished     String?
+  priceFob          Float?
+  surCharges        Float?
+  color             Color?             @relation(fields: [colorId], references: [id], onDelete: Cascade)
+  colorId           Int?
+  quantity          Float?
+  isPurchased       Boolean?
+  UnitOfMeasurement UnitOfMeasurement? @relation(fields: [uomId], references: [id], onDelete: Cascade)
+  uomId             Int?
+  poSubGrid         poSubGrid[]
+}
+
+model Po {
+  id                  Int                   @id @default(autoincrement())
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  createdBy           User?                 @relation("createdBy", fields: [createdById], references: [id])
+  createdById         Int?
+  updatedBy           User?                 @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById         Int?
+  branch              Branch?               @relation(fields: [branchId], references: [id])
+  branchId            Int?
+  docId               String?
+  date                DateTime
+  revisedDate         DateTime?
+  customerPoNumber    String?
+  quantityAllowance   String?
+  shippingMark        String?
+  shipmentMode        String?
+  shipDate            DateTime?
+  deliveryTerm        String?
+  portOrigin          String?
+  finalDestination    String?
+  paymentTerms        String?
+  shipName            String?
+  shipAddress         String?
+  shipMobile          String?
+  customerId          Int
+  supplierId          Int
+  orderId             Int?
+  customer            Party                 @relation("CustomerPo", fields: [customerId], references: [id])
+  supplier            Party                 @relation("SupplierPo", fields: [supplierId], references: [id])
+  order               order?                @relation(fields: [orderId], references: [id])
+  poGrid              poGrid[]
+  proformaImage       Json?
+  purchaseInwardEntry purchaseInwardEntry[]
+  attachments         poAttachments[]
+}
+
+model poGrid {
+  id             Int             @id @default(autoincrement())
+  poId           Int
+  po             Po              @relation(fields: [poId], references: [id], onDelete: Cascade)
+  orderBillItems orderBillItems? @relation(fields: [gridId], references: [id])
+  gridId         Int?
+  fabCode        String?
+  poSubGrid      poSubGrid[]
+  styleSheet     StyleSheet?     @relation(fields: [styleSheetId], references: [id])
+  styleSheetId   Int?
+}
+
+model poSubGrid {
+  id            Int      @id @default(autoincrement())
+  poGridId      Int
+  subgrid       SubGrid? @relation(fields: [subgridId], references: [id])
+  subgridId     Int?
+  fabType       String?
+  fiberContent  String?
+  weightGSM     String?
+  widthFinished String?
+  priceFob      Float?
+  surCharges    Float?
+  quantity      Float?
+  poGrid        poGrid   @relation(fields: [poGridId], references: [id], onDelete: Cascade)
+  color         Color?   @relation(fields: [colorId], references: [id])
+  colorId       Int?
+
+  UnitOfMeasurement UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId             Int?
+}
+
+model Email {
+  id              Int      @id @default(autoincrement())
+  order           order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId         Int?
+  poExcelFileName String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdBy       User?    @relation("createdBy", fields: [createdById], references: [id])
+  createdById     Int?
+  updatedBy       User?    @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById     Int?
+}
+
+model percentage {
+  id     Int     @id @default(autoincrement())
+  qty    Int?
+  active Boolean @default(false)
+}
+
+model OrderImport {
+  id               Int                @id @default(autoincrement())
+  docId            String
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  createdBy        User               @relation("createdBy", fields: [createdById], references: [id])
+  createdById      Int
+  updatedBy        User?              @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById      Int?
+  Branch           Branch?            @relation(fields: [branchId], references: [id])
+  branchId         Int?
+  Company          Company?           @relation(fields: [companyId], references: [id])
+  companyId        Int?
+  orderImportItems OrderImportItems[]
+}
+
+model OrderImportItems {
+  id                   Int         @id @default(autoincrement())
+  OrderImport          OrderImport @relation(fields: [orderImportId], references: [id], onDelete: Cascade)
+  orderImportId        Int
+  department           String?
+  class_Subclass       String?
+  season_supplier_code String?
+  item_code            String?
+  ean_barcode          String?
+  style_code_group     String?
+  mrp                  String?
+  month_year           String?
+  product              String?
+  size_desc            String?
+  code                 String?
+  colour               String?
+  qty                  String?
+  order_qty            String?
+  po_number            String?
+  class                String?
+  manufacturer_mail_id String?
+  vendor_mail_id       String?
+}
+
+model Attachments {
+  id                  Int       @id @default(autoincrement())
+  order               order?    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  date                DateTime? @db.Date
+  orderId             Int?
+  gridUser            String?
+  fileName            String?
+  filePath            String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  createdBy           User?     @relation("createdBy", fields: [createdById], references: [id])
+  createdById         Int?
+  updatedBy           User?     @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById         Int?
+  comments            String?   @db.LongText
+  log                 String?   @db.LongText
+  isBuyerAttachments  Boolean?  @default(false)
+  isVendorAttachments Boolean?  @default(false)
+}
+
+model controlPanel {
+  id     Int      @id @default(autoincrement())
+  name   String?
+  active Boolean?
+}
+
+model MailTransaction {
+  id                   Int                    @id @default(autoincrement())
+  order                order?                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  date                 DateTime?              @db.Date
+  orderId              Int?
+  senderName           String?
+  receiverName         String?
+  sender               Party?                 @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId             Int?
+  receiver             Party?                 @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiverId           Int?
+  from                 String?                @db.LongText
+  to                   String?                @db.LongText
+  cc                   String?                @db.LongText
+  subject              String?                @db.LongText
+  messages             String?                @db.LongText
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  createdBy            User?                  @relation("createdBy", fields: [createdById], references: [id])
+  createdById          Int?
+  updatedBy            User?                  @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById          Int?
+  previousMailId       Int?
+  userName             String?
+  user                 User?                  @relation("user", fields: [userId], references: [id])
+  userId               Int?
+  mailTransAttachments MailTransAttachments[]
+}
+
+model MailTransAttachments {
+  id                Int              @id @default(autoincrement())
+  MailTransaction   MailTransaction? @relation(fields: [mailTransactionId], references: [id], onDelete: Cascade)
+  date              DateTime?        @db.Date
+  mailTransactionId Int?
+  fileName          String?
+  filePath          String?
+}
+
+model ApprovalDoneBy {
+  id               Int     @id @default(autoincrement())
+  selectedApprover String?
+}
+
+model TagType {
+  id       Int      @id @default(autoincrement())
+  name     String?
+  fileName String?
+  active   Boolean? @default(false)
+}
+
+model StyleSheet {
+  id                       Int                       @id @default(autoincrement())
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+  fdsDate                  DateTime?
+  fabCode                  String?
+  fabType                  String?
+  countryOriginFabric      String?
+  countryOriginYarn        String?
+  countryOriginFiber       String?
+  smsMcq                   String?
+  smsMoq                   String?
+  smsLeadTime              String?
+  bulkMcq                  String?
+  bulkMoq                  String?
+  bulkLeadTime             String?
+  surCharges               Float?
+  priceFob                 Float?
+  fabricImage              String?                   @db.Text
+  construction             String?
+  fiberContent             String?
+  yarnDetails              String?
+  weightGSM                String?
+  weftWalesCount           String?
+  widthFinished            String?
+  widthCuttale             String?
+  wrapCoursesCount         String?
+  dyeName                  String?
+  dyedMethod               String?
+  printingMethod           String?
+  surfaceFinish            String?
+  otherPerformanceFunction String?
+  materialCode             String?
+  orderBillItems           orderBillItems[]
+  poGrid                   poGrid[]
+  purchaseInwardEntryGrid  purchaseInwardEntryGrid[]
+  sampleEntryGrid          sampleEntryGrid[]
+}
+
+model LineMaster {
+  id               Int      @id @default(autoincrement())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  lineNo           String?
+  lineName         String?
+  sewingMachineQty String?
+  helperQty        String?
+  OperationQty     String?
+  active           Boolean  @default(false)
+  Company          Company? @relation(fields: [companyId], references: [id])
+  companyId        Int?
+}
+
+model Fabric {
+  id     Int     @id @default(autoincrement())
+  name   String?
+  number Int?
+}
+
+model Color {
+  id                         Int                          @id @default(autoincrement())
+  name                       String
+  pantone                    String
+  Company                    Company                      @relation(fields: [companyId], references: [id])
+  companyId                  Int
+  active                     Boolean                      @default(true)
+  isGrey                     Boolean                      @default(false)
+  number                     Int
+  subGrid                    SubGrid[]
+  posubGrid                  poSubGrid[]
+  purchaseInwardEntrySubGrid purchaseInwardEntrySubGrid[]
+}
+
+model UnitOfMeasurement {
+  id                         Int                          @id @default(autoincrement())
+  name                       String
+  active                     Boolean                      @default(true)
+  isCutting                  Boolean                      @default(false)
+  Company                    Company                      @relation(fields: [companyId], references: [id])
+  companyId                  Int
+  subGrid                    SubGrid[]
+  posubGrid                  poSubGrid[]
+  purchaseInwardEntrySubGrid purchaseInwardEntrySubGrid[]
+}
+
+model purchaseInwardEntry {
+  id                      Int                       @id @default(autoincrement())
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  createdBy               User?                     @relation("createdBy", fields: [createdById], references: [id])
+  createdById             Int?
+  updatedBy               User?                     @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById             Int?
+  branch                  Branch?                   @relation(fields: [branchId], references: [id])
+  branchId                Int?
+  po                      Po?                       @relation(fields: [poId], references: [id])
+  poId                    Int?
+  date                    DateTime?
+  isPurchased             Boolean                   @default(false)
+  purchaseInwardEntryGrid purchaseInwardEntryGrid[]
+  orderId                 Int?
+  order                   order?                    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+}
+
+model purchaseInwardEntryGrid {
+  id                         Int                          @id @default(autoincrement())
+  purchaseInwardEntry        purchaseInwardEntry?         @relation(fields: [purchaseInwardEntryId], references: [id], onDelete: Cascade)
+  purchaseInwardEntryId      Int?
+  styleSheet                 StyleSheet?                  @relation(fields: [styleSheetId], references: [id])
+  styleSheetId               Int?
+  purchaseInwardEntrySubGrid purchaseInwardEntrySubGrid[]
+}
+
+model purchaseInwardEntrySubGrid {
+  id                        Int                      @id @default(autoincrement())
+  purchaseInwardEntryGrid   purchaseInwardEntryGrid? @relation(fields: [purchaseInwardEntryGridId], references: [id], onDelete: Cascade)
+  purchaseInwardEntryGridId Int?
+  color                     Color?                   @relation(fields: [colorId], references: [id])
+  colorId                   Int?
+  UnitOfMeasurement         UnitOfMeasurement?       @relation(fields: [uomId], references: [id])
+  uomId                     Int?
+  fabType                   String?
+  fiberContent              String?
+  quantity                  Float?
+  actualQuantity            Float?
+}
+
+model PartyMasterNew {
+  id                  Int       @id @default(autoincrement())
+  createdAt           DateTime? @default(now())
+  updatedAt           DateTime? @updatedAt
+  createdBy           User?     @relation("createdBy", fields: [createdById], references: [id])
+  createdById         Int?
+  updatedBy           User?     @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById         Int?
+  isSupplier          Boolean?  @default(false)
+  isClient            Boolean?  @default(false)
+  name                String?
+  aliasName           String?
+  partyCode           String?
+  active              Boolean?  @default(true)
+  displayName         String?
+  address             String?   @db.LongText
+  landMark            String?
+  City                City?     @relation(fields: [cityId], references: [id])
+  cityId              Int?
+  pincode             Int?
+  email               String?
+  contact             BigInt?
+  contactPersonName   String?
+  designation         String?
+  department          String?
+  contactPersonEmail  String?
+  contactPersonNumber BigInt?
+  alterContactNumber  BigInt?
+  Currency            Currency? @relation(fields: [currencyId], references: [id])
+  currencyId          Int?
+  PayTerm             PayTerm?  @relation(fields: [payTermId], references: [id])
+  payTermId           Int?
+  panNo               String?
+  gstNo               String?
+  msmeNo              String?
+  cinNo               String?
+  bankName            String?
+  bankBranchName      String?
+  accountNumber       BigInt?
+  ifscCode            String?
+  Company             Company?  @relation(fields: [companyId], references: [id])
+  companyId           Int?
+}
+
+model SampleEntry {
+  id              Int               @id @default(autoincrement())
+  createdAt       DateTime?         @default(now())
+  updatedAt       DateTime?         @updatedAt
+  createdBy       User?             @relation("createdBy", fields: [createdById], references: [id])
+  createdById     Int?
+  updatedBy       User?             @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById     Int?
+  branch          Branch?           @relation(fields: [branchId], references: [id])
+  branchId        Int?
+  date            DateTime?
+  submitter       String?
+  submittingTo    String?
+  supplier        Party?            @relation("supplier", fields: [supplierId], references: [id], onDelete: Cascade)
+  supplierId      Int?
+  supplierAddress String?
+  sampleEntryGrid sampleEntryGrid[]
+}
+
+model sampleEntryGrid {
+  id                 Int                  @id @default(autoincrement())
+  sampleEntry        SampleEntry?         @relation(fields: [sampleEntryId], references: [id], onDelete: Cascade)
+  sampleEntryId      Int?
+  fabCode            String?
+  styleSheet         StyleSheet?          @relation(fields: [styleSheetId], references: [id])
+  styleSheetId       Int?
+  sampleEntrySubGrid sampleEntrySubGrid[]
+}
+
+model sampleEntrySubGrid {
+  id                Int              @id @default(autoincrement())
+  sampleEntryGrid   sampleEntryGrid? @relation(fields: [sampleEntryGridId], references: [id], onDelete: Cascade)
+  sampleEntryGridId Int?
+  fabType           String?
+  fiberContent      String?
+  weightGSM         String?
+  widthFinished     String?
+  smsMcq            String?
+  smsMoq            String?
+  smsLeadTime       String?
+  fabricImage       String?          @db.Text
+}
+
+model poAttachments {
+  id          Int       @id @default(autoincrement())
+  createdAt   DateTime? @default(now())
+  updatedAt   DateTime? @updatedAt
+  createdBy   User?     @relation("createdBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?     @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  branch      Branch?   @relation(fields: [branchId], references: [id])
+  branchId    Int?
+  po          Po?       @relation(fields: [poId], references: [id], onDelete: Cascade)
+  poId        Int?
+  date        DateTime?
+  comments    String?   @db.LongText
+  fileName    String?
+  filePath    String?
+
+  log String? @db.LongText
+}
+
+model Designation {
+  id           Int      @id @default(autoincrement())
+  name         String?
+  code         String?
+  active       Boolean? @default(true)
+  departmentId Int?
+  companyId    Int?
+
+  department Department? @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  company    Company?    @relation(fields: [companyId], references: [id])
+  Employee   Employee[]
+}
+
+model Shift {
+  id                Int                  @id @default(autoincrement())
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  createdBy         User?                @relation("createdBy", fields: [createdById], references: [id])
+  createdById       Int?
+  updatedBy         User?                @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById       Int?
+  companyId         Int?
+  company           Company?             @relation(fields: [companyId], references: [id])
+  branch            Branch?              @relation(fields: [branchId], references: [id])
+  branchId          Int?
+  name              String?
+  description       String?
+  docId             String?
+  active            Boolean?             @default(true)
+  from              String?
+  to                String?
+  shipTemplateItems ShiftTemplateItems[]
+}
+
+model ShiftCommonTemplate {
+  id                  Int                  @id @default(autoincrement())
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  createdBy           User?                @relation("createdBy", fields: [createdById], references: [id])
+  createdById         Int?
+  updatedBy           User?                @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById         Int?
+  companyId           Int?
+  company             Company?             @relation(fields: [companyId], references: [id])
+  branch              Branch?              @relation(fields: [branchId], references: [id])
+  branchId            Int?
+  employeeCategory    EmployeeCategory?    @relation(fields: [employeeCategoryId], references: [id])
+  employeeCategoryId  Int?
+  docId               String?
+  active              Boolean?             @default(true)
+  shiftCommonTemplate ShiftTemplateItems[]
+}
+
+model ShiftTemplate {
+  id                 Int                  @id @default(autoincrement())
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  createdBy          User?                @relation("createdBy", fields: [createdById], references: [id])
+  createdById        Int?
+  updatedBy          User?                @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById        Int?
+  companyId          Int?
+  company            Company?             @relation(fields: [companyId], references: [id])
+  branch             Branch?              @relation(fields: [branchId], references: [id])
+  branchId           Int?
+  name               String?
+  docId              String?
+  active             Boolean?             @default(true)
+  category           String?
+  date               DateTime?
+  ShiftTemplateItems ShiftTemplateItems[]
+  Employee           Employee[]
+}
+
+model ShiftTemplateItems {
+  id                      Int                 @id @default(autoincrement())
+  ShiftTemplate           ShiftTemplate?      @relation(fields: [shiftTemplateId], references: [id], onDelete: Cascade)
+  shiftTemplateId         Int?
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+  createdBy               User?               @relation("createdBy", fields: [createdById], references: [id])
+  createdById             Int?
+  updatedBy               User?               @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById             Int?
+  active                  Boolean?            @default(true)
+  shiftCommonTemplate     ShiftCommonTemplate @relation(fields: [templateId], references: [id])
+  templateId              Int
+  shift                   Shift               @relation(fields: [shiftId], references: [id])
+  shiftId                 Int
+  inNextDay               String?
+  toleranceInBeforeStart  String?
+  startTime               String?
+  toleranceInAfterEnd     String?
+  fbOut                   String?
+  fbIn                    String?
+  lunchBst                String?
+  lBSNDay                 String?
+  lunchBET                String?
+  lBEnday                 String?
+  sbOut                   String?
+  sbIn                    String?
+  toleranceOutBeforeStart String?
+  endTime                 String?
+  toleranceOutAfterEnd    String?
+  outNxtDay               String?
+  shiftTimeHrs            String?
+  otHrs                   String?
+  quater                  String?
+  date                    DateTime?
+}
+
+model PayFrequency {
+  id          Int       @id @default(autoincrement())
+  createdAt   DateTime? @default(now())
+  updatedAt   DateTime? @updatedAt
+  createdBy   User?     @relation("createdBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?     @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  name        String?
+  active      Boolean?  @default(true)
+
+  finYear          FinYear?           @relation(fields: [finYearId], references: [id], onDelete: Cascade)
+  finYearId        Int?
+  companyId        Int?
+  company          Company?           @relation(fields: [companyId], references: [id])
+  branch           Branch?            @relation(fields: [branchId], references: [id])
+  branchId         Int?
+  PayFrequencyType PayFrequencyType[]
+}
+
+model PayFrequencyType {
+  id                Int                 @id @default(autoincrement())
+  payFrequencyType  String?
+  payFrequency      PayFrequency?       @relation(fields: [payFrequencyId], references: [id], onDelete: Cascade)
+  payFrequencyId    Int?
+  PayFrequencyItems PayFrequencyItems[]
+}
+
+model EmployeSubCategory {
+  id                 Int               @id @default(autoincrement())
+  companyId          Int?
+  company            Company?          @relation(fields: [companyId], references: [id])
+  branch             Branch?           @relation(fields: [branchId], references: [id])
+  branchId           Int?
+  employeeCategory   EmployeeCategory? @relation(fields: [employeeCategoryId], references: [id])
+  employeeCategoryId Int?
+  gradeName          String?
+  active             Boolean?          @default(true)
+}
+
+model PayFrequencyItems {
+  id                 Int               @id @default(autoincrement())
+  payFrequencyType   PayFrequencyType? @relation(fields: [payFrequencyTypeId], references: [id], onDelete: Cascade)
+  payFrequencyTypeId Int?
+  startDate          DateTime?
+  endDate            DateTime?
+  salaryDate         DateTime?
+  notes              String?
+}
+
+model PayComponents {
+  id             Int          @id @default(autoincrement())
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  createdBy      User?        @relation("createdBy", fields: [createdById], references: [id])
+  createdById    Int?
+  updatedBy      User?        @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById    Int?
+  companyId      Int?
+  company        Company?     @relation(fields: [companyId], references: [id])
+  branch         Branch?      @relation(fields: [branchId], references: [id])
+  branchId       Int?
+  payCode        String?
+  payDescription String?      @db.Text
+  earningsType   String?
+  taxable        String?
+  notes          String?      @db.Text
+  PayDetails     PayDetails[]
+}
+
+model CompanyPaycode {
+  id          Int          @id @default(autoincrement())
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  createdBy   User?        @relation("createdBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?        @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  companyId   Int?
+  company     Company?     @relation(fields: [companyId], references: [id])
+  branch      Branch?      @relation(fields: [branchId], references: [id])
+  branchId    Int?
+  date        DateTime?
+  docId       String?
+  PayDetails  PayDetails[]
+}
+
+model PayDetails {
+  id               Int            @id @default(autoincrement())
+  companyPaycode   CompanyPaycode @relation(fields: [companyPayCodeId], references: [id] , onDelete: Cascade)
+  companyPayCodeId Int
+  payComponent     PayComponents  @relation(fields: [payComponentId], references: [id])
+  payComponentId   Int
+  lop              String?
+  pf               String?
+  esi              String?
+  pickFrom         String?
+}

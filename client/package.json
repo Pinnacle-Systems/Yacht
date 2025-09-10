@@ -1,0 +1,101 @@
+{
+  "name": "pharma-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@emailjs/browser": "^4.4.1",
+    "@etsoo/reactprint": "^1.0.3",
+    "@fortawesome/fontawesome-svg-core": "^6.2.1",
+    "@fortawesome/free-regular-svg-icons": "^6.2.1",
+    "@fortawesome/free-solid-svg-icons": "^6.2.1",
+    "@fortawesome/react-fontawesome": "^0.2.0",
+    "@headlessui/react": "^1.7.7",
+    "@heroicons/react": "^2.2.0",
+    "@material-tailwind/react": "^2.1.9",
+    "@mui/icons-material": "^5.14.8",
+    "@mui/material": "^5.16.7",
+    "@react-pdf/renderer": "^3.4.5",
+    "@reduxjs/toolkit": "^1.9.2",
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "axios": "^1.6.8",
+    "babel-plugin-macros": "^3.1.0",
+    "chart.js": "^4.4.8",
+    "comma-number": "^2.1.0",
+    "cors": "^2.8.5",
+    "country-state-city": "^3.2.1",
+    "dom-to-image": "^2.6.0",
+    "exceljs": "^4.4.0",
+    "html2canvas": "^1.4.1",
+    "joi": "^17.13.3",
+    "jquery": "^3.6.3",
+    "jspdf": "^2.5.1",
+    "lodash": "^4.17.21",
+    "lucide-react": "^0.487.0",
+    "moment": "^2.30.1",
+    "nodemailer": "^6.10.1",
+    "num-words": "^1.2.3",
+    "number-to-text": "^0.3.9",
+    "number-to-words": "^1.2.4",
+    "path-browserify": "^1.0.1",
+    "react": "^18.2.0",
+    "react-beautiful-dnd": "^13.1.1",
+    "react-chartjs-2": "^5.3.0",
+    "react-color": "^2.19.3",
+    "react-data-to-export": "^1.0.0",
+    "react-dom": "^18.2.0",
+    "react-dropdown-select": "^4.11.2",
+    "react-hot-toast": "^2.5.2",
+    "react-html-table-to-excel": "^2.0.0",
+    "react-icon": "^1.0.0",
+    "react-icons": "^5.5.0",
+    "react-json-to-table": "^0.1.7",
+    "react-loader-spinner": "^5.3.4",
+    "react-multi-select-component": "^4.3.4",
+    "react-paginate": "^8.2.0",
+    "react-pdf-tailwind": "^2.3.0",
+    "react-qr-code": "^2.0.11",
+    "react-redux": "^8.0.5",
+    "react-router-dom": "^6.6.1",
+    "react-scripts": "5.0.1",
+    "react-secure-storage": "^1.1.0",
+    "react-select": "^5.10.1",
+    "react-toastify": "^9.1.1",
+    "react-webcam": "^7.0.1",
+    "socket.io-client": "^4.6.1",
+    "sweetalert2": "^11.21.0",
+    "util": "^0.12.5",
+    "validator": "^13.7.0",
+    "web-vitals": "^2.1.4",
+    "xlsx": "^0.18.5",
+    "xlsx-js-style": "^1.2.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts --max_old_space_size=8192 build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.2.4"
+  }
+}

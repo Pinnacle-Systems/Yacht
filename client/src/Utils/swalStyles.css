@@ -1,0 +1,42 @@
+.payment-swal-popup {
+  width: 300px !important;
+  padding: 10px !important;
+  font-size: 1rem !important;
+  border-radius: 8px !important;
+  background-color: #fff !important;
+  color: #333 !important;
+}
+
+.payment-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.payment-icon {
+  font-size: 30px;
+  margin: 5px 0;
+}
+
+.payment-icon i {
+  color: #27ae60;
+}
+
+.payment-text {
+  font-size: 1rem;
+  font-weight: bold;
+  text-align: center;
+  margin: 3px 0;
+}
+
+.payment-swal-popup .swal2-title {
+  font-size: 1.1rem !important;
+  margin: 6px 0 !important;
+  color: #333 !important;
+}
+
+.payment-swal-popup .swal2-timer-progress-bar {
+  height: 2px !important;
+  background-color: #27ae60 !important;
+}

@@ -1,0 +1,104 @@
+/* Base sidebar styles */
+/* .sidebar {
+    position: absolute;
+    top: 20%;
+    left: 2px; */
+    /* height: 100vh; */
+    /* background-color: #4d4d52; */
+    /* Dark background */
+    /* border-radius:10px;
+    overflow: hidden;
+    transition: width 0.3s ease;
+    z-index: 9;
+    box-shadow: rgba(0, 0, 0, 0.15) 0px 5px 15px 0px;
+    overflow: visible;
+
+} */
+
+/* Collapsed sidebar: narrow width */
+/* .sidebar.closed {
+    left:-80px
+} */
+
+/* Expanded sidebar: wider to show full content */
+/* .sidebar.open {
+    width: 80px;
+    left:1%;
+
+} */
+
+/* Header always visible at the top */
+/* .sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9.9px;
+    padding-left: 5px;
+    padding-right: 5px;
+    border-bottom: 0.5px solid #dbdcdd;
+
+} */
+
+/* Logo styling */
+/* .sidebar-logo {
+    transition: width 0.3s ease;
+    width: 40px;
+} */
+
+/* Enlarge logo when sidebar is open */
+/* .sidebar.open .sidebar-logo {
+    width: 100px;
+    color: #495057;
+} */
+
+/* Toggle button styling */
+/* .sidebar-toggle {
+    background: none;
+    border: none;
+    color: #f5f5f5;
+    cursor: pointer;
+    font-size: 0.9rem;
+} */
+
+/* Sidebar content (navigation links) */
+/* .sidebar-content {
+    padding: 15px;
+    height: 40%;
+} */
+
+/* .sidebar-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+} */
+
+/* .sidebar-content li {
+    margin: 5px 0;
+    color: #495057;
+    display: flex;
+} */
+
+
+
+/* .small li {
+    margin: 5px 0;
+    color: #495057;
+    display: flex;
+    justify-content: center;
+} */
+
+/* a svg {
+    width: 20px;
+} */
+
+/* .sidebar-content a {
+    color: #fcfcfc;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    color: #40474d;
+    font-size: 12px;
+} */
+
+/* .sidebar-content a:hover {
+    color: #adb5bd;
+} */

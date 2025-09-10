@@ -1,0 +1,23 @@
+label{
+    font-size: 14.5px;
+}
+
+.small-input{
+   font-size:12px;
+}
+
+select{
+    font-size:12px;
+}
+
+* {
+  font-family: 'Segoe UI' !important;
+}
+html, body {
+  font-family: "Segoe UI" !important;
+  background-color: #F1F1F0;
+  
+}
+.font-segoe {
+  font-family: 'Segoe UI';
+}
