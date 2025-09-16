@@ -27,7 +27,7 @@ const FabricPoItem = ({ fabricList, uomList,
 
         }
     }, [isFetching, isLoading, data, purchaseInwardId])
-    if (isLoading || isFetching) return <Loader />
+    // if (isLoading || isFetching) return <Loader />
 
     let lotNoArr = item?.inwardLotDetails ? item.inwardLotDetails.map(item => item.lotNo) : []
     let isLotNoUnique = new Set(lotNoArr).size === lotNoArr.length

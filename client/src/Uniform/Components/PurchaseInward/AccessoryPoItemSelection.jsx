@@ -171,7 +171,7 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                             <tbody>
                                 <tr>
                                     <td>
-                                        <Loader />
+                                        {/* <Loader /> */}
                                     </td>
                                 </tr>
                             </tbody>

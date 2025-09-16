@@ -19,7 +19,7 @@ const DirectInwardOrReturnApi = createApi({
             headers: {
               "Content-type": "application/json; charset=UTF-8",
             },
-            params
+            params,
           };
         }
         return {
@@ -28,7 +28,7 @@ const DirectInwardOrReturnApi = createApi({
           headers: {
             "Content-type": "application/json; charset=UTF-8",
           },
-          params
+          params,
         };
       },
       providesTags: ["DirectInwardOrReturn"],
@@ -53,7 +53,7 @@ const DirectInwardOrReturnApi = createApi({
           headers: {
             "Content-type": "application/json; charset=UTF-8",
           },
-          params
+          params,
         };
       },
       providesTags: ["DirectInwardOrReturn"],
@@ -66,7 +66,7 @@ const DirectInwardOrReturnApi = createApi({
           headers: {
             "Content-type": "application/json; charset=UTF-8",
           },
-          params
+          params,
         };
       },
       providesTags: ["DirectInwardOrReturn"],
@@ -74,7 +74,11 @@ const DirectInwardOrReturnApi = createApi({
     getDirectItemById: builder.query({
       query: ({ id, purchaseInwardId, stockId, storeId, billEntryId }) => {
         return {
-          url: `${DIRECT_INWARD_OR_RETURN_API}/getDirectItems/${id}/${purchaseInwardId ? purchaseInwardId : null}/${stockId ? stockId : null}/${storeId ? storeId : null}/${billEntryId ? billEntryId : null}`,
+          url: `${DIRECT_INWARD_OR_RETURN_API}/getDirectItems/${id}/${
+            purchaseInwardId ? purchaseInwardId : null
+          }/${stockId ? stockId : null}/${storeId ? storeId : null}/${
+            billEntryId ? billEntryId : null
+          }`,
           method: "GET",
           headers: {
             "Content-type": "application/json; charset=UTF-8",

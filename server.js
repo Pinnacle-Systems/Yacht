@@ -52,7 +52,8 @@ import {
   payfrequency,
   payComponents,
   companyPaycode,
-  style
+  style,
+  directInwardOrReturn,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";
@@ -139,6 +140,7 @@ app.use("/payFrequency", payfrequency);
 app.use("/payComponent", payComponents);
 app.use("/companyPayCode", companyPaycode);
 app.use("/style", style);
+app.use("/directInwardOrReturn", directInwardOrReturn);
 
 app.get("/retreiveFile/:fileName", (req, res) => {
   const { fileName } = req.params;

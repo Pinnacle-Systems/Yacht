@@ -125,7 +125,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
 
 
 
-    if (!accessoryList || !colorList || !uomList || !sizeList) return <Loader />
+    // if (!accessoryList || !colorList || !uomList || !sizeList) return <Loader />
 
     return (
         <>

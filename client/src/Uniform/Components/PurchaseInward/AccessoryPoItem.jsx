@@ -20,7 +20,7 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
 
         }
     }, [isFetching, isLoading, data, purchaseInwardId])
-    if (isLoading || isFetching) return <Loader />
+    // if (isLoading || isFetching) return <Loader />
 
 
 

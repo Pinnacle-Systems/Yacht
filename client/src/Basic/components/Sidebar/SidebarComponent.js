@@ -26,6 +26,7 @@ import size from "./images/size.png";
 import style from "./images/fabImage.jpg";
 import location from "./images/location.png";
 import sizetemplate from "./images/sizetemplate.png";
+import fabstyle from "./images/style.png"
 import lossreason from "./images/reason.png";
 import yarncontent from "./images/cotton.png";
 import yarntype from "./images/yarntype.png";
@@ -115,6 +116,14 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
             <span className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow">
                 <img />
             </span>
+        ,
+
+        "DEPARTMENT MASTER":
+            <img src={department} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
+        ,
+
+        "STYLE MASTER":
+            <img src={fabstyle} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
         ,
 
 
