@@ -14,41 +14,25 @@ import { findFromList } from "../../../Utils/helper";
 import {
   dropDownListMergedObject,
   dropDownListObject,
-  multiSelectOption,
 } from "../../../Utils/contructObject";
-import PartyOnItems from "./PartyOnItems";
-import { Check, ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { Check, LayoutGrid, Paperclip, Plus, Table } from "lucide-react";
 import { statusDropdown } from "../../../Utils/DropdownData";
-import BrowseSingleImage from "../../components/BrowseSingleImage";
-import MastersForm from "../MastersForm/MastersForm";
 import {
   Modal,
   ToggleButton,
-  DateInput,
   DropdownInput,
   TextInput,
-  FancyCheckBox,
-  MultiSelectDropdown,
-  TextAreaInput,
+  ReusableTable,
+  TextArea,
 } from "../../../Inputs";
-import Mastertable from "../MasterTable/Mastertable";
 import { useGetProcessMasterQuery } from "../../../redux/uniformService/ProcessMasterService";
-import { useGetCurrencyMasterQuery } from "../../../redux/services/CurrencyMasterServices";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrashCan, faUserPlus } from "@fortawesome/free-solid-svg-icons";
-import { DELETE, PLUS } from "../../../icons";
 import { toast } from "react-toastify";
-import { exist } from "joi";
-import { push } from "../../../redux/features/opentabs";
-import { TextField } from "@mui/material";
-import CommonTable from "../../../Uniform/Components/common/CommonTable.jsx";
-import { FaChevronRight } from "react-icons/fa6";
-import GarmentBranchForm from "./GarmentBranchForm.jsx";
+import Swal from "sweetalert2";
+import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterServices";
 
 const MODEL = "Party Master";
 
 export default function Form({ partyId, onCloseForm }) {
-  const [isAddressExpanded, setIsAddressExpanded] = useState(false);
   const [form, setForm] = useState(false);
   const [readOnly, setReadOnly] = useState(false);
   const [id, setId] = useState("");
@@ -65,7 +49,6 @@ export default function Form({ partyId, onCloseForm }) {
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [pincode, setPincode] = useState("");
-  const [contactPersonName, setContactPersionName] = useState("");
   const [igst, setIgst] = useState(false);
   const [gstNo, setGstNo] = useState("");
   const [costCode, setCostCode] = useState("");
@@ -79,30 +62,43 @@ export default function Form({ partyId, onCloseForm }) {
   const [mail, setMail] = useState("");
   const [accessoryItemList, setAccessoryItemList] = useState([]);
   const [accessoryGroup, setAccessoryGroup] = useState(false);
-  const [accessoryGroupPrev, setAccessoryGroupPrev] = useState(false);
   const [priceTemplateId, setPriceTemplateId] = useState("");
-  const [currency, setCurrency] = useState("INR");
   const [active, setActive] = useState(true);
   const [isSupplier, setSupplier] = useState(true);
   const [isClient, setClient] = useState(true);
-  const [itemsPopup, setItemsPopup] = useState(false);
-  const [backUpItemsList, setBackUpItemsList] = useState([]);
   const [shippingAddress, setShippingAddress] = useState([]);
   const [contactDetails, setContactDetails] = useState([]);
   const [certificate, setCertificate] = useState([]);
   const [searchValue, setSearchValue] = useState("");
   const [email, setEmail] = useState("");
-  const [branch, setBranch] = useState(false);
-  const [errors, setErrors] = useState({});
   const [image, setImage] = useState({});
-  const [mobileNumber, setMobileNumber] = useState("")
+  const [mobileNumber, setMobileNumber] = useState("");
+  const [view, setView] = useState("all");
+  const [step, setStep] = useState(1);
+  const [branchModelOpen, setBranchModelOpen] = useState(false);
+  const [branchForm, setBranchForm] = useState(true);
+  const [partyCode, setPartyCode] = useState("");
+  const [landMark, setlandMark] = useState("");
+  const [country, setCountry] = useState("");
+  const [contact, setContact] = useState("");
+  const [bankname, setBankName] = useState("");
+  const [bankBranchName, setBankBranchName] = useState("");
+  const [ifscCode, setIfscCode] = useState("");
+  const [contactPersonName, setContactPersonName] = useState("");
+  const [designation, setDesignation] = useState("");
+  const [department, setDepartment] = useState("");
+  const [contactPersonEmail, setContactPersonEmail] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
+  const [alterContactNumber, setAlterContactNumber] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [msmeNo, setMsmeNo] = useState("");
+
   const childRecord = useRef(0);
   const dispatch = useDispatch();
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
   );
 
-  // const { data: accessoryItemsMasterList, isLoading: isItemsLoading, isFetching: isItemsFetching } = useGetAccessoryItemMasterQuery({ companyId })
   let accessoryItemsMasterList;
 
   const userId = secureLocalStorage.getItem(
@@ -111,10 +107,9 @@ export default function Form({ partyId, onCloseForm }) {
   const params = {
     companyId,
   };
+
   const { data: cityList } = useGetCityQuery({ params });
-
-  const { data: currencyList } = useGetCurrencyMasterQuery({ params });
-
+  const { data: payTermList } = useGetPaytermMasterQuery({ params });
   const {
     data: allData,
     isLoading,
@@ -127,15 +122,26 @@ export default function Form({ partyId, onCloseForm }) {
 
   const {
     data: singleData,
+    refetch,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetPartyByIdQuery(id, { skip: !id });
 
-
-
   const [addData] = useAddPartyMutation();
   const [updateData] = useUpdatePartyMutation();
   const [removeData] = useDeletePartyMutation();
+
+  let filterParty;
+
+  if (view == "Customer") {
+    filterParty = allData?.data?.filter((item) => item.isClient);
+  }
+  if (view === "Supplier") {
+    filterParty = allData?.data?.filter((item) => item.isSupplier);
+  }
+  if (view == "all") {
+    filterParty = allData?.data;
+  }
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -154,7 +160,6 @@ export default function Form({ partyId, onCloseForm }) {
         setCinNo("");
         setFaxNo("");
         setCinNo("");
-        setContactPersionName("");
         setGstNo("");
         setCostCode("");
         setPayTermDay("0");
@@ -164,7 +169,6 @@ export default function Form({ partyId, onCloseForm }) {
         setWebsite("");
         setEmail("");
         setCity("");
-        setCurrency("");
         setActive(id ? data?.active : true);
         setSupplier(false);
         setClient(false);
@@ -174,11 +178,6 @@ export default function Form({ partyId, onCloseForm }) {
         setPriceTemplateId("");
         setProcessDetails([]);
       } else {
-        // if (partyId) {
-        //   setReadOnly(false);
-        // } else {
-        // }
-
         setPanNo(data?.panNo || "");
         setName(data?.name || "");
         setMail(data?.mailId || "");
@@ -194,9 +193,7 @@ export default function Form({ partyId, onCloseForm }) {
         setCinNo(data?.cinNo || "");
         setFaxNo(data?.faxNo || "");
         setCinNo(data?.cinNo || "");
-        setContactPersionName(data?.contactPersionName || "");
         setMobileNumber(data?.mobileNumber || "");
-
         setGstNo(data?.gstNo || "");
         setCostCode(data?.costCode || "");
         setCstDate(
@@ -208,7 +205,6 @@ export default function Form({ partyId, onCloseForm }) {
         setWebsite(data?.website || "");
         setEmail(data?.email || "");
         setCity(data?.cityId || "");
-        setCurrency(data?.currencyId || "");
         setActive(id ? data?.active ?? false : true);
         setSupplier(data?.yarn || false);
         setClient(data?.fabric || false);
@@ -216,8 +212,8 @@ export default function Form({ partyId, onCloseForm }) {
         setAccessoryItemList(
           data?.PartyOnAccessoryItems
             ? data.PartyOnAccessoryItems.map((item) =>
-              parseInt(item.accessoryItemId)
-            )
+                parseInt(item.accessoryItemId)
+              )
             : []
         );
         setPriceTemplateId(data?.priceTemplateId || "");
@@ -228,11 +224,11 @@ export default function Form({ partyId, onCloseForm }) {
         setProcessDetails(
           data?.PartyOnProcess
             ? data.PartyOnProcess.map((item) => {
-              return {
-                value: parseInt(item.processId),
-                label: findFromList(item.processId, processList.data, "name"),
-              };
-            })
+                return {
+                  value: parseInt(item.processId),
+                  label: findFromList(item.processId, processList.data, "name"),
+                };
+              })
             : []
         );
       }
@@ -264,7 +260,6 @@ export default function Form({ partyId, onCloseForm }) {
     contactPersonName,
     igst,
     companyId,
-    currencyId: currency,
     costCode,
     contactMobile,
     gstNo,
@@ -289,7 +284,7 @@ export default function Form({ partyId, onCloseForm }) {
     mail,
     isGy,
     isDy,
-    mobileNumber
+    mobileNumber,
   };
 
   const {
@@ -301,9 +296,6 @@ export default function Form({ partyId, onCloseForm }) {
   const validateData = (data) => {
     if (data.name) {
       return true;
-      // && data.joiningDate && data.fatherName && data.dob && data.gender && data.maritalStatus && data.bloodGroup &&
-      //     data.panNo && data.email && data.mobile && data.degree && data.specialization &&
-      //     data.localAddress && data.localCity && data.localPincode && data.partyCategoryId && data.currencyId
     }
     return false;
   };
@@ -325,11 +317,6 @@ export default function Form({ partyId, onCloseForm }) {
         type: `CityMaster/invalidateTags`,
         payload: ["City/State Name"],
       });
-      dispatch({
-        type: `CurrencyMaster/invalidateTags`,
-        payload: ["Currency"],
-      });
-
       setId(returnData.data.id);
       onNew();
       setStep(1);
@@ -343,11 +330,6 @@ export default function Form({ partyId, onCloseForm }) {
   };
 
   useEffect(() => {
-    if (itemsPopup) {
-      setBackUpItemsList(accessoryItemList);
-    }
-  }, [itemsPopup]);
-  useEffect(() => {
     if (accessoryGroup) {
       if (accessoryItemsMasterList) {
         setAccessoryItemList(
@@ -358,9 +340,24 @@ export default function Form({ partyId, onCloseForm }) {
   }, [accessoryGroup, accessoryItemsMasterList]);
 
   const saveData = () => {
+    // if (isSupplier) {
+    //   console.log(selected.length <= 0, "condiion");
+    //   if (selected.length <= 0) {
+    //     Swal.fire({
+    //       icon: "error",
+    //       title: `Select One Material...!`,
+    //       showConfirmButton: false,
+    //       timer: 3000,
+    //     });
+    //     return false;
+    //   }
+    // }
     if (!validateData(data)) {
-      toast.error("Please fill all required fields...!", {
-        position: "top-center",
+      Swal.fire({
+        icon: "warning",
+        title: `Please fill all required fields...!`,
+        showConfirmButton: false,
+        timer: 3000,
       });
       return;
     }
@@ -371,6 +368,7 @@ export default function Form({ partyId, onCloseForm }) {
       handleSubmitCustom(addData, data, "Added");
     }
   };
+
   const saveExitData = () => {
     if (!validateData(data)) {
       toast.error("Please fill all required fields...!", {
@@ -389,35 +387,38 @@ export default function Form({ partyId, onCloseForm }) {
 
   const deleteData = async (id) => {
     if (!id) return;
-    if (id) {
-      if (!window.confirm("Are you sure to delete...?")) {
+    if (!window.confirm("Are you sure to delete...?")) {
+      return;
+    }
+    try {
+      let deldata = await removeData(id).unwrap();
+      if (deldata?.statusCode == 1) {
+        toast.error(deldata?.message);
         return;
       }
-      try {
-        let deldata = await removeData(id).unwrap();
-        if (deldata?.statusCode == 1) {
-          toast.error(deldata?.message);
-          return;
-        }
-        dispatch({
-          type: `accessoryItemMaster/invalidateTags`,
-          payload: ["AccessoryItemMaster"],
-        });
-        setId("");
-        dispatch({
-          type: `CityMaster/invalidateTags`,
-          payload: ["City/State Name"],
-        });
-        dispatch({
-          type: `CurrencyMaster/invalidateTags`,
-          payload: ["Currency"],
-        });
-        syncFormWithDb(undefined);
-        toast.success("Deleted Successfully");
-        setForm(false);
-      } catch (error) {
-        toast.error("something went wrong");
-      }
+      dispatch({
+        type: `accessoryItemMaster/invalidateTags`,
+        payload: ["AccessoryItemMaster"],
+      });
+      setId("");
+      dispatch({
+        type: `CityMaster/invalidateTags`,
+        payload: ["City/State Name"],
+      });
+      syncFormWithDb(undefined);
+      Swal.fire({
+        icon: "success",
+        title: `Deleted Successfully`,
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      setForm(false);
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Submission error",
+        text: error.data?.message || "Something went wrong!",
+      });
     }
   };
 
@@ -468,39 +469,18 @@ export default function Form({ partyId, onCloseForm }) {
     });
   }
 
-  const tableHeaders = [
-    "S.NO",
-    "Party Name",
-    "Alias Name",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-  ];
-  const tableDataNames = [
-    "index+1",
-    "dataObj.name",
-    "dataObj.aliasName",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-  ];
-  const [step, setStep] = useState(1);
+  const handleView = (id) => {
+    setId(id);
+    setForm(true);
+    setReadOnly(true);
+  };
+
+  const handleEdit = (orderId) => {
+    setId(orderId);
+    setForm(true);
+    setReadOnly(false);
+  };
+
   useEffect(() => {
     if (!partyId) return;
     if (partyId == "new") {
@@ -517,343 +497,792 @@ export default function Form({ partyId, onCloseForm }) {
 
   const columns = [
     {
-      header: "Name.",
+      header: "S.No",
+      accessor: (item, index) => index + 1,
+      className: "font-medium text-gray-900 w-12  text-center",
+    },
+
+    {
+      header: "Name",
       accessor: (item) => item.name,
       cellClass: () => "font-medium text-gray-900",
+      className: "text-gray-800 uppercase w-[300px]",
     },
     {
-      header: "Alias Name",
-      accessor: (item) => item.aliasName,
+      header: "Address",
+      accessor: (item) => item.address,
+      cellClass: () => "font-medium text-gray-900",
+      className: "text-gray-800 uppercase w-[700px]",
     },
   ];
+
+  const handleChange = (type) => {
+    setSupplier(type == "supplier");
+    setClient(type == "client");
+  };
+
   return (
     <div onKeyDown={handleKeyDown}>
-      <>
-        <div className="w-full flex justify-between mb-2 items-center px-0.5 p-2">
-          <h1 className="text-2xl font-bold text-gray-800"> Party Master</h1>
-          <div className="flex items-center">
+      <div className="w-full bg-white  mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto mt-1">
+        <div className="w-full flex justify-between p-1  items-center px-0.5">
+          <h1 className="text-xl font-bold text-gray-800">Party Master</h1>
+          <div className="flex items-center gap-4 text-md">
             <button
               onClick={() => {
                 setForm(true);
                 onNew();
               }}
-              className="px-3 py-1 text-green-600 hover:bg-green-600 hover:text-white border border-green-600 text-xs rounded"
+              className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
             >
-              + Add Party
+              <Plus size={12} />
+              <span className=" ">Add New Customer/Supplier</span>
             </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setView("all")}
+                className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${
+                  view === "all"
+                    ? "bg-indigo-100 text-indigo-600"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                <Table size={16} />
+                All
+              </button>
+              <button
+                onClick={() => setView("Customer")}
+                className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${
+                  view === "Customer"
+                    ? "bg-indigo-100 text-indigo-600"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                <Table size={16} />
+                Customer
+              </button>
+              <button
+                onClick={() => setView("Supplier")}
+                className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${
+                  view === "Supplier"
+                    ? "bg-indigo-100 text-indigo-600"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                <LayoutGrid size={16} />
+                Supplier
+              </button>
+            </div>
           </div>
         </div>
-
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          {console.log(allData, "alll")}
-          <CommonTable
-            columns={columns}
-            data={allData?.data || []}
-            onDataClick={onDataClick}
-            itemsPerPage={10}
-            setReadOnly={setReadOnly}
-            handleDelete={deleteData}
-          />
-        </div>
-      </>
+      </div>
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3 w-">
+        <ReusableTable
+          columns={columns}
+          data={filterParty || []}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={deleteData}
+          itemsPerPage={10}
+        />
+      </div>
 
       {form === true && (
         <Modal
           isOpen={form}
           form={form}
-          widthClass={"w-[75%] h-[65vh] -mt-10"}
+          widthClass={"w-[90%] h-[95%]"}
           onClose={() => {
             setForm(false);
-            onCloseForm();
-            setErrors({});
-            setStep(1);
           }}
         >
-          <Modal
-            isOpen={itemsPopup}
+          {/* <Modal
+            isOpen={branchModelOpen}
+            form={form}
+            widthClass={` ${
+              branchForm ? "w-[60%] h-[80%]" : "w-[90%] h-[90%]"
+            } `}
+            setBranchModelOpen={setBranchModelOpen}
             onClose={() => {
-              setAccessoryGroup(accessoryGroupPrev);
-              setAccessoryItemList(structuredClone(backUpItemsList));
-              setItemsPopup(false);
+              setBranchModelOpen(false);
+              refetch();
             }}
-            widthClass={"w-[55%] h-[45%] "}
           >
-            <PartyOnItems
+            <AddBranch
+              singleData={singleData}
+              partyId={id}
+              branchEmail={branchEmail}
+              setBranchEmail={setBranchEmail}
+              setBranchAddress={setBranchAddress}
+              branchName={branchName}
+              setBranchName={setBranchName}
+              branchCode={branchCode}
+              setBranchCode={setBranchCode}
+              branchAddress={branchAddress}
+              branchContact={branchContact}
+              setBranchContact={setBranchContact}
+              branchContactPerson={branchContactPerson}
+              setBranchcontactPerson={setBranchcontactPerson}
+              branchWebsite={branchWebsite}
+              setBranchWebsite={setBranchWebsite}
+              openingHours={openingHours}
+              setopeningHours={setopeningHours}
+              onNew={onNew}
+              branchType={branchType}
+              handleFun={handleFun}
+              setPartyId={setId}
+              childRecord={childRecord}
+              saveData={saveData}
+              saveExitData={saveExitData}
+              setReadOnly={setReadOnly}
+              deleteData={deleteData}
               readOnly={readOnly}
-              setItemsPopup={setItemsPopup}
-              accessoryItemsMasterList={accessoryItemsMasterList}
-              accessoryItemList={accessoryItemList}
-              setAccessoryItemList={setAccessoryItemList}
+              onCloseForm={onCloseForm}
+              handleChange={handleChange}
+              contactDetails={contactDetails}
+              setContactDetails={setContactDetails}
+              shippingAddress={shippingAddress}
+              setForm={setForm}
+              onClose={() => {
+                setBranchModelOpen(false);
+              }}
+              branchForm={branchForm}
+              setBranchForm={setBranchForm}
+              removeItem={removeItem}
+              setBranchInfo={setBranchInfo}
+              branchInfo={branchInfo}
+              partyBranch={partyBranch}
+              setPartyBranch={setPartyBranch}
+              setBranchModelOpen={setBranchModelOpen}
+              name={name}
+              setBranchType={setBranchType}
+              handleInputbranch={handleInputbranch}
+              deleteBranch={deleteBranch}
+              cityList={cityList}
+              branchState={branchState}
+              refetch={refetch}
+              branchActive={branchActive}
             />
-          </Modal>
+          </Modal> */}
 
-          <div className="h-full flex flex-col bg-[#f1f1f0]">
-            {/* Header */}
-            <div className="border-b py-2 px-4 mx-3 my-3 flex justify-between items-center sticky top-0 z-10 bg-white">
+          {/* <Modal
+            isOpen={rawMaterial}
+            widthClass={`${"w-[50%] h-[70%]"}`}
+            setRawmeterial={setRawMaterial}
+            onClose={() => {
+              setRawMaterial(false);
+              setMaterialForm(false);
+            }}
+            allData={allData}
+          >
+            <RawMaterial
+              addData={addData}
+              updateData={updateData}
+              SaveBranch={SaveBranch}
+              material={material}
+              setMaterial={setMaterial}
+              setMaterialActive={setMaterialActive}
+              materialActive={materialActive}
+              allData={allData}
+              setMaterialForm={setMaterialForm}
+              materialForm={materialForm}
+              setMaterialId={setMaterialId}
+              materialId={materialId}
+            />
+          </Modal> */}
+          {/* <Modal
+            isOpen={isContactPerson}
+            widthClass={`${branchForm ? "w-[33%] h-[71%]" : "w-[60%] h-[68%]"}`}
+            setIsContactPerson={setIsContactPerson}
+            onClose={() => {
+              setIsContactPerson(false);
+              // setMaterialForm(false)
+            }}
+            allData={allData}
+          >
+            <ContactPersonDetails
+              partyData={singleData?.data}
+              partyId={id}
+              contactNumber={contactNumber}
+              setContactNumber={setContactNumber}
+              contactPersonName={contactPersonName}
+              setContactPersonName={setContactPersonName}
+              designation={designation}
+              setDesignation={setDesignation}
+              setDepartment={setDepartment}
+              department={department}
+              setIsContactPerson={setIsContactPerson}
+              setContactPersonEmail={setContactPersonEmail}
+              contactPersonEmail={contactPersonEmail}
+              branchForm={branchForm}
+              refetch={refetch}
+              syncFormWithDb={syncFormWithDb}
+              alterContactNumber={alterContactNumber}
+              setAlterContactNumber={setAlterContactNumber}
+              setBranchForm={setBranchForm}
+              onClose={() => {
+                setIsContactPerson(false);
+              }}
+            />
+          </Modal> */}
+          {/* <Modal
+            isOpen={formReport}
+            onClose={() => setFormReport(false)}
+            widthClass={"p-3 h-[70%] w-[70%]"}
+          >
+            <ArtDesignReport
+              // userRole={userRole}
+              setFormReport={setFormReport}
+              tableWidth="100%"
+              formReport={formReport}
+              setAttachments={setAttachments}
+              attachments={attachments}
+              searchValue={searchValue}
+              setSearchValue={setSearchValue}
+            />
+          </Modal> */}
+
+          <div className="h-full flex flex-col bg-[f1f1f0] ">
+            <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3 ">
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-gray-800">
+                <h2 className="text-md font-semibold text-gray-800">
                   {id
-                    ? readOnly
-                      ? "Party Master"
-                      : "Edit Party"
-                    : "Add New Party"}
+                    ? !readOnly
+                      ? "Edit Customer/Supplier"
+                      : "Customer/Supplier Master"
+                    : "Add New Customer/Supplier"}
                 </h2>
               </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setForm(false);
-                    setSearchValue("");
-                    setId(false);
-                  }}
-                  className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    deleteData();
-                    setId(id);
-                  }}
-                  className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
-                >
-                  Deleted
-                </button>
 
-                {!readOnly && (
+              <div className="flex gap-2">
+                <div className="  ">
                   <button
-                    type="button"
-                    onClick={saveData}
-                    className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-              border border-green-600 flex items-center gap-1 text-xs"
+                    onClick={() => {
+                      if (name) {
+                        setBranchModelOpen(true);
+                        setBranchForm(false);
+                      } else {
+                        Swal.fire({
+                          icon: "warning",
+                          title: `Enter ${
+                            isSupplier ? "Supplier Details" : "Customer Details"
+                          } `,
+                          showConfirmButton: false,
+                          timer: 2000,
+                        });
+                      }
+                    }}
+                    readOnly={readOnly}
+                    className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
                   >
-                    <Check size={14} />
-                    {id ? "Update" : "Save"}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Add Branch
                   </button>
-                )}
+                </div>
+                <div>
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForm(false);
+                        setSearchValue("");
+                        setId(false);
+                      }}
+                      className="px-2 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={saveData}
+                      className="px-2 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                  border border-green-600 flex items-center gap-1 text-xs"
+                    >
+                      <Check size={14} />
+                      {id ? "Update" : "Save"}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto p-4">
-              <div className="bg-white p-4 rounded-md border border-gray-200 mb-4">
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                  Party Type
-                </h3>
-                <div className={`space-y-2 ${readOnly ? "opacity-80" : ""}`}>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-6">
-                    <FancyCheckBox
-                      label="Is Supplier"
-                      value={isSupplier}
-                      onChange={setSupplier}
-                      readOnly={readOnly}
-                      className="hover:bg-gray-50 p-3 rounded-lg transition-colors"
-                    />
-                    <FancyCheckBox
-                      label="Is Client"
-                      value={isClient}
-                      onChange={setClient}
-                      readOnly={readOnly}
-                      className="hover:bg-gray-50 p-3 rounded-lg transition-colors"
-                    />
-                    {/* 
-                    {isSupplier && (
-                      <>
-                        <FancyCheckBox
-                          label="Grey Yarn"
-                          value={isGy}
-                          onChange={setIsGy}
-                          readOnly={readOnly}
-                          className="hover:bg-gray-100 p-3 rounded-lg"
-                        />
-                        <FancyCheckBox
-                          label="Dyed Yarn"
-                          value={isDy}
-                          onChange={setIsDy}
-                          readOnly={readOnly}
-                          className="hover:bg-gray-100 p-3 rounded-lg"
-                        />
-                        <FancyCheckBox
-                          label="Accessories"
-                          value={isAcc}
-                          onChange={setIsAcc}
-                          readOnly={readOnly}
-                          className="hover:bg-gray-100 p-3 rounded-lg"
-                        />
-                      </>
-                    )} */}
+            <div className="flex-1 overflow-auto p-3">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                <div className="lg:col-span-4 space-y-3 ">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-[330px]">
+                    <h3 className="font-medium text-gray-800 mb-2 text-sm">
+                      Basic Details
+                    </h3>
+                    <div className="grid grid-cols-2">
+                      <div className="flex flex-row items-center gap-2 mt-2 mb-2">
+                        <div className="flex items-center gap-2 ">
+                          <input
+                            type="radio"
+                            name="type"
+                            checked={isClient}
+                            onChange={() => handleChange("client")}
+                            readOnly={readOnly}
+                          />
+                          <label className="block text-xs font-bold text-gray-600 mt-1">
+                            Customer
+                          </label>
+                        </div>
+                        <div className="flex flex-row gap-2">
+                          <input
+                            type="radio"
+                            name="type"
+                            checked={isSupplier}
+                            onChange={() => handleChange("supplier")}
+                            readOnly={readOnly}
+                          />
+                          <label className="block text-xs font-bold text-gray-600 mt-1">
+                            Supplier
+                          </label>
+                        </div>
+                        <div className="col-span-4 flex flex-row">
+                          {/* {isSupplier && (
+                            <div className="w-48">
+                              <MultiSelectDropdown
+                                // name={"Material List"}
+                                options={multiSelectOption(
+                                  allData ? allData?.materialData : [],
+                                  "name",
+                                  "id"
+                                )}
+                                labelName="name"
+                                setSelected={setSelected}
+                                selected={selected}
+                              />
+                            </div>
+                          )} */}
 
-                    <div className="flex items-center gap-x-2">
-                      <ToggleButton
-                        name="Status"
-                        options={statusDropdown}
-                        value={active}
-                        setActive={setActive}
-                        required={true}
-                        readOnly={readOnly}
-                        className="bg-gray-100 p-1 rounded-lg"
-                        activeClass="bg-[#f1f1f0] shadow-sm text-blue-600"
-                        inactiveClass="text-gray-500"
-                      />
+                          {/* {isSupplier && (
+                            <div className="mt-3 px-3 relative inline-block">
+                              <button
+                                className="w-7 h-6 border border-green-500 rounded-md mt-2
+                hover:bg-green-500 text-green-600 hover:text-white
+                transition-colors flex items-center justify-center"
+                                onClick={() => setRawMaterial(true)}
+                                onMouseEnter={() =>
+                                  setTooltipVisibleForMaterial(true)
+                                }
+                                onMouseLeave={() =>
+                                  setTooltipVisibleForMaterial(false)
+                                }
+                              >
+                                <FaPlus className="text-sm w-3 h-4" />
+                              </button>
+
+                              {tooltipVisibleForMaterial && (
+                                <div className="absolute left-full top-0 ml-2 mt-1 w-56 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg z-10">
+                                  <div className="flex items-start">
+                                    <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
+                                    <span>Click to add a new Material</span>
+                                  </div>
+                                  <div className="absolute top-2 -left-1 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
+                                </div>
+                              )}
+                            </div>
+                          )} */}
+                        </div>
+                      </div>
+
+                      <div className="col-span-2">
+                        <TextArea
+                          name={isSupplier ? "Supplier Name" : "Customer Name"}
+                          type="text"
+                          value={name}
+                          inputClass="h-8"
+                          setValue={setName}
+                          required={true}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          onBlur={(e) => {
+                            if (aliasName) return;
+                            setAliasName(e.target.value);
+                          }}
+                          className="focus:ring-2 focus:ring-blue-100"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <TextArea
+                          name="Alias Name"
+                          type="text"
+                          inputClass="h-8"
+                          value={aliasName}
+                          setValue={setAliasName}
+                          required={true}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          className="focus:ring-2 focus:ring-blue-100"
+                        />
+                      </div>
+                      <div className="col-span-1">
+                        <TextInput
+                          name="Party Code"
+                          type="text"
+                          value={partyCode}
+                          setValue={setPartyCode}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          className="focus:ring-2 focus:ring-blue-100 w-10"
+                        />
+                      </div>
+                      <div className="mt-5 ml-3">
+                        <ToggleButton
+                          name="Status"
+                          options={statusDropdown}
+                          value={active}
+                          setActive={setActive}
+                          required={true}
+                          readOnly={readOnly}
+                          className="bg-gray-100 p-1 rounded-lg"
+                          activeClass="bg-[#f1f1f0] shadow-sm text-blue-600"
+                          inactiveClass="text-gray-500"
+                        />
+                      </div>
+                      <div className="mt-5 ml-3"></div>
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Party Details Section */}
-              <div className="bg-white p-4 rounded-md border border-gray-200 mb-4">
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                  Party Details
-                </h3>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-5">
-                  <TextInput
-                    name="Party Name"
-                    type="text"
-                    value={name}
-                    setValue={setName}
-                    required={true}
-                    readOnly={readOnly}
-                    disabled={childRecord.current > 0}
-                    onBlur={(e) => {
-                      if (aliasName) return;
-                      setAliasName(e.target.value);
-                    }}
-                    className="focus:ring-2 focus:ring-blue-100"
-                  />
-
-                  <TextInput
-                    name="Alias Name"
-                    type="text"
-                    value={aliasName}
-                    setValue={setAliasName}
-                    required={true}
-                    readOnly={readOnly}
-                    disabled={childRecord.current > 0}
-                    className="focus:ring-2 focus:ring-blue-100"
-                  />
-
-                  <TextInput
-                    name="Pan No"
-                    type="pan_no"
-                    value={panNo}
-                    setValue={setPanNo}
-                    readOnly={readOnly}
-                    disabled={childRecord.current > 0}
-                    className="focus:ring-2 focus:ring-blue-100"
-                  />
-
-                  <TextInput
-                    name="GST No"
-                    type="text"
-                    value={gstNo}
-                    setValue={setGstNo}
-                    readOnly={readOnly}
-                    className="focus:ring-2 focus:ring-blue-100"
-                  />
-
-                  <TextInput
-                    name="Pincode"
-                    type="number"
-                    value={pincode}
-                    setValue={setPincode}
-                    readOnly={readOnly}
-                    disabled={childRecord.current > 0}
-                    className="focus:ring-2 focus:ring-blue-100"
-                  />
-
-                  <TextInput
-                    name="CST No"
-                    type="text"
-                    value={cstNo}
-                    setValue={setCstNo}
-                    readOnly={readOnly}
-                    disabled={childRecord.current > 0}
-                    className="focus:ring-2 focus:ring-blue-100"
-                  />
-
-                  <TextInput
-                    name="Fax No"
-                    type="text"
-                    value={faxNo}
-                    setValue={setFaxNo}
-                    readOnly={readOnly}
-                    disabled={childRecord.current > 0}
-                    className="focus:ring-2 focus:ring-blue-100"
-                  />
-
-                  <DropdownInput
-                    name="Currency"
-                    options={dropDownListObject(
-                      id
-                        ? currencyList?.data ?? []
-                        : currencyList?.data?.filter((item) => item.active) ??
-                        [],
-                      "name",
-                      "id"
-                    )}
-                    value={currency}
-                    setValue={setCurrency}
-                    readOnly={readOnly}
-                    disabled={childRecord.current > 0}
-                    className="focus:ring-2 focus:ring-blue-100"
-                  />
-
-                  <DropdownInput
-                    name="City/State Name"
-                    options={dropDownListMergedObject(
-                      id
-                        ? cityList?.data
-                        : cityList?.data?.filter((item) => item.active),
-                      "name",
-                      "id"
-                    )}
-                    value={city}
-                    setValue={setCity}
-                    required={true}
-                    readOnly={readOnly}
-                    disabled={childRecord.current > 0}
-                    className="focus:ring-2 focus:ring-blue-100"
-                  />
-
-                  <TextInput
-                    name="PayTerm Days"
-                    type="name"
-                    value={payTermDay}
-                    setValue={setPayTermDay}
-                    readOnly={readOnly}
-                    disabled={childRecord.current > 0}
-                    className="focus:ring-2 focus:ring-blue-100"
-                  />
-
-                  <TextInput
-                    name="Mobile Number"
-                    type="text"
-                    value={mobileNumber}
-                    setValue={setMobileNumber}
-                    readOnly={readOnly}
-                    disabled={childRecord.current > 0}
-                    className="focus:ring-2 focus:ring-blue-100"
-                  />
-
-                  <TextAreaInput
-                    name="Address"
-                    value={address}
-                    setValue={setAddress}
-                    required={true}
-                  />
-
-                  <button
-                    onClick={() => {
-                      setBranch(true)
-                    }}
-                    // className="px-3 py-1 w-40 text-[12px] text-green-600 hover:bg-green-600 hover:text-white border border-green-600  rounded"
-                    className="w-20 h-5 mt-8 ml-5 text-green-600 hover:bg-green-600 hover:text-white border border-green-600 text-xs rounded"
-                  >
-                    + Add Branch
-                  </button>
-                  {branch && <GarmentBranchForm onClose={() => setBranch(false)} />}
+                <div className="lg:col-span-4 space-y-3 ">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-[330px]">
+                    <h3 className="font-medium text-gray-800 mb-2 text-sm">
+                      Address Details
+                    </h3>
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="col-span-2">
+                          <TextArea
+                            name="Address"
+                            inputClass="h-10"
+                            value={address}
+                            setValue={setAddress}
+                            required={true}
+                            readOnly={readOnly}
+                            d
+                            isabled={childRecord.current > 0}
+                          />
+                        </div>
+                        <TextInput
+                          name="Land Mark"
+                          type="text"
+                          value={landMark}
+                          setValue={setlandMark}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          className="focus:ring-2 focus:ring-blue-100 w-10"
+                        />
+                        <DropdownInput
+                          name="City/State Name"
+                          options={dropDownListMergedObject(
+                            id
+                              ? cityList?.data
+                              : cityList?.data?.filter((item) => item.active),
+                            "name",
+                            "id"
+                          )}
+                          country={country}
+                          masterName="CITY MASTER"
+                          lastTab={activeTab}
+                          value={city}
+                          setValue={setCity}
+                          required={true}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          className="focus:ring-2 focus:ring-blue-100"
+                        />
+                        <div className="col-span-2 flex flex-row gap-3">
+                          <div className="w-24">
+                            <TextInput
+                              name="Pincode"
+                              type="number"
+                              value={pincode}
+                              required={true}
+                              setValue={setPincode}
+                              readOnly={readOnly}
+                              disabled={childRecord.current > 0}
+                              className="focus:ring-2 focus:ring-blue-100 w-10"
+                            />
+                          </div>
+                          <div className="w-64">
+                            <TextInput
+                              name={"Email"}
+                              type="text"
+                              value={email}
+                              setValue={setEmail}
+                              readOnly={readOnly}
+                              disabled={childRecord.current > 0}
+                              className="focus:ring-2 focus:ring-blue-100 w-10"
+                            />
+                            <div></div>
+                          </div>
+                        </div>
+                        <div>
+                          <TextInput
+                            name={"Contact Number"}
+                            type="number"
+                            value={contact}
+                            setValue={setContact}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+                <div className="lg:col-span-4 space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200  h-[330px]">
+                    <h3 className="font-medium text-gray-800 mb-2 text-sm">
+                      Contact Details
+                    </h3>
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="col-span-2 flex flex-row gap-4 mt-2">
+                          <div className="w-96">
+                            <TextInput
+                              name="Contact Person Name"
+                              type="text"
+                              value={contactPersonName}
+                              setValue={setContactPersonName}
+                              readOnly={readOnly}
+                              disabled={childRecord.current > 0}
+                              className="focus:ring-2 focus:ring-blue-100 w-10"
+                            />
+                          </div>
+                          {/* <div className="relative inline-block">
+                            <button
+                              className="w-7 h-6 border border-green-500 rounded-md mt-6
+                                            hover:bg-green-500 text-green-600 hover:text-white
+                                            transition-colors flex items-center justify-center"
+                              disabled={readOnly}
+                              onClick={() => {
+                                // openAddModal();
+                                // setIsDropdownOpen(false);
+                                // setEditingItem("new");
+                                // setOpenModel(true);
+                                setBranchForm(false);
+                                setIsContactPerson(true);
+                              }}
+                              onMouseEnter={() => setTooltipVisible(true)}
+                              onMouseLeave={() => setTooltipVisible(false)}
+                              aria-label="Add supplier"
+                            >
+                              <FaPlus className="text-sm" />
+                            </button>
+
+                            {tooltipVisible && (
+                              <div className="absolute z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
+                                <div className="flex items-start">
+                                  <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
+                                  <span>Click to add a new Contact Person</span>
+                                </div>
+                                <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
+                              </div>
+                            )}
+                          </div> */}
+                        </div>
+                        <TextInput
+                          name="Designation"
+                          type="text"
+                          value={designation}
+                          setValue={setDesignation}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          className="focus:ring-2 focus:ring-blue-100 w-10"
+                        />
+                        <TextInput
+                          name="Department"
+                          type="text"
+                          value={department}
+                          setValue={setDepartment}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          className="focus:ring-2 focus:ring-blue-100 w-10"
+                        />
+                        <div className="col-span-2">
+                          <TextInput
+                            name="Email"
+                            type="text"
+                            value={contactPersonEmail}
+                            setValue={setContactPersonEmail}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                          />
+                        </div>
+                        <div className="col-span-1">
+                          <TextInput
+                            name="Contact Number"
+                            type="number"
+                            value={contactNumber}
+                            setValue={setContactNumber}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                          />
+                        </div>
+                        <div className="col-span-1">
+                          <TextInput
+                            name="Alternative Contact Number"
+                            type="number"
+                            value={alterContactNumber}
+                            setValue={setAlterContactNumber}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-4 space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-[240px]">
+                    <h3 className="font-medium text-gray-800 mb-2 text-sm">
+                      Business Details
+                    </h3>
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <DropdownInput
+                          name="PayTerm"
+                          options={dropDownListObject(
+                            id
+                              ? payTermList?.data
+                              : payTermList?.data?.filter(
+                                  (item) => item.active
+                                ),
+                            "name",
+                            "id"
+                          )}
+                          value={payTermDay}
+                          setValue={setPayTermDay}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          className="focus:ring-2 focus:ring-blue-100"
+                        />
+                        <TextInput
+                          name="Pan No"
+                          type="pan_no"
+                          value={panNo}
+                          setValue={setPanNo}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          className="focus:ring-2 focus:ring-blue-100"
+                        />
+                        <TextInput
+                          name="GST No"
+                          type="text"
+                          value={gstNo}
+                          setValue={setGstNo}
+                          readOnly={readOnly}
+                          className="focus:ring-2 focus:ring-blue-100"
+                        />
+                        <TextInput
+                          name="MSME CERTFICATE  No"
+                          type="text"
+                          value={msmeNo}
+                          setValue={setMsmeNo}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          className="focus:ring-2 focus:ring-blue-100"
+                        />
+                        <TextInput
+                          name="CIN No"
+                          type="text"
+                          value={cinNo}
+                          setValue={setCinNo}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          className="focus:ring-2 focus:ring-blue-100"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="lg:col-span-4 space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-[240px]">
+                    <h3 className="font-medium text-gray-800 mb-2 text-sm">
+                      Bank Details
+                    </h3>
+                    <div className="space-y-2">
+                      <TextInput
+                        name="Bank Name"
+                        type="text"
+                        value={bankname}
+                        setValue={setBankName}
+                        readOnly={readOnly}
+                        disabled={childRecord.current > 0}
+                        className="focus:ring-2 focus:ring-blue-100 w-10"
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <TextInput
+                          name="Branch Name"
+                          type="text"
+                          value={bankBranchName}
+                          setValue={setBankBranchName}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          className="focus:ring-2 focus:ring-blue-100 w-10"
+                        />
+                        <TextInput
+                          name="Account Number"
+                          type="text"
+                          value={accountNumber}
+                          setValue={setAccountNumber}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          className="focus:ring-2 focus:ring-blue-100 w-10"
+                        />
+                        <TextInput
+                          name="IFSC CODE"
+                          type="text"
+                          value={ifscCode}
+                          setValue={setIfscCode}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          className="focus:ring-2 focus:ring-blue-100 w-10"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* <div className="lg:col-span-4 space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200  h-[240px]">
+                    <h3 className="font-medium text-gray-800 mb-2 text-sm">
+                      Attchments
+                    </h3>
+                    <div className="space-y-2">
+                      <div className="flex pt-4">
+                        <button
+                          className="relative w-20 h-7 bg-gray-800    text-white rounded-md shadow-md hover:shadow-xl hover:scale-105 
+        transform transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center"
+                          onClick={() => setFormReport(true)}
+                        >
+                          <span className="absolute inset-0 bg-white opacity-10 rounded-md"></span>
+                          <Paperclip className="relative z-10 w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div> */}
               </div>
             </div>
           </div>

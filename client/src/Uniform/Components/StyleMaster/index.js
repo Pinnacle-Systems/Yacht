@@ -24,6 +24,7 @@ const StyleMaster = () => {
   const [searchValue, setSearchValue] = useState("");
   const [searchSku, setSearchSku] = useState("");
   const [searchName, setSearchName] = useState("");
+  const [alias, setAlias] = useState("");
 
   const [addData] = useAddStyleMasterMutation();
   const [updateData] = useUpdateStyleMasterMutation();
@@ -50,6 +51,7 @@ const StyleMaster = () => {
     sku,
     active,
     name,
+    alias,
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
     ),
@@ -91,7 +93,7 @@ const StyleMaster = () => {
     (data) => {
       // if (id) setReadOnly(true);
       setName(data?.name ? data.name : "");
-
+      setAlias(data?.alias ? data?.alias : "");
       setSku(data?.sku ? data?.sku : "");
       setActive(id ? (data?.active ? data.active : false) : true);
     },
@@ -147,7 +149,7 @@ const StyleMaster = () => {
     {
       header: "SKU",
       accessor: (item) => item.name,
-      className: "font-medium text-gray-900 text-center w-[150px]  py-1  px-2",
+      className: "font-medium text-gray-900  w-[150px]  py-1  px-2",
       search: "SKU",
       value: searchSku,
       setValue: setSearchSku,
@@ -161,7 +163,7 @@ const StyleMaster = () => {
       setValue: setSearchName,
     },
     {
-      header: "Active",
+      header: "Status",
       accessor: (item) => (item.active ? ACTIVE : INACTIVE),
       className: "font-medium text-gray-900 text-center w-[10px] py-1",
       search: "",
@@ -273,13 +275,13 @@ const StyleMaster = () => {
         <Modal
           isOpen={form}
           form={form}
-          widthClass={"w-[30%] max-w-6xl h-[50vh]"}
+          widthClass={"w-[40%] h-[60%]"}
           onClose={() => {
             setForm(false);
           }}
         >
           <div className="h-full flex flex-col bg-[f1f1f0]">
-            <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
+            <div className="border-b py-2 px-4 mx-3 mt-4  flex justify-between items-center sticky top-0 z-10 bg-white">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
                   {id
@@ -327,31 +329,39 @@ const StyleMaster = () => {
                   <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
                     <fieldset className=" rounded mt-2">
                       <div className="">
-                        <div className="flex justify-between">
-                          <div>
-                            <div className="mb-3">
-                              <TextInput
-                                name="SKU / Style code"
-                                type="text"
-                                value={name}
-                                setValue={setName}
-                                required={true}
-                                readOnly={readOnly}
-                              />
-                            </div>
-                            <div className="mb-3">
-                              <TextInput
-                                name="Alias Name"
-                                type="text"
-                                value={sku}
-                                setValue={setSku}
-                                required={true}
-                                readOnly={readOnly}
-                              />
-                            </div>
+                        <div className="flex flex-wrap gap-x-4">
+                          <div className="mb-3 w-48">
+                            <TextInput
+                              name="SKU / Style code"
+                              type="text"
+                              value={name}
+                              setValue={setName}
+                              required={true}
+                              readOnly={readOnly}
+                            />
+                          </div>
+                          <div className="mb-3 w-48">
+                            <TextInput
+                              name="Style Name"
+                              type="text"
+                              value={sku}
+                              setValue={setSku}
+                              required={true}
+                              readOnly={readOnly}
+                            />
+                          </div>
+                          <div className="mb-3 w-48">
+                            <TextInput
+                              name="Alias Name"
+                              type="text"
+                              value={alias}
+                              setValue={setAlias}
+                              required={false}
+                              readOnly={readOnly}
+                            />
                           </div>
                         </div>
-                        <div className="mb-5">
+                        <div className="mb-5 w-48">
                           <ToggleButton
                             name="Status"
                             options={statusDropdown}

@@ -1,0 +1,8 @@
+-- AlterTable
+ALTER TABLE `party` ADD COLUMN `accountNumber` VARCHAR(191) NULL,
+    ADD COLUMN `bankName` VARCHAR(191) NULL,
+    ADD COLUMN `branchName` VARCHAR(191) NULL,
+    ADD COLUMN `ifscCode` VARCHAR(191) NULL,
+    ADD COLUMN `isBuyer` BOOLEAN NULL DEFAULT false,
+    ADD COLUMN `msmeNo` VARCHAR(191) NULL,
+    ADD COLUMN `payTermDay` VARCHAR(191) NULL;

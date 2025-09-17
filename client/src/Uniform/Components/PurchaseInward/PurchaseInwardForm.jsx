@@ -364,7 +364,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                   // readOnly={id || readOnly}
                 />
               </div>
-              {!readOnly && poInwardOrDirectInward == "PurchaseInward" && (
+              {/* {!readOnly && poInwardOrDirectInward == "PurchaseInward" && (
                 <div className="mt-5">
                   <button
                     className="p-1.5 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
@@ -379,7 +379,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                     Select Items
                   </button>
                 </div>
-              )}
+              )}*/}
             </div>
           </div>
         </div>
@@ -404,31 +404,25 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
               <></>
             ))}
 
-          {/* {poInwardOrDirectInward == "PurchaseInward" &&
-            (transType.toLowerCase().includes("yarn") ? (
-              <YarnInwardPoItems
-                inwardItems={directInwardReturnItems}
-                setInwardItems={setDirectInwardReturnItems}
-                removeItem={removeItem}
+          {poInwardOrDirectInward == "PurchaseInward" &&
+            (transType.toLowerCase().includes("fabric") ? (
+              <FabricPoItems
+                id={id}
                 transType={transType}
-                purchaseInwardId={id}
                 params={params}
+                poItems={directInwardReturnItems}
+                setPoItems={setDirectInwardReturnItems}
                 readOnly={readOnly}
                 isSupplierOutside={isSupplierOutside()}
               />
-            ) : transType.toLowerCase().includes("fabric") ? (
-              // <FabricPoItems
-              // greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()}
-              // />
-              <></>
             ) : (
-              <AccessoryInwardItems
-                inwardItems={directInwardReturnItems}
-                setInwardItems={setDirectInwardReturnItems}
-                readOnly={readOnly}
-                //  id={id} transType={transType} taxTypeId={taxTemplateId} params={params}  isSupplierOutside={isSupplierOutside()}
-              />
-            ))} */}
+              //   <AccessoryPoItems
+              //     poItems={directInwardReturnItems}
+              //     setPoItems={setDirectInwardReturnItems}
+              //     //  id={id} transType={transType}  params={params}  readOnly={readOnly} isSupplierOutside={isSupplierOutside()}
+              //   />
+              <></>
+            ))}
         </fieldset>
 
         <div className="grid grid-cols-3 gap-3">

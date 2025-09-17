@@ -496,6 +496,13 @@ model Party {
   isClient                  Boolean?                    @default(false)
   isIgst                    Boolean?                    @default(false)
   isVendor                  Boolean?                    @default(false)
+  isBuyer                   Boolean?                    @default(false)
+  payTermDay                String?
+  msmeNo                    String?
+  bankName                  String?
+  branchName                String?
+  accountNumber             String?
+  ifscCode                  String?
   partyType                 String?
   mobileNumber              String?
   BillEntry                 BillEntry[]
@@ -1417,6 +1424,7 @@ model Style {
   id        Int      @id @default(autoincrement())
   name      String?
   sku       String?
+  alias     String?
   active    Boolean?
   Company   Company? @relation(fields: [companyId], references: [id])
   companyId Int?

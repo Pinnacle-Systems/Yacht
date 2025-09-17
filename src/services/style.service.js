@@ -61,16 +61,12 @@ export async function upload(req) {
 
 async function create(req) {
   String;
-  const {
-    name,
-    companyId,
-    active,
-    sku,
-  } = await req;
+  const { name, companyId, active, sku, alias } = await req;
   const data = await prisma.style.create({
     data: {
       name,
       sku,
+      alias,
       active: active !== undefined ? JSON.parse(active) : undefined,
       companyId: companyId ? parseInt(companyId) : null,
     },
@@ -80,12 +76,7 @@ async function create(req) {
 }
 
 async function update(id, body) {
-  const {
-    name,
-    companyId,
-    active,
-    sku,
-  } = await body;
+  const { name, companyId, active, sku, alias } = await body;
 
   const dataFound = await prisma.style.findUnique({
     where: { id: parseInt(id) },
@@ -98,6 +89,7 @@ async function update(id, body) {
     data: {
       name,
       sku,
+      alias,
       active: active !== undefined ? JSON.parse(active) : undefined,
       companyId: companyId ? parseInt(companyId) : null,
     },
