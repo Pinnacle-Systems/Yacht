@@ -54,6 +54,9 @@ import {
   companyPaycode,
   style,
   directInwardOrReturn,
+  location,
+  size,
+  measurement,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";
@@ -129,7 +132,7 @@ app.use("/purchaseInwardEntry", purchaseInwardEntry);
 app.use("/partyMasterNew", partyMasterNew);
 app.use("/sampleEntry", sampleEntry);
 app.use("/uploads", express.static("uploads"));
-
+app.use("/location", location);
 app.use("/sendMail", sendMail);
 app.use("/designation", designation);
 app.use("/shift", shiftMaster);
@@ -141,6 +144,8 @@ app.use("/payComponent", payComponents);
 app.use("/companyPayCode", companyPaycode);
 app.use("/style", style);
 app.use("/directInwardOrReturn", directInwardOrReturn);
+app.use("/size", size);
+app.use("/measurement", measurement);
 
 app.get("/retreiveFile/:fileName", (req, res) => {
   const { fileName } = req.params;

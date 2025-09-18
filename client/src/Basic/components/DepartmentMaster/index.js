@@ -38,7 +38,7 @@ export default function Form() {
   const [form, setForm] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
- const departmentNameref = useRef(null);
+  const departmentNameref = useRef(null);
   console.log(form, "form");
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -91,11 +91,11 @@ export default function Form() {
     }
     return false;
   };
-   useEffect(() => {
-     if (form && !readOnly && departmentNameref.current) {
-       departmentNameref.current.focus();
-     }
-   }, [form, readOnly]);
+  useEffect(() => {
+    if (form && !readOnly && departmentNameref.current) {
+      departmentNameref.current.focus();
+    }
+  }, [form, readOnly]);
   const handleSubmitCustom = async (callback, data, text) => {
     try {
       let returnData = await callback(data).unwrap();
@@ -329,11 +329,13 @@ export default function Form() {
                     <button
                       type="button"
                       onClick={() => {
-                        setReadOnly(false);
+                        setForm(false);
+                        setSearchValue("");
+                        setId(false);
                       }}
                       className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                     >
-                      Edit
+                      Cancel
                     </button>
                   )}
                 </div>
@@ -368,7 +370,7 @@ export default function Form() {
                             required={true}
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
-                             ref={departmentNameref}
+                            ref={departmentNameref}
                           />
                         </div>
                         <div className="mb-3 w-[20%] ml-6">
@@ -380,7 +382,6 @@ export default function Form() {
                             // required={true}
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
-                            
                           />
                         </div>
                       </div>

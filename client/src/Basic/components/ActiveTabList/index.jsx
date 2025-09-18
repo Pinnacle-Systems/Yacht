@@ -36,11 +36,8 @@ import {
   EmployeeSubCategory,
   PayComponents,
   CompanyPaycode,
-
-  // ShiftCommonTemplate,
+  Measurement,
 } from "../../components";
-
-// import { PatientVisitTransaction, DoctorConsultation } from "../../../pharma/components";
 
 import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
@@ -61,8 +58,6 @@ import Manufacture from "../../../Uniform/Components/styleesheet/Manufacture";
 import PurchaseOrders from "../../../Uniform/Components/styleesheet";
 import PoForm from "../../../Uniform/Components/PurchaseOrder";
 import PartyDetailModal from "../../../Uniform/Components/styleesheet/partyMaster";
-
-// import HRTemplateMaster from "../Shift Master";
 import ShiftCommonTemplateMaster from "../ShiftCommonTemplate";
 import ShiftMaster from "../ShiftMaster";
 import ShiftTemplateMaster from "../ShiftTemplateMaster";
@@ -126,6 +121,7 @@ const ActiveTabList = () => {
     "COMPANY PAYCODE": <CompanyPaycode />,
     "STYLE MASTER": <StyleMaster />,
     "PURCHASE INWARD": <PurchaseInward />,
+    "MEASUREMENT MASTER": <Measurement />,
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

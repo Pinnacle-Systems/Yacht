@@ -47,3 +47,6 @@ export { default as payComponents } from "./payComponents.route.js";
 export { default as companyPaycode } from "./companyPayCode.route.js";
 export { default as style } from "./style.routes.js";
 export { default as directInwardOrReturn } from "./directInwardOrReturn.route.js";
+export { default as location } from "./location.route.js";
+export { default as size } from "./size.route.js";
+export { default as measurement } from "./measurement.route.js";

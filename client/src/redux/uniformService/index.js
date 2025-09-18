@@ -1,3 +1,5 @@
+import MeasurementMasterApi from "./MeasurementMasterService";
+
 export { default as SampleApi } from "./SampleService";
 export { default as OrderApi } from "./OrderService";
 export { default as CuttingOrderApi } from "./CuttingOrderService";
@@ -33,3 +35,4 @@ export { default as RawMaterialOpeningStockApi } from "./RawMaterialOpeningStock
 export { default as CertificateMaster } from "./CertificateMasterService";
 export { default as purchaseInwardEntryApi } from "./PurchaseInwardEntry";
 export { default as styleMasterApi } from "./StyleMasterService";
+export { default as MeasurementMasterApi } from "./MeasurementMasterService";

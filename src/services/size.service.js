@@ -4,10 +4,8 @@ import { NoRecordFound } from "../configs/Responses.js";
 const prisma = new PrismaClient();
 
 async function get(req) {
-  console.log("data");
-
   const { companyId, active } = req.query;
-  const data = await prisma.payTerm.findMany({
+  let data = await prisma.size.findMany({
     where: {
       companyId: companyId ? parseInt(companyId) : undefined,
       active: active ? Boolean(active) : undefined,
@@ -18,19 +16,19 @@ async function get(req) {
 
 async function getOne(id) {
   const childRecord = 0;
-  const data = await prisma.payTerm.findUnique({
+  const data = await prisma.size.findUnique({
     where: {
       id: parseInt(id),
     },
   });
-  if (!data) return NoRecordFound("payTerm");
+  if (!data) return NoRecordFound("size");
   return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
 async function getSearch(req) {
   const { searchKey } = req.params;
   const { companyId, active } = req.query;
-  const data = await prisma.payTerm.findMany({
+  const data = await prisma.size.findMany({
     where: {
       companyId: companyId ? parseInt(companyId) : undefined,
       active: active ? Boolean(active) : undefined,
@@ -47,45 +45,39 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-  const { name, days, companyId, active, aliasName } = await body;
-  const data = await prisma.payTerm.create({
+  const { name, companyId, active } = await body;
+  const data = await prisma.size.create({
     data: {
       name,
-      days: days ? parseInt(days) : undefined,
       companyId: parseInt(companyId),
       active,
-      aliasName,
     },
   });
   return { statusCode: 0, data };
 }
 
 async function update(id, body) {
-  const { name, days, companyId, active, aliasName } = await body;
-  console.log(body,"body")
-  const dataFound = await prisma.payTerm.findUnique({
+  const { name, active } = await body;
+  const dataFound = await prisma.size.findUnique({
     where: {
       id: parseInt(id),
     },
   });
-  if (!dataFound) return NoRecordFound("payTerm");
-  const data = await prisma.payTerm.update({
+  if (!dataFound) return NoRecordFound("size");
+  const data = await prisma.size.update({
     where: {
       id: parseInt(id),
     },
     data: {
       name,
-      days: days ? parseInt(days) : undefined,
-      companyId: companyId ?  parseInt(companyId) : undefined,
       active,
-      aliasName: aliasName ? aliasName : undefined,
     },
   });
   return { statusCode: 0, data };
 }
 
 async function remove(id) {
-  const data = await prisma.payTerm.delete({
+  const data = await prisma.size.delete({
     where: {
       id: parseInt(id),
     },

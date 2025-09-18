@@ -18,7 +18,6 @@ import {
 import { Check, LayoutGrid, Paperclip, Plus, Table } from "lucide-react";
 import { statusDropdown } from "../../../Utils/DropdownData";
 import {
-  Modal,
   ToggleButton,
   DropdownInput,
   TextInput,
@@ -29,6 +28,7 @@ import { useGetProcessMasterQuery } from "../../../redux/uniformService/ProcessM
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterServices";
+import Modal from "../../../UiComponents/Modal";
 
 const MODEL = "Party Master";
 
@@ -532,7 +532,7 @@ export default function Form({ partyId, onCloseForm }) {
                 setForm(true);
                 onNew();
               }}
-              className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+              className="bg-white border text-xs border-green-600 text-green-600 hover:bg-green-700 hover:text-white px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
             >
               <Plus size={12} />
               <span className=" ">Add New Customer/Supplier</span>
@@ -542,7 +542,7 @@ export default function Form({ partyId, onCloseForm }) {
                 onClick={() => setView("all")}
                 className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${
                   view === "all"
-                    ? "bg-indigo-100 text-indigo-600"
+                    ? "bg-green-100 text-green-600"
                     : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
@@ -553,7 +553,7 @@ export default function Form({ partyId, onCloseForm }) {
                 onClick={() => setView("Customer")}
                 className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${
                   view === "Customer"
-                    ? "bg-indigo-100 text-indigo-600"
+                    ? "bg-green-100 text-green-600"
                     : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
@@ -564,7 +564,7 @@ export default function Form({ partyId, onCloseForm }) {
                 onClick={() => setView("Supplier")}
                 className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${
                   view === "Supplier"
-                    ? "bg-indigo-100 text-indigo-600"
+                    ? "bg-green-100 text-green-600"
                     : "text-gray-600 hover:bg-gray-100"
                 }`}
               >

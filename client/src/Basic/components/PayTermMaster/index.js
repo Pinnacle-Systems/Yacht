@@ -97,7 +97,7 @@ export default function Form() {
     try {
       let returnData;
       if (text === "Updated") {
-        returnData = await callback({ id, body: data }).unwrap();
+        returnData = await callback(data).unwrap();
       } else {
         returnData = await callback(data).unwrap();
       }
@@ -197,11 +197,6 @@ export default function Form() {
     </div>
   );
 
-  useEffect(() => {
-    if (id) return;
-    setAliasName(` ${days} ${" "} ${name} `);
-  }, [name, days]);
-
   const columns = [
     {
       header: "S.No",
@@ -296,13 +291,11 @@ export default function Form() {
                     <button
                       type="button"
                       onClick={() => {
-                        setForm(false);
-                        setSearchValue("");
-                        setId(false);
+                        setReadOnly(false);
                       }}
                       className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                     >
-                      Cancel
+                      Edit
                     </button>
                   )}
                 </div>

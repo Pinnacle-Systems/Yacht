@@ -66,6 +66,8 @@ model Company {
   PayComponents       PayComponents[]
   CompanyPaycode      CompanyPaycode[]
   Style               Style[]
+  Size                Size[]
+  Measurement         Measurement[]
 }
 
 model Subscription {
@@ -112,6 +114,7 @@ model Branch {
   EmployeSubCategory  EmployeSubCategory[]
   PayComponents       PayComponents[]
   CompanyPaycode      CompanyPaycode[]
+  Location            Location[]
 }
 
 model UserOnBranch {
@@ -581,6 +584,7 @@ model PayTerm {
   Company        Company          @relation(fields: [companyId], references: [id])
   companyId      Int
   active         Boolean          @default(true)
+  aliasName      String?
   BillEntry      BillEntry[]
   partyMasterNew PartyMasterNew[]
 }
@@ -616,17 +620,18 @@ model TaxTemplateDetails {
 }
 
 model Location {
-  id          Int     @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   storeName   String
-  isFabric    Boolean @default(true)
-  isYarn      Boolean @default(true)
-  isAccessory Boolean @default(true)
-  isGarments  Boolean @default(true)
-  active      Boolean @default(true)
-  Company     Company @relation(fields: [companyId], references: [id])
+  isFabric    Boolean     @default(true)
+  isYarn      Boolean     @default(true)
+  isAccessory Boolean     @default(true)
+  isGarments  Boolean     @default(true)
+  active      Boolean     @default(true)
+  Company     Company     @relation(fields: [companyId], references: [id])
   companyId   Int
-
-  BillEntry BillEntry[]
+  Location    Branch      @relation(fields: [locationId], references: [id])
+  BillEntry   BillEntry[]
+  locationId  Int
 }
 
 model TermsAndConditions {
@@ -1038,12 +1043,12 @@ model Fabric {
 model Color {
   id                         Int                          @id @default(autoincrement())
   name                       String
-  pantone                    String
+  pantone                    String?
   Company                    Company                      @relation(fields: [companyId], references: [id])
   companyId                  Int
   active                     Boolean                      @default(true)
-  isGrey                     Boolean                      @default(false)
-  number                     Int
+  isGrey                     Boolean?                     @default(false)
+  number                     Int?
   subGrid                    SubGrid[]
   posubGrid                  poSubGrid[]
   purchaseInwardEntrySubGrid purchaseInwardEntrySubGrid[]
@@ -1428,4 +1433,21 @@ model Style {
   active    Boolean?
   Company   Company? @relation(fields: [companyId], references: [id])
   companyId Int?
+}
+
+model Size {
+  id          Int      @id @default(autoincrement())
+  name        String?
+  isAccessory Boolean? @default(false)
+  Company     Company? @relation(fields: [companyId], references: [id])
+  companyId   Int?
+  active      Boolean? @default(true)
+}
+
+model Measurement {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+  active    Boolean? @default(true)
 }
