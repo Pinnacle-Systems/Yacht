@@ -50,3 +50,5 @@ export { default as directInwardOrReturn } from "./directInwardOrReturn.route.js
 export { default as location } from "./location.route.js";
 export { default as size } from "./size.route.js";
 export { default as measurement } from "./measurement.route.js";
+export { default as fabric } from "./fabric.route.js";
+export { default as accessoryGroup } from "./accessoryGroup.route.js";

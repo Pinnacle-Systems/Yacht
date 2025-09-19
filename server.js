@@ -57,6 +57,8 @@ import {
   location,
   size,
   measurement,
+  fabric,
+  accessoryGroup,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";
@@ -146,7 +148,8 @@ app.use("/style", style);
 app.use("/directInwardOrReturn", directInwardOrReturn);
 app.use("/size", size);
 app.use("/measurement", measurement);
-
+app.use("/fabric", fabric);
+app.use("/accessoryGroup", accessoryGroup);
 app.get("/retreiveFile/:fileName", (req, res) => {
   const { fileName } = req.params;
   res.sendFile(__dirname + "/uploads/" + fileName);

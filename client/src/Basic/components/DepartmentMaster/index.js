@@ -282,19 +282,6 @@ export default function Form() {
           </button>
         </div>
       </div>
-      {/* <div className="w-full flex items-start">
-        <Mastertable
-          header={"Department list"}
-          searchValue={searchValue}
-          setSearchValue={setSearchValue}
-          onDataClick={onDataClick}
-          // setOpenTable={setOpenTable}
-          tableHeaders={tableHeaders}
-          tableDataNames={tableDataNames}
-          data={allData?.data}
-          loading={isLoading || isFetching}
-        />
-      </div> */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
         <ReusableTable
           columns={columns}
@@ -329,13 +316,11 @@ export default function Form() {
                     <button
                       type="button"
                       onClick={() => {
-                        setForm(false);
-                        setSearchValue("");
-                        setId(false);
+                        setReadOnly(false);
                       }}
                       className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                     >
-                      Cancel
+                      Edit
                     </button>
                   )}
                 </div>

@@ -49,3 +49,4 @@ export { default as TagTypeMater } from "./TagTypeMaster";
 export { default as NewOrder } from "./NewOrder";
 export { default as LabDip } from "./LabDip";
 export { default as NewPurchaseInward } from "./NewPurchaseInward";
+export { default as OpeningStockForm } from "./OpeningStock";

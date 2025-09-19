@@ -267,7 +267,7 @@ export default function Form() {
                 <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
                   {id
                     ? !readOnly
-                      ? "Edit Measurement Master"
+                      ? "Edit Measurement"
                       : "Measurement Master"
                     : "Add New Measurement"}
                 </h2>

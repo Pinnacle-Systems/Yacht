@@ -68,6 +68,8 @@ model Company {
   Style               Style[]
   Size                Size[]
   Measurement         Measurement[]
+  Fabric              Fabric[]
+  AccessoryGroup      AccessoryGroup[]
 }
 
 model Subscription {
@@ -1035,9 +1037,13 @@ model LineMaster {
 }
 
 model Fabric {
-  id     Int     @id @default(autoincrement())
-  name   String?
-  number Int?
+  id        Int      @id @default(autoincrement())
+  name      String?
+  number    Int?
+  active    Boolean? @default(true)
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+  aliasName String?
 }
 
 model Color {
@@ -1450,4 +1456,12 @@ model Measurement {
   Company   Company? @relation(fields: [companyId], references: [id])
   companyId Int?
   active    Boolean? @default(true)
+}
+
+model AccessoryGroup {
+  id        Int      @id @default(autoincrement())
+  name      String
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+  active    Boolean  @default(true)
 }

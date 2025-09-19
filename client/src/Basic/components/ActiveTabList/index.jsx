@@ -37,16 +37,22 @@ import {
   PayComponents,
   CompanyPaycode,
   Measurement,
+  FabricMaster,
 } from "../../components";
 
 import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
 import {
+  AccessoryGroupMaster,
+  AccessoryItemMaster,
+  AccessoryMaster,
   LabDip,
   MaxcontrolPanel,
   MaxHomePage,
   NewPurchaseInward,
+  OpeningStock,
+  OpeningStockForm,
   Order,
   PurchaseInward,
   PurchaseOrder,
@@ -122,6 +128,11 @@ const ActiveTabList = () => {
     "STYLE MASTER": <StyleMaster />,
     "PURCHASE INWARD": <PurchaseInward />,
     "MEASUREMENT MASTER": <Measurement />,
+    "ACCESSORY GROUP MASTER": <AccessoryGroupMaster />,
+    "ACCESSORY ITEM MASTER": <AccessoryItemMaster />,
+    "ACCESSORY MASTER": <AccessoryMaster />,
+    "FABRIC MASTER": <FabricMaster />,
+    "OPENING STOCK": <OpeningStockForm />,
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

@@ -188,7 +188,7 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
                                     <div className={`w-full text-[11px] text-left  items-center  rounded cursor-default`} >
                                         {search.length > 0 ? "" :
                                             <div className="text-[14px] font-semibold ml-2.5 text-gray-800 mt-2">
-                                                {(group?.name + " MASTER").toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase())}
+                                                {(group?.name + " MODULE").replace(/\b[a-z]/g, char => char.toUpperCase())}
                                             </div>}
 
                                         <ul className=" grid grid-cols-4 gap-2 pt-1">

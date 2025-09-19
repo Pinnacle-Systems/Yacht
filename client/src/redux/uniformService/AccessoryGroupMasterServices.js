@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { ACCESSORY_GROUP_API} from "../../Api";
+import { ACCESSORY_GROUP_API } from "../../Api";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -11,15 +11,15 @@ const AccessoryGroupMasterApi = createApi({
   tagTypes: ["AccessoryGroupMaster"],
   endpoints: (builder) => ({
     getAccessoryGroupMaster: builder.query({
-      query: ({params, searchParams}) => {
-        if(searchParams){
+      query: ({ params, searchParams }) => {
+        if (searchParams) {
           return {
-            url: ACCESSORY_GROUP_API +"/search/"+searchParams,
+            url: ACCESSORY_GROUP_API + "/search/" + searchParams,
             method: "GET",
             headers: {
               "Content-type": "application/json; charset=UTF-8",
             },
-            params
+            params,
           };
         }
         return {
@@ -28,7 +28,7 @@ const AccessoryGroupMasterApi = createApi({
           headers: {
             "Content-type": "application/json; charset=UTF-8",
           },
-          params
+          params,
         };
       },
       providesTags: ["AccessoryGroupMaster"],
