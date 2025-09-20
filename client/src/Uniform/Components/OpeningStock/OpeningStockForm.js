@@ -2,37 +2,31 @@ import { useState } from "react";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../../../Utils/CommonInput";
 import { DropdownInput } from "../../../Inputs";
-import { materialType } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { getCommonParams } from "../../../Utils/helper";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
-import {
-  useAddRawMaterialOpeningStockMutation,
-  useUpdateRawMaterialOpeningStockMutation,
-} from "../../../redux/uniformService/RawMaterialOpeningStockServices";
-import { useDeleteDirectInwardOrReturnMutation } from "../../../redux/uniformService/DirectInwardOrReturnServices";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import Swal from "sweetalert2";
 import { HiOutlineRefresh, HiX } from "react-icons/hi";
 import ReadyGoods from "./ReadyGoods.js";
+import {
+  useAddOpeningStockMutation,
+  useUpdateOpeningStockMutation,
+} from "../../../redux/uniformService/OpeningStockService.js";
 
 export default function OpeningStockForm({ onClose, id, setId }) {
   const [docId, setDocId] = useState("");
-  const [date, setDate] = useState("");
+  const [docDate, setDocDate] = useState("");
   const [readOnly, setReadOnly] = useState("");
-  const [rawMaterialType, setRawMaterialType] = useState("GreyYarn");
-  const [dcNo, setDcNo] = useState("");
-  const [dcDate, setDcDate] = useState("");
   const [locationId, setLocationId] = useState("");
   const [searchValue, setSearchValue] = useState("");
   const [term, setTerm] = useState("");
   const [notes, setNotes] = useState("");
-  const [orderBy, setOrderBy] = useState("");
   const [storeId, setStoreId] = useState("");
-  const [goodsItems, setGoodsItems] = useState([]);
+  const [openingStockItems, setOpeningStockItems] = useState([]);
 
-  const { branchId, companyId, userId, finYearId } = getCommonParams();
+  const { companyId, userId, finYearId, branchId } = getCommonParams();
 
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
 
@@ -41,9 +35,8 @@ export default function OpeningStockForm({ onClose, id, setId }) {
     searchParams: searchValue,
   });
 
-  const [addData] = useAddRawMaterialOpeningStockMutation();
-  const [updateData] = useUpdateRawMaterialOpeningStockMutation();
-  const [removeData] = useDeleteDirectInwardOrReturnMutation();
+  const [addData] = useAddOpeningStockMutation();
+  const [updateData] = useUpdateOpeningStockMutation();
 
   const storeOptions = locationData
     ? locationData.data.filter(
@@ -101,15 +94,16 @@ export default function OpeningStockForm({ onClose, id, setId }) {
   };
 
   const data = {
-    docId,
-    rawMaterialType,
-    dcDate,
-    branchId,
     id,
-    userId,
+    docDate,
+    branchId,
     storeId,
-    dcNo,
+    openingStockItems,
+    userId,
     finYearId,
+    locationId,
+    term,
+    notes,
   };
 
   return (
@@ -134,7 +128,7 @@ export default function OpeningStockForm({ onClose, id, setId }) {
               <ReusableInput label="Doc.Id" readOnly value={docId} />
               <ReusableInput
                 label="Doc Date"
-                value={date}
+                value={docDate}
                 type={"date"}
                 required={true}
                 readOnly={true}
@@ -144,16 +138,10 @@ export default function OpeningStockForm({ onClose, id, setId }) {
           </div>
 
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">Inward Details</h2>
+            <h2 className="font-medium text-slate-700 mb-2">
+              Location Details
+            </h2>
             <div className="grid grid-cols-2 gap-1">
-              <DropdownInput
-                name="Inward Type"
-                options={materialType}
-                value={rawMaterialType}
-                setValue={setRawMaterialType}
-                required={true}
-                readOnly={readOnly}
-              />
               <DropdownInput
                 name="Location"
                 options={
@@ -187,38 +175,21 @@ export default function OpeningStockForm({ onClose, id, setId }) {
                 value={storeId}
                 setValue={setStoreId}
                 required={true}
-                // readOnly={id || readOnly}
+                readOnly={readOnly}
               />
-              {/* {!readOnly && poInwardOrDirectInward == "PurchaseInward" && (
-                <div className="">
-                  <button
-                    className="p-1.5 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
-                    onClick={() => {
-                      if (!supplierId) {
-                        toast.info("Please Select Suppplier", {
-                          position: "top-center",
-                        });
-                        return;
-                      }
-                      setInwardItemSelection(true);
-                    }}
-                  >
-                    Select Items
-                  </button>
-                </div>
-              )} */}
             </div>
           </div>
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">
-              {/* Inward Details */}
-            </h2>
+            <h2 className="font-medium text-slate-700 mb-2"></h2>
 
             <div className="grid grid-cols-2 gap-1"></div>
           </div>
         </div>
         <fieldset>
-          <ReadyGoods goodsItems={goodsItems} setGoodsItems={setGoodsItems} />
+          <ReadyGoods
+            openingStockItems={openingStockItems}
+            setOpeningStockItems={setOpeningStockItems}
+          />
         </fieldset>
 
         <div className="grid grid-cols-3 gap-3">
@@ -232,7 +203,7 @@ export default function OpeningStockForm({ onClose, id, setId }) {
               onChange={(e) => {
                 setTerm(e.target.value);
               }}
-              className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+              className="w-full h-16 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
               placeholder="Additional notes..."
             />
           </div>
@@ -245,35 +216,21 @@ export default function OpeningStockForm({ onClose, id, setId }) {
               onChange={(e) => {
                 setNotes(e.target.value);
               }}
-              className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+              className="w-full h-16 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
               placeholder="Additional notes..."
             />
           </div>
 
-          {/* Pricing Summary (Grand Total) Section */}
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
             <h2 className="font-semibold text-slate-800 mb-2 text-base">
               Qty Summary
             </h2>
-
-            <div className="space-y-1.5">
-              <div className="flex justify-between py-1 text-sm">
+            <div className="">
+              <div className="flex justify-between py-auto text-sm">
                 <span className="text-slate-600">Total Qty</span>
                 <span className="font-medium">
                   {/* {parseInt(getTotalQty())}  */} No's
                 </span>
-              </div>
-
-              <div className="flex justify-between py-1 text-sm">
-                <span className="text-slate-600">Order By</span>
-                <input
-                  type="text"
-                  className="w-60 pl-2.5 pr-8 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
-                  placeholder="Order By"
-                  readOnly
-                  value={orderBy}
-                  onChange={(e) => setOrderBy(e.target.value)}
-                />
               </div>
             </div>
           </div>

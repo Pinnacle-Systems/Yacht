@@ -59,6 +59,7 @@ import {
   measurement,
   fabric,
   accessoryGroup,
+  openingStock,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";
@@ -154,6 +155,7 @@ app.get("/retreiveFile/:fileName", (req, res) => {
   const { fileName } = req.params;
   res.sendFile(__dirname + "/uploads/" + fileName);
 });
+app.use("/openingStock", openingStock);
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {

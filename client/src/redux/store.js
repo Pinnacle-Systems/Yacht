@@ -80,7 +80,6 @@ import {
   ProductionReceiptApi,
   DispatchedApi,
   GeneralPurchaseApi,
-  RawMaterialOpeningStockApi,
   purchaseInwardEntryApi,
   MeasurementMasterApi,
 } from "./uniformService";
@@ -180,7 +179,6 @@ const commonReducers = {
   productionDelivery: ProductionDeliveryApi.reducer,
   dispatched: DispatchedApi.reducer,
   generalPurchase: GeneralPurchaseApi.reducer,
-  RawMaterialOpeningStock: RawMaterialOpeningStockApi.reducer,
   currencyMaster: CurrencyMasterApi.reducer,
   SizeMasterTemplate: sizeTemplateApi.reducer,
   contentMaster: ContentMasterApi.reducer,
@@ -279,7 +277,6 @@ const commonMiddleware = [
   ProductionReceiptApi.middleware,
   DispatchedApi.middleware,
   GeneralPurchaseApi.middleware,
-  RawMaterialOpeningStockApi.middleware,
   CurrencyMasterApi.middleware,
   sizeTemplateApi.middleware,
   ContentMasterApi.middleware,

@@ -29,7 +29,7 @@ export { default as email } from "./email.route.js";
 export { default as orderImport } from "./orderImport.route.js";
 export { default as controlPanel } from "./controlPanel.js";
 export { default as TagType } from "./tagType.rote.js";
-
+export { default as openingStock } from "./openingStock.route.js";
 export { default as color } from "./color.route.js";
 export { default as payTerm } from "./payTerm.route.js";
 export { default as currency } from "./currency.route.js";
