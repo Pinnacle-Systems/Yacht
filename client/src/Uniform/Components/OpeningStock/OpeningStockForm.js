@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../../../Utils/CommonInput";
 import { DropdownInput } from "../../../Inputs";
@@ -12,13 +12,22 @@ import { HiOutlineRefresh, HiX } from "react-icons/hi";
 import ReadyGoods from "./ReadyGoods.js";
 import {
   useAddOpeningStockMutation,
+  useGetOpeningStockByIdQuery,
+  useGetOpeningStockQuery,
   useUpdateOpeningStockMutation,
 } from "../../../redux/uniformService/OpeningStockService.js";
+import moment from "moment";
 
-export default function OpeningStockForm({ onClose, id, setId }) {
+export default function OpeningStockForm({
+  onClose,
+  id,
+  setId,
+  readOnly,
+  setReadOnly,
+  setShowForm,
+}) {
   const [docId, setDocId] = useState("");
   const [docDate, setDocDate] = useState("");
-  const [readOnly, setReadOnly] = useState("");
   const [locationId, setLocationId] = useState("");
   const [searchValue, setSearchValue] = useState("");
   const [term, setTerm] = useState("");
@@ -34,6 +43,63 @@ export default function OpeningStockForm({ onClose, id, setId }) {
     params: { branchId },
     searchParams: searchValue,
   });
+  const {
+    data: allData,
+    isLoading,
+    isFetching,
+  } = useGetOpeningStockQuery({
+    params: { branchId, finYearId },
+    searchParams: searchValue,
+  });
+
+  const getNextDocId = useCallback(() => {
+    if (id || isLoading || isFetching) return;
+    if (allData?.nextDocId) {
+      setDocId(allData.nextDocId);
+    }
+  }, [allData, isLoading, isFetching, id]);
+
+  useEffect(getNextDocId, [getNextDocId]);
+  const {
+    data: singleData,
+    isFetching: isSingleFetching,
+    isLoading: isSingleLoading,
+  } = useGetOpeningStockByIdQuery(id, { skip: !id });
+
+  const syncFormWithDb = useCallback(
+    (data) => {
+      const today = new Date();
+      if (id) {
+        setReadOnly(true);
+      } else {
+        setReadOnly(false);
+      }
+      setDocDate(
+        data?.docDate
+          ? moment.utc(data.docDate).format("YYYY-MM-DD")
+          : moment.utc(today).format("YYYY-MM-DD")
+      );
+      setOpeningStockItems(
+        data?.OpeningStockItems ? data.OpeningStockItems : []
+      );
+      if (data?.docId) {
+        setDocId(data?.docId);
+      }
+      setLocationId(data?.branchId ? data?.branchId : "");
+      setStoreId(data?.storeId ? data.storeId : "");
+      setNotes(data?.notes ? data?.notes : "");
+      setTerm(data?.term ? data?.term : "");
+    },
+    [id]
+  );
+
+  useEffect(() => {
+    if (id) {
+      syncFormWithDb(singleData?.data);
+    } else {
+      syncFormWithDb(undefined);
+    }
+  }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
   const [addData] = useAddOpeningStockMutation();
   const [updateData] = useUpdateOpeningStockMutation();
@@ -48,11 +114,12 @@ export default function OpeningStockForm({ onClose, id, setId }) {
     try {
       let returnData;
       if (text === "Updated") {
-        returnData = await callback({ id, body: data }).unwrap();
+        returnData = await callback(data).unwrap();
       } else {
         returnData = await callback(data).unwrap();
       }
       setId(returnData.data.id);
+      setShowForm(false);
       Swal.fire({
         title: text + "  " + "Successfully",
         icon: "success",

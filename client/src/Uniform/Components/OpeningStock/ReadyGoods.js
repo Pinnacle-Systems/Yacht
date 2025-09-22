@@ -103,7 +103,10 @@ export default function ReadyGoods({
             <tbody>
               {(openingStockItems ? openingStockItems : [])?.map(
                 (row, index) => (
-                  <tr className="border border-blue-gray-200 cursor-pointer ">
+                  <tr
+                    className="border border-blue-gray-200 cursor-pointer "
+                    key={index}
+                  >
                     <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
                       {index + 1}
                     </td>

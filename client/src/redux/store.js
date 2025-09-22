@@ -101,6 +101,8 @@ import CertificateMasterApi from "./uniformService/CertificateMasterService";
 import UnitOfMeasurementMasterApi from "./uniformService/UnitOfMeasurementServices";
 import partyMasterNewApi from "./services/PartyMasterNewService";
 import PayFrequencyMasterApi from "./services/PayFrequencyService";
+import { OpeningStock } from "../Uniform/Components";
+import OpeningStockApi from "./uniformService/OpeningStockService";
 
 const commonReducers = {
   openTabs,
@@ -200,6 +202,7 @@ const commonReducers = {
   [employeeSubCategoryApi.reducerPath]: employeeSubCategoryApi.reducer,
   [payComponentApi.reducerPath]: payComponentApi.reducer,
   [companyPayCodeApi.reducerPath]: companyPayCodeApi.reducer,
+  OpeningStock: OpeningStockApi.reducer,
 };
 const commonMiddleware = [
   countryMasterApi.middleware,
@@ -297,6 +300,7 @@ const commonMiddleware = [
   payFrequencyApi.middleware,
   payComponentApi.middleware,
   companyPayCodeApi.middleware,
+  OpeningStockApi.middleware,
 ];
 
 const store = configureStore({

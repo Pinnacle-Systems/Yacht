@@ -7,7 +7,7 @@ import {
   create as _create,
   update as _update,
   remove as _remove,
-} from "../services/openingStock.Service.js";
+} from "../services/openingStock.service.js";
 
 async function get(req, res, next) {
   try {

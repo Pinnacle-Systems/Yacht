@@ -1525,7 +1525,7 @@ model AccessoryItem {
 
 model Stock {
   id                  Int                @id @default(autoincrement())
-  docId               String
+  docId               String?
   docDate             DateTime?
   inOrOut             String?
   Fabric              Fabric?            @relation(fields: [fabricId], references: [id])
@@ -1568,6 +1568,7 @@ model Stock {
 model OpeningStock {
   id                Int                 @id @default(autoincrement())
   docId             String
+  docDate           DateTime?
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   createdBy         User?               @relation("createdBy", fields: [createdById], references: [id])
@@ -1585,7 +1586,7 @@ model OpeningStock {
 
 model OpeningStockItems {
   id             Int          @id @default(autoincrement())
-  OpeningStock   OpeningStock @relation(fields: [openingStockId], references: [id])
+  OpeningStock   OpeningStock @relation(fields: [openingStockId], references: [id], onDelete: Cascade)
   openingStockId Int
   Style          Style?       @relation(fields: [styleId], references: [id])
   styleId        Int?

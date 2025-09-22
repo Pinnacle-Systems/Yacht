@@ -34,7 +34,7 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
   let newDocId = `${branchObj.branchCode}/${getYearShortCode(
     new Date()
   )}/OST/1`;
-  if (lastObject) {
+  if (lastObject?.docId) {
     newDocId = `${branchObj.branchCode}/${getYearShortCode(new Date())}/OST/${
       parseInt(lastObject.docId.split("/").at(-1)) + 1
     }`;
@@ -61,12 +61,11 @@ async function get(req) {
     pagination,
     pageNumber,
     dataPerPage,
-    searchDocId,
-    searchDelDate,
-    searchDueDate,
+    serachDocNo,
+    searchDocDate,
+    searchStore,
     finYearId,
     stock,
-    rawMaterialType,
     endDate,
     storeId,
   } = req.query;
@@ -74,39 +73,40 @@ async function get(req) {
   let data;
   let totalCount;
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime)
     : "";
   data = await prisma.openingStock.findMany({
     where: {
-      AND: finYearDate
-        ? [
-            {
-              createdAt: {
-                gte: finYearDate.startTime,
-              },
-            },
-            {
-              createdAt: {
-                lte: finYearDate.endTime,
-              },
-            },
-          ]
-        : undefined,
+      // AND: finYearDate
+      //   ? [
+      //       {
+      //         createdAt: {
+      //           gte: finYearDate.startTime,
+      //         },
+      //       },
+      //       {
+      //         createdAt: {
+      //           lte: finYearDate.endTime,
+      //         },
+      //       },
+      //     ]
+      //   : undefined,
       branchId: branchId ? parseInt(branchId) : undefined,
-      active: active ? Boolean(active) : undefined,
-      docId: Boolean(searchDocId)
-        ? {
-            contains: searchDocId,
-          }
-        : undefined,
+      // active: active ? Boolean(active) : undefined,
+      // docId: Boolean(serachDocNo)
+      //   ? {
+      //       contains: serachDocNo,
+      //     }
+      //   : undefined,
     },
     include: {
       Store: true,
-      openingStockItems: true,
+      OpeningStockItems: true,
     },
   });
-  data = manualFilterSearchData(searchDelDate, searchDueDate, data);
+  // data = manualFilterSearchData(searchDelDate, searchDueDate, data);
   totalCount = data.length;
   if (pagination) {
     data = data.slice(
@@ -117,27 +117,30 @@ async function get(req) {
   let newDocId = await getNextDocId(
     branchId,
     shortCode,
-    finYearDate?.startTime,
-    finYearDate?.endTime
+    finYearDate?.startDateStartTime,
+    finYearDate?.endDateEndTime
   );
 
   let StockReport;
   console.log(req.query, "req");
-
+  console.log(finYearDate);
   if (stock) {
     StockReport = await prisma.$queryRaw`
-    SELECT * FROM stock WHERE createdAt < STR_TO_DATE(${endDate}, '%Y-%m-%d') AND itemType = ${rawMaterialType} AND storeId = ${storeId} ;
+    SELECT * FROM stock WHERE createdAt < STR_TO_DATE(${endDate}, '%Y-%m-%d') AND storeId = ${storeId} ;
     `;
   }
 
-  return { statusCode: 0, data, nextDocId: newDocId, totalCount, StockReport };
+  return {
+    statusCode: 0,
+    data,
+    nextDocId: newDocId,
+    totalCount,
+    StockReport,
+  };
 }
 
 async function getOne(id) {
-  const childRecord = await prisma.po.count({
-    where: { requirementId: parseInt(id) },
-  });
-
+  const childRecord = 0;
   const data = await prisma.openingStock.findUnique({
     where: {
       id: parseInt(id),
@@ -148,7 +151,7 @@ async function getOne(id) {
           locationId: true,
         },
       },
-      openingStockItems: true,
+      OpeningStockItems: true,
     },
   });
   if (!data) return NoRecordFound("openingStock");
@@ -185,18 +188,23 @@ async function create(body) {
     finYearId,
     term,
     notes,
+    docDate,
   } = await body;
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate
-    ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime)
+    ? getYearShortCodeForFinYear(
+        finYearDate?.startDateStartTime,
+        finYearDate?.endDateEndTime
+      )
     : "";
   let newDocId = await getNextDocId(
     branchId,
     shortCode,
-    finYearDate?.startTime,
-    finYearDate?.endTime
+    finYearDate?.startDateStartTime,
+    finYearDate?.endDateEndTime
   );
   let data;
+  console.log(newDocId);
   await prisma.$transaction(async (tx) => {
     data = await tx.openingStock.create({
       data: {
@@ -206,48 +214,178 @@ async function create(body) {
         createdById: parseInt(userId),
         notes,
         term,
+        docDate: docDate ? new Date(docDate) : null,
       },
     });
-    await (async function createopeningStockItems() {
-      let promises = openingStockItems.map(async (stockDetail) => {
-        return await tx.openingStockItems.create({
-          data: {
-            openingStockId: parseInt(data.id),
-            styleId: stockDetail?.styleId
-              ? parseInt(stockDetail.styleId)
-              : null,
-            sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-            qty: parseFloat(stockDetail.qty),
-            Stock: {
-              create: {
-                inOrOut: "OpeningStock",
-                createdById: parseInt(userId),
-                branchId: parseInt(branchId),
-                storeId: parseInt(storeId),
-                styleId: stockDetail?.styleId
-                  ? parseInt(stockDetail.styleId)
-                  : null,
-                sizeId: stockDetail?.sizeId
-                  ? parseInt(stockDetail.sizeId)
-                  : null,
-                qty: parseFloat(stockDetail.qty),
-              },
-            },
-          },
-        });
-      });
-      return Promise.all(promises);
-    })();
+    await createOpeningStockItems(
+      tx,
+      openingStockItems,
+      data,
+      userId,
+      branchId,
+      storeId
+    );
   });
   return { statusCode: 0, data };
 }
 
-async function createopeningStockItems(tx,openingStockId,openingStockItems,storeId,branchId){
-    
+async function update(id, body) {
+  console.log(body);
+  const { branchId, openingStockItems, userId, storeId, term, notes, docDate } =
+    await body;
+  let data;
+  const dataFound = await prisma.openingStock.findUnique({
+    where: {
+      id: parseInt(id),
+    },
+    include: {
+      OpeningStockItems: {
+        select: {
+          id: true,
+        },
+      },
+    },
+  });
+  if (!dataFound) return NoRecordFound("openingStock");
+  let removedItems = findRemovedItems(dataFound, openingStockItems);
+  let removeItemsIds = removedItems.map((item) => parseInt(item.id));
+  await prisma.$transaction(async (tx) => {
+    await deleteItemsFromStock(tx, removeItemsIds);
+    if (removeItemsIds.length > 0) {
+      await tx.openingStockItems.deleteMany({
+        where: { id: { in: removeItemsIds } },
+      });
+    }
+    data = await tx.openingStock.update({
+      where: {
+        id: parseInt(id),
+      },
+      data: {
+        storeId: parseInt(storeId),
+        updatedById: parseInt(userId),
+        branchId: parseInt(branchId),
+        notes,
+        term,
+        docDate: docDate ? new Date(docDate) : null,
+      },
+    });
+    await updateOpeningStockItems(
+      tx,
+      openingStockItems,
+      data,
+      userId,
+      branchId,
+      storeId
+    );
+  });
+  return { statusCode: 0, data };
+}
+
+async function updateOpeningStockItems(
+  tx,
+  openingStockItems,
+  openingStock,
+  userId,
+  branchId,
+  storeId
+) {
+  const promises = openingStockItems.map(async (stockDetail) => {
+    if (stockDetail.id) {
+      // Update existing item
+      const updatedItem = await tx.openingStockItems.update({
+        where: { id: parseInt(stockDetail.id) },
+        data: {
+          openingStockId: parseInt(openingStock.id),
+          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          qty: parseFloat(stockDetail.qty),
+        },
+      });
+
+      // Sync stock
+      await tx.stock.updateMany({
+        where: { OpeningStockItemsId: updatedItem.id },
+        data: {
+          branchId: parseInt(branchId),
+          storeId: parseInt(storeId),
+          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          qty: parseFloat(stockDetail.qty),
+          updatedById: parseInt(userId),
+        },
+      });
+
+      return updatedItem;
+    } else {
+      // Create new item + stock
+      const createdItem = await tx.openingStockItems.create({
+        data: {
+          openingStockId: parseInt(openingStock.id),
+          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          qty: parseFloat(stockDetail.qty),
+        },
+      });
+
+      await tx.stock.create({
+        data: {
+          inOrOut: "OpeningStock",
+          createdById: parseInt(userId),
+          branchId: parseInt(branchId),
+          storeId: parseInt(storeId),
+          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          qty: parseFloat(stockDetail.qty),
+          OpeningStockItemsId: createdItem.id,
+        },
+      });
+
+      return createdItem;
+    }
+  });
+
+  return Promise.all(promises);
+}
+
+async function createOpeningStockItems(
+  tx,
+  openingStockItems,
+  openingStock,
+  userId,
+  branchId,
+  storeId
+) {
+  const promises = openingStockItems.map(async (stockDetail) => {
+    const createdItem = await tx.openingStockItems.create({
+      data: {
+        openingStockId: parseInt(openingStock.id),
+        styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+        sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+        qty: parseFloat(stockDetail.qty),
+      },
+    });
+
+    await tx.stock.create({
+      data: {
+        inOrOut: "OpeningStock",
+        createdById: parseInt(userId),
+        branchId: parseInt(branchId),
+        storeId: parseInt(storeId),
+        styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+        sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+        qty: parseFloat(stockDetail.qty),
+        OpeningStockItemsId: createdItem.id,
+      },
+    });
+
+    return createdItem;
+  });
+
+  return Promise.all(promises);
 }
 
 function findRemovedItems(dataFound, openingStockItems) {
-  let removedItems = dataFound.openingStockItems.filter((oldItem) => {
+  let removedItems = dataFound.OpeningStockItems.filter((oldItem) => {
     let result = openingStockItems.find(
       (newItem) => parseInt(newItem.id) === parseInt(oldItem.id)
     );
@@ -265,80 +403,6 @@ async function deleteItemsFromStock(tx, removeItemsStockIds) {
       },
     },
   });
-}
-
-async function update(id, body) {
-  const { branchId, openingStockItems, userId, storeId, term, notes } =
-    await body;
-  let data;
-  const dataFound = await prisma.openingStock.findUnique({
-    where: {
-      id: parseInt(id),
-    },
-    include: {
-      openingStockItems: {
-        select: {
-          id: true,
-        },
-      },
-    },
-  });
-  if (!dataFound) return NoRecordFound("openingStock");
-  let removedItems = findRemovedItems(dataFound, openingStockItems);
-  let removeItemsIds = removedItems.map((item) => parseInt(item.id));
-  await prisma.$transaction(async (tx) => {
-    await deleteItemsFromStock(tx, removeItemsIds);
-    data = await tx.openingStock.update({
-      where: {
-        id: parseInt(id),
-      },
-      data: {
-        storeId: parseInt(storeId),
-        updatedById: parseInt(userId),
-        branchId: parseInt(branchId),
-        notes,
-        term,
-      },
-    });
-    await (async function updateOpeningStockGridDetails() {
-      let promises = openingStockItems.map(async (stockDetail) => {
-        if (stockDetail.id) {
-          return await tx.openingStockItems.update({
-            where: {
-              id: parseInt(stockDetail.id),
-            },
-            data: {
-              openingStockId: parseInt(data.id),
-              styleId: stockDetail?.styleId
-                ? parseInt(stockDetail.styleId)
-                : null,
-              sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-              qty: parseFloat(stockDetail.qty),
-              Stock: {
-                update: {},
-              },
-            },
-          });
-        } else {
-          return await tx.openingStockItems.create({
-            data: {
-              openingStockId: parseInt(data.id),
-              styleId: stockDetail?.styleId
-                ? parseInt(stockDetail.styleId)
-                : null,
-              sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-              qty: parseFloat(stockDetail.qty),
-              Stock: {
-                create: {},
-              },
-            },
-          });
-        }
-      });
-      return Promise.all(promises);
-    })();
-  });
-  return { statusCode: 0, data };
 }
 
 async function remove(id) {
