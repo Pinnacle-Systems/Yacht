@@ -59,9 +59,27 @@ export async function upload(req) {
   return { statusCode: 0, data };
 }
 
+async function getNextStyleSku(companyId, prefix) {
+  const lastStyle = await prisma.style.findFirst({
+    where: { companyId: parseInt(companyId) },
+    orderBy: { id: "desc" },
+  });
+
+  let nextNumber = 1;
+  if (lastStyle?.styleNo) {
+    const match = lastStyle.styleNo.match(/(\d+)$/);
+    if (match) {
+      nextNumber = parseInt(match[1]) + 1;
+    }
+  }
+  const padded = String(nextNumber).padStart(4, "0");
+  return `${prefix}${padded}`;
+}
+
 async function create(req) {
-  String;
   const { name, companyId, active, sku, alias } = await req;
+  const file = req.file;
+  let styleNo = await getNextStyleSku(companyId, name);
   const data = await prisma.style.create({
     data: {
       name,
@@ -69,9 +87,10 @@ async function create(req) {
       alias,
       active: active !== undefined ? JSON.parse(active) : undefined,
       companyId: companyId ? parseInt(companyId) : null,
+      img: file ? file.filename : null,
+      styleNo,
     },
   });
-
   return { statusCode: 0, data };
 }
 

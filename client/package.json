@@ -30,6 +30,7 @@
     "html2canvas": "^1.4.1",
     "joi": "^17.13.3",
     "jquery": "^3.6.3",
+    "jsbarcode": "^3.12.1",
     "jspdf": "^2.5.1",
     "lodash": "^4.17.21",
     "lucide-react": "^0.487.0",

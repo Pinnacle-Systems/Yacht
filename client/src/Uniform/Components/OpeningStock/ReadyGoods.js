@@ -81,17 +81,17 @@ export default function ReadyGoods({
                   S.No
                 </th>
                 <th
-                  className={`w-96 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style
                 </th>
                 <th
-                  className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Size
                 </th>
                 <th
-                  className={`w-32 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Quantity
                 </th>

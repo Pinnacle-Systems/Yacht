@@ -17,6 +17,8 @@ import {
   useUpdateOpeningStockMutation,
 } from "../../../redux/uniformService/OpeningStockService.js";
 import moment from "moment";
+import Modal from "../../../UiComponents/Modal/index.js";
+import BarCodePrintFormat from "./BarcodePrintFormat.jsx";
 
 export default function OpeningStockForm({
   onClose,
@@ -34,6 +36,9 @@ export default function OpeningStockForm({
   const [notes, setNotes] = useState("");
   const [storeId, setStoreId] = useState("");
   const [openingStockItems, setOpeningStockItems] = useState([]);
+  const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
+  const [barCodePerPage, setBarCodePerPage] = useState(10);
+  const [barcodeItems, setBarcodeItems] = useState([]);
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
@@ -96,6 +101,8 @@ export default function OpeningStockForm({
   useEffect(() => {
     if (id) {
       syncFormWithDb(singleData?.data);
+      // const allStockRows = openingStockItems.flatMap((item) => item.Stock);
+      // setBarcodeItems(allStockRows);
     } else {
       syncFormWithDb(undefined);
     }
@@ -173,11 +180,20 @@ export default function OpeningStockForm({
     notes,
   };
 
+  function getTotalQty() {
+    let qty = openingStockItems?.reduce((acc, curr) => {
+      return acc + parseInt(curr?.qty ? curr?.qty : 0);
+    }, 0);
+    return parseInt(qty);
+  }
+
   return (
     <>
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800">Stock Details</h1>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Opening Stock Details
+          </h1>
           <button
             onClick={onClose}
             className="text-indigo-600 hover:text-indigo-700"
@@ -296,7 +312,7 @@ export default function OpeningStockForm({
               <div className="flex justify-between py-auto text-sm">
                 <span className="text-slate-600">Total Qty</span>
                 <span className="font-medium">
-                  {/* {parseInt(getTotalQty())}  */} No's
+                  {parseInt(getTotalQty())} No's
                 </span>
               </div>
             </div>
@@ -340,13 +356,36 @@ export default function OpeningStockForm({
               <FaWhatsapp className="w-4 h-4 mr-2" />
               WhatsApp
             </button>
-            <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm">
-              <FiPrinter className="w-4 h-4 mr-2" />
-              Print
-            </button>
+            {id && (
+              <button
+                className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
+                onClick={() => {
+                  const allStockRows = openingStockItems.flatMap(
+                    (item) => item.Stock
+                  );
+                  setBarcodeItems(allStockRows);
+
+                  console.log(allStockRows);
+                  setBarcodePrintOpen(true);
+                }}
+              >
+                <FiPrinter className="w-4 h-4 mr-2" />
+                Print
+              </button>
+            )}
           </div>
         </div>
       </div>
+      <Modal
+        isOpen={barcodePrintOpen}
+        onClose={() => setBarcodePrintOpen(false)}
+        widthClass={"px-2 h-[90%] w-[90%]"}
+      >
+        <BarCodePrintFormat
+          data={barcodeItems.filter((i) => i?.styleId)}
+          barCodePerPage={barCodePerPage}
+        />
+      </Modal>
     </>
   );
 }

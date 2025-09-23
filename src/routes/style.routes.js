@@ -10,8 +10,9 @@ import {
   remove,
   upload,
 } from "../controllers/style.controller.js";
+import { styleUpload } from "../configs/styleMulter.config.js";
 
-router.post("/", create);
+router.post("/", styleUpload.single("image"), create);
 
 router.patch("/upload/:id", multerUpload.single("image"), upload);
 

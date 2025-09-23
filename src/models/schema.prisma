@@ -1451,6 +1451,8 @@ model Style {
   sku               String?
   alias             String?
   active            Boolean?
+  img               String?
+  styleNo           String?
   Company           Company?            @relation(fields: [companyId], references: [id])
   companyId         Int?
   Stock             Stock[]
@@ -1563,6 +1565,7 @@ model Stock {
   active              Boolean?           @default(true)
   OpeningStockItems   OpeningStockItems? @relation(fields: [OpeningStockItemsId], references: [id], onDelete: Cascade)
   OpeningStockItemsId Int?
+  barCode             String?
 }
 
 model OpeningStock {
