@@ -56,6 +56,7 @@ import {
   Order,
   PurchaseInward,
   PurchaseOrder,
+  StockAdjustment,
   StyleMaster,
   TagTypeMater,
 } from "../../../Uniform/Components";
@@ -133,6 +134,7 @@ const ActiveTabList = () => {
     "ACCESSORY MASTER": <AccessoryMaster />,
     "FABRIC MASTER": <FabricMaster />,
     "OPENING STOCK": <OpeningStockForm />,
+    "STOCK ADJUSTMENT": <StockAdjustment />,
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

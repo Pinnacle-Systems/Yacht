@@ -19,6 +19,7 @@ export default function ReadyGoods({
       styleId: "",
       sizeId: "",
       qty: "",
+      remarks: "",
     };
     setOpeningStockItems([...openingStockItems, newRow]);
   };
@@ -61,13 +62,21 @@ export default function ReadyGoods({
 
   useEffect(() => {
     if (!openingStockItems || openingStockItems.length === 0) {
-      setOpeningStockItems([{ styleId: "", sizeId: "", qty: "" }]);
+      // setOpeningStockItems([{ styleId: "", sizeId: "", qty: "" }]);
+      setOpeningStockItems(
+        Array.from({ length: 6 }, () => ({
+          styleId: "",
+          sizeId: "",
+          qty: "",
+          remarks: "",
+        }))
+      );
     }
   }, [openingStockItems, setOpeningStockItems]);
 
   return (
     <>
-      <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
+      <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[350px] overflow-auto">
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
         </div>
@@ -86,7 +95,7 @@ export default function ReadyGoods({
                   Style
                 </th>
                 <th
-                  className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Size
                 </th>
@@ -94,6 +103,11 @@ export default function ReadyGoods({
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Quantity
+                </th>
+                <th
+                  className={`w-48 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Remarks
                 </th>
                 <th
                   className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
@@ -186,11 +200,31 @@ export default function ReadyGoods({
                           handleInputChange(e.target.value, index, "qty")
                         }
                         onBlur={(e) => {
-                          handleInputChange(
-                            parseFloat(e.target.value).toFixed(2),
-                            index,
-                            "qty"
-                          );
+                          // handleInputChange(
+                          //   parseFloat(e.target.value).toFixed(2),
+                          //   index,
+                          //   "qty"
+                          // );
+                          handleInputChange(e.target.value, index, "qty");
+                        }}
+                      />
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "remarks");
+                          }
+                        }}
+                        type="string"
+                        className="text-left rounded py-1 px-1 w-full table-data-input"
+                        onFocus={(e) => e.target.select()}
+                        value={row?.remarks}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "remarks")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "remarks");
                         }}
                       />
                     </td>
@@ -214,6 +248,22 @@ export default function ReadyGoods({
                 )
               )}
             </tbody>
+            <tfoot>
+              <tr className="bg-gray-50 font-medium text-gray-800">
+                <td
+                  className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
+                  colSpan={3}
+                >
+                  Total Qty
+                </td>
+                <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
+                  {openingStockItems
+                    .reduce((sum, row) => sum + (Number(row.qty) || 0), 0)
+                    .toFixed(2)}
+                </td>
+                <td className="border border-gray-300" colSpan={2}></td>
+              </tr>
+            </tfoot>
           </table>
         </div>
         {contextMenu && (

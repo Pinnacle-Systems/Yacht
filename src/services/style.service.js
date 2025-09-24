@@ -77,8 +77,8 @@ async function getNextStyleSku(companyId, prefix) {
 }
 
 async function create(req) {
-  const { name, companyId, active, sku, alias } = await req;
-  const file = req.file;
+  const { name, companyId, active, sku, alias, img } = await req;
+  // const file = req.file;
   let styleNo = await getNextStyleSku(companyId, name);
   const data = await prisma.style.create({
     data: {
@@ -87,7 +87,7 @@ async function create(req) {
       alias,
       active: active !== undefined ? JSON.parse(active) : undefined,
       companyId: companyId ? parseInt(companyId) : null,
-      img: file ? file.filename : null,
+      img,
       styleNo,
     },
   });
@@ -95,7 +95,7 @@ async function create(req) {
 }
 
 async function update(id, body) {
-  const { name, companyId, active, sku, alias } = await body;
+  const { name, companyId, active, sku, alias,img } = await body;
 
   const dataFound = await prisma.style.findUnique({
     where: { id: parseInt(id) },
@@ -111,6 +111,7 @@ async function update(id, body) {
       alias,
       active: active !== undefined ? JSON.parse(active) : undefined,
       companyId: companyId ? parseInt(companyId) : null,
+      img
     },
   });
   return { statusCode: 0, data };

@@ -4,7 +4,6 @@ import {
   getDateFromDateTimeToDisplay,
   reactPaginateIndexToPageNumber,
 } from "../../../Utils/helper";
-import { useGetOrderQuery } from "../../../redux/uniformService/OrderService";
 import { Loader } from "../../../Basic/components";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useGetOpeningStockQuery } from "../../../redux/uniformService/OpeningStockService";

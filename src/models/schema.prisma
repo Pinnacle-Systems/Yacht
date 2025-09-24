@@ -1580,6 +1580,7 @@ model OpeningStock {
   updatedById       Int?
   Branch            Branch?             @relation(fields: [branchId], references: [id])
   branchId          Int?
+  locationId        Int?
   Store             Location?           @relation(fields: [storeId], references: [id])
   storeId           Int?
   notes             String?
@@ -1596,5 +1597,6 @@ model OpeningStockItems {
   Size           Size?        @relation(fields: [sizeId], references: [id])
   sizeId         Int?
   qty            Int?
+  remarks        String?
   Stock          Stock[]
 }

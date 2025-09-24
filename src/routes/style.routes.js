@@ -12,7 +12,7 @@ import {
 } from "../controllers/style.controller.js";
 import { styleUpload } from "../configs/styleMulter.config.js";
 
-router.post("/", styleUpload.single("image"), create);
+router.post("/", styleUpload.single("img"), create);
 
 router.patch("/upload/:id", multerUpload.single("image"), upload);
 
@@ -22,7 +22,8 @@ router.get("/:id", getOne);
 
 router.get("/search/:searchKey", getSearch);
 
-router.put("/:id", update);
+// router.put("/:id", update);
+router.put("/:id", styleUpload.single("img"), update);
 
 router.delete("/:id", remove);
 

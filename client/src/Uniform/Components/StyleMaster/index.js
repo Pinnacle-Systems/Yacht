@@ -13,6 +13,8 @@ import Swal from "sweetalert2";
 import { TextInput, ToggleButton, ReusableTable } from "../../../Inputs";
 import { statusDropdown } from "../../../Utils/DropdownData";
 import { useState, useCallback, useEffect } from "react";
+import BrowseSingleImage from "./BrowseSingleImage";
+import { getImageUrlPath } from "../../../Constants";
 
 const StyleMaster = () => {
   const [form, setForm] = useState(false);
@@ -25,7 +27,7 @@ const StyleMaster = () => {
   const [searchSku, setSearchSku] = useState("");
   const [searchName, setSearchName] = useState("");
   const [alias, setAlias] = useState("");
-
+  const [img, setImg] = useState("");
   const [addData] = useAddStyleMasterMutation();
   const [updateData] = useUpdateStyleMasterMutation();
   const [removeData] = useDeleteStyleMasterMutation();
@@ -75,10 +77,26 @@ const StyleMaster = () => {
     if (!window.confirm("Are you sure save the details ...?")) {
       return;
     }
+    // 🔹 Convert to FormData
+    const formData = new FormData();
+    formData.append("id", id || "");
+    formData.append("sku", sku);
+    formData.append("name", name);
+    formData.append("alias", alias);
+    formData.append("active", active);
+    formData.append(
+      "companyId",
+      secureLocalStorage.getItem(
+        sessionStorage.getItem("sessionId") + "userCompanyId"
+      )
+    );
+
+    if (img instanceof File) formData.append("img", img);
+
     if (id) {
-      handleSubmitCustom(updateData, data, "Updated");
+      handleSubmitCustom(updateData, formData, "Updated", true);
     } else {
-      handleSubmitCustom(addData, data, "Added");
+      handleSubmitCustom(addData, formData, "Added", true);
     }
   };
   const handleKeyDown = (event) => {
@@ -89,6 +107,10 @@ const StyleMaster = () => {
     }
   };
 
+  // function getImageUrlPath(fileName) {
+  //   return setImagePreview(getImageUrlPath(data.fabricImage));
+  // }
+
   const syncFormWithDb = useCallback(
     (data) => {
       // if (id) setReadOnly(true);
@@ -96,6 +118,7 @@ const StyleMaster = () => {
       setAlias(data?.alias ? data?.alias : "");
       setSku(data?.sku ? data?.sku : "");
       setActive(id ? (data?.active ? data.active : false) : true);
+      setImg(data?.img ? getImageUrlPath(data?.img) : "");
     },
     [id]
   );
@@ -230,21 +253,6 @@ const StyleMaster = () => {
 
   return (
     <div onKeyDown={handleKeyDown} className="p-1">
-      {/* <div className="w-full flex justify-between mb-2 items-center px-0.5">
-        <h5 className="my-1">Style Master</h5>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => {
-              setForm(true);
-              onNew();
-            }}
-            className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-          >
-            <Plus size={16} />
-            Add New Style
-          </button>
-        </div>
-      </div> */}
       <div className="w-full flex bg-white p-1 justify-between  items-center">
         <h5 className="text-2xl font-bold font-segoe text-gray-800 ">
           Style Master
@@ -275,7 +283,7 @@ const StyleMaster = () => {
         <Modal
           isOpen={form}
           form={form}
-          widthClass={"w-[40%] h-[60%]"}
+          widthClass={"w-[55%] h-[60%]"}
           onClose={() => {
             setForm(false);
           }}
@@ -325,7 +333,7 @@ const StyleMaster = () => {
               <div className="grid grid-cols-1  gap-3  h-full">
                 <div className="lg:col-span- space-y-3">
                   <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                    <fieldset className=" rounded mt-2">
+                    <fieldset className="flex rounded mt-2 gap-6">
                       <div className="">
                         <div className="flex flex-wrap gap-x-4">
                           <div className="mb-3 w-48">
@@ -348,16 +356,16 @@ const StyleMaster = () => {
                               readOnly={readOnly}
                             />
                           </div>
-                          <div className="mb-3 w-48">
-                            <TextInput
-                              name="Alias Name"
-                              type="text"
-                              value={alias}
-                              setValue={setAlias}
-                              required={false}
-                              readOnly={readOnly}
-                            />
-                          </div>
+                        </div>
+                        <div className="mb-5 w-48">
+                          <TextInput
+                            name="Alias Name"
+                            type="text"
+                            value={alias}
+                            setValue={setAlias}
+                            required={false}
+                            readOnly={readOnly}
+                          />
                         </div>
                         <div className="mb-5 w-48">
                           <ToggleButton
@@ -369,6 +377,13 @@ const StyleMaster = () => {
                             readOnly={readOnly}
                           />
                         </div>
+                      </div>
+                      <div className="flex mx-auto">
+                        <BrowseSingleImage
+                          picture={img}
+                          setPicture={setImg}
+                          readOnly={readOnly}
+                        />
                       </div>
                     </fieldset>
                   </div>

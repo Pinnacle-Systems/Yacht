@@ -151,10 +151,12 @@ app.use("/size", size);
 app.use("/measurement", measurement);
 app.use("/fabric", fabric);
 app.use("/accessoryGroup", accessoryGroup);
+
 app.get("/retreiveFile/:fileName", (req, res) => {
   const { fileName } = req.params;
   res.sendFile(__dirname + "/uploads/" + fileName);
 });
+
 app.use("/openingStock", openingStock);
 
 const httpServer = createServer(app);

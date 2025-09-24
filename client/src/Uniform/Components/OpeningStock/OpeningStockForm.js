@@ -19,6 +19,7 @@ import {
 import moment from "moment";
 import Modal from "../../../UiComponents/Modal/index.js";
 import BarCodePrintFormat from "./BarcodePrintFormat.jsx";
+import { toast } from "react-toastify";
 
 export default function OpeningStockForm({
   onClose,
@@ -28,7 +29,7 @@ export default function OpeningStockForm({
   setReadOnly,
   setShowForm,
 }) {
-  const [docId, setDocId] = useState("");
+  const [docId, setDocId] = useState("New");
   const [docDate, setDocDate] = useState("");
   const [locationId, setLocationId] = useState("");
   const [searchValue, setSearchValue] = useState("");
@@ -57,14 +58,6 @@ export default function OpeningStockForm({
     searchParams: searchValue,
   });
 
-  const getNextDocId = useCallback(() => {
-    if (id || isLoading || isFetching) return;
-    if (allData?.nextDocId) {
-      setDocId(allData.nextDocId);
-    }
-  }, [allData, isLoading, isFetching, id]);
-
-  useEffect(getNextDocId, [getNextDocId]);
   const {
     data: singleData,
     isFetching: isSingleFetching,
@@ -90,7 +83,7 @@ export default function OpeningStockForm({
       if (data?.docId) {
         setDocId(data?.docId);
       }
-      setLocationId(data?.branchId ? data?.branchId : "");
+      setLocationId(data?.locationId ? data?.locationId : "");
       setStoreId(data?.storeId ? data.storeId : "");
       setNotes(data?.notes ? data?.notes : "");
       setTerm(data?.term ? data?.term : "");
@@ -101,8 +94,6 @@ export default function OpeningStockForm({
   useEffect(() => {
     if (id) {
       syncFormWithDb(singleData?.data);
-      // const allStockRows = openingStockItems.flatMap((item) => item.Stock);
-      // setBarcodeItems(allStockRows);
     } else {
       syncFormWithDb(undefined);
     }
@@ -117,7 +108,7 @@ export default function OpeningStockForm({
       )
     : [];
 
-  const handleSubmitCustom = async (callback, data, text) => {
+  const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData;
       if (text === "Updated") {
@@ -125,38 +116,62 @@ export default function OpeningStockForm({
       } else {
         returnData = await callback(data).unwrap();
       }
-      setId(returnData.data.id);
-      setShowForm(false);
-      Swal.fire({
-        title: text + "  " + "Successfully",
-        icon: "success",
-        draggable: true,
-        timer: 1000,
-        showConfirmButton: false,
-        didOpen: () => {
-          Swal.showLoading();
-        },
-      });
+      if (returnData.statusCode === 0) {
+        if (nextProcess == "new") {
+          setId(0);
+          setDocId("New");
+          syncFormWithDb(undefined);
+        } else {
+          onClose();
+        }
+        // setId(returnData?.data?.id);
+        // setShowForm(false);
+        Swal.fire({
+          title: text + "  " + "Successfully",
+          icon: "success",
+          draggable: true,
+          timer: 1000,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          },
+        });
+      } else {
+        toast.error(returnData?.message);
+      }
     } catch (error) {
       console.log("handle");
     }
   };
 
+  const validateData = (data) => {
+    if (openingStockItems?.length > 0 && data.storeId) {
+      return true;
+    }
+    return false;
+  };
+
   const saveData = (nextProcess) => {
+    if (!validateData(data)) {
+      toast.info("Please fill all required fields...!", {
+        position: "top-center",
+      });
+      return;
+    }
     if (!window.confirm("Are you sure save the details ...?")) {
       return;
     }
     if (nextProcess == "draft" && !id) {
       handleSubmitCustom(
         addData,
-        (data = { ...data, draftSave: true }),
+        { ...data, draftSave: true },
         "Added",
         nextProcess
       );
     } else if (id && nextProcess == "draft") {
       handleSubmitCustom(
         updateData,
-        (data = { ...data, draftSave: true }),
+        { ...data, draftSave: true },
         "Updated",
         nextProcess
       );
@@ -203,7 +218,7 @@ export default function OpeningStockForm({
           </button>
         </div>
       </div>
-      <div className="space-y-3 h-full mt-2">
+      <div className="space-y-3 mt-3">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
             <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
@@ -275,36 +290,8 @@ export default function OpeningStockForm({
           />
         </fieldset>
 
-        <div className="grid grid-cols-3 gap-3">
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-            <h2 className="font-medium text-slate-700 mb-2 text-base">
-              Terms & Conditions
-            </h2>
-            <textarea
-              readOnly={readOnly}
-              value={term}
-              onChange={(e) => {
-                setTerm(e.target.value);
-              }}
-              className="w-full h-16 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-              placeholder="Additional notes..."
-            />
-          </div>
-
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
-            <h2 className="font-medium text-slate-700 mb-2 text-base">Notes</h2>
-            <textarea
-              readOnly={readOnly}
-              value={notes}
-              onChange={(e) => {
-                setNotes(e.target.value);
-              }}
-              className="w-full h-16 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-              placeholder="Additional notes..."
-            />
-          </div>
-
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
+        {/* <div className="flex justify-end">
+          <div className="border border-slate-200 p-2 px-4 w-72 bg-white rounded-md shadow-sm">
             <h2 className="font-semibold text-slate-800 mb-2 text-base">
               Qty Summary
             </h2>
@@ -317,9 +304,9 @@ export default function OpeningStockForm({
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
-        <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
+        <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">
           <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => saveData("new")}
@@ -356,23 +343,20 @@ export default function OpeningStockForm({
               <FaWhatsapp className="w-4 h-4 mr-2" />
               WhatsApp
             </button>
-            {id && (
-              <button
-                className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
-                onClick={() => {
-                  const allStockRows = openingStockItems.flatMap(
-                    (item) => item.Stock
-                  );
-                  setBarcodeItems(allStockRows);
-
-                  console.log(allStockRows);
-                  setBarcodePrintOpen(true);
-                }}
-              >
-                <FiPrinter className="w-4 h-4 mr-2" />
-                Print
-              </button>
-            )}
+            <button
+              className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
+              onClick={() => {
+                const allStockRows = openingStockItems.flatMap(
+                  (item) => item.Stock
+                );
+                setBarcodeItems(allStockRows);
+                setBarcodePrintOpen(true);
+              }}
+              disabled={!id}
+            >
+              <FiPrinter className="w-4 h-4 mr-2" />
+              Print
+            </button>
           </div>
         </div>
       </div>
