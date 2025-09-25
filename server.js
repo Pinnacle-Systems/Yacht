@@ -60,6 +60,7 @@ import {
   fabric,
   accessoryGroup,
   openingStock,
+  stockAdjustment,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";
@@ -151,13 +152,13 @@ app.use("/size", size);
 app.use("/measurement", measurement);
 app.use("/fabric", fabric);
 app.use("/accessoryGroup", accessoryGroup);
+app.use("/openingStock", openingStock);
+app.use("/stockAdjustment", stockAdjustment);
 
 app.get("/retreiveFile/:fileName", (req, res) => {
   const { fileName } = req.params;
   res.sendFile(__dirname + "/uploads/" + fileName);
 });
-
-app.use("/openingStock", openingStock);
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {

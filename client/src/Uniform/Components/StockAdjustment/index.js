@@ -1,14 +1,23 @@
+import { useState } from "react";
+import StockAdjustmentkForm from "./StockAdjustmentForm";
+
 export default function Form() {
+  const [showForm, setShowForm] = useState(false);
+  const [id, setId] = useState("");
+  const [readOnly, setReadOnly] = useState(false);
   return (
-    <div className="p-1 bg-[#F1F1F0] h-[85%]">
-      <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">
-            {" "}
-             Stock Adjustment
-          </h1>
-        </div>
-      </div>
-    </div>
+    <>
+      <StockAdjustmentkForm
+        readOnly={readOnly}
+        setReadOnly={setReadOnly}
+        id={id}
+        setId={setId}
+        onClose={() => {
+          setShowForm(false);
+          setReadOnly((prev) => !prev);
+        }}
+        setShowForm={setShowForm}
+      />
+    </>
   );
 }

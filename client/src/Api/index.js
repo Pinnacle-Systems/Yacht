@@ -102,3 +102,4 @@ export const PAY_COMPONENT_API = "payComponent";
 export const COMPANY_PAY_CODE_API = "companyPayCode";
 export const MEASUREMENT_API = "measurement";
 export const RAW_MATERIAL_OPENING_STOCK_API = "rawMaterialOpeningStock";
+export const STOCK_ADJUSTMENT_API = "stockAdjustment";

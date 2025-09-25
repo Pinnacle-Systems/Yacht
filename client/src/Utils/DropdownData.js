@@ -287,8 +287,7 @@ export const payCategory = [
   { show: "Weekly Pay Frequency", value: "Weekly Pay Frequency" },
 ];
 
-export const materialType = [
-  { show: "SET", value: "SET" },
-  { show: "WOMENS", value: "WOMENS" },
-  { show: "MENS", value: "MENS" },
+export const adjTypeData = [
+  { show: "PLUS", value: "PLUS" },
+  { show: "MINUS", value: "MINUS" },
 ];

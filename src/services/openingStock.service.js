@@ -337,6 +337,143 @@ async function update(id, body) {
   return { statusCode: 0, data };
 }
 
+// async function updateOpeningStockItems(
+//   tx,
+//   openingStockItems,
+//   openingStock,
+//   userId,
+//   branchId,
+//   storeId
+// ) {
+//   const promises = openingStockItems.map(async (stockDetail) => {
+//     const qty = parseInt(stockDetail.qty) || 0;
+
+//     if (stockDetail.id) {
+//       // Update existing OpeningStockItem
+//       const updatedItem = await tx.openingStockItems.update({
+//         where: { id: parseInt(stockDetail.id) },
+//         data: {
+//           openingStockId: parseInt(openingStock.id),
+//           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+//           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+//           qty:
+//             stockDetail?.qty && !isNaN(parseFloat(stockDetail.qty))
+//               ? Math.round(parseFloat(stockDetail.qty))
+//               : null,
+//           remarks: stockDetail?.remarks ? stockDetail?.remarks : undefined,
+//         },
+//       });
+
+//       // Get existing stock rows
+//       const existingStocks = await tx.stock.findMany({
+//         where: { OpeningStockItemsId: updatedItem.id },
+//         orderBy: { id: "asc" },
+//       });
+//       const currentCount = existingStocks.length;
+
+//       // Add new stock rows if qty increased
+//       if (qty > currentCount) {
+//         const rowsToAdd = qty - currentCount;
+//         const now = new Date();
+//         const dd = String(now.getDate()).padStart(2, "0");
+//         const mm = String(now.getMonth() + 1).padStart(2, "0");
+//         const yyyy = now.getFullYear();
+//         const datePrefix = `${dd}${mm}${yyyy}`;
+
+//         const stockRows = [];
+//         for (let i = 0; i < rowsToAdd; i++) {
+//           const uniqueId = String(currentCount + i + 1).padStart(4, "0");
+//           const barCode = `${datePrefix}${updatedItem.id}${uniqueId}`;
+//           stockRows.push(
+//             tx.stock.create({
+//               data: {
+//                 inOrOut: "OpeningStock",
+//                 createdById: parseInt(userId),
+//                 branchId: parseInt(branchId),
+//                 storeId: parseInt(storeId),
+//                 styleId: stockDetail?.styleId
+//                   ? parseInt(stockDetail.styleId)
+//                   : null,
+//                 sizeId: stockDetail?.sizeId
+//                   ? parseInt(stockDetail.sizeId)
+//                   : null,
+//                 qty: 1,
+//                 OpeningStockItemsId: updatedItem.id,
+//                 barCode,
+//               },
+//             })
+//           );
+//         }
+//         await Promise.all(stockRows);
+//       }
+
+//       // Remove extra stock rows if qty decreased
+//       if (qty < currentCount) {
+//         const rowsToRemove = existingStocks.slice(qty).map((row) => row.id);
+//         await tx.stock.deleteMany({
+//           where: { id: { in: rowsToRemove } },
+//         });
+//       }
+
+//       // Update remaining stock rows attributes
+//       await tx.stock.updateMany({
+//         where: { OpeningStockItemsId: updatedItem.id },
+//         data: {
+//           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+//           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+//         },
+//       });
+
+//       return updatedItem;
+//     } else {
+//       // Create new OpeningStockItem
+//       const createdItem = await tx.openingStockItems.create({
+//         data: {
+//           openingStockId: parseInt(openingStock.id),
+//           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+//           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+//           qty: stockDetail?.qty ? parseInt(stockDetail?.qty) : null,
+//         },
+//       });
+
+//       // Create stock rows
+//       const now = new Date();
+//       const dd = String(now.getDate()).padStart(2, "0");
+//       const mm = String(now.getMonth() + 1).padStart(2, "0");
+//       const yyyy = now.getFullYear();
+//       const datePrefix = `${dd}${mm}${yyyy}`;
+
+//       const stockRows = [];
+//       for (let i = 0; i < qty; i++) {
+//         const uniqueId = String(i + 1).padStart(4, "0");
+//         const barCode = `${datePrefix}${createdItem.id}${uniqueId}`;
+//         stockRows.push(
+//           tx.stock.create({
+//             data: {
+//               inOrOut: "OpeningStock",
+//               createdById: parseInt(userId),
+//               branchId: parseInt(branchId),
+//               storeId: parseInt(storeId),
+//               styleId: stockDetail?.styleId
+//                 ? parseInt(stockDetail.styleId)
+//                 : null,
+//               sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+//               qty: 1,
+//               OpeningStockItemsId: createdItem.id,
+//               barCode,
+//             },
+//           })
+//         );
+//       }
+
+//       await Promise.all(stockRows);
+//       return createdItem;
+//     }
+//   });
+
+//   return Promise.all(promises);
+// }
+
 async function updateOpeningStockItems(
   tx,
   openingStockItems,
@@ -346,10 +483,10 @@ async function updateOpeningStockItems(
   storeId
 ) {
   const promises = openingStockItems.map(async (stockDetail) => {
-    const qty = parseInt(stockDetail.qty) || 0;
+    const qty = parseInt(stockDetail.qty) || null;
 
     if (stockDetail.id) {
-      // Update existing OpeningStockItem
+      // 1️⃣ Update existing OpeningStockItem
       const updatedItem = await tx.openingStockItems.update({
         where: { id: parseInt(stockDetail.id) },
         data: {
@@ -364,109 +501,88 @@ async function updateOpeningStockItems(
         },
       });
 
-      // Get existing stock rows
-      const existingStocks = await tx.stock.findMany({
+      // If stock row already exists → update it
+      const existingStock = await tx.stock.findFirst({
         where: { OpeningStockItemsId: updatedItem.id },
-        orderBy: { id: "asc" },
       });
-      const currentCount = existingStocks.length;
 
-      // Add new stock rows if qty increased
-      if (qty > currentCount) {
-        const rowsToAdd = qty - currentCount;
+      if (existingStock) {
+        await tx.stock.update({
+          where: { id: existingStock.id },
+          data: {
+            styleId: stockDetail?.styleId
+              ? parseInt(stockDetail.styleId)
+              : null,
+            sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+            qty,
+            barCode: stockDetail?.barCode,
+          },
+        });
+      } else {
+        // 2️⃣ Update stock row (only one row per item)
         const now = new Date();
         const dd = String(now.getDate()).padStart(2, "0");
         const mm = String(now.getMonth() + 1).padStart(2, "0");
         const yyyy = now.getFullYear();
         const datePrefix = `${dd}${mm}${yyyy}`;
 
-        const stockRows = [];
-        for (let i = 0; i < rowsToAdd; i++) {
-          const uniqueId = String(currentCount + i + 1).padStart(4, "0");
-          const barCode = `${datePrefix}${updatedItem.id}${uniqueId}`;
-          stockRows.push(
-            tx.stock.create({
-              data: {
-                inOrOut: "OpeningStock",
-                createdById: parseInt(userId),
-                branchId: parseInt(branchId),
-                storeId: parseInt(storeId),
-                styleId: stockDetail?.styleId
-                  ? parseInt(stockDetail.styleId)
-                  : null,
-                sizeId: stockDetail?.sizeId
-                  ? parseInt(stockDetail.sizeId)
-                  : null,
-                qty: 1,
-                OpeningStockItemsId: updatedItem.id,
-                barCode,
-              },
-            })
-          );
-        }
-        await Promise.all(stockRows);
-      }
-
-      // Remove extra stock rows if qty decreased
-      if (qty < currentCount) {
-        const rowsToRemove = existingStocks.slice(qty).map((row) => row.id);
-        await tx.stock.deleteMany({
-          where: { id: { in: rowsToRemove } },
+        const rawCode = `${datePrefix}${updatedItem.id}`;
+        const barCode = rawCode.padStart(13, "0");
+        // If no stock row exists → create one
+        await tx.stock.create({
+          data: {
+            inOrOut: "OpeningStock",
+            createdById: parseInt(userId),
+            branchId: parseInt(branchId),
+            storeId: parseInt(storeId),
+            styleId: stockDetail?.styleId
+              ? parseInt(stockDetail.styleId)
+              : null,
+            sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+            qty,
+            OpeningStockItemsId: updatedItem.id,
+            barCode,
+          },
         });
       }
 
-      // Update remaining stock rows attributes
-      await tx.stock.updateMany({
-        where: { OpeningStockItemsId: updatedItem.id },
-        data: {
-          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
-          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-        },
-      });
-
       return updatedItem;
     } else {
-      // Create new OpeningStockItem
+      // 3️⃣ Create new OpeningStockItem
       const createdItem = await tx.openingStockItems.create({
         data: {
           openingStockId: parseInt(openingStock.id),
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-          qty,
+          qty: stockDetail?.qty ? parseInt(stockDetail?.qty) : null,
+          remarks: stockDetail?.remarks ? stockDetail?.remarks : undefined,
         },
       });
 
-      // Create stock rows
+      // 4️⃣ Create one stock row
       const now = new Date();
       const dd = String(now.getDate()).padStart(2, "0");
       const mm = String(now.getMonth() + 1).padStart(2, "0");
       const yyyy = now.getFullYear();
       const datePrefix = `${dd}${mm}${yyyy}`;
 
-      const stockRows = [];
-      for (let i = 0; i < qty; i++) {
-        const uniqueId = String(i + 1).padStart(4, "0");
-        const barCode = `${datePrefix}${createdItem.id}${uniqueId}`;
-        stockRows.push(
-          tx.stock.create({
-            data: {
-              inOrOut: "OpeningStock",
-              createdById: parseInt(userId),
-              branchId: parseInt(branchId),
-              storeId: parseInt(storeId),
-              styleId: stockDetail?.styleId
-                ? parseInt(stockDetail.styleId)
-                : null,
-              sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-              qty: 1,
-              OpeningStockItemsId: createdItem.id,
-              barCode,
-            },
-          })
-        );
-      }
+      const rawCode = `${datePrefix}${createdItem.id}`;
+      const barCode = rawCode.padStart(13, "0");
 
-      await Promise.all(stockRows);
+      await tx.stock.create({
+        data: {
+          inOrOut: "OpeningStock",
+          createdById: parseInt(userId),
+          branchId: parseInt(branchId),
+          storeId: parseInt(storeId),
+          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          qty: createdItem.qty || 0,
+          OpeningStockItemsId: createdItem.id,
+          barCode,
+        },
+      });
+
       return createdItem;
     }
   });
@@ -474,11 +590,61 @@ async function updateOpeningStockItems(
   return Promise.all(promises);
 }
 
-export async function generateBarCode(tx, item) {
-  let barCode = item?.barCode ? item?.barCode : "";
+// async function createOpeningStockItems(
+//   tx,
+//   openingStockItems,
+//   openingStock,
+//   userId,
+//   branchId,
+//   storeId
+// ) {
+//   const promises = openingStockItems.map(async (stockDetail) => {
+//     const createdItem = await tx.openingStockItems.create({
+//       data: {
+//         openingStockId: parseInt(openingStock.id),
+//         styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+//         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+//         qty:
+//           stockDetail?.qty && !isNaN(parseFloat(stockDetail.qty))
+//             ? Math.round(parseFloat(stockDetail.qty))
+//             : null,
+//         remarks: stockDetail?.remarks ? stockDetail?.remarks : undefined,
+//       },
+//     });
+//     const stockRows = [];
+//     const qty = parseInt(stockDetail.qty) || null;
+//     const now = new Date();
+//     const dd = String(now.getDate()).padStart(2, "0");
+//     const mm = String(now.getMonth() + 1).padStart(2, "0");
+//     const yyyy = now.getFullYear();
+//     const datePrefix = `${dd}${mm}${yyyy}`;
+//     for (let i = 0; i < qty; i++) {
+//       const uniqueId = String(i + 1).padStart(4, "0");
+//       const barCode = `${datePrefix}${createdItem.id}${uniqueId}`;
+//       stockRows.push(
+//         tx.stock.create({
+//           data: {
+//             inOrOut: "OpeningStock",
+//             createdById: parseInt(userId),
+//             branchId: parseInt(branchId),
+//             storeId: parseInt(storeId),
+//             styleId: stockDetail?.styleId
+//               ? parseInt(stockDetail.styleId)
+//               : null,
+//             sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+//             qty: 1,
+//             OpeningStockItemsId: createdItem.id,
+//             barCode,
+//           },
+//         })
+//       );
+//     }
+//     await Promise.all(stockRows);
+//     return createdItem;
+//   });
 
-  return barCode;
-}
+//   return Promise.all(promises);
+// }
 
 async function createOpeningStockItems(
   tx,
@@ -501,35 +667,26 @@ async function createOpeningStockItems(
         remarks: stockDetail?.remarks ? stockDetail?.remarks : undefined,
       },
     });
-    const stockRows = [];
-    const qty = parseInt(stockDetail.qty) || 0;
     const now = new Date();
     const dd = String(now.getDate()).padStart(2, "0");
     const mm = String(now.getMonth() + 1).padStart(2, "0");
     const yyyy = now.getFullYear();
     const datePrefix = `${dd}${mm}${yyyy}`;
-    for (let i = 0; i < qty; i++) {
-      const uniqueId = String(i + 1).padStart(4, "0");
-      const barCode = `${datePrefix}${createdItem.id}${uniqueId}`;
-      stockRows.push(
-        tx.stock.create({
-          data: {
-            inOrOut: "OpeningStock",
-            createdById: parseInt(userId),
-            branchId: parseInt(branchId),
-            storeId: parseInt(storeId),
-            styleId: stockDetail?.styleId
-              ? parseInt(stockDetail.styleId)
-              : null,
-            sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-            qty: 1,
-            OpeningStockItemsId: createdItem.id,
-            barCode,
-          },
-        })
-      );
-    }
-    await Promise.all(stockRows);
+    const rawCode = `${datePrefix}${createdItem.id}`;
+    const barCode = rawCode.padStart(13, "0");
+    await tx.stock.create({
+      data: {
+        inOrOut: "OpeningStock",
+        createdById: parseInt(userId),
+        branchId: parseInt(branchId),
+        storeId: parseInt(storeId),
+        styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+        sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+        qty: stockDetail.qty ? parseInt(stockDetail.qty) : null,
+        OpeningStockItemsId: createdItem.id,
+        barCode,
+      },
+    });
     return createdItem;
   });
 

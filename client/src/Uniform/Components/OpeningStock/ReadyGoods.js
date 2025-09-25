@@ -188,7 +188,7 @@ export default function ReadyGoods({
                           if (e.code === "Minus" || e.code === "NumpadSubtract")
                             e.preventDefault();
                           if (e.key === "Delete") {
-                            handleInputChange("0.000", index, "qty");
+                            handleInputChange("", index, "qty");
                           }
                         }}
                         min={"0"}
@@ -200,13 +200,9 @@ export default function ReadyGoods({
                           handleInputChange(e.target.value, index, "qty")
                         }
                         onBlur={(e) => {
-                          // handleInputChange(
-                          //   parseFloat(e.target.value).toFixed(2),
-                          //   index,
-                          //   "qty"
-                          // );
                           handleInputChange(e.target.value, index, "qty");
                         }}
+                        disabled={readOnly}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
@@ -226,6 +222,7 @@ export default function ReadyGoods({
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "remarks");
                         }}
+                        disabled={readOnly}
                       />
                     </td>
                     <td className="w-2 border border-gray-300">

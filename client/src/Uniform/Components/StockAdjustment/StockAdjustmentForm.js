@@ -1,45 +1,37 @@
-import { useCallback, useEffect, useState } from "react";
-import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
-import { ReusableInput } from "../../../Utils/CommonInput";
-import { DropdownInput } from "../../../Inputs";
+import { useState, useCallback } from "react";
+import { DropdownInput, TextInput } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
-import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
+import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { getCommonParams } from "../../../Utils/helper";
+import { ReusableInput } from "../../../Utils/CommonInput";
+import { useGetStockAdjustmentByIdQuery } from "../../../redux/uniformService/StockAdjustmentService";
+import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
+import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
-import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
-import Swal from "sweetalert2";
-import { HiOutlineRefresh, HiX } from "react-icons/hi";
-import ReadyGoods from "./ReadyGoods.js";
-import {
-  useAddOpeningStockMutation,
-  useGetOpeningStockByIdQuery,
-  useGetOpeningStockQuery,
-  useUpdateOpeningStockMutation,
-} from "../../../redux/uniformService/OpeningStockService.js";
-import moment from "moment";
-import Modal from "../../../UiComponents/Modal/index.js";
-import BarCodePrintFormat from "./BarcodePrintFormat.jsx";
+import { adjTypeData } from "../../../Utils/DropdownData";
+import AdjustItems from "./AdjustItems";
 import { toast } from "react-toastify";
+import Swal from "sweetalert2";
+import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
+import { HiOutlineRefresh } from "react-icons/hi";
+import moment from "moment";
 
-export default function OpeningStockForm({
+export default function StockAdjustmentkForm({
   onClose,
   id,
-  setId,
   readOnly,
+  setId,
   setReadOnly,
-  setShowForm,
 }) {
+  const [searchValue, setSearchValue] = useState("");
   const [docId, setDocId] = useState("New");
   const [docDate, setDocDate] = useState("");
   const [locationId, setLocationId] = useState("");
-  const [searchValue, setSearchValue] = useState("");
-  const [term, setTerm] = useState("");
-  const [notes, setNotes] = useState("");
   const [storeId, setStoreId] = useState("");
-  const [openingStockItems, setOpeningStockItems] = useState([]);
-  const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
-  const [barCodePerPage, setBarCodePerPage] = useState(10);
-  const [barcodeItems, setBarcodeItems] = useState([]);
+  const [remarks, setRemarks] = useState("");
+  const [barcodeNo, setBarcodeNo] = useState("");
+  const [stockAdjustItems, setStockAdjustItems] = useState([]);
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
@@ -49,20 +41,46 @@ export default function OpeningStockForm({
     params: { branchId },
     searchParams: searchValue,
   });
-  const {
-    data: allData,
-    isLoading,
-    isFetching,
-  } = useGetOpeningStockQuery({
-    params: { branchId, finYearId },
-    searchParams: searchValue,
-  });
 
+  const storeOptions = locationData
+    ? locationData.data.filter(
+        (item) => parseInt(item.locationId) === parseInt(locationId)
+      )
+    : [];
+
+  const { data: styleList } = useGetStyleMasterQuery({
+    params: {
+      companyId,
+    },
+  });
+  const { data: sizeList } = useGetSizeMasterQuery({
+    params: {
+      companyId,
+    },
+  });
   const {
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
-  } = useGetOpeningStockByIdQuery(id, { skip: !id });
+  } = useGetStockAdjustmentByIdQuery(barcodeNo, { skip: !barcodeNo });
+
+  const validateData = (data) => {
+    if (stockAdjustItems?.length > 0 && data.storeId) {
+      return true;
+    }
+    return false;
+  };
+
+  const data = {
+    id,
+    docDate,
+    branchId,
+    storeId,
+    stockAdjustItems,
+    userId,
+    finYearId,
+    locationId,
+  };
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -77,36 +95,15 @@ export default function OpeningStockForm({
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
           : moment.utc(today).format("YYYY-MM-DD")
       );
-      setOpeningStockItems(
-        data?.OpeningStockItems ? data.OpeningStockItems : []
-      );
+      setStockAdjustItems(data?.stockAdjustItems ? data.stockAdjustItems : []);
       if (data?.docId) {
         setDocId(data?.docId);
       }
       setLocationId(data?.locationId ? data?.locationId : "");
       setStoreId(data?.storeId ? data.storeId : "");
-      setNotes(data?.notes ? data?.notes : "");
-      setTerm(data?.term ? data?.term : "");
     },
     [id]
   );
-
-  useEffect(() => {
-    if (id) {
-      syncFormWithDb(singleData?.data);
-    } else {
-      syncFormWithDb(undefined);
-    }
-  }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
-
-  const [addData] = useAddOpeningStockMutation();
-  const [updateData] = useUpdateOpeningStockMutation();
-
-  const storeOptions = locationData
-    ? locationData.data.filter(
-        (item) => parseInt(item.locationId) === parseInt(locationId)
-      )
-    : [];
 
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
@@ -124,8 +121,6 @@ export default function OpeningStockForm({
         } else {
           onClose();
         }
-        // setId(returnData?.data?.id);
-        // setShowForm(false);
         Swal.fire({
           title: text + "  " + "Successfully",
           icon: "success",
@@ -144,13 +139,6 @@ export default function OpeningStockForm({
     }
   };
 
-  const validateData = (data) => {
-    if (openingStockItems?.length > 0 && data.storeId) {
-      return true;
-    }
-    return false;
-  };
-
   const saveData = (nextProcess) => {
     if (!validateData(data)) {
       toast.info("Please fill all required fields...!", {
@@ -161,54 +149,32 @@ export default function OpeningStockForm({
     if (!window.confirm("Are you sure save the details ...?")) {
       return;
     }
-    if (nextProcess == "draft" && !id) {
-      handleSubmitCustom(
-        addData,
-        { ...data, draftSave: true },
-        "Added",
-        nextProcess
-      );
-    } else if (id && nextProcess == "draft") {
-      handleSubmitCustom(
-        updateData,
-        { ...data, draftSave: true },
-        "Updated",
-        nextProcess
-      );
-    } else if (id) {
-      handleSubmitCustom(updateData, data, "Updated", nextProcess);
-    } else {
-      handleSubmitCustom(addData, data, "Added", nextProcess);
-    }
+    // if (nextProcess == "draft" && !id) {
+    //   handleSubmitCustom(
+    //     addData,
+    //     { ...data, draftSave: true },
+    //     "Added",
+    //     nextProcess
+    //   );
+    // } else if (id && nextProcess == "draft") {
+    //   handleSubmitCustom(
+    //     updateData,
+    //     { ...data, draftSave: true },
+    //     "Updated",
+    //     nextProcess
+    //   );
+    // } else if (id) {
+    //   handleSubmitCustom(updateData, data, "Updated", nextProcess);
+    // } else {
+    //   handleSubmitCustom(addData, data, "Added", nextProcess);
+    // }
   };
-
-  const data = {
-    id,
-    docDate,
-    branchId,
-    storeId,
-    openingStockItems,
-    userId,
-    finYearId,
-    locationId,
-    term,
-    notes,
-  };
-
-  function getTotalQty() {
-    let qty = openingStockItems?.reduce((acc, curr) => {
-      return acc + parseInt(curr?.qty ? curr?.qty : 0);
-    }, 0);
-    return parseInt(qty);
-  }
 
   return (
-    <>
+    <div className="">
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800">
-            Opening Stock Details
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-800">Stock Adjustment</h1>
           <button
             onClick={onClose}
             className="text-indigo-600 hover:text-indigo-700"
@@ -278,18 +244,98 @@ export default function OpeningStockForm({
             </div>
           </div>
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2"></h2>
-
-            <div className="grid grid-cols-2 gap-1"></div>
+            {/* <h2 className="font-medium text-slate-700 mb-2">Barcode Details</h2>
+            <div className="grid grid-cols-2 gap-1">
+              <ReusableInput
+                label="Barcode No"
+                value={barcodeNo}
+                type="text"
+                readOnly={false}
+                setValue={setBarcodeNo}
+              />
+            </div> */}
           </div>
         </div>
         <fieldset>
-          <ReadyGoods
-            openingStockItems={openingStockItems}
-            setOpeningStockItems={setOpeningStockItems}
+          <AdjustItems
+            stockAdjustItems={stockAdjustItems}
+            setStockAdjustItems={setStockAdjustItems}
             readOnly={readOnly}
           />
         </fieldset>
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+            <h2 className="font-medium text-slate-700 mb-2">Stock Details</h2>
+            <div className="grid grid-cols-3 gap-1">
+              <DropdownInput
+                name="Style"
+                options={
+                  styleList
+                    ? dropDownListObject(
+                        styleList?.data?.filter((item) => item.active),
+                        "styleName",
+                        "id"
+                      )
+                    : []
+                }
+                value={styleId}
+                setValue={(value) => {
+                  setStyleId(value);
+                }}
+                readOnly
+              />
+              <DropdownInput
+                name="Size"
+                options={
+                  sizeList
+                    ? dropDownListObject(
+                        sizeList?.data?.filter((item) => item.active),
+                        "sizeName",
+                        "id"
+                      )
+                    : []
+                }
+                value={sizeId}
+                setValue={(value) => {
+                  setSizeId(value);
+                }}
+                readOnly
+              />
+              <TextInput name="Qty" type="text" value={qty} readOnly={true} />
+            </div>
+          </div>
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+            <h2 className="font-medium text-slate-700 mb-2">
+              Stock Adjustment Details
+            </h2>
+            <div className="grid grid-cols-3 gap-1">
+              <DropdownInput
+                name="Adj Type"
+                options={adjTypeData}
+                value={adjType}
+                setValue={(value) => {
+                  setAdjType(value);
+                }}
+                readOnly={readOnly}
+              />
+              <TextInput
+                label="Adj Qty"
+                name="Adj Qty"
+                value={adjQty}
+                type="number"
+                readOnly={readOnly}
+                setValue={setAdjQty}
+              />
+              <TextInput
+                name="New Qty"
+                type="number"
+                value={newQty}
+                setValue={setNewQty}
+                readOnly={true}
+              />
+            </div>
+          </div>
+        </div> */}
         <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">
           <div className="flex gap-2 flex-wrap">
             <button
@@ -328,13 +374,6 @@ export default function OpeningStockForm({
             </button>
             <button
               className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
-              onClick={() => {
-                const allStockRows = openingStockItems.flatMap(
-                  (item) => item.Stock
-                );
-                setBarcodeItems(allStockRows);
-                setBarcodePrintOpen(true);
-              }}
               disabled={!id}
             >
               <FiPrinter className="w-4 h-4 mr-2" />
@@ -343,16 +382,6 @@ export default function OpeningStockForm({
           </div>
         </div>
       </div>
-      <Modal
-        isOpen={barcodePrintOpen}
-        onClose={() => setBarcodePrintOpen(false)}
-        widthClass={"px-2 h-[90%] w-[90%]"}
-      >
-        <BarCodePrintFormat
-          data={barcodeItems.filter((i) => i?.styleId)}
-          barCodePerPage={barCodePerPage}
-        />
-      </Modal>
-    </>
+    </div>
   );
 }

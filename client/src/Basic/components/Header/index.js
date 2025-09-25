@@ -155,11 +155,11 @@ const Header = ({ profile, setProfile, setLogout, logout }) => {
 
   return (
 
-    <div className='py-1 w-full flex justify-between items-center bg-purple-900 shadow-sm fixed z-50 px-4'>
+    <div className='py-1 w-full flex justify-between items-center bg-white shadow-sm fixed z-50 px-4'>
       {/* Logo */}
      
         {/* <img className="rounded-lg h-8 w-32" src={logo3}   alt="peenics logo" /> */}
-        <h1 className="text-white">YACHT</h1>
+        <h1 className="text-black font-semibold">YACHT</h1>
 
 
 
@@ -210,8 +210,8 @@ const Header = ({ profile, setProfile, setLogout, logout }) => {
       </div>
 
       {/* Right Side */}
-      <div className="flex items-center text-white space-x-6 text-sm">
-          <div className='relative'>
+      <div className="flex items-center text-black space-x-6 text-sm">
+          <div className='relative border rounded'>
          
                <PageSearch pageList={allowedPages} />
         </div>
