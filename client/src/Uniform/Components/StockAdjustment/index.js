@@ -1,5 +1,5 @@
 import { useState } from "react";
-import StockAdjustmentkForm from "./StockAdjustmentForm";
+import StockAdjustmentForm from "./StockAdjustmentForm";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -7,7 +7,7 @@ export default function Form() {
   const [readOnly, setReadOnly] = useState(false);
   return (
     <>
-      <StockAdjustmentkForm
+      <StockAdjustmentForm
         readOnly={readOnly}
         setReadOnly={setReadOnly}
         id={id}

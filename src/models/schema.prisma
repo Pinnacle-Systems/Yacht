@@ -122,6 +122,7 @@ model Branch {
   Location            Location[]
   Stock               Stock[]
   OpeningStock        OpeningStock[]
+  StockAdjustment     StockAdjustment[]
 }
 
 model UserOnBranch {
@@ -224,6 +225,8 @@ model User {
   StockUpdatedBy               Stock[]               @relation(name: "updatedBy")
   OpeningStockCreatedBy        OpeningStock[]        @relation(name: "createdBy")
   OpeningStockUpdatedBy        OpeningStock[]        @relation(name: "updatedBy")
+  StockAdjustmentCreatedBy     StockAdjustment[]     @relation(name: "createdBy")
+  StockAdjustmentUpdatedBy     StockAdjustment[]     @relation(name: "updatedBy")
 }
 
 model Employee {
@@ -631,20 +634,21 @@ model TaxTemplateDetails {
 }
 
 model Location {
-  id           Int            @id @default(autoincrement())
-  storeName    String
-  isFabric     Boolean        @default(true)
-  isYarn       Boolean        @default(true)
-  isAccessory  Boolean        @default(true)
-  isGarments   Boolean        @default(true)
-  active       Boolean        @default(true)
-  Company      Company        @relation(fields: [companyId], references: [id])
-  companyId    Int
-  Location     Branch         @relation(fields: [locationId], references: [id])
-  BillEntry    BillEntry[]
-  locationId   Int
-  Stock        Stock[]
-  OpeningStock OpeningStock[]
+  id              Int               @id @default(autoincrement())
+  storeName       String
+  isFabric        Boolean           @default(true)
+  isYarn          Boolean           @default(true)
+  isAccessory     Boolean           @default(true)
+  isGarments      Boolean           @default(true)
+  active          Boolean           @default(true)
+  Company         Company           @relation(fields: [companyId], references: [id])
+  companyId       Int
+  Location        Branch            @relation(fields: [locationId], references: [id])
+  BillEntry       BillEntry[]
+  locationId      Int
+  Stock           Stock[]
+  OpeningStock    OpeningStock[]
+  StockAdjustment StockAdjustment[]
 }
 
 model TermsAndConditions {
@@ -1446,28 +1450,30 @@ model PayDetails {
 }
 
 model Style {
-  id                Int                 @id @default(autoincrement())
-  name              String?
-  sku               String?
-  alias             String?
-  active            Boolean?
-  img               String?
-  styleNo           String?
-  Company           Company?            @relation(fields: [companyId], references: [id])
-  companyId         Int?
-  Stock             Stock[]
-  OpeningStockItems OpeningStockItems[]
+  id                   Int                    @id @default(autoincrement())
+  name                 String?
+  sku                  String?
+  alias                String?
+  active               Boolean?
+  img                  String?
+  styleNo              String?
+  Company              Company?               @relation(fields: [companyId], references: [id])
+  companyId            Int?
+  Stock                Stock[]
+  OpeningStockItems    OpeningStockItems[]
+  StockAdjustmentItems StockAdjustmentItems[]
 }
 
 model Size {
-  id                Int                 @id @default(autoincrement())
-  name              String?
-  isAccessory       Boolean?            @default(false)
-  Company           Company?            @relation(fields: [companyId], references: [id])
-  companyId         Int?
-  active            Boolean?            @default(true)
-  Stock             Stock[]
-  OpeningStockItems OpeningStockItems[]
+  id                   Int                    @id @default(autoincrement())
+  name                 String?
+  isAccessory          Boolean?               @default(false)
+  Company              Company?               @relation(fields: [companyId], references: [id])
+  companyId            Int?
+  active               Boolean?               @default(true)
+  Stock                Stock[]
+  OpeningStockItems    OpeningStockItems[]
+  StockAdjustmentItems StockAdjustmentItems[]
 }
 
 model Measurement {
@@ -1526,46 +1532,48 @@ model AccessoryItem {
 }
 
 model Stock {
-  id                  Int                @id @default(autoincrement())
-  docId               String?
-  docDate             DateTime?
-  inOrOut             String?
-  Fabric              Fabric?            @relation(fields: [fabricId], references: [id])
-  fabricId            Int?
-  Yarn                Yarn?              @relation(fields: [yarnId], references: [id])
-  yarnId              Int?
-  Accessory           Accessory?         @relation(fields: [accessoryId], references: [id])
-  accessoryId         Int?
-  accessoryGroup      AccessoryGroup?    @relation(fields: [accessoryGroupId], references: [id])
-  accessoryGroupId    Int?
-  accessoryItem       AccessoryItem?     @relation(fields: [accessoryItemId], references: [id])
-  accessoryItemId     Int?
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime?          @updatedAt
-  createdBy           User?              @relation("createdBy", fields: [createdById], references: [id])
-  createdById         Int?
-  updatedBy           User?              @relation("updatedBy", fields: [updatedById], references: [id])
-  updatedById         Int?
-  Branch              Branch?            @relation(fields: [branchId], references: [id])
-  branchId            Int?
-  Store               Location?          @relation(fields: [storeId], references: [id])
-  storeId             Int?
-  notes               String?
-  term                String?
-  Color               Color?             @relation(fields: [colorId], references: [id])
-  colorId             Int?
-  Uom                 UnitOfMeasurement? @relation(fields: [uomId], references: [id])
-  uomId               Int?
-  Style               Style?             @relation(fields: [styleId], references: [id])
-  styleId             Int?
-  Size                Size?              @relation(fields: [sizeId], references: [id])
-  sizeId              Int?
-  qty                 Float?
-  price               Float?
-  active              Boolean?           @default(true)
-  OpeningStockItems   OpeningStockItems? @relation(fields: [OpeningStockItemsId], references: [id], onDelete: Cascade)
-  OpeningStockItemsId Int?
-  barCode             String?
+  id                   Int                   @id @default(autoincrement())
+  docId                String?
+  docDate              DateTime?
+  inOrOut              String?
+  Fabric               Fabric?               @relation(fields: [fabricId], references: [id])
+  fabricId             Int?
+  Yarn                 Yarn?                 @relation(fields: [yarnId], references: [id])
+  yarnId               Int?
+  Accessory            Accessory?            @relation(fields: [accessoryId], references: [id])
+  accessoryId          Int?
+  accessoryGroup       AccessoryGroup?       @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId     Int?
+  accessoryItem        AccessoryItem?        @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId      Int?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime?             @updatedAt
+  createdBy            User?                 @relation("createdBy", fields: [createdById], references: [id])
+  createdById          Int?
+  updatedBy            User?                 @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById          Int?
+  Branch               Branch?               @relation(fields: [branchId], references: [id])
+  branchId             Int?
+  Store                Location?             @relation(fields: [storeId], references: [id])
+  storeId              Int?
+  notes                String?
+  term                 String?
+  Color                Color?                @relation(fields: [colorId], references: [id])
+  colorId              Int?
+  Uom                  UnitOfMeasurement?    @relation(fields: [uomId], references: [id])
+  uomId                Int?
+  Style                Style?                @relation(fields: [styleId], references: [id])
+  styleId              Int?
+  Size                 Size?                 @relation(fields: [sizeId], references: [id])
+  sizeId               Int?
+  qty                  Float?
+  price                Float?
+  active               Boolean?              @default(true)
+  OpeningStockItems    OpeningStockItems?    @relation(fields: [OpeningStockItemsId], references: [id], onDelete: Cascade)
+  OpeningStockItemsId  Int?
+  barCode              String?
+  StockAdjustmentItems StockAdjustmentItems? @relation(fields: [stockAdjustmentId], references: [id], onDelete: Cascade)
+  stockAdjustmentId    Int?
 }
 
 model OpeningStock {
@@ -1599,4 +1607,38 @@ model OpeningStockItems {
   qty            Int?
   remarks        String?
   Stock          Stock[]
+}
+
+model StockAdjustment {
+  id                   Int                    @id @default(autoincrement())
+  docId                String
+  docDate              DateTime?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  createdBy            User?                  @relation("createdBy", fields: [createdById], references: [id])
+  createdById          Int?
+  updatedBy            User?                  @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById          Int?
+  Branch               Branch?                @relation(fields: [branchId], references: [id])
+  branchId             Int?
+  locationId           Int?
+  Store                Location?              @relation(fields: [storeId], references: [id])
+  storeId              Int?
+  StockAdjustmentItems StockAdjustmentItems[]
+}
+
+model StockAdjustmentItems {
+  id                Int              @id @default(autoincrement())
+  StockAdjustment   StockAdjustment? @relation(fields: [stockAdjustmentId], references: [id])
+  stockAdjustmentId Int?
+  barcode           String?
+  Style             Style?           @relation(fields: [styleId], references: [id])
+  styleId           Int?
+  Size              Size?            @relation(fields: [sizeId], references: [id])
+  sizeId            Int?
+  stkQty            Int?
+  adjType           String?
+  adjQty            Int?
+  remarks           String?
+  Stock             Stock[]
 }

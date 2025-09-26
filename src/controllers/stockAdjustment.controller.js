@@ -1,10 +1,31 @@
 import { Prisma } from "@prisma/client";
 
 import {
-  getOne as _getOne,
+  getOneBarcode as _getOneBarcode,
   remove as _remove,
+  get as _get,
+  getOne as _getOne,
+  create as _create,
+  update as _update,
 } from "../services/stockAdjustment.service.js";
 
+async function getOneBarcode(req, res, next) {
+  try {
+    res.json(await _getOneBarcode(req));
+    console.log(res.statusCode);
+  } catch (err) {
+    console.error(`Error`, err.message);
+  }
+}
+
+async function get(req, res, next) {
+  try {
+    res.json(await _get(req));
+    console.log(res.statusCode);
+  } catch (err) {
+    console.error(`Error `, err.message);
+  }
+}
 
 async function getOne(req, res, next) {
   try {
@@ -12,6 +33,66 @@ async function getOne(req, res, next) {
     console.log(res.statusCode);
   } catch (err) {
     console.error(`Error`, err.message);
+  }
+}
+
+async function create(req, res, next) {
+  try {
+    res.json(await _create(req.body));
+    console.log(res.statusCode);
+  } catch (error) {
+    console.error(
+      `Error`,
+      error?.message?.match(/message: "(.*?)"/)?.[1] || error?.message
+    );
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        res.statusCode = 200;
+        res.json({
+          statusCode: 1,
+          message: `${error.meta.target
+            .split("_")[1]
+            .toUpperCase()} Already exists`,
+        });
+        console.log(res.statusCode);
+      }
+    } else {
+      res.json({
+        statusCode: 1,
+        message:
+          error?.message?.match(/message: "(.*?)"/)?.[1] || error?.message,
+      });
+    }
+  }
+}
+
+async function update(req, res, next) {
+  try {
+    res.json(await _update(req.params.id, req.body));
+    console.log(res.statusCode);
+  } catch (error) {
+    console.error(
+      `Error`,
+      error?.message?.match(/message: "(.*?)"/)?.[1] || error?.message
+    );
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        res.statusCode = 200;
+        res.json({
+          statusCode: 1,
+          message: `${error.meta.target
+            .split("_")[1]
+            .toUpperCase()} Already exists`,
+        });
+        console.log(res.statusCode);
+      }
+    } else {
+      res.json({
+        statusCode: 1,
+        message:
+          error?.message?.match(/message: "(.*?)"/)?.[1] || error?.message,
+      });
+    }
   }
 }
 
@@ -32,4 +113,4 @@ async function remove(req, res, next) {
   }
 }
 
-export { getOne, remove };
+export { getOneBarcode, remove, get, getOne, create, update };

@@ -2,6 +2,7 @@ import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMaste
 import { useEffect, useState } from "react";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { adjTypeData } from "../../../Utils/DropdownData";
+import { useLazyGetBarcodeDetailQuery } from "../../../redux/uniformService/StockAdjustmentService";
 
 export default function AdjustItems({
   stockAdjustItems,
@@ -15,6 +16,11 @@ export default function AdjustItems({
   const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
 
+  const [
+    triggerGetBarcodeDetail,
+    { data: barcodeData, isFetching, isLoading },
+  ] = useLazyGetBarcodeDetailQuery();
+
   const addRow = () => {
     const newRow = {
       barcode: "",
@@ -23,7 +29,6 @@ export default function AdjustItems({
       stkQty: "",
       adjType: "",
       adjQty: "",
-      newQty: "",
       remarks: "",
     };
     setStockAdjustItems([...stockAdjustItems, newRow]);
@@ -38,7 +43,7 @@ export default function AdjustItems({
   const deleteRow = (id) => {
     setStockAdjustItems((currentRows) => {
       if (currentRows.length > 1) {
-        return currentRows.filter((row, index) => index !== parseInt(id));
+        return currentRows.filter((row, index) => index !== Number(id));
       }
       return currentRows;
     });
@@ -69,14 +74,48 @@ export default function AdjustItems({
     if (!stockAdjustItems || stockAdjustItems.length === 0) {
       setStockAdjustItems(
         Array.from({ length: 6 }, () => ({
+          barcode: "",
           styleId: "",
           sizeId: "",
-          qty: "",
+          stkQty: "",
+          adjType: "",
+          adjQty: "",
           remarks: "",
         }))
       );
     }
   }, [stockAdjustItems, setStockAdjustItems]);
+
+  const handleBarcodeApiCall = async (index, row) => {
+    try {
+      const result = await triggerGetBarcodeDetail({
+        params: {
+          barcode: row.barcode,
+          styleId: row.styleId,
+          sizeId: row.sizeId,
+        },
+      }).unwrap();
+
+      if (result?.totalCount === 1 && result?.data?.length > 0) {
+        const item = result.data[0];
+        setStockAdjustItems((prev) =>
+          prev.map((r, i) =>
+            i === index
+              ? {
+                  ...r,
+                  barcode: item.barCode,
+                  styleId: item.styleId,
+                  sizeId: item.sizeId,
+                  stkQty: item.qty,
+                }
+              : r
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Error fetching barcode details:", err);
+    }
+  };
 
   return (
     <>
@@ -94,7 +133,7 @@ export default function AdjustItems({
                   S.No
                 </th>
                 <th
-                  className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Barcode No
                 </th>
@@ -122,11 +161,6 @@ export default function AdjustItems({
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Adj Qty
-                </th>
-                <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
-                >
-                  New Qty
                 </th>
                 <th
                   className={`w-48 px-1 py-2 text-center font-medium text-[13px] `}
@@ -159,19 +193,27 @@ export default function AdjustItems({
                       className="text-left rounded py-1 px-1 w-full table-data-input"
                       onFocus={(e) => e.target.select()}
                       value={row?.barcode}
+                      disabled={readOnly}
                       onChange={(e) =>
                         handleInputChange(e.target.value, index, "barcode")
                       }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "barcode");
-                      }}
+                      onBlur={() => handleBarcodeApiCall(index, row)}
                     />
                   </td>
                   <td className="py-0.5 border border-gray-300 text-[11px] ">
                     <select
-                      disabled={true}
+                      disabled={readOnly || !!row.barcode}
                       className="text-left w-full rounded py-1 table-data-input"
                       value={row.styleId}
+                      onKeyDown={(e) => {
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "styleId");
+                        }
+                      }}
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "styleId")
+                      }
+                      onBlur={() => handleBarcodeApiCall(index, row)}
                     >
                       <option></option>
                       {(id
@@ -186,9 +228,18 @@ export default function AdjustItems({
                   </td>
                   <td className="py-0.5 border border-gray-300 text-[11px]">
                     <select
-                      disabled={true}
+                      disabled={readOnly || !!row.barcode}
                       className="text-left w-full rounded py-1 table-data-input"
                       value={row.sizeId}
+                      onKeyDown={(e) => {
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "sizeId");
+                        }
+                      }}
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "sizeId")
+                      }
+                      onBlur={() => handleBarcodeApiCall(index, row)}
                     >
                       <option></option>
                       {(id
@@ -206,14 +257,31 @@ export default function AdjustItems({
                       type="number"
                       className="text-right rounded py-1 px-1 w-full table-data-input"
                       value={row?.stkQty}
-                      disabled={true}
+                      disabled={readOnly || !!row.barcode}
+                      onKeyDown={(e) => {
+                        if (e.code === "Minus" || e.code === "NumpadSubtract")
+                          e.preventDefault();
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "stkQty");
+                        }
+                      }}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "stkQty")
+                      }
+                      onBlur={(e) => {
+                        handleInputChange(e.target.value, index, "stkQty");
+                      }}
                     />
                   </td>
                   <td className="py-0.5 border border-gray-300 text-[11px]">
                     <select
                       tabIndex={"0"}
                       disabled={readOnly}
-                      className="text-left w-full rounded py-1 table-data-input"
+                      className={`text-left w-full rounded py-1 table-data-input 
+    ${row.adjType === "PLUS" ? "text-green-600" : ""}
+    ${row.adjType === "MINUS" ? "text-red-600" : ""}
+  `}
                       value={row.adjType}
                       onChange={(e) =>
                         handleInputChange(e.target.value, index, "adjType")
@@ -221,6 +289,7 @@ export default function AdjustItems({
                       onBlur={(e) => {
                         handleInputChange(e.target.value, index, "adjType");
                       }}
+                      onFocus={(e) => e.target.select()}
                     >
                       <option></option>
                       {adjTypeData?.map((blend) => (
@@ -252,15 +321,6 @@ export default function AdjustItems({
                       }}
                     />
                   </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      type="number"
-                      className="text-right rounded py-1 px-1 w-full table-data-input"
-                      value={row?.newQty}
-                      disabled={true}
-                    />
-                  </td>
-
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                     <input
                       onKeyDown={(e) => {

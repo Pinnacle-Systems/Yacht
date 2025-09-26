@@ -1,27 +1,24 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { DropdownInput, TextInput } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
-import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
-import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { getCommonParams } from "../../../Utils/helper";
 import { ReusableInput } from "../../../Utils/CommonInput";
-import { useGetStockAdjustmentByIdQuery } from "../../../redux/uniformService/StockAdjustmentService";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
-import { adjTypeData } from "../../../Utils/DropdownData";
 import AdjustItems from "./AdjustItems";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import moment from "moment";
+import { useGetStockAdjustmentByIdQuery } from "../../../redux/uniformService/StockAdjustmentService";
 
-export default function StockAdjustmentkForm({
+export default function StockAdjustmentForm({
   onClose,
   id,
-  readOnly,
   setId,
+  readOnly,
   setReadOnly,
 }) {
   const [searchValue, setSearchValue] = useState("");
@@ -29,8 +26,6 @@ export default function StockAdjustmentkForm({
   const [docDate, setDocDate] = useState("");
   const [locationId, setLocationId] = useState("");
   const [storeId, setStoreId] = useState("");
-  const [remarks, setRemarks] = useState("");
-  const [barcodeNo, setBarcodeNo] = useState("");
   const [stockAdjustItems, setStockAdjustItems] = useState([]);
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
@@ -48,28 +43,18 @@ export default function StockAdjustmentkForm({
       )
     : [];
 
-  const { data: styleList } = useGetStyleMasterQuery({
-    params: {
-      companyId,
-    },
-  });
-  const { data: sizeList } = useGetSizeMasterQuery({
-    params: {
-      companyId,
-    },
-  });
-  const {
-    data: singleData,
-    isFetching: isSingleFetching,
-    isLoading: isSingleLoading,
-  } = useGetStockAdjustmentByIdQuery(barcodeNo, { skip: !barcodeNo });
-
   const validateData = (data) => {
     if (stockAdjustItems?.length > 0 && data.storeId) {
       return true;
     }
     return false;
   };
+
+  const {
+    data: singleData,
+    isFetching: isSingleFetching,
+    isLoading: isSingleLoading,
+  } = useGetStockAdjustmentByIdQuery(id, { skip: !id });
 
   const data = {
     id,
@@ -104,6 +89,14 @@ export default function StockAdjustmentkForm({
     },
     [id]
   );
+
+  useEffect(() => {
+    if (id) {
+      syncFormWithDb(singleData?.data);
+    } else {
+      syncFormWithDb(undefined);
+    }
+  }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
@@ -243,18 +236,7 @@ export default function StockAdjustmentkForm({
               />
             </div>
           </div>
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            {/* <h2 className="font-medium text-slate-700 mb-2">Barcode Details</h2>
-            <div className="grid grid-cols-2 gap-1">
-              <ReusableInput
-                label="Barcode No"
-                value={barcodeNo}
-                type="text"
-                readOnly={false}
-                setValue={setBarcodeNo}
-              />
-            </div> */}
-          </div>
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1"></div>
         </div>
         <fieldset>
           <AdjustItems
@@ -263,79 +245,6 @@ export default function StockAdjustmentkForm({
             readOnly={readOnly}
           />
         </fieldset>
-        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">Stock Details</h2>
-            <div className="grid grid-cols-3 gap-1">
-              <DropdownInput
-                name="Style"
-                options={
-                  styleList
-                    ? dropDownListObject(
-                        styleList?.data?.filter((item) => item.active),
-                        "styleName",
-                        "id"
-                      )
-                    : []
-                }
-                value={styleId}
-                setValue={(value) => {
-                  setStyleId(value);
-                }}
-                readOnly
-              />
-              <DropdownInput
-                name="Size"
-                options={
-                  sizeList
-                    ? dropDownListObject(
-                        sizeList?.data?.filter((item) => item.active),
-                        "sizeName",
-                        "id"
-                      )
-                    : []
-                }
-                value={sizeId}
-                setValue={(value) => {
-                  setSizeId(value);
-                }}
-                readOnly
-              />
-              <TextInput name="Qty" type="text" value={qty} readOnly={true} />
-            </div>
-          </div>
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">
-              Stock Adjustment Details
-            </h2>
-            <div className="grid grid-cols-3 gap-1">
-              <DropdownInput
-                name="Adj Type"
-                options={adjTypeData}
-                value={adjType}
-                setValue={(value) => {
-                  setAdjType(value);
-                }}
-                readOnly={readOnly}
-              />
-              <TextInput
-                label="Adj Qty"
-                name="Adj Qty"
-                value={adjQty}
-                type="number"
-                readOnly={readOnly}
-                setValue={setAdjQty}
-              />
-              <TextInput
-                name="New Qty"
-                type="number"
-                value={newQty}
-                setValue={setNewQty}
-                readOnly={true}
-              />
-            </div>
-          </div>
-        </div> */}
         <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">
           <div className="flex gap-2 flex-wrap">
             <button

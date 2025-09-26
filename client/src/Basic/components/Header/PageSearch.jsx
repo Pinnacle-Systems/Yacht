@@ -62,7 +62,7 @@ const PageSearch = ({ pageList }) => {
       <input
         type="text"
         placeholder="Search here"
-        className="text-black p-2 w-[350px]  h-[30px] rounded-lg focus:border-0 font-medium  focus:outline-none"
+        className="text-black p-2 w-[300px]  h-[30px] rounded-lg focus:border-0 font-medium  focus:outline-none"
         tabIndex={0}
         onChange={(e) => {
           setSearch(e.target.value);
@@ -76,7 +76,7 @@ const PageSearch = ({ pageList }) => {
         <Search size={15} />
       </div>
       {isListShow && (
-        <ul className="absolute max-h-[300px] text-sm overflow-auto bg-gray-100 top-7  w-[350px] ">
+        <ul className="absolute max-h-[300px] text-sm overflow-auto bg-gray-100 top-7  w-[300px] ">
           {filteredPages.map((page) => (
             <li
               className="cursor-pointer text-sm pb-1  "
