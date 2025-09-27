@@ -98,7 +98,7 @@ export function ReusableInput(
   return (
     <div className="mb-2">
       {label && (
-        <label className="block  font-bold text-slate-700 mb-1 text-ms">
+        <label className="block  font-bold text-slate-700 mb-1 text-xs">
           {label}
         </label>
       )}

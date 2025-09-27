@@ -5,8 +5,8 @@ import { adjTypeData } from "../../../Utils/DropdownData";
 import { useLazyGetBarcodeDetailQuery } from "../../../redux/uniformService/StockAdjustmentService";
 
 export default function AdjustItems({
-  stockAdjustItems,
-  setStockAdjustItems,
+  stockAdjustmentItems,
+  setStockAdjustmentItems,
   params,
   readOnly,
   id,
@@ -31,17 +31,11 @@ export default function AdjustItems({
       adjQty: "",
       remarks: "",
     };
-    setStockAdjustItems([...stockAdjustItems, newRow]);
-  };
-
-  const handleInputChange = (value, index, field) => {
-    const newBlend = structuredClone(stockAdjustItems);
-    newBlend[index][field] = value;
-    setStockAdjustItems(newBlend);
+    setStockAdjustmentItems([...stockAdjustmentItems, newRow]);
   };
 
   const deleteRow = (id) => {
-    setStockAdjustItems((currentRows) => {
+    setStockAdjustmentItems((currentRows) => {
       if (currentRows.length > 1) {
         return currentRows.filter((row, index) => index !== Number(id));
       }
@@ -50,7 +44,7 @@ export default function AdjustItems({
   };
 
   const handleDeleteAllRows = () => {
-    setStockAdjustItems((prevRows) => {
+    setStockAdjustmentItems((prevRows) => {
       if (prevRows.length <= 1) return prevRows;
       return [prevRows[0]];
     });
@@ -71,8 +65,8 @@ export default function AdjustItems({
   };
 
   useEffect(() => {
-    if (!stockAdjustItems || stockAdjustItems.length === 0) {
-      setStockAdjustItems(
+    if (!stockAdjustmentItems || stockAdjustmentItems.length === 0) {
+      setStockAdjustmentItems(
         Array.from({ length: 6 }, () => ({
           barcode: "",
           styleId: "",
@@ -84,36 +78,120 @@ export default function AdjustItems({
         }))
       );
     }
-  }, [stockAdjustItems, setStockAdjustItems]);
+  }, [stockAdjustmentItems, setStockAdjustmentItems]);
 
-  const handleBarcodeApiCall = async (index, row) => {
-    try {
-      const result = await triggerGetBarcodeDetail({
-        params: {
-          barcode: row.barcode,
-          styleId: row.styleId,
-          sizeId: row.sizeId,
-        },
-      }).unwrap();
+  // const handleInputChange = (value, index, field) => {
+  //   const newBlend = structuredClone(stockAdjustmentItems);
+  //   newBlend[index][field] = value;
+  //   setStockAdjustmentItems(newBlend);
+  // };
 
-      if (result?.totalCount === 1 && result?.data?.length > 0) {
-        const item = result.data[0];
-        setStockAdjustItems((prev) =>
-          prev.map((r, i) =>
-            i === index
-              ? {
-                  ...r,
-                  barcode: item.barCode,
-                  styleId: item.styleId,
-                  sizeId: item.sizeId,
-                  stkQty: item.qty,
-                }
-              : r
-          )
-        );
+  // const handleBarcodeApiCall = async (index, row) => {
+  //   try {
+  //     const response = await triggerGetBarcodeDetail({
+  //       params: {
+  //         barcode: row.barcode,
+  //         styleId: row.styleId,
+  //         sizeId: row.sizeId,
+  //       },
+  //     }).unwrap();
+
+  //     if (response?.data?.length > 0) {
+  //       const item = response.data[0];
+  //       setStockAdjustmentItems((prev) =>
+  //         prev.map((r, i) =>
+  //           i === index
+  //             ? {
+  //                 ...r,
+  //                 barcode: item.barCode,
+  //                 styleId: item.styleId,
+  //                 sizeId: item.sizeId,
+  //                 stkQty: response.totalQty,
+  //               }
+  //             : r
+  //         )
+  //       );
+  //     }
+  //   } catch (err) {
+  //     console.error("Error fetching barcode details:", err);
+  //   }
+  // };
+
+  const handleInputChange = async (value, index, field) => {
+    setStockAdjustmentItems((prev) => {
+      const newItems = structuredClone(prev);
+      newItems[index][field] = value;
+      return newItems;
+    });
+
+    // Trigger API call only for barcode, styleId, or sizeId
+    if (["barcode", "styleId", "sizeId"].includes(field)) {
+      const row = structuredClone(stockAdjustmentItems[index]);
+      row[field] = value; // use updated value
+      // Only call API if at least barcode or (style+size) is filled
+      if (row.barcode || (row.styleId && row.sizeId)) {
+        try {
+          const response = await triggerGetBarcodeDetail({
+            params: {
+              barcode: row.barcode,
+              styleId: row.styleId,
+              sizeId: row.sizeId,
+            },
+          }).unwrap();
+          // if (response?.statusCode === 1) {
+          //   // No record found → reset the row
+          //   setStockAdjustmentItems((prev) =>
+          //     prev.map((r, i) =>
+          //       i === index
+          //         ? {
+          //             barcode: "",
+          //             styleId: "",
+          //             sizeId: "",
+          //             stkQty: "",
+          //             adjType: "",
+          //             adjQty: "",
+          //             remarks: "",
+          //           }
+          //         : r
+          //     )
+          //   );
+          //   return; // stop here
+          // }
+          if (response?.data?.length > 0) {
+            const item = response.data[0];
+            setStockAdjustmentItems((prev) =>
+              prev.map((r, i) =>
+                i === index
+                  ? {
+                      ...r,
+                      barcode: item.barCode,
+                      styleId: item.styleId,
+                      sizeId: item.sizeId,
+                      stkQty: response.totalQty,
+                    }
+                  : r
+              )
+            );
+          } else {
+            setStockAdjustmentItems((prev) =>
+              prev.map((r, i) =>
+                i === index
+                  ? {
+                      styleId: "",
+                      sizeId: "",
+                      stkQty: "",
+                      adjType: "",
+                      adjQty: "",
+                      remarks: "",
+                    }
+                  : r
+              )
+            );
+          }
+        } catch (err) {
+          console.error("Error fetching barcode details:", err);
+        }
       }
-    } catch (err) {
-      console.error("Error fetching barcode details:", err);
     }
   };
 
@@ -173,191 +251,199 @@ export default function AdjustItems({
               </tr>
             </thead>
             <tbody>
-              {(stockAdjustItems ? stockAdjustItems : [])?.map((row, index) => (
-                <tr
-                  className="border border-blue-gray-200 cursor-pointer "
-                  key={index}
-                >
-                  <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
-                    {index + 1}
-                  </td>
+              {(stockAdjustmentItems ? stockAdjustmentItems : [])?.map(
+                (row, index) => (
+                  <tr
+                    className="border border-blue-gray-200 cursor-pointer "
+                    key={index}
+                  >
+                    <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
+                      {index + 1}
+                    </td>
 
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "barcode");
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "barcode");
+                          }
+                        }}
+                        type="string"
+                        className="text-left rounded py-1 px-1 w-full table-data-input"
+                        onFocus={(e) => e.target.select()}
+                        value={row?.barcode}
+                        disabled={readOnly}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "barcode")
                         }
-                      }}
-                      type="string"
-                      className="text-left rounded py-1 px-1 w-full table-data-input"
-                      onFocus={(e) => e.target.select()}
-                      value={row?.barcode}
-                      disabled={readOnly}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "barcode")
-                      }
-                      onBlur={() => handleBarcodeApiCall(index, row)}
-                    />
-                  </td>
-                  <td className="py-0.5 border border-gray-300 text-[11px] ">
-                    <select
-                      disabled={readOnly || !!row.barcode}
-                      className="text-left w-full rounded py-1 table-data-input"
-                      value={row.styleId}
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "styleId");
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "barcode");
+                        }}
+                      />
+                    </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px] ">
+                      <select
+                        disabled={readOnly || !!row.barcode}
+                        className="text-left w-full rounded py-1 table-data-input"
+                        value={row.styleId}
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "styleId");
+                          }
+                        }}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "styleId")
                         }
-                      }}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "styleId")
-                      }
-                      onBlur={() => handleBarcodeApiCall(index, row)}
-                    >
-                      <option></option>
-                      {(id
-                        ? styleList?.data
-                        : styleList?.data?.filter((item) => item.active)
-                      )?.map((blend) => (
-                        <option value={blend.id} key={blend.id}>
-                          {blend?.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="py-0.5 border border-gray-300 text-[11px]">
-                    <select
-                      disabled={readOnly || !!row.barcode}
-                      className="text-left w-full rounded py-1 table-data-input"
-                      value={row.sizeId}
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "sizeId");
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "styleId");
+                        }}
+                      >
+                        <option></option>
+                        {(id
+                          ? styleList?.data
+                          : styleList?.data?.filter((item) => item.active)
+                        )?.map((blend) => (
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <select
+                        disabled={readOnly || !!row.barcode}
+                        className="text-left w-full rounded py-1 table-data-input"
+                        value={row.sizeId}
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "sizeId");
+                          }
+                        }}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "sizeId")
                         }
-                      }}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "sizeId")
-                      }
-                      onBlur={() => handleBarcodeApiCall(index, row)}
-                    >
-                      <option></option>
-                      {(id
-                        ? sizeList?.data
-                        : sizeList?.data?.filter((item) => item.active)
-                      )?.map((blend) => (
-                        <option value={blend.id} key={blend.id}>
-                          {blend?.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      type="number"
-                      className="text-right rounded py-1 px-1 w-full table-data-input"
-                      value={row?.stkQty}
-                      disabled={readOnly || !!row.barcode}
-                      onKeyDown={(e) => {
-                        if (e.code === "Minus" || e.code === "NumpadSubtract")
-                          e.preventDefault();
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "stkQty");
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "sizeId");
+                        }}
+                      >
+                        <option></option>
+                        {(id
+                          ? sizeList?.data
+                          : sizeList?.data?.filter((item) => item.active)
+                        )?.map((blend) => (
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        type="number"
+                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        value={row?.stkQty}
+                        disabled={true}
+                        onKeyDown={(e) => {
+                          if (e.code === "Minus" || e.code === "NumpadSubtract")
+                            e.preventDefault();
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "stkQty");
+                          }
+                        }}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "stkQty")
                         }
-                      }}
-                      onFocus={(e) => e.target.select()}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "stkQty")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "stkQty");
-                      }}
-                    />
-                  </td>
-                  <td className="py-0.5 border border-gray-300 text-[11px]">
-                    <select
-                      tabIndex={"0"}
-                      disabled={readOnly}
-                      className={`text-left w-full rounded py-1 table-data-input 
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "stkQty");
+                        }}
+                      />
+                    </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <select
+                        tabIndex={"0"}
+                        disabled={readOnly}
+                        className={`text-left w-full rounded py-1 table-data-input 
     ${row.adjType === "PLUS" ? "text-green-600" : ""}
     ${row.adjType === "MINUS" ? "text-red-600" : ""}
   `}
-                      value={row.adjType}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "adjType")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "adjType");
-                      }}
-                      onFocus={(e) => e.target.select()}
-                    >
-                      <option></option>
-                      {adjTypeData?.map((blend) => (
-                        <option value={blend.value} key={blend.value}>
-                          {blend?.show}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      onKeyDown={(e) => {
-                        if (e.code === "Minus" || e.code === "NumpadSubtract")
-                          e.preventDefault();
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "adjQty");
+                        value={row.adjType}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "adjType")
                         }
-                      }}
-                      min={"0"}
-                      type="number"
-                      className="text-right rounded py-1 px-1 w-full table-data-input"
-                      onFocus={(e) => e.target.select()}
-                      value={row?.adjQty}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "adjQty")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "adjQty");
-                      }}
-                    />
-                  </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "remarks");
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "adjType");
+                        }}
+                        onFocus={(e) => e.target.onselect()}
+                      >
+                        <option></option>
+                        {adjTypeData?.map((blend) => (
+                          <option value={blend.value} key={blend.value}>
+                            {blend?.show}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        onKeyDown={(e) => {
+                          if (e.code === "Minus" || e.code === "NumpadSubtract")
+                            e.preventDefault();
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "adjQty");
+                          }
+                        }}
+                        min={"0"}
+                        type="number"
+                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        onFocus={(e) => e.target.select()}
+                        value={row?.adjQty}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "adjQty")
                         }
-                      }}
-                      type="string"
-                      className="text-left rounded py-1 px-1 w-full table-data-input"
-                      onFocus={(e) => e.target.select()}
-                      value={row?.remarks}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "remarks")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "remarks");
-                      }}
-                    />
-                  </td>
-                  <td className="w-2 border border-gray-300">
-                    <input
-                      onContextMenu={(e) => {
-                        if (!readOnly) {
-                          handleRightClick(e, index, "notes");
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "adjQty");
+                        }}
+                      />
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "remarks");
+                          }
+                        }}
+                        type="string"
+                        className="text-left rounded py-1 px-1 w-full table-data-input"
+                        onFocus={(e) => e.target.select()}
+                        value={row?.remarks}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "remarks")
                         }
-                      }}
-                      className="w-full "
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          addRow();
-                        }
-                      }}
-                    />
-                  </td>
-                </tr>
-              ))}
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "remarks");
+                        }}
+                      />
+                    </td>
+                    <td className="w-2 border border-gray-300">
+                      <input
+                        onContextMenu={(e) => {
+                          if (!readOnly) {
+                            handleRightClick(e, index, "notes");
+                          }
+                        }}
+                        className="w-full "
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addRow();
+                          }
+                        }}
+                      />
+                    </td>
+                  </tr>
+                )
+              )}
             </tbody>
           </table>
         </div>

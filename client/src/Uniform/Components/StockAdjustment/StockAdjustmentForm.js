@@ -12,7 +12,11 @@ import Swal from "sweetalert2";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import moment from "moment";
-import { useGetStockAdjustmentByIdQuery } from "../../../redux/uniformService/StockAdjustmentService";
+import {
+  useAddStockAdjustmentMutation,
+  useGetStockAdjustmentByIdQuery,
+  useUpdateStockAdjustmentMutation,
+} from "../../../redux/uniformService/StockAdjustmentService";
 
 export default function StockAdjustmentForm({
   onClose,
@@ -26,7 +30,7 @@ export default function StockAdjustmentForm({
   const [docDate, setDocDate] = useState("");
   const [locationId, setLocationId] = useState("");
   const [storeId, setStoreId] = useState("");
-  const [stockAdjustItems, setStockAdjustItems] = useState([]);
+  const [stockAdjustmentItems, setStockAdjustmentItems] = useState([]);
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
@@ -44,7 +48,7 @@ export default function StockAdjustmentForm({
     : [];
 
   const validateData = (data) => {
-    if (stockAdjustItems?.length > 0 && data.storeId) {
+    if (stockAdjustmentItems?.length > 0 && data.storeId) {
       return true;
     }
     return false;
@@ -61,7 +65,9 @@ export default function StockAdjustmentForm({
     docDate,
     branchId,
     storeId,
-    stockAdjustItems,
+    stockAdjustmentItems: stockAdjustmentItems?.filter(
+      (item) => item?.barcode && item?.styleId && item?.sizeId
+    ),
     userId,
     finYearId,
     locationId,
@@ -80,7 +86,9 @@ export default function StockAdjustmentForm({
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
           : moment.utc(today).format("YYYY-MM-DD")
       );
-      setStockAdjustItems(data?.stockAdjustItems ? data.stockAdjustItems : []);
+      setStockAdjustmentItems(
+        data?.StockAdjustmentItems ? data.StockAdjustmentItems : []
+      );
       if (data?.docId) {
         setDocId(data?.docId);
       }
@@ -97,6 +105,9 @@ export default function StockAdjustmentForm({
       syncFormWithDb(undefined);
     }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+  const [addData] = useAddStockAdjustmentMutation();
+  const [updateData] = useUpdateStockAdjustmentMutation();
 
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
@@ -142,25 +153,25 @@ export default function StockAdjustmentForm({
     if (!window.confirm("Are you sure save the details ...?")) {
       return;
     }
-    // if (nextProcess == "draft" && !id) {
-    //   handleSubmitCustom(
-    //     addData,
-    //     { ...data, draftSave: true },
-    //     "Added",
-    //     nextProcess
-    //   );
-    // } else if (id && nextProcess == "draft") {
-    //   handleSubmitCustom(
-    //     updateData,
-    //     { ...data, draftSave: true },
-    //     "Updated",
-    //     nextProcess
-    //   );
-    // } else if (id) {
-    //   handleSubmitCustom(updateData, data, "Updated", nextProcess);
-    // } else {
-    //   handleSubmitCustom(addData, data, "Added", nextProcess);
-    // }
+    if (nextProcess == "draft" && !id) {
+      handleSubmitCustom(
+        addData,
+        { ...data, draftSave: true },
+        "Added",
+        nextProcess
+      );
+    } else if (id && nextProcess == "draft") {
+      handleSubmitCustom(
+        updateData,
+        { ...data, draftSave: true },
+        "Updated",
+        nextProcess
+      );
+    } else if (id) {
+      handleSubmitCustom(updateData, data, "Updated", nextProcess);
+    } else {
+      handleSubmitCustom(addData, data, "Added", nextProcess);
+    }
   };
 
   return (
@@ -240,8 +251,8 @@ export default function StockAdjustmentForm({
         </div>
         <fieldset>
           <AdjustItems
-            stockAdjustItems={stockAdjustItems}
-            setStockAdjustItems={setStockAdjustItems}
+            stockAdjustmentItems={stockAdjustmentItems}
+            setStockAdjustmentItems={setStockAdjustmentItems}
             readOnly={readOnly}
           />
         </fieldset>

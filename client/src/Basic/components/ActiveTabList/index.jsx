@@ -56,6 +56,7 @@ import {
   Order,
   PurchaseInward,
   PurchaseOrder,
+  SalesBill,
   StockAdjustment,
   StyleMaster,
   TagTypeMater,
@@ -135,6 +136,7 @@ const ActiveTabList = () => {
     "FABRIC MASTER": <FabricMaster />,
     "OPENING STOCK": <OpeningStockForm />,
     "STOCK ADJUSTMENT": <StockAdjustment />,
+    "SALES BILL": <SalesBill />,
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

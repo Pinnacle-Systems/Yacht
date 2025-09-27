@@ -12,40 +12,113 @@ const prisma = new PrismaClient();
 
 // async function getOneBarcode(req) {
 //   const { barcode, styleId, sizeId } = req.query;
-//   let data;
-//   let totalCount;
-//   data = await prisma.stock.findMany({
-//     where: { barCode: barcode, styleId: styleId, sizeId: sizeId },
-//   });
-//   totalCount = data.length;
-//   if (!data) return NoRecordFound("Barcode No");
-//   return { statusCode: 0, data: data, totalCount };
+//   const styleNum = styleId ? parseInt(styleId, 10) : null;
+//   const sizeNum = sizeId ? parseInt(sizeId, 10) : null;
+//   // Check if neither barcode nor style+size is provided
+//   if (!barcode && !(styleNum && sizeNum)) {
+//     return {
+//       statusCode: 0,
+//       data: [],
+//       totalCount: 0,
+//       totalQty: 0,
+//       message: "Please provide either a barcode or both styleId and sizeId",
+//     };
+//   }
+
+//   // Check for incomplete style/size combination
+//   if ((styleNum && !sizeNum) || (!styleNum && sizeNum)) {
+//     return {
+//       statusCode: 0,
+//       data: [],
+//       totalCount: 0,
+//       totalQty: 0,
+//       message: "Both styleId and sizeId must be provided together",
+//     };
+//   }
+
+//   const where = {};
+
+//   if (barcode) {
+//     where.barCode = barcode;
+//   }
+
+//   if (styleNum && sizeNum) {
+//     where.styleId = styleNum;
+//     where.sizeId = sizeNum;
+//   }
+
+//   // Run both queries in one transaction
+//   const [data, aggregate] = await prisma.$transaction([
+//     prisma.stock.findMany({ where }),
+//     prisma.stock.aggregate({
+//       _sum: { qty: true },
+//       where,
+//     }),
+//   ]);
+
+//   if (!data || data.length === 0) {
+//     return NoRecordFound("Barcode No");
+//   }
+
+//   return {
+//     statusCode: 0,
+//     data,
+//     totalCount: data.length,
+//     totalQty: aggregate._sum.qty ?? 0,
+//   };
 // }
 
 async function getOneBarcode(req) {
   const { barcode, styleId, sizeId } = req.query;
+  const styleNum = styleId ? parseInt(styleId, 10) : null;
+  const sizeNum = sizeId ? parseInt(sizeId, 10) : null;
 
-  const where = {};
-
-  if (barcode) {
-    where.barCode = barcode;
+  // Validate inputs
+  if (!barcode && !(styleNum && sizeNum)) {
+    return {
+      statusCode: 0,
+      data: [],
+      totalCount: 0,
+      totalQty: 0,
+      message: "Please provide either a barcode or both styleId and sizeId",
+    };
   }
 
-  if (styleId && !isNaN(styleId)) {
-    where.styleId = parseInt(styleId);
+  if ((styleNum && !sizeNum) || (!styleNum && sizeNum)) {
+    return {
+      statusCode: 0,
+      data: [],
+      totalCount: 0,
+      totalQty: 0,
+      message: "Both styleId and sizeId must be provided together",
+    };
   }
 
-  if (sizeId && !isNaN(sizeId)) {
-    where.sizeId = parseInt(sizeId);
-  }
+  // Build Prisma 'where' dynamically
+  const where = {
+    ...(barcode ? { barCode: barcode } : {}),
+    ...(styleNum && sizeNum ? { styleId: styleNum, sizeId: sizeNum } : {}),
+  };
 
-  const data = await prisma.stock.findMany({ where });
+  // Run both queries in one transaction
+  const [data, aggregate] = await prisma.$transaction([
+    prisma.stock.findMany({ where }),
+    prisma.stock.aggregate({
+      _sum: { qty: true },
+      where,
+    }),
+  ]);
 
   if (!data || data.length === 0) {
     return NoRecordFound("Barcode No");
   }
 
-  return { statusCode: 0, data, totalCount: data.length };
+  return {
+    statusCode: 0,
+    data,
+    totalCount: data.length,
+    totalQty: aggregate._sum.qty ?? 0,
+  };
 }
 
 async function getNextDocId(
@@ -237,7 +310,7 @@ async function create(body) {
     userId,
     branchId,
     storeId,
-    stockAdjustItems,
+    stockAdjustmentItems,
     finYearId,
     docDate,
     draftSave,
@@ -270,9 +343,9 @@ async function create(body) {
         locationId: parseInt(locationId),
       },
     });
-    await createStockAdjustItems(
+    await createStockAdjustmentItems(
       tx,
-      stockAdjustItems,
+      stockAdjustmentItems,
       data,
       userId,
       branchId,
@@ -282,15 +355,15 @@ async function create(body) {
   return { statusCode: 0, data };
 }
 
-async function createStockAdjustItems(
+async function createStockAdjustmentItems(
   tx,
-  stockAdjustItems,
+  stockAdjustmentItems,
   stockAdjustment,
   userId,
   branchId,
   storeId
 ) {
-  const promises = stockAdjustItems.map(async (stockDetail) => {
+  const promises = stockAdjustmentItems.map(async (stockDetail) => {
     const createdItem = await tx.stockAdjustmentItems.create({
       data: {
         stockAdjustmentId: parseInt(stockAdjustment.id),
@@ -324,6 +397,7 @@ async function createStockAdjustItems(
         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
         qty,
         stockAdjustmentId: createdItem.id,
+        barCode: stockDetail?.barcode ? stockDetail?.barcode : "",
       },
     });
     return createdItem;
@@ -333,8 +407,14 @@ async function createStockAdjustItems(
 }
 
 async function update(id, body) {
-  const { branchId, stockAdjustItems, userId, storeId, docDate, locationId } =
-    await body;
+  const {
+    branchId,
+    stockAdjustmentItems,
+    userId,
+    storeId,
+    docDate,
+    locationId,
+  } = await body;
   let data;
   const dataFound = await prisma.stockAdjustment.findUnique({
     where: {
@@ -349,7 +429,7 @@ async function update(id, body) {
     },
   });
   if (!dataFound) return NoRecordFound("stockAdjustment");
-  let removedItems = findRemovedItems(dataFound, stockAdjustItems);
+  let removedItems = findRemovedItems(dataFound, stockAdjustmentItems);
   let removeItemsIds = removedItems.map((item) => parseInt(item.id));
   await prisma.$transaction(async (tx) => {
     await deleteItemsFromStock(tx, removeItemsIds);
@@ -372,7 +452,7 @@ async function update(id, body) {
     });
     await updateOpeningStockItems(
       tx,
-      stockAdjustItems,
+      stockAdjustmentItems,
       data,
       userId,
       branchId,
@@ -382,9 +462,101 @@ async function update(id, body) {
   return { statusCode: 0, data };
 }
 
-function findRemovedItems(dataFound, stockAdjustItems) {
-  let removedItems = dataFound.stockAdjustItems.filter((oldItem) => {
-    let result = stockAdjustItems.find(
+async function updateOpeningStockItems(
+  tx,
+  stockAdjustmentItems,
+  stockAdjustment,
+  userId,
+  branchId,
+  storeId
+) {
+  const promises = stockAdjustmentItems.map(async (stockDetail) => {
+    if (stockDetail.id) {
+      const updatedItem = await tx.stockAdjustmentItems.update({
+        where: {
+          id: parseInt(stockDetail.id),
+        },
+        data: {
+          barcode: stockDetail?.barcode ? stockDetail.barCode : "",
+          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          stkQty:
+            stockDetail?.stkQty && !isNaN(parseFloat(stockDetail.stkQty))
+              ? Math.round(parseFloat(stockDetail.stkQty))
+              : null,
+          adjType: stockDetail?.adjType || undefined,
+          adjQty:
+            stockDetail?.adjQty && !isNaN(parseFloat(stockDetail.adjQty))
+              ? Math.round(parseFloat(stockDetail.adjQty))
+              : null,
+          remarks: stockDetail?.remarks || undefined,
+        },
+      });
+      let qty = null;
+      if (stockDetail?.adjQty && !isNaN(parseFloat(stockDetail?.adjQty))) {
+        const adjQty = parseInt(stockDetail.adjQty);
+        qty = stockDetail.adjType === "MINUS" ? -adjQty : adjQty;
+      }
+      await tx.stock.updateMany({
+        where: { stockAdjustmentId: parseInt(stockDetail.id) },
+        data: {
+          inOrOut: "stockAdjustment",
+          updatedById: parseInt(userId),
+          branchId: parseInt(branchId),
+          storeId: parseInt(storeId),
+          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          qty,
+          barCode: stockDetail?.barcode || "",
+        },
+      });
+      return updatedItem;
+    } else {
+      const createdItem = await tx.stockAdjustmentItems.create({
+        data: {
+          stockAdjustmentId: parseInt(stockAdjustment.id),
+          barcode: stockDetail?.barcode || undefined,
+          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          stkQty:
+            stockDetail?.stkQty && !isNaN(parseFloat(stockDetail.stkQty))
+              ? Math.round(parseFloat(stockDetail.stkQty))
+              : null,
+          adjType: stockDetail?.adjType || undefined,
+          adjQty:
+            stockDetail?.adjQty && !isNaN(parseFloat(stockDetail.adjQty))
+              ? Math.round(parseFloat(stockDetail.adjQty))
+              : null,
+          remarks: stockDetail?.remarks || undefined,
+        },
+      });
+      let qty = null;
+      if (stockDetail?.adjQty && !isNaN(parseFloat(stockDetail.adjQty))) {
+        const adjQty = parseInt(stockDetail.adjQty);
+        qty = stockDetail.adjType === "MINUS" ? -adjQty : adjQty;
+      }
+      await tx.stock.create({
+        data: {
+          inOrOut: "stockAdjustment",
+          createdById: parseInt(userId),
+          branchId: parseInt(branchId),
+          storeId: parseInt(storeId),
+          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          qty,
+          stockAdjustmentId: createdItem.id,
+          barCode: stockDetail?.barcode || "",
+        },
+      });
+      return createdItem;
+    }
+  });
+  return Promise.all(promises);
+}
+
+function findRemovedItems(dataFound, stockAdjustmentItems) {
+  let removedItems = dataFound.StockAdjustmentItems.filter((oldItem) => {
+    let result = stockAdjustmentItems.find(
       (newItem) => parseInt(newItem.id) === parseInt(oldItem.id)
     );
     if (result) return false;
