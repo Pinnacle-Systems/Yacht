@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { adjTypeData } from "../../../Utils/DropdownData";
 import { useLazyGetBarcodeDetailQuery } from "../../../redux/uniformService/StockAdjustmentService";
+import Swal from "sweetalert2";
 
 export default function BillItems({
-  salesBillItems,
-  setSalesBillItems,
+  salesEntryItems,
+  setSalesEntryItems,
   params,
   readOnly,
   id,
@@ -26,14 +27,15 @@ export default function BillItems({
       barcode: "",
       styleId: "",
       sizeId: "",
+      stkQty: "",
       qty: "",
       remarks: "",
     };
-    setSalesBillItems([...salesBillItems, newRow]);
+    setSalesEntryItems([...salesEntryItems, newRow]);
   };
 
   const deleteRow = (id) => {
-    setSalesBillItems((currentRows) => {
+    setSalesEntryItems((currentRows) => {
       if (currentRows.length > 1) {
         return currentRows.filter((row, index) => index !== Number(id));
       }
@@ -42,7 +44,7 @@ export default function BillItems({
   };
 
   const handleDeleteAllRows = () => {
-    setSalesBillItems((prevRows) => {
+    setSalesEntryItems((prevRows) => {
       if (prevRows.length <= 1) return prevRows;
       return [prevRows[0]];
     });
@@ -62,22 +64,72 @@ export default function BillItems({
     setContextMenu(null);
   };
 
+  // useEffect(() => {
+  //   if (!salesEntryItems || salesEntryItems.length === 0) {
+  //     setSalesEntryItems(
+  //       Array.from({ length: 6 }, () => ({
+  //         barcode: "",
+  //         styleId: "",
+  //         sizeId: "",
+  //         stkQty: "",
+  //         qty: "",
+  //         remarks: "",
+  //       }))
+  //     );
+  //   }
+  // }, [salesEntryItems, setSalesEntryItems]);
+
   useEffect(() => {
-    if (!salesBillItems || salesBillItems.length === 0) {
-      setSalesBillItems(
+    if (salesEntryItems) {
+      setSalesEntryItems((prev) => {
+        const count = prev.length;
+
+        if (count < 6) {
+          return [
+            ...prev,
+            ...Array.from({ length: 6 - count }, () => ({
+              barcode: "",
+              styleId: "",
+              sizeId: "",
+              stkQty: "",
+              qty: "",
+              remarks: "",
+            })),
+          ];
+        }
+
+        return prev; // keep as-is if already >= 6
+      });
+    } else {
+      setSalesEntryItems(
         Array.from({ length: 6 }, () => ({
           barcode: "",
           styleId: "",
           sizeId: "",
+          stkQty: "",
           qty: "",
           remarks: "",
         }))
       );
     }
-  }, [salesBillItems, setSalesBillItems]);
+  }, [salesEntryItems, setSalesEntryItems]);
 
   const handleInputChange = async (value, index, field) => {
-    setSalesBillItems((prev) => {
+    if (field === "qty") {
+      const row = salesEntryItems[index];
+      const balanceQty = row?.stkQty || 0;
+
+      if (parseFloat(balanceQty) < parseFloat(value)) {
+        Swal.fire({
+          icon: "warning",
+          title: "Invalid Quantity",
+          text: "Sales Qty cannot be more than Stock Qty!",
+          confirmButtonText: "OK",
+        });
+        return;
+      }
+    }
+    setSalesEntryItems((prev) => {
       const newItems = structuredClone(prev);
       newItems[index][field] = value;
       return newItems;
@@ -85,7 +137,7 @@ export default function BillItems({
 
     // Trigger API call only for barcode, styleId, or sizeId
     if (["barcode", "styleId", "sizeId"].includes(field)) {
-      const row = structuredClone(salesBillItems[index]);
+      const row = structuredClone(salesEntryItems[index]);
       row[field] = value; // use updated value
       // Only call API if at least barcode or (style+size) is filled
       if (row.barcode || (row.styleId && row.sizeId)) {
@@ -99,7 +151,7 @@ export default function BillItems({
           }).unwrap();
           if (response?.data?.length > 0) {
             const item = response.data[0];
-            setSalesBillItems((prev) =>
+            setSalesEntryItems((prev) =>
               prev.map((r, i) =>
                 i === index
                   ? {
@@ -107,12 +159,13 @@ export default function BillItems({
                       barcode: item.barCode,
                       styleId: item.styleId,
                       sizeId: item.sizeId,
+                      stkQty: response.totalQty,
                     }
                   : r
               )
             );
           } else {
-            setSalesBillItems((prev) =>
+            setSalesEntryItems((prev) =>
               prev.map((r, i) =>
                 i === index
                   ? {
@@ -120,6 +173,7 @@ export default function BillItems({
                       sizeId: "",
                       qty: "",
                       remarks: "",
+                      stkQty: "",
                     }
                   : r
               )
@@ -136,7 +190,7 @@ export default function BillItems({
     <>
       <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[350px] overflow-auto">
         <div className="flex justify-between items-center mb-2">
-          <h2 className="font-medium text-slate-700">Adjustment Details</h2>
+          <h2 className="font-medium text-slate-700">Sales Item Details</h2>
         </div>
         <div className={`w-full overflow-y-auto py-1 relative`}>
           <table className="w-auto border-collapse table-fixed">
@@ -165,6 +219,11 @@ export default function BillItems({
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
+                  Stock Qty
+                </th>
+                <th
+                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                >
                   Qty
                 </th>
                 <th
@@ -178,7 +237,7 @@ export default function BillItems({
               </tr>
             </thead>
             <tbody>
-              {(salesBillItems ? salesBillItems : [])?.map((row, index) => (
+              {(salesEntryItems ? salesEntryItems : [])?.map((row, index) => (
                 <tr
                   className="border border-blue-gray-200 cursor-pointer "
                   key={index}
@@ -209,7 +268,7 @@ export default function BillItems({
                   </td>
                   <td className="py-0.5 border border-gray-300 text-[11px] ">
                     <select
-                      disabled={readOnly || !!row.barcode}
+                      disabled={readOnly}
                       className="text-left w-full rounded py-1 table-data-input"
                       value={row.styleId}
                       onKeyDown={(e) => {
@@ -237,7 +296,7 @@ export default function BillItems({
                   </td>
                   <td className="py-0.5 border border-gray-300 text-[11px]">
                     <select
-                      disabled={readOnly || !!row.barcode}
+                      disabled={readOnly}
                       className="text-left w-full rounded py-1 table-data-input"
                       value={row.sizeId}
                       onKeyDown={(e) => {
@@ -262,6 +321,28 @@ export default function BillItems({
                         </option>
                       ))}
                     </select>
+                  </td>
+                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                    <input
+                      type="number"
+                      className="text-right rounded py-1 px-1 w-full table-data-input"
+                      value={row?.stkQty}
+                      disabled={true}
+                      onKeyDown={(e) => {
+                        if (e.code === "Minus" || e.code === "NumpadSubtract")
+                          e.preventDefault();
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "stkQty");
+                        }
+                      }}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "stkQty")
+                      }
+                      onBlur={(e) => {
+                        handleInputChange(e.target.value, index, "stkQty");
+                      }}
+                    />
                   </td>
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                     <input
@@ -302,6 +383,7 @@ export default function BillItems({
                       onBlur={(e) => {
                         handleInputChange(e.target.value, index, "remarks");
                       }}
+                      disabled={readOnly}
                     />
                   </td>
                   <td className="w-2 border border-gray-300">
@@ -318,11 +400,29 @@ export default function BillItems({
                           addRow();
                         }
                       }}
+                      disabled={readOnly}
                     />
                   </td>
                 </tr>
               ))}
             </tbody>
+            <tfoot>
+              <tr className="bg-gray-50 font-medium text-gray-800">
+                <td
+                  className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
+                  colSpan={5}
+                >
+                  Total Qty
+                </td>
+                <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
+                  {salesEntryItems.reduce(
+                    (sum, row) => sum + (Number(row.qty) || 0),
+                    0
+                  )}
+                </td>
+                <td className="border border-gray-300" colSpan={2}></td>
+              </tr>
+            </tfoot>
           </table>
         </div>
         {contextMenu && (

@@ -103,6 +103,7 @@ import partyMasterNewApi from "./services/PartyMasterNewService";
 import PayFrequencyMasterApi from "./services/PayFrequencyService";
 import OpeningStockApi from "./uniformService/OpeningStockService";
 import StockAdjustmentApi from "./uniformService/StockAdjustmentService";
+import SalesEntryApi from "./uniformService/SalesEntryService";
 
 const commonReducers = {
   openTabs,
@@ -204,6 +205,7 @@ const commonReducers = {
   [companyPayCodeApi.reducerPath]: companyPayCodeApi.reducer,
   OpeningStock: OpeningStockApi.reducer,
   StockAdjustment: StockAdjustmentApi.reducer,
+  SalesEntry: SalesEntryApi.reducer,
 };
 const commonMiddleware = [
   countryMasterApi.middleware,
@@ -302,7 +304,8 @@ const commonMiddleware = [
   payComponentApi.middleware,
   companyPayCodeApi.middleware,
   OpeningStockApi.middleware,
-  StockAdjustmentApi.middleware
+  StockAdjustmentApi.middleware,
+  SalesEntryApi.middleware,
 ];
 
 const store = configureStore({

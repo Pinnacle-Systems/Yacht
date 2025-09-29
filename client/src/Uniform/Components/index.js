@@ -51,4 +51,4 @@ export { default as LabDip } from "./LabDip";
 export { default as NewPurchaseInward } from "./NewPurchaseInward";
 export { default as OpeningStockForm } from "./OpeningStock";
 export { default as StockAdjustment } from "./StockAdjustment";
-export { default as SalesBill } from "./SalesBill";
+export { default as SalesEntry } from "./SalesEntry";

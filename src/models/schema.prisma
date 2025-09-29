@@ -123,6 +123,8 @@ model Branch {
   Stock               Stock[]
   OpeningStock        OpeningStock[]
   StockAdjustment     StockAdjustment[]
+  SalesEntryBranch    SalesEntry[]          @relation(name: "branch")
+  SalesEntryLocation  SalesEntry[]          @relation(name: "location")
 }
 
 model UserOnBranch {
@@ -227,6 +229,8 @@ model User {
   OpeningStockUpdatedBy        OpeningStock[]        @relation(name: "updatedBy")
   StockAdjustmentCreatedBy     StockAdjustment[]     @relation(name: "createdBy")
   StockAdjustmentUpdatedBy     StockAdjustment[]     @relation(name: "updatedBy")
+  SalesEntryCreatedBy          SalesEntry[]          @relation(name: "createdBy")
+  SalesEntryUpdatedBy          SalesEntry[]          @relation(name: "updatedBy")
 }
 
 model Employee {
@@ -535,6 +539,7 @@ model Party {
   SupplierPo                Po[]                        @relation(name: "SupplierPo")
   CustomerPo                Po[]                        @relation(name: "CustomerPo")
   SampleEntry               SampleEntry[]               @relation(name: "supplier")
+  SalesEntry                SalesEntry[]
 }
 
 model PartyBranch {
@@ -649,6 +654,7 @@ model Location {
   Stock           Stock[]
   OpeningStock    OpeningStock[]
   StockAdjustment StockAdjustment[]
+  SalesEntry      SalesEntry[]
 }
 
 model TermsAndConditions {
@@ -1462,6 +1468,7 @@ model Style {
   Stock                Stock[]
   OpeningStockItems    OpeningStockItems[]
   StockAdjustmentItems StockAdjustmentItems[]
+  SalesEntryItems      SalesEntryItems[]
 }
 
 model Size {
@@ -1474,6 +1481,7 @@ model Size {
   Stock                Stock[]
   OpeningStockItems    OpeningStockItems[]
   StockAdjustmentItems StockAdjustmentItems[]
+  SalesEntryItems      SalesEntryItems[]
 }
 
 model Measurement {
@@ -1574,6 +1582,8 @@ model Stock {
   barCode              String?
   StockAdjustmentItems StockAdjustmentItems? @relation(fields: [stockAdjustmentId], references: [id], onDelete: Cascade)
   stockAdjustmentId    Int?
+  SalesEntryItems      SalesEntryItems?      @relation(fields: [salesEntryItemsId], references: [id], onDelete: Cascade)
+  salesEntryItemsId    Int?
 }
 
 model OpeningStock {
@@ -1606,6 +1616,7 @@ model OpeningStockItems {
   sizeId         Int?
   qty            Int?
   remarks        String?
+  barcode        String?
   Stock          Stock[]
 }
 
@@ -1641,4 +1652,42 @@ model StockAdjustmentItems {
   adjQty            Int?
   remarks           String?
   Stock             Stock[]
+}
+
+model SalesEntry {
+  id              Int               @id @default(autoincrement())
+  docId           String
+  docDate         DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  createdBy       User?             @relation("createdBy", fields: [createdById], references: [id])
+  createdById     Int?
+  updatedBy       User?             @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById     Int?
+  branch          Branch?           @relation("branch", fields: [branchId], references: [id])
+  branchId        Int?
+  Location        Branch?           @relation("location", fields: [locationId], references: [id])
+  locationId      Int?
+  Store           Location?         @relation(fields: [storeId], references: [id])
+  storeId         Int?
+  Customer        Party?            @relation(fields: [customerId], references: [id])
+  customerId      Int?
+  contactPerson   String?
+  contactNumber   String?
+  SalesEntryItems SalesEntryItems[]
+}
+
+model SalesEntryItems {
+  id           Int         @id @default(autoincrement())
+  SalesEntry   SalesEntry? @relation(fields: [salesEntryId], references: [id], onDelete: Cascade)
+  salesEntryId Int?
+  barcode      String?
+  Style        Style?      @relation(fields: [styleId], references: [id])
+  styleId      Int?
+  Size         Size?       @relation(fields: [sizeId], references: [id])
+  sizeId       Int?
+  stkQty       Int?
+  qty          Int?
+  remarks      String?
+  Stock        Stock[]
 }

@@ -11,7 +11,13 @@ import Swal from "sweetalert2";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import moment from "moment";
-import BillItems from "./BillItems";
+import BillItems from "./SalesEntrytems";
+import {
+  useAddSalesEntryMutation,
+  useGetSalesEntryByIdQuery,
+  useUpdateSalesEntryMutation,
+} from "../../../redux/uniformService/SalesEntryService";
+import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 
 export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
   const [searchValue, setSearchValue] = useState("");
@@ -19,11 +25,19 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
   const [docDate, setDocDate] = useState("");
   const [locationId, setLocationId] = useState("");
   const [storeId, setStoreId] = useState("");
-  const [salesBillItems, setSalesBillItems] = useState([]);
+  const [salesEntryItems, setSalesEntryItems] = useState([]);
+  const [customerId, setCustomerId] = useState("");
+  const [contactPerson, setContactPerson] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
+
+  const { data: partyList } = useGetPartyQuery({
+    params: { branchId },
+    searchParams: searchValue,
+  });
 
   const { data: locationData } = useGetLocationMasterQuery({
     params: { branchId },
@@ -37,29 +51,32 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
     : [];
 
   const validateData = (data) => {
-    if (salesBillItems?.length > 0 && data.storeId) {
+    if (salesEntryItems?.length > 0 && data.storeId && data.customerId) {
       return true;
     }
     return false;
   };
 
-  //   const {
-  //     data: singleData,
-  //     isFetching: isSingleFetching,
-  //     isLoading: isSingleLoading,
-  //   } = useGetStockAdjustmentByIdQuery(id, { skip: !id });
+  const {
+    data: singleData,
+    isFetching: isSingleFetching,
+    isLoading: isSingleLoading,
+  } = useGetSalesEntryByIdQuery(id, { skip: !id });
 
   const data = {
     id,
     docDate,
     branchId,
     storeId,
-    salesBillItems: salesBillItems?.filter(
+    salesEntryItems: salesEntryItems?.filter(
       (item) => item?.barcode && item?.styleId && item?.sizeId
     ),
     userId,
     finYearId,
     locationId,
+    customerId,
+    contactPerson,
+    contactNumber,
   };
 
   const syncFormWithDb = useCallback(
@@ -75,26 +92,29 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
           : moment.utc(today).format("YYYY-MM-DD")
       );
-      setSalesBillItems(data?.salesBillItems ? data.salesBillItems : []);
+      setSalesEntryItems(data?.SalesEntryItems ? data.SalesEntryItems : []);
       if (data?.docId) {
         setDocId(data?.docId);
       }
       setLocationId(data?.locationId ? data?.locationId : "");
       setStoreId(data?.storeId ? data.storeId : "");
+      setCustomerId(data?.customerId ? data?.customerId : "");
+      setContactNumber(data?.contactNumber ? data?.contactNumber : "");
+      setContactPerson(data?.contactPerson ? data?.contactPerson : "");
     },
     [id]
   );
 
-  //   useEffect(() => {
-  //     if (id) {
-  //       syncFormWithDb(singleData?.data);
-  //     } else {
-  //       syncFormWithDb(undefined);
-  //     }
-  //   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+  useEffect(() => {
+    if (id) {
+      syncFormWithDb(singleData?.data);
+    } else {
+      syncFormWithDb(undefined);
+    }
+  }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-  //   const [addData] = useAddStockAdjustmentMutation();
-  //   const [updateData] = useUpdateStockAdjustmentMutation();
+  const [addData] = useAddSalesEntryMutation();
+  const [updateData] = useUpdateSalesEntryMutation();
 
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
@@ -140,32 +160,50 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
     if (!window.confirm("Are you sure save the details ...?")) {
       return;
     }
-    // if (nextProcess == "draft" && !id) {
-    //   handleSubmitCustom(
-    //     addData,
-    //     { ...data, draftSave: true },
-    //     "Added",
-    //     nextProcess
-    //   );
-    // } else if (id && nextProcess == "draft") {
-    //   handleSubmitCustom(
-    //     updateData,
-    //     { ...data, draftSave: true },
-    //     "Updated",
-    //     nextProcess
-    //   );
-    // } else if (id) {
-    //   handleSubmitCustom(updateData, data, "Updated", nextProcess);
-    // } else {
-    //   handleSubmitCustom(addData, data, "Added", nextProcess);
-    // }
+    if (nextProcess == "draft" && !id) {
+      handleSubmitCustom(
+        addData,
+        { ...data, draftSave: true },
+        "Added",
+        nextProcess
+      );
+    } else if (id && nextProcess == "draft") {
+      handleSubmitCustom(
+        updateData,
+        { ...data, draftSave: true },
+        "Updated",
+        nextProcess
+      );
+    } else if (id) {
+      handleSubmitCustom(updateData, data, "Updated", nextProcess);
+    } else {
+      handleSubmitCustom(addData, data, "Added", nextProcess);
+    }
   };
+
+  const handlePartyChange = (selectedId, field) => {
+    const selectedParty = partyList?.data?.find(
+      (p) => p.id === Number(selectedId)
+    );
+
+    if (field === "customer") {
+      setCustomerId(selectedParty?.id);
+      setContactNumber(selectedParty?.mobileNumber);
+      setContactPerson(selectedParty?.contactPersonName || "");
+    }
+  };
+
+  useEffect(() => {
+    if (customerId) {
+      handlePartyChange(customerId, "customer");
+    }
+  }, [customerId, setCustomerId]);
 
   return (
     <div className="">
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800">Sales Entry</h1>
+          <h1 className="text-2xl font-bold text-gray-800"> Delivery</h1>
           <button
             onClick={onClose}
             className="text-indigo-600 hover:text-indigo-700"
@@ -191,7 +229,6 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
               />
             </div>
           </div>
-
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
             <h2 className="font-medium text-slate-700 mb-2">
               Location Details
@@ -234,12 +271,52 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
               />
             </div>
           </div>
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1"></div>
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+            <h2 className="font-medium text-slate-700 mb-2">
+              Customer Details
+            </h2>
+            <div className="grid grid-cols-2 gap-1">
+              <DropdownInput
+                name="Customer"
+                options={
+                  partyList
+                    ? dropDownListObject(
+                        id
+                          ? partyList?.data
+                          : partyList?.data?.filter((item) => item.active),
+                        "name",
+                        "id"
+                      )
+                    : []
+                }
+                value={customerId}
+                setValue={(value) => {
+                  setCustomerId(value);
+                }}
+                required={true}
+                readOnly={readOnly}
+              />
+              <ReusableInput
+                label="Contact Person"
+                value={contactPerson}
+                type={"text"}
+                readOnly={true}
+                disabled
+              />
+              <ReusableInput
+                label="Contact Number"
+                value={contactNumber}
+                type={"text"}
+                readOnly={true}
+                disabled
+              />
+            </div>
+          </div>
         </div>
         <fieldset>
           <BillItems
-            salesBillItems={salesBillItems}
-            setSalesBillItems={setSalesBillItems}
+            salesEntryItems={salesEntryItems}
+            setSalesEntryItems={setSalesEntryItems}
             readOnly={readOnly}
           />
         </fieldset>

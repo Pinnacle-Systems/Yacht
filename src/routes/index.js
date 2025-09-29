@@ -53,3 +53,4 @@ export { default as measurement } from "./measurement.route.js";
 export { default as fabric } from "./fabric.route.js";
 export { default as accessoryGroup } from "./accessoryGroup.route.js";
 export { default as stockAdjustment } from "./stockAdjustment.route.js";
+export { default as salesEntry } from "./salesEntry.route.js";

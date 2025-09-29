@@ -64,21 +64,21 @@ export default function AdjustItems({
     setContextMenu(null);
   };
 
-  useEffect(() => {
-    if (!stockAdjustmentItems || stockAdjustmentItems.length === 0) {
-      setStockAdjustmentItems(
-        Array.from({ length: 6 }, () => ({
-          barcode: "",
-          styleId: "",
-          sizeId: "",
-          stkQty: "",
-          adjType: "",
-          adjQty: "",
-          remarks: "",
-        }))
-      );
-    }
-  }, [stockAdjustmentItems, setStockAdjustmentItems]);
+  // useEffect(() => {
+  //   if (!stockAdjustmentItems || stockAdjustmentItems.length === 0) {
+  //     setStockAdjustmentItems(
+  //       Array.from({ length: 6 }, () => ({
+  //         barcode: "",
+  //         styleId: "",
+  //         sizeId: "",
+  //         stkQty: "",
+  //         adjType: "",
+  //         adjQty: "",
+  //         remarks: "",
+  //       }))
+  //     );
+  //   }
+  // }, [stockAdjustmentItems, setStockAdjustmentItems]);
 
   // const handleInputChange = (value, index, field) => {
   //   const newBlend = structuredClone(stockAdjustmentItems);
@@ -116,6 +116,43 @@ export default function AdjustItems({
   //     console.error("Error fetching barcode details:", err);
   //   }
   // };
+
+  useEffect(() => {
+    if (stockAdjustmentItems) {
+      setStockAdjustmentItems((prev) => {
+        const count = prev.length;
+
+        if (count < 6) {
+          return [
+            ...prev,
+            ...Array.from({ length: 8 - count }, () => ({
+              barcode: "",
+              styleId: "",
+              sizeId: "",
+              stkQty: "",
+              adjType: "",
+              adjQty: "",
+              remarks: "",
+            })),
+          ];
+        }
+
+        return prev; // keep as-is if already >= 6
+      });
+    } else {
+      setStockAdjustmentItems(
+        Array.from({ length: 8 }, () => ({
+          barcode: "",
+          styleId: "",
+          sizeId: "",
+          stkQty: "",
+          adjType: "",
+          adjQty: "",
+          remarks: "",
+        }))
+      );
+    }
+  }, [stockAdjustmentItems, setStockAdjustmentItems]);
 
   const handleInputChange = async (value, index, field) => {
     setStockAdjustmentItems((prev) => {
@@ -404,6 +441,7 @@ export default function AdjustItems({
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "adjQty");
                         }}
+                        disabled={readOnly}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
@@ -413,6 +451,7 @@ export default function AdjustItems({
                             handleInputChange("", index, "remarks");
                           }
                         }}
+                        disabled={readOnly}
                         type="string"
                         className="text-left rounded py-1 px-1 w-full table-data-input"
                         onFocus={(e) => e.target.select()}
@@ -432,6 +471,7 @@ export default function AdjustItems({
                             handleRightClick(e, index, "notes");
                           }
                         }}
+                        disabled={readOnly}
                         className="w-full "
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {

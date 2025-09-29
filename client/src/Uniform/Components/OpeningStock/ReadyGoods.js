@@ -60,11 +60,43 @@ export default function ReadyGoods({
     setContextMenu(null);
   };
 
+  // useEffect(() => {
+  //   if (!openingStockItems || openingStockItems.length === 0) {
+  //     // setOpeningStockItems([{ styleId: "", sizeId: "", qty: "" }]);
+  //     setOpeningStockItems(
+  //       Array.from({ length: 6 }, () => ({
+  //         styleId: "",
+  //         sizeId: "",
+  //         qty: "",
+  //         remarks: "",
+  //       }))
+  //     );
+  //   }
+  // }, [openingStockItems, setOpeningStockItems]);
+
   useEffect(() => {
-    if (!openingStockItems || openingStockItems.length === 0) {
-      // setOpeningStockItems([{ styleId: "", sizeId: "", qty: "" }]);
+    if (openingStockItems) {
+      setOpeningStockItems((prev) => {
+        const filledRows = prev.length;
+
+        if (filledRows < 6) {
+          // add empty rows until total becomes 6
+          return [
+            ...prev,
+            ...Array.from({ length: 8 - filledRows }, () => ({
+              styleId: "",
+              sizeId: "",
+              qty: "",
+              remarks: "",
+            })),
+          ];
+        }
+        return prev; // if already >= 6, just keep as it is
+      });
+    } else {
+      // if null/undefined, initialize with 6 empty rows
       setOpeningStockItems(
-        Array.from({ length: 6 }, () => ({
+        Array.from({ length: 8 }, () => ({
           styleId: "",
           sizeId: "",
           qty: "",
@@ -102,7 +134,7 @@ export default function ReadyGoods({
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Quantity
+                  Qty
                 </th>
                 <th
                   className={`w-48 px-1 py-2 text-center font-medium text-[13px] `}
@@ -239,6 +271,7 @@ export default function ReadyGoods({
                             addRow();
                           }
                         }}
+                        disabled={readOnly}
                       />
                     </td>
                   </tr>
@@ -254,9 +287,10 @@ export default function ReadyGoods({
                   Total Qty
                 </td>
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
-                  {openingStockItems
-                    .reduce((sum, row) => sum + (Number(row.qty) || 0), 0)
-                    .toFixed(2)}
+                  {openingStockItems.reduce(
+                    (sum, row) => sum + (Number(row.qty) || 0),
+                    0
+                  )}
                 </td>
                 <td className="border border-gray-300" colSpan={2}></td>
               </tr>

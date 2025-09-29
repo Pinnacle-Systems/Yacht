@@ -61,6 +61,7 @@ import {
   accessoryGroup,
   openingStock,
   stockAdjustment,
+  salesEntry,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";
@@ -154,6 +155,7 @@ app.use("/fabric", fabric);
 app.use("/accessoryGroup", accessoryGroup);
 app.use("/openingStock", openingStock);
 app.use("/stockAdjustment", stockAdjustment);
+app.use("/salesEntry", salesEntry);
 
 app.get("/retreiveFile/:fileName", (req, res) => {
   const { fileName } = req.params;
