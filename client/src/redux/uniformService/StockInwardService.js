@@ -1,20 +1,20 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { SIZE_TEMPLATE_API } from "../../Api";
+import { STOCK_INWARD_API } from "../../Api";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
-const sizeTemplateApi = createApi({
-  reducerPath: "SizeTemplate",
+const StockInwardApi = createApi({
+  reducerPath: "StockInward",
   baseQuery: fetchBaseQuery({
     baseUrl: BASE_URL,
   }),
-  tagTypes: ["SizeTemplate"],
+  tagTypes: ["StockInward"],
   endpoints: (builder) => ({
-    getSizeTemplate: builder.query({
+    getStockInward: builder.query({
       query: ({ params, searchParams }) => {
         if (searchParams) {
           return {
-            url: SIZE_TEMPLATE_API + "/search/" + searchParams,
+            url: STOCK_INWARD_API + "/search/" + searchParams,
             method: "GET",
             headers: {
               "Content-type": "application/json; charset=UTF-8",
@@ -23,7 +23,7 @@ const sizeTemplateApi = createApi({
           };
         }
         return {
-          url: SIZE_TEMPLATE_API,
+          url: STOCK_INWARD_API,
           method: "GET",
           headers: {
             "Content-type": "application/json; charset=UTF-8",
@@ -31,59 +31,58 @@ const sizeTemplateApi = createApi({
           params,
         };
       },
-      providesTags: ["SizeTemplate"],
+      providesTags: ["StockInward"],
     }),
-    getSizeTemplateById: builder.query({
+    getStockInwardById: builder.query({
       query: (id) => {
         return {
-          url: `${SIZE_TEMPLATE_API}/${id}`,
+          url: `${STOCK_INWARD_API}/${id}`,
           method: "GET",
           headers: {
             "Content-type": "application/json; charset=UTF-8",
           },
         };
       },
-      providesTags: ["SizeTemplate"],
+      providesTags: ["StockInward"],
     }),
-    addSizeTemplate: builder.mutation({
+    addStockInward: builder.mutation({
       query: (payload) => ({
-        url: SIZE_TEMPLATE_API,
+        url: STOCK_INWARD_API,
         method: "POST",
         body: payload,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
         },
       }),
-      invalidatesTags: ["SizeTemplate"],
+      invalidatesTags: ["StockInward"],
     }),
-    updateSizeTemplate: builder.mutation({
+    updateStockInward: builder.mutation({
       query: (payload) => {
         const { id, ...body } = payload;
         return {
-          url: `${SIZE_TEMPLATE_API}/${id}`,
+          url: `${STOCK_INWARD_API}/${id}`,
           method: "PUT",
           body,
         };
       },
-      invalidatesTags: ["SizeTemplate"],
+      invalidatesTags: ["StockInward"],
     }),
-    deleteSizeTemplate: builder.mutation({
+    deleteStockInward: builder.mutation({
       query: (id) => ({
-        url: `${SIZE_TEMPLATE_API}/${id}`,
+        url: `${STOCK_INWARD_API}/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["SizeTemplate"],
+      invalidatesTags: ["StockInward"],
     }),
   }),
 });
 
 export const {
-  useGetSizeTemplateQuery,
-  useGetSizeTemplateByIdQuery,
-  useLazyGetSizeTemplateByIdQuery,
-  useAddSizeTemplateMutation,
-  useUpdateSizeTemplateMutation,
-  useDeleteSizeTemplateMutation,
-} = sizeTemplateApi;
+  useGetStockInwardQuery,
+  useGetStockInwardByIdQuery,
+  useAddStockInwardMutation,
+  useUpdateStockInwardMutation,
+  useDeleteStockInwardMutation,
+} = StockInwardApi;
 
-export default sizeTemplateApi;
+export default StockInwardApi;

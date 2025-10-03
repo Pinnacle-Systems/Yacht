@@ -104,3 +104,4 @@ export const MEASUREMENT_API = "measurement";
 export const RAW_MATERIAL_OPENING_STOCK_API = "rawMaterialOpeningStock";
 export const STOCK_ADJUSTMENT_API = "stockAdjustment";
 export const SALES_ENTRY_API = "salesEntry";
+export const STOCK_INWARD_API = "stockInward"

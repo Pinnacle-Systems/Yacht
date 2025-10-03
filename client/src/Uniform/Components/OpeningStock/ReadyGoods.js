@@ -1,6 +1,13 @@
-import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+import {
+  useGetStyleMasterQuery,
+  useLazyGetStyleCodeDetailQuery,
+} from "../../../redux/uniformService/StyleMasterService";
 import { useEffect, useState } from "react";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { ReusableInput } from "../../../Utils/CommonInput";
+import { FaPlus } from "react-icons/fa";
+import { useLazyGetSizeTemplateByIdQuery } from "../../../redux/uniformService/SizeTemplateMasterServices";
+import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
 
 export default function ReadyGoods({
   openingStockItems,
@@ -10,12 +17,17 @@ export default function ReadyGoods({
   id,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
-
+  const [styleNo, setStyleNo] = useState("");
+  const [getStyleCodeDetail] = useLazyGetStyleCodeDetailQuery();
+  const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
   const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
+  const { data: fabricList } = useGetFabricMasterQuery({ params });
 
   const addRow = () => {
     const newRow = {
+      styleNo: "",
+      fabricId: "",
       styleId: "",
       sizeId: "",
       qty: "",
@@ -60,20 +72,6 @@ export default function ReadyGoods({
     setContextMenu(null);
   };
 
-  // useEffect(() => {
-  //   if (!openingStockItems || openingStockItems.length === 0) {
-  //     // setOpeningStockItems([{ styleId: "", sizeId: "", qty: "" }]);
-  //     setOpeningStockItems(
-  //       Array.from({ length: 6 }, () => ({
-  //         styleId: "",
-  //         sizeId: "",
-  //         qty: "",
-  //         remarks: "",
-  //       }))
-  //     );
-  //   }
-  // }, [openingStockItems, setOpeningStockItems]);
-
   useEffect(() => {
     if (openingStockItems) {
       setOpeningStockItems((prev) => {
@@ -83,7 +81,9 @@ export default function ReadyGoods({
           // add empty rows until total becomes 6
           return [
             ...prev,
-            ...Array.from({ length: 8 - filledRows }, () => ({
+            ...Array.from({ length: 6 - filledRows }, () => ({
+              styleNo: "",
+              fabricId: "",
               styleId: "",
               sizeId: "",
               qty: "",
@@ -96,7 +96,9 @@ export default function ReadyGoods({
     } else {
       // if null/undefined, initialize with 6 empty rows
       setOpeningStockItems(
-        Array.from({ length: 8 }, () => ({
+        Array.from({ length: 6 }, () => ({
+          styleNo: "",
+          fabricId: "",
           styleId: "",
           sizeId: "",
           qty: "",
@@ -106,9 +108,129 @@ export default function ReadyGoods({
     }
   }, [openingStockItems, setOpeningStockItems]);
 
+  // const handleAddRow = async () => {
+  //   try {
+  //     const { data: styleData } = await getStyleCodeDetail({ params });
+  //     const style = styleData?.data?.[0]; // since response has "0" key
+  //     if (!style) return;
+  //     const sizeTemplateId = style.sizeTemplateId;
+  //     let sizeRows = [];
+  //     if (sizeTemplateId) {
+  //       const { data: sizeData } = await styleTemplateDetail(sizeTemplateId);
+
+  //       if (sizeData?.SizeTemplateList?.length) {
+  //         sizeRows = sizeData.SizeTemplateList.map((s) => ({
+  //           styleNo: styleNo,
+  //           fabricId: style.fabricId || "",
+  //           styleId: style.id || "",
+  //           sizeId: s.sizeId,
+  //           qty: "",
+  //           remarks: "",
+  //         }));
+  //       }
+  //     }
+  //     const totalRows = [
+  //       ...sizeRows,
+  //       ...Array.from({ length: Math.max(0, 6 - sizeRows.length) }, () => ({
+  //         styleNo: "",
+  //         fabricId: "",
+  //         styleId: "",
+  //         sizeId: "",
+  //         qty: "",
+  //         remarks: "",
+  //       })),
+  //     ];
+
+  //     // 4. Update state
+  //     setOpeningStockItems(totalRows);
+
+  //     console.log("Opening Stock Items set:", totalRows);
+  //   } catch (error) {
+  //     console.error("Error adding row:", error);
+  //   }
+  // };
+  const handleAddRow = async () => {
+    try {
+      const { data: styleData } = await getStyleCodeDetail({ params });
+      const style = styleData?.data && Object.values(styleData.data)[0];
+      if (!style) return;
+
+      const sizeTemplateId = style.sizeTemplateId;
+      let sizeRows = [];
+
+      if (sizeTemplateId) {
+        const { data: sizeData } = await styleTemplateDetail(sizeTemplateId);
+
+        if (sizeData?.data?.SizeTemplateList?.length) {
+          sizeRows = sizeData.data.SizeTemplateList.map((s) => ({
+            styleNo: styleNo || "",
+            fabricId: style.fabricId || "",
+            styleId: style.id || "",
+            sizeId: s.sizeId,
+            qty: "",
+            remarks: "",
+          }));
+          console.log("Mapped size rows:", sizeRows);
+        }
+      }
+      setOpeningStockItems((prev) => {
+        const updated = [...prev];
+
+        // Find first empty slot index
+        let startIndex = updated.findIndex(
+          (row) => !row.styleId && !row.sizeId && !row.styleNo && !row.fabricId
+        );
+        if (startIndex === -1) startIndex = updated.length;
+
+        // Fill in sizeRows starting at first empty slot
+        sizeRows.forEach((row, i) => {
+          if (startIndex + i < updated.length) {
+            updated[startIndex + i] = row;
+          } else {
+            updated.push(row); // append if no empty slot
+          }
+        });
+
+        // Ensure at least 6 rows
+        while (updated.length < 6) {
+          updated.push({
+            styleNo: "",
+            fabricId: "",
+            styleId: "",
+            sizeId: "",
+            qty: "",
+            remarks: "",
+          });
+        }
+
+        return updated;
+      });
+    } catch (error) {
+      console.error("Error adding row:", error);
+    }
+  };
+
   return (
     <>
       <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[350px] overflow-auto">
+        <div className="flex items-center gap-4">
+          <ReusableInput
+            label="Style No"
+            value={styleNo}
+            setValue={setStyleNo}
+            type={"text"}
+            required={true}
+            readOnly={readOnly}
+          />
+          <button
+            className="hover:bg-green-700 h-6 mt-3 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-xs"
+            onClick={() => {
+              handleAddRow();
+            }}
+          >
+            <FaPlus /> Add
+          </button>
+        </div>
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
         </div>
@@ -120,6 +242,16 @@ export default function ReadyGoods({
                   className={`w-12 px-4 py-2 text-center font-medium text-[13px]`}
                 >
                   S.No
+                </th>
+                <th
+                  className={`w-20 px-4 py-2 text-center font-medium text-[13px]`}
+                >
+                  Style.No
+                </th>{" "}
+                <th
+                  className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
+                >
+                  Fabric
                 </th>
                 <th
                   className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
@@ -156,6 +288,55 @@ export default function ReadyGoods({
                     <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
                       {index + 1}
                     </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "styleNo");
+                          }
+                        }}
+                        type="string"
+                        className="text-left rounded py-1 px-1 w-full table-data-input"
+                        onFocus={(e) => e.target.select()}
+                        value={row?.styleNo}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "styleNo")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "styleNo");
+                        }}
+                        disabled={true}
+                      />
+                    </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px] ">
+                      <select
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "fabricId");
+                          }
+                        }}
+                        tabIndex={"0"}
+                        disabled={true}
+                        className="text-left w-full rounded py-1 table-data-input"
+                        value={row.fabricId}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "fabricId")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "fabricId");
+                        }}
+                      >
+                        <option></option>
+                        {(id
+                          ? fabricList?.data
+                          : fabricList?.data?.filter((item) => item.active)
+                        )?.map((blend) => (
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                       <select
                         onKeyDown={(e) => {
@@ -164,7 +345,7 @@ export default function ReadyGoods({
                           }
                         }}
                         tabIndex={"0"}
-                        disabled={readOnly}
+                        disabled={true}
                         className="text-left w-full rounded py-1 table-data-input"
                         value={row.styleId}
                         onChange={(e) =>
@@ -193,7 +374,7 @@ export default function ReadyGoods({
                           }
                         }}
                         tabIndex={"0"}
-                        disabled={readOnly}
+                        disabled={true}
                         className="text-left w-full rounded py-1 table-data-input"
                         value={row.sizeId}
                         onChange={(e) =>
@@ -282,7 +463,7 @@ export default function ReadyGoods({
               <tr className="bg-gray-50 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={3}
+                  colSpan={5}
                 >
                   Total Qty
                 </td>

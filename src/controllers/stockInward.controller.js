@@ -7,9 +7,7 @@ import {
   create as _create,
   update as _update,
   remove as _remove,
-  upload as _upload,
-  getStyleCode as _getStyleCode,
-} from "../services/style.service.js";
+} from "../services/stockInward.service.js";
 
 async function get(req, res, next) {
   try {
@@ -38,12 +36,15 @@ async function getSearch(req, res, next) {
   }
 }
 
-export async function upload(req, res, next) {
+async function create(req, res, next) {
   try {
-    res.json(await _upload(req));
+    res.json(await _create(req.body));
     console.log(res.statusCode);
   } catch (error) {
-    console.error(`Error`, error.message);
+    console.error(
+      `Error`,
+      error?.message?.match(/message: "(.*?)"/)?.[1] || error?.message
+    );
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         res.statusCode = 200;
@@ -54,8 +55,6 @@ export async function upload(req, res, next) {
             .toUpperCase()} Already exists`,
         });
         console.log(res.statusCode);
-      } else {
-        res.json({ statusCode: 1, message: "Child Record Exists" });
       }
     } else {
       res.json({
@@ -67,35 +66,15 @@ export async function upload(req, res, next) {
   }
 }
 
-async function create(req, res, next) {
-  try {
-    res.json(await _create(req.body));
-    console.log(res.statusCode);
-  } catch (error) {
-    console.error(`Error`, error.message);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2002") {
-        res.statusCode = 200;
-        res.json({
-          statusCode: 1,
-          message: `${error.meta.target
-            .split("_")[1]
-            .toUpperCase()} Already exists`,
-        });
-        console.log(res.statusCode);
-      }
-    } else {
-      res.json({ statusCode: 1, message: error.message });
-    }
-  }
-}
-
 async function update(req, res, next) {
   try {
     res.json(await _update(req.params.id, req.body));
     console.log(res.statusCode);
   } catch (error) {
-    console.error(`Error`, error.message);
+    console.error(
+      `Error`,
+      error?.message?.match(/message: "(.*?)"/)?.[1] || error?.message
+    );
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         res.statusCode = 200;
@@ -108,7 +87,11 @@ async function update(req, res, next) {
         console.log(res.statusCode);
       }
     } else {
-      res.json({ statusCode: 1, message: error.message });
+      res.json({
+        statusCode: 1,
+        message:
+          error?.message?.match(/message: "(.*?)"/)?.[1] || error?.message,
+      });
     }
   }
 }
@@ -126,17 +109,11 @@ async function remove(req, res, next) {
       res.statusCode = 200;
       res.json({ statusCode: 1, message: "Child record Exists" });
     }
-    console.error(`Error`, error.message);
+    console.error(
+      `Error`,
+      error?.message?.match(/message: "(.*?)"/)?.[1] || error?.message
+    );
   }
 }
 
-async function getOneStyleCode(req, res, next) {
-  try {
-    res.json(await _getStyleCode(req));
-    console.log(res.statusCode);
-  } catch (err) {
-    console.error(`Error`, err.message);
-  }
-}
-
-export { get, getOne, getSearch, create, update, remove, getOneStyleCode };
+export { get, getOne, getSearch, create, update, remove };

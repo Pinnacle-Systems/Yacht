@@ -9,6 +9,7 @@ import {
   update,
   remove,
   upload,
+  getOneStyleCode,
 } from "../controllers/style.controller.js";
 import { styleUpload } from "../configs/styleMulter.config.js";
 
@@ -17,7 +18,7 @@ router.post("/", styleUpload.single("img"), create);
 router.patch("/upload/:id", multerUpload.single("image"), upload);
 
 router.get("/", get);
-
+router.get("/styleCode", getOneStyleCode);
 router.get("/:id", getOne);
 
 router.get("/search/:searchKey", getSearch);

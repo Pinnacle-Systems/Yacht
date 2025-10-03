@@ -22,7 +22,7 @@ async function getNextDocId(
   if (saveType) {
     return "Draft Save";
   } else if (isUpdate === "drift") {
-    lastObject = await prisma.openingStock.findFirst({
+    lastObject = await prisma.stockInward.findFirst({
       where: {
         branchId: parseInt(branchId),
         draftSave: false,
@@ -46,7 +46,7 @@ async function getNextDocId(
 
     return newDocId;
   } else {
-    let lastObject = await prisma.openingStock.findFirst({
+    let lastObject = await prisma.stockInward.findFirst({
       where: {
         branchId: parseInt(branchId),
         AND: [
@@ -116,7 +116,7 @@ async function get(req) {
   );
   let data;
   let totalCount;
-  data = await prisma.openingStock.findMany({
+  data = await prisma.stockInward.findMany({
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
       AND: finYearDate
@@ -149,7 +149,7 @@ async function get(req) {
           storeName: true,
         },
       },
-      OpeningStockItems: true,
+      StockInwardItems: true,
     },
   });
   totalCount = data.length;
@@ -174,7 +174,7 @@ async function get(req) {
 
 async function getOne(id) {
   const childRecord = 0;
-  const data = await prisma.openingStock.findUnique({
+  const data = await prisma.stockInward.findUnique({
     where: {
       id: parseInt(id),
     },
@@ -184,11 +184,11 @@ async function getOne(id) {
           locationId: true,
         },
       },
-      OpeningStockItems: {
+      StockInwardItems: {
         select: {
           Stock: true,
           id: true,
-          openingStockId: true,
+          stockInwardId: true,
           styleId: true,
           sizeId: true,
           qty: true,
@@ -199,14 +199,14 @@ async function getOne(id) {
       },
     },
   });
-  if (!data) return NoRecordFound("openingStock");
+  if (!data) return NoRecordFound("stockInward");
   return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
 async function getSearch(req) {
   const { companyId, active } = req.query;
   const { searchKey } = req.params;
-  const data = await prisma.openingStock.findMany({
+  const data = await prisma.stockInward.findMany({
     where: {
       country: {
         companyId: companyId ? parseInt(companyId) : undefined,
@@ -229,7 +229,7 @@ async function create(body) {
     userId,
     branchId,
     storeId,
-    openingStockItems,
+    stockInwardItems,
     finYearId,
     term,
     notes,
@@ -254,7 +254,7 @@ async function create(body) {
   let data;
   console.log(newDocId);
   await prisma.$transaction(async (tx) => {
-    data = await tx.openingStock.create({
+    data = await tx.stockInward.create({
       data: {
         docId: newDocId,
         branchId: parseInt(branchId),
@@ -266,9 +266,9 @@ async function create(body) {
         locationId: parseInt(locationId),
       },
     });
-    await createOpeningStockItems(
+    await createStockInwardItems(
       tx,
-      openingStockItems,
+      stockInwardItems,
       data,
       userId,
       branchId,
@@ -281,7 +281,7 @@ async function create(body) {
 async function update(id, body) {
   const {
     branchId,
-    openingStockItems,
+    stockInwardItems,
     userId,
     storeId,
     term,
@@ -290,29 +290,29 @@ async function update(id, body) {
     locationId,
   } = await body;
   let data;
-  const dataFound = await prisma.openingStock.findUnique({
+  const dataFound = await prisma.stockInward.findUnique({
     where: {
       id: parseInt(id),
     },
     include: {
-      OpeningStockItems: {
+      StockInwardItems: {
         select: {
           id: true,
         },
       },
     },
   });
-  if (!dataFound) return NoRecordFound("openingStock");
-  let removedItems = findRemovedItems(dataFound, openingStockItems);
+  if (!dataFound) return NoRecordFound("stockInward");
+  let removedItems = findRemovedItems(dataFound, stockInwardItems);
   let removeItemsIds = removedItems.map((item) => parseInt(item.id));
   await prisma.$transaction(async (tx) => {
     await deleteItemsFromStock(tx, removeItemsIds);
     if (removeItemsIds.length > 0) {
-      await tx.openingStockItems.deleteMany({
+      await tx.stockInwardItems.deleteMany({
         where: { id: { in: removeItemsIds } },
       });
     }
-    data = await tx.openingStock.update({
+    data = await tx.stockInward.update({
       where: {
         id: parseInt(id),
       },
@@ -326,9 +326,9 @@ async function update(id, body) {
         locationId: parseInt(locationId),
       },
     });
-    await updateOpeningStockItems(
+    await updateStockInwardItems(
       tx,
-      openingStockItems,
+      stockInwardItems,
       data,
       userId,
       branchId,
@@ -338,161 +338,8 @@ async function update(id, body) {
   return { statusCode: 0, data };
 }
 
-// async function updateOpeningStockItems(
-//   tx,
-//   openingStockItems,
-//   openingStock,
-//   userId,
-//   branchId,
-//   storeId
-// ) {
-//   const promises = openingStockItems.map(async (stockDetail) => {
-//     const qty = parseInt(stockDetail.qty) || null;
-
-//     if (stockDetail.id) {
-//       // 1️⃣ Update existing OpeningStockItem
-//       const updatedItem = await tx.openingStockItems.update({
-//         where: { id: parseInt(stockDetail.id) },
-//         data: {
-//           openingStockId: parseInt(openingStock.id),
-//           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
-//           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-//           qty:
-//             stockDetail?.qty && !isNaN(parseFloat(stockDetail.qty))
-//               ? Math.round(parseFloat(stockDetail.qty))
-//               : null,
-//           remarks: stockDetail?.remarks ? stockDetail?.remarks : undefined,
-//           barcode: stockDetail?.barcode ? stockDetail?.barcode : undefined,
-//         },
-//       });
-
-//       // If stock row already exists → update it
-//       const existingStock = await tx.stock.findFirst({
-//         where: { OpeningStockItemsId: updatedItem.id },
-//       });
-
-//       if (existingStock) {
-//         await tx.stock.update({
-//           where: { id: existingStock.id },
-//           data: {
-//             styleId: stockDetail?.styleId
-//               ? parseInt(stockDetail.styleId)
-//               : null,
-//             sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-//             qty,
-//             barCode: stockDetail?.barcode,
-//             updatedById: parseInt(userId),
-//           },
-//         });
-//       } else {
-//         const newBarcode = stockDetail?.barcode
-//           ? stockDetail.barcode
-//           : await getNextBarcodeNo();
-//         await tx.stock.create({
-//           data: {
-//             inOrOut: "OpeningStock",
-//             createdById: parseInt(userId),
-//             branchId: parseInt(branchId),
-//             storeId: parseInt(storeId),
-//             styleId: stockDetail?.styleId
-//               ? parseInt(stockDetail.styleId)
-//               : null,
-//             sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-//             qty,
-//             OpeningStockItemsId: updatedItem.id,
-//             barCode: newBarcode,
-//           },
-//         });
-//       }
-
-//       return updatedItem;
-//     } else {
-//       // 3️⃣ Create new OpeningStockItem
-//       const newBarcode = await getNextBarcodeNo();
-//       const createdItem = await tx.openingStockItems.create({
-//         data: {
-//           openingStockId: parseInt(openingStock.id),
-//           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
-//           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-//           qty: stockDetail?.qty ? parseInt(stockDetail?.qty) : null,
-//           remarks: stockDetail?.remarks ? stockDetail?.remarks : undefined,
-//           barcode: newBarcode,
-//         },
-//       });
-//       await tx.stock.create({
-//         data: {
-//           inOrOut: "OpeningStock",
-//           createdById: parseInt(userId),
-//           branchId: parseInt(branchId),
-//           storeId: parseInt(storeId),
-//           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
-//           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-//           qty: createdItem.qty || 0,
-//           OpeningStockItemsId: createdItem.id,
-//           barCode: newBarcode,
-//         },
-//       });
-
-//       return createdItem;
-//     }
-//   });
-
-//   return Promise.all(promises);
-// }
-
-// async function createOpeningStockItems(
-//   tx,
-//   openingStockItems,
-//   openingStock,
-//   userId,
-//   branchId,
-//   storeId
-// ) {
-//   const promises = openingStockItems.map(async (stockDetail,index) => {
-//     // 1️⃣ Get the last barcode once
-//     const lastObject = await tx.openingStockItems.findFirst({
-//       orderBy: { id: "desc" },
-//     });
-//     let lastNumber = 0;
-//     if (lastObject?.barcode) {
-//       lastNumber = parseInt(lastObject.barcode.replace("YS", "")) || 0;
-//     }
-//     const barcode = await getNextBarcodeNo();
-//     const createdItem = await tx.openingStockItems.create({
-//       data: {
-//         openingStockId: parseInt(openingStock.id),
-//         styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
-//         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-//         qty:
-//           stockDetail?.qty && !isNaN(parseFloat(stockDetail.qty))
-//             ? Math.round(parseFloat(stockDetail.qty))
-//             : null,
-//         remarks: stockDetail?.remarks ? stockDetail?.remarks : undefined,
-//         barcode: barcode,
-//       },
-//     });
-
-//     await tx.stock.create({
-//       data: {
-//         inOrOut: "OpeningStock",
-//         createdById: parseInt(userId),
-//         branchId: parseInt(branchId),
-//         storeId: parseInt(storeId),
-//         styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
-//         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-//         qty: stockDetail.qty ? parseInt(stockDetail.qty) : null,
-//         OpeningStockItemsId: createdItem.id,
-//         barCode: barcode,
-//       },
-//     });
-//     return createdItem;
-//   });
-
-//   return Promise.all(promises);
-// }
-
 async function getLastBarcodeNumber(tx) {
-  const lastItem = await tx.openingStockItems.findFirst({
+  const lastItem = await tx.stockInwardItems.findFirst({
     orderBy: { id: "desc" },
   });
 
@@ -503,16 +350,16 @@ async function getLastBarcodeNumber(tx) {
   return 0;
 }
 
-async function updateOpeningStockItems(
+async function updateStockInwardItems(
   tx,
-  openingStockItems,
-  openingStock,
+  stockInwardItems,
+  stockInward,
   userId,
   branchId,
   storeId
 ) {
   // 1️⃣ Get the last barcode number in this branch
-  const lastItem = await tx.openingStockItems.findFirst({
+  const lastItem = await tx.stockInwardItems.findFirst({
     orderBy: { id: "desc" }, // or order by createdAt
   });
 
@@ -523,7 +370,7 @@ async function updateOpeningStockItems(
 
   let newIndex = 0; // Counter for new rows in this update
 
-  const promises = openingStockItems.map(async (stockDetail) => {
+  const promises = stockInwardItems.map(async (stockDetail) => {
     const qty = stockDetail?.qty
       ? Math.round(parseFloat(stockDetail.qty))
       : null;
@@ -539,11 +386,10 @@ async function updateOpeningStockItems(
     }
 
     if (stockDetail.id) {
-      // Update existing OpeningStockItem
-      const updatedItem = await tx.openingStockItems.update({
+      const updatedItem = await tx.stockInwardItems.update({
         where: { id: parseInt(stockDetail.id) },
         data: {
-          openingStockId: parseInt(openingStock.id),
+          stockInwardId: parseInt(stockInward.id),
           styleNo: stockDetail?.styleNo ?? undefined,
           fabricId: stockDetail?.fabricId
             ? parseInt(stockDetail.fabricId)
@@ -558,7 +404,7 @@ async function updateOpeningStockItems(
 
       // Update or create Stock row
       const existingStock = await tx.stock.findFirst({
-        where: { OpeningStockItemsId: updatedItem.id },
+        where: { stockInwardItemsId: updatedItem.id },
       });
 
       if (existingStock) {
@@ -580,7 +426,7 @@ async function updateOpeningStockItems(
       } else {
         await tx.stock.create({
           data: {
-            inOrOut: "OpeningStock",
+            inOrOut: "StockInward",
             createdById: parseInt(userId),
             branchId: parseInt(branchId),
             storeId: parseInt(storeId),
@@ -589,7 +435,7 @@ async function updateOpeningStockItems(
               : null,
             sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
             qty,
-            OpeningStockItemsId: updatedItem.id,
+            stockInwardItemsId: updatedItem.id,
             barCode: barcode,
             fabricId: stockDetail?.fabricId
               ? parseInt(stockDetail.fabricId)
@@ -600,10 +446,9 @@ async function updateOpeningStockItems(
 
       return updatedItem;
     } else {
-      // Create new OpeningStockItem
-      const createdItem = await tx.openingStockItems.create({
+      const createdItem = await tx.stockInwardItems.create({
         data: {
-          openingStockId: parseInt(openingStock.id),
+          stockInwardId: parseInt(stockInward.id),
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
           qty,
@@ -619,7 +464,7 @@ async function updateOpeningStockItems(
       // Create Stock row
       await tx.stock.create({
         data: {
-          inOrOut: "OpeningStock",
+          inOrOut: "StockInward",
           createdById: parseInt(userId),
           branchId: parseInt(branchId),
           storeId: parseInt(storeId),
@@ -629,7 +474,7 @@ async function updateOpeningStockItems(
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
           qty,
-          OpeningStockItemsId: createdItem.id,
+          stockInwardItemsId: createdItem.id,
           barCode: barcode,
         },
       });
@@ -641,16 +486,16 @@ async function updateOpeningStockItems(
   return Promise.all(promises);
 }
 
-async function createOpeningStockItems(
+async function createStockInwardItems(
   tx,
-  openingStockItems,
-  openingStock,
+  stockInwardItems,
+  stockInward,
   userId,
   branchId,
   storeId
 ) {
   // 1️⃣ Get the highest existing barcode number for this branch
-  const lastItem = await tx.openingStockItems.findFirst({
+  const lastItem = await tx.stockInwardItems.findFirst({
     orderBy: { id: "desc" }, // or order by createdAt
   });
 
@@ -661,7 +506,7 @@ async function createOpeningStockItems(
   }
 
   // 2️⃣ Map through all items and create them with sequential barcodes
-  const promises = openingStockItems.map(async (stockDetail, index) => {
+  const promises = stockInwardItems.map(async (stockDetail, index) => {
     const qty = stockDetail?.qty
       ? Math.round(parseFloat(stockDetail.qty))
       : null;
@@ -671,10 +516,9 @@ async function createOpeningStockItems(
       ? stockDetail.barcode
       : `YS${String(lastNumber + index + 1).padStart(4, "0")}`;
 
-    // Create OpeningStockItem
-    const createdItem = await tx.openingStockItems.create({
+    const createdItem = await tx.stockInwardItems.create({
       data: {
-        openingStockId: parseInt(openingStock.id),
+        stockInwardId: parseInt(stockInward.id),
         styleNo: stockDetail?.styleNo ?? undefined,
         fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
         styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
@@ -688,7 +532,7 @@ async function createOpeningStockItems(
     // Create corresponding Stock row
     await tx.stock.create({
       data: {
-        inOrOut: "OpeningStock",
+        inOrOut: "StockInward",
         createdById: parseInt(userId),
         branchId: parseInt(branchId),
         storeId: parseInt(storeId),
@@ -696,7 +540,7 @@ async function createOpeningStockItems(
         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
         fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
         qty,
-        OpeningStockItemsId: createdItem.id,
+        stockInwardItemsId: createdItem.id,
         barCode: barcode,
       },
     });
@@ -707,9 +551,9 @@ async function createOpeningStockItems(
   return Promise.all(promises);
 }
 
-function findRemovedItems(dataFound, openingStockItems) {
-  let removedItems = dataFound.OpeningStockItems.filter((oldItem) => {
-    let result = openingStockItems.find(
+function findRemovedItems(dataFound, stockInwardItems) {
+  let removedItems = dataFound.StockInwardItems.filter((oldItem) => {
+    let result = stockInwardItems.find(
       (newItem) => parseInt(newItem.id) === parseInt(oldItem.id)
     );
     if (result) return false;
@@ -730,7 +574,7 @@ async function deleteItemsFromStock(tx, removeItemsStockIds) {
 
 async function remove(id) {
   console.log(id, "id");
-  const data = await prisma.openingStock.delete({
+  const data = await prisma.stockInward.delete({
     where: {
       id: parseInt(id),
     },

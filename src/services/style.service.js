@@ -77,9 +77,10 @@ async function getNextStyleSku(companyId, prefix) {
 }
 
 async function create(req) {
-  const { name, companyId, active, sku, alias, img } = await req;
+  const { name, companyId, active, sku, alias, img, fabricId, sizeTemplateId } =
+    await req;
   // const file = req.file;
-  let styleNo = await getNextStyleSku(companyId, name);
+  // let styleNo = await getNextStyleSku(companyId, name);
   const data = await prisma.style.create({
     data: {
       name,
@@ -88,14 +89,17 @@ async function create(req) {
       active: active !== undefined ? JSON.parse(active) : undefined,
       companyId: companyId ? parseInt(companyId) : null,
       img,
-      styleNo,
+      // styleNo,
+      sizeTemplateId: sizeTemplateId ? parseInt(sizeTemplateId) : undefined,
+      fabricId: fabricId ? parseInt(fabricId) : undefined,
     },
   });
   return { statusCode: 0, data };
 }
 
 async function update(id, body) {
-  const { name, companyId, active, sku, alias,img } = await body;
+  const { name, companyId, active, sku, alias, img, fabricId, sizeTemplateId } =
+    await body;
 
   const dataFound = await prisma.style.findUnique({
     where: { id: parseInt(id) },
@@ -111,7 +115,9 @@ async function update(id, body) {
       alias,
       active: active !== undefined ? JSON.parse(active) : undefined,
       companyId: companyId ? parseInt(companyId) : null,
-      img
+      img,
+      fabricId: fabricId ? parseInt(fabricId) : undefined,
+      sizeTemplateId: sizeTemplateId ? parseInt(sizeTemplateId) : undefined,
     },
   });
   return { statusCode: 0, data };
@@ -126,4 +132,16 @@ async function remove(id) {
   return { statusCode: 0, data };
 }
 
-export { get, getOne, getSearch, create, update, remove };
+async function getStyleCode(req) {
+  const { styleNo } = req.query;
+  console.log(first);
+  const data = await prisma.style.findMany({
+    where: {
+      sku: parseInt(styleNo),
+    },
+  });
+  if (!data) return NoRecordFound("style");
+  return { statusCode: 0, data };
+}
+
+export { get, getOne, getSearch, create, update, remove, getStyleCode };

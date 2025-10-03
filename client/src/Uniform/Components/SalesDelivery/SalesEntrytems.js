@@ -1,7 +1,6 @@
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import { useEffect, useState } from "react";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
-import { adjTypeData } from "../../../Utils/DropdownData";
 import { useLazyGetBarcodeDetailQuery } from "../../../redux/uniformService/StockAdjustmentService";
 import Swal from "sweetalert2";
 
@@ -63,21 +62,6 @@ export default function BillItems({
   const handleCloseContextMenu = () => {
     setContextMenu(null);
   };
-
-  // useEffect(() => {
-  //   if (!salesEntryItems || salesEntryItems.length === 0) {
-  //     setSalesEntryItems(
-  //       Array.from({ length: 6 }, () => ({
-  //         barcode: "",
-  //         styleId: "",
-  //         sizeId: "",
-  //         stkQty: "",
-  //         qty: "",
-  //         remarks: "",
-  //       }))
-  //     );
-  //   }
-  // }, [salesEntryItems, setSalesEntryItems]);
 
   useEffect(() => {
     if (salesEntryItems) {
@@ -186,9 +170,78 @@ export default function BillItems({
     }
   };
 
+  // const handleInputChange = async (value, index, field) => {
+  //   if (field === "qty") {
+  //     const row = salesEntryItems[index];
+  //     const balanceQty = row?.stkQty || 0;
+
+  //     if (parseFloat(balanceQty) < parseFloat(value)) {
+  //       Swal.fire({
+  //         icon: "warning",
+  //         title: "Invalid Quantity",
+  //         text: "Sales Qty cannot be more than Stock Qty!",
+  //         confirmButtonText: "OK",
+  //       });
+  //       return;
+  //     }
+  //   }
+
+  //   setSalesEntryItems((prev) => {
+  //     const newItems = structuredClone(prev);
+  //     newItems[index][field] = value;
+  //     return newItems;
+  //   });
+
+  //   // Only trigger API if search field changes
+  //   if (field === "barcode") {
+  //     const row = structuredClone(salesEntryItems[index]);
+  //     row.barcode = value;
+
+  //     if (row.search) {
+  //       try {
+  //         const response = await triggerGetBarcodeDetail({
+  //           params: { search: row.search }, // 👈 only one param now
+  //         }).unwrap();
+
+  //         if (response?.data?.length > 0) {
+  //           const item = response.data[0];
+  //           setSalesEntryItems((prev) =>
+  //             prev.map((r, i) =>
+  //               i === index
+  //                 ? {
+  //                     ...r,
+  //                     barcode: item.barCode,
+  //                     styleId: item.styleId,
+  //                     sizeId: item.sizeId,
+  //                     stkQty: response.totalQty,
+  //                   }
+  //                 : r
+  //             )
+  //           );
+  //         } else {
+  //           setSalesEntryItems((prev) =>
+  //             prev.map((r, i) =>
+  //               i === index
+  //                 ? {
+  //                     search: "",
+  //                     qty: "",
+  //                     remarks: "",
+  //                     stkQty: "",
+  //                   }
+  //                 : r
+  //             )
+  //           );
+  //         }
+  //       } catch (err) {
+  //         console.error("Error fetching stock details:", err);
+  //       }
+  //     }
+  //   }
+  // };
+
   return (
     <>
-      <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[350px] overflow-auto">
+      <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[300px] overflow-auto">
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">Sales Item Details</h2>
         </div>

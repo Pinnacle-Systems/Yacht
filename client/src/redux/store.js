@@ -104,6 +104,7 @@ import PayFrequencyMasterApi from "./services/PayFrequencyService";
 import OpeningStockApi from "./uniformService/OpeningStockService";
 import StockAdjustmentApi from "./uniformService/StockAdjustmentService";
 import SalesEntryApi from "./uniformService/SalesEntryService";
+import StockInwardApi from "./uniformService/StockInwardService";
 
 const commonReducers = {
   openTabs,
@@ -206,6 +207,8 @@ const commonReducers = {
   OpeningStock: OpeningStockApi.reducer,
   StockAdjustment: StockAdjustmentApi.reducer,
   SalesEntry: SalesEntryApi.reducer,
+  SizeTemplate: sizeTemplateApi.reducer,
+  StockInward: StockInwardApi.reducer,
 };
 const commonMiddleware = [
   countryMasterApi.middleware,
@@ -306,6 +309,7 @@ const commonMiddleware = [
   OpeningStockApi.middleware,
   StockAdjustmentApi.middleware,
   SalesEntryApi.middleware,
+  StockInwardApi.middleware,
 ];
 
 const store = configureStore({

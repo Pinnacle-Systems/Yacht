@@ -121,6 +121,86 @@ async function getOneBarcode(req) {
   };
 }
 
+// async function getOneBarcode(req) {
+//   const { search } = req.query;
+
+//   if (!search) {
+//     return {
+//       statusCode: 0,
+//       data: [],
+//       totalCount: 0,
+//       totalQty: 0,
+//       message: "Please provide a search term",
+//     };
+//   }
+
+//   const normalizedSearch = String(search).trim().replace(/\+/g, " ");
+//   let data = [];
+//   let aggregate = { _sum: { qty: 0 } };
+
+//   // 1️⃣ Try exact barcode match
+//   let where = {
+//     OR: [
+//       { barCode: search },
+//       { barCode: normalizedSearch.replace(/\s+/g, "+") },
+//       { barCode: normalizedSearch },
+//     ],
+//   };
+
+//   [data, aggregate] = await prisma.$transaction([
+//     prisma.stock.findMany({
+//       where,
+//       include: { Style: true, Size: true },
+//     }),
+//     prisma.stock.aggregate({
+//       _sum: { qty: true },
+//       where,
+//     }),
+//   ]);
+
+//   // 2️⃣ If no barcode match → fallback to style+size
+//   if (!data.length) {
+//     const parts = normalizedSearch.split(/\s+/);
+//     if (parts.length >= 2) {
+//       const sizeName = parts.pop(); // last token = size
+//       const styleName = parts.join(" "); // rest = style
+
+//       where = {
+//         Style: { name: { equals: styleName, mode: "insensitive" } },
+//         Size: { name: { equals: sizeName, mode: "insensitive" } },
+//       };
+
+//       [data, aggregate] = await prisma.$transaction([
+//         prisma.stock.findMany({
+//           where,
+//           include: { Style: true, Size: true },
+//         }),
+//         prisma.stock.aggregate({
+//           _sum: { qty: true },
+//           where,
+//         }),
+//       ]);
+//     }
+//   }
+
+//   if (!data.length) {
+//     return {
+//       statusCode: 0,
+//       data: [],
+//       totalCount: 0,
+//       totalQty: 0,
+//       message: "No record found",
+//     };
+//   }
+
+//   return {
+//     statusCode: 1,
+//     data,
+//     totalCount: data.length,
+//     totalQty: aggregate._sum.qty ?? 0,
+//   };
+// }
+
 async function getNextDocId(
   branchId,
   shortCode,

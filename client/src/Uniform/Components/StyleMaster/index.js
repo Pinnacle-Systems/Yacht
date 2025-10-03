@@ -1,5 +1,5 @@
 import React from "react";
-import { Check, Plus, Power } from "lucide-react";
+import { Check, Power } from "lucide-react";
 import Modal from "../../../UiComponents/Modal";
 import secureLocalStorage from "react-secure-storage";
 import {
@@ -10,11 +10,19 @@ import {
   useGetStyleMasterByIdQuery,
 } from "../../../redux/uniformService/StyleMasterService";
 import Swal from "sweetalert2";
-import { TextInput, ToggleButton, ReusableTable } from "../../../Inputs";
+import {
+  TextInput,
+  ToggleButton,
+  ReusableTable,
+  DropdownInput,
+} from "../../../Inputs";
 import { statusDropdown } from "../../../Utils/DropdownData";
 import { useState, useCallback, useEffect } from "react";
 import BrowseSingleImage from "./BrowseSingleImage";
 import { getImageUrlPath } from "../../../Constants";
+import { useGetSizeTemplateQuery } from "../../../redux/uniformService/SizeTemplateMasterServices";
+import { dropDownListObject } from "../../../Utils/contructObject";
+import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
 
 const StyleMaster = () => {
   const [form, setForm] = useState(false);
@@ -28,6 +36,8 @@ const StyleMaster = () => {
   const [searchName, setSearchName] = useState("");
   const [alias, setAlias] = useState("");
   const [img, setImg] = useState("");
+  const [sizeTemplateId, setSizeTemplateId] = useState("");
+  const [fabricId, setFabricId] = useState("");
   const [addData] = useAddStyleMasterMutation();
   const [updateData] = useUpdateStyleMasterMutation();
   const [removeData] = useDeleteStyleMasterMutation();
@@ -47,6 +57,12 @@ const StyleMaster = () => {
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetStyleMasterByIdQuery(id, { skip: !id });
+  const { data: sizeTemplateList } = useGetSizeTemplateQuery({
+    params,
+  });
+  const { data: fabricList } = useGetFabricMasterQuery({
+    params,
+  });
 
   const data = {
     id,
@@ -57,10 +73,12 @@ const StyleMaster = () => {
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
     ),
+    sizeTemplateId,
+    fabricId,
   };
 
   const validateData = (data) => {
-    if (data.name && data.sku) {
+    if (data.name && data.sku && data.sizeTemplateId) {
       return true;
     }
     return false;
@@ -90,7 +108,8 @@ const StyleMaster = () => {
         sessionStorage.getItem("sessionId") + "userCompanyId"
       )
     );
-
+    formData.append("sizeTemplateId", sizeTemplateId);
+    formData.append("fabricId", fabricId);
     if (img instanceof File) formData.append("img", img);
 
     if (id) {
@@ -119,6 +138,8 @@ const StyleMaster = () => {
       setSku(data?.sku ? data?.sku : "");
       setActive(id ? (data?.active ? data.active : false) : true);
       setImg(data?.img ? getImageUrlPath(data?.img) : "");
+      setSizeTemplateId(data?.sizeTemplateId ? data?.sizeTemplateId : "");
+      setFabricId(data?.fabricId ? data?.fabricId : "");
     },
     [id]
   );
@@ -133,11 +154,6 @@ const StyleMaster = () => {
     syncFormWithDb(undefined);
     setReadOnly(false);
   };
-
-  function onDataClick(id) {
-    setId(id);
-    setForm(true);
-  }
 
   const handleView = (id) => {
     setId(id);
@@ -170,16 +186,16 @@ const StyleMaster = () => {
       search: "",
     },
     {
-      header: "SKU",
-      accessor: (item) => item.name,
+      header: "Style Code",
+      accessor: (item) => item.sku,
       className: "font-medium text-gray-900  w-[150px]  py-1  px-2",
       search: "SKU",
       value: searchSku,
       setValue: setSearchSku,
     },
     {
-      header: "Name",
-      accessor: (item) => item.sku,
+      header: "Style Name",
+      accessor: (item) => item.name,
       className: "font-medium text-gray-900 w-[250px]  py-1  px-2",
       search: "Name",
       value: searchName,
@@ -200,7 +216,7 @@ const StyleMaster = () => {
       }
       try {
         let deldata = await removeData(id).unwrap();
-        if (deldata?.statusCode == 1) {
+        if (deldata?.statusCode === 1) {
           Swal.fire({
             icon: "error",
             title: "Child record Exists",
@@ -283,7 +299,7 @@ const StyleMaster = () => {
         <Modal
           isOpen={form}
           form={form}
-          widthClass={"w-[55%] h-[60%]"}
+          widthClass={"w-[65%] h-[60%]"}
           onClose={() => {
             setForm(false);
           }}
@@ -334,14 +350,14 @@ const StyleMaster = () => {
                 <div className="lg:col-span- space-y-3">
                   <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
                     <fieldset className="flex rounded mt-2 gap-6">
-                      <div className="">
-                        <div className="flex flex-wrap gap-x-4">
+                      <div>
+                        <div className="grid md:grid-cols-3 gap-x-5 gap-y-1">
                           <div className="mb-3 w-48">
                             <TextInput
-                              name="SKU / Style code"
+                              name="Style code"
                               type="text"
-                              value={name}
-                              setValue={setName}
+                              value={sku}
+                              setValue={setSku}
                               required={true}
                               readOnly={readOnly}
                             />
@@ -350,22 +366,66 @@ const StyleMaster = () => {
                             <TextInput
                               name="Style Name"
                               type="text"
-                              value={sku}
-                              setValue={setSku}
+                              value={name}
+                              setValue={setName}
                               required={true}
                               readOnly={readOnly}
                             />
                           </div>
-                        </div>
-                        <div className="mb-5 w-48">
-                          <TextInput
-                            name="Alias Name"
-                            type="text"
-                            value={alias}
-                            setValue={setAlias}
-                            required={false}
-                            readOnly={readOnly}
-                          />
+                          <div className="mb-5 w-48">
+                            <TextInput
+                              name="Alias Name"
+                              type="text"
+                              value={alias}
+                              setValue={setAlias}
+                              required={false}
+                              readOnly={readOnly}
+                            />
+                          </div>
+                          <div className="mb-5 w-48">
+                            <DropdownInput
+                              name="Fabric"
+                              options={
+                                fabricList
+                                  ? dropDownListObject(
+                                      id
+                                        ? fabricList?.data
+                                        : fabricList?.data?.filter(
+                                            (item) => item.active
+                                          ),
+                                      "name",
+                                      "id"
+                                    )
+                                  : []
+                              }
+                              value={fabricId}
+                              setValue={setFabricId}
+                              required={true}
+                              readOnly={readOnly}
+                            />
+                          </div>
+                          <div className="mb-5 w-48">
+                            <DropdownInput
+                              name="Size Template"
+                              options={
+                                sizeTemplateList
+                                  ? dropDownListObject(
+                                      id
+                                        ? sizeTemplateList?.data
+                                        : sizeTemplateList?.data?.filter(
+                                            (item) => item.active
+                                          ),
+                                      "name",
+                                      "id"
+                                    )
+                                  : []
+                              }
+                              value={sizeTemplateId}
+                              setValue={setSizeTemplateId}
+                              required={true}
+                              readOnly={readOnly}
+                            />
+                          </div>
                         </div>
                         <div className="mb-5 w-48">
                           <ToggleButton

@@ -58,7 +58,9 @@ import {
   PurchaseOrder,
   SalesBill,
   SalesEntry,
+  SizeTemplateMaster,
   StockAdjustment,
+  StockInward,
   StyleMaster,
   TagTypeMater,
 } from "../../../Uniform/Components";
@@ -138,6 +140,8 @@ const ActiveTabList = () => {
     "OPENING STOCK": <OpeningStockForm />,
     "STOCK ADJUSTMENT": <StockAdjustment />,
     "SALES DELIVERY": <SalesEntry />,
+    "SIZE TEMPLATE MASTER": <SizeTemplateMaster />,
+    "STOCK INWARD": <StockInward/>,
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

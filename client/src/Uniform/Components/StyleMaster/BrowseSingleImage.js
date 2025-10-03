@@ -44,6 +44,7 @@ const BrowseSingleImage = ({ picture, setPicture, readOnly }) => {
                   if (readOnly) return;
                   setPicture(e.target.files[0]);
                 }}
+                disabled={readOnly}
               />
               <label htmlFor="profileImage" className="text-xs">
                 {" "}
@@ -56,6 +57,7 @@ const BrowseSingleImage = ({ picture, setPicture, readOnly }) => {
                   onClick={() => {
                     setPicture(null);
                   }}
+                  disabled={readOnly}
                 />
               }
             </div>
