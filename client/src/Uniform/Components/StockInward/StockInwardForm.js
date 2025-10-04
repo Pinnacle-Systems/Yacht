@@ -66,7 +66,7 @@ export default function StockInwardForm({
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
           : moment.utc(today).format("YYYY-MM-DD")
       );
-      setStockInwardItems(data?.stockInwardItems ? data.stockInwardItems : []);
+      setStockInwardItems(data?.StockInwardItems ? data.StockInwardItems : []);
       if (data?.docId) {
         setDocId(data?.docId);
       }

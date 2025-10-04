@@ -19,7 +19,7 @@ const stockApi = createApi({
             headers: {
               "Content-type": "application/json; charset=UTF-8",
             },
-            params
+            params,
           };
         }
         return {
@@ -28,7 +28,20 @@ const stockApi = createApi({
           headers: {
             "Content-type": "application/json; charset=UTF-8",
           },
-          params
+          params,
+        };
+      },
+      providesTags: ["Stock"],
+    }),
+    getStyleDetail: builder.query({
+      query: ({ params }) => {
+        return {
+          url: `${STOCK_API}/styleDetail`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
         };
       },
       providesTags: ["Stock"],
@@ -41,7 +54,7 @@ const stockApi = createApi({
           headers: {
             "Content-type": "application/json; charset=UTF-8",
           },
-          params
+          params,
         };
       },
       providesTags: ["Stock"],
@@ -54,7 +67,7 @@ const stockApi = createApi({
           headers: {
             "Content-type": "application/json; charset=UTF-8",
           },
-          params
+          params,
         };
       },
       providesTags: ["Stock"],
@@ -97,7 +110,8 @@ export const {
   useAddStockMutation,
   useUpdateStockMutation,
   useDeleteStockMutation,
-  useGetPcsStockQuery
+  useGetPcsStockQuery,
+  useLazyGetStyleDetailQuery,
 } = stockApi;
 
 export default stockApi;

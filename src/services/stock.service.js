@@ -1,108 +1,141 @@
-import { PrismaClient } from '@prisma/client'
-import { NoRecordFound } from '../configs/Responses.js';
-import { getStockProperty } from '../utils/helper.js';
-import { getFinishedGoodsStockReport, getStockReport, getStockReportForCuttingDelivery } from '../utils/stockHelper.js';
-const prisma = new PrismaClient()
+import { PrismaClient } from "@prisma/client";
+import { NoRecordFound } from "../configs/Responses.js";
+import { getStockProperty } from "../utils/helper.js";
+import {
+  getFinishedGoodsStockReport,
+  getStockReport,
+  getStockReportForCuttingDelivery,
+} from "../utils/stockHelper.js";
+import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
+
+const prisma = new PrismaClient();
+
 const xprisma = prisma.$extends({
-    result: {
-        stock: {
-            gross: {
-                needs: { price: true, qty: true },
-                compute(stock) {
-                    return stock.price * stock.qty
-                }
-            },
-        }
+  result: {
+    stock: {
+      gross: {
+        needs: { price: true, qty: true },
+        compute(stock) {
+          return stock.price * stock.qty;
+        },
+      },
     },
-})
+  },
+});
 
 export async function getPcsStock(req) {
-    const {
-        pagination = false, dataPerPage = 5, pageNumber = 1, storeId, prevProcessId, itemId, orderId,
-        productionDeliveryId, isPacking, finishedGoodsSalesId, finishedGoodsSalesDeliveryId, branchId,
-        stockTransferFinishedGoodsId, onlineSalesId, searchStyleNo, isForProductionDelivery, toProcessId,
-    } = req.query
-    let processId;
+  const {
+    pagination = false,
+    dataPerPage = 5,
+    pageNumber = 1,
+    storeId,
+    prevProcessId,
+    itemId,
+    orderId,
+    productionDeliveryId,
+    isPacking,
+    finishedGoodsSalesId,
+    finishedGoodsSalesDeliveryId,
+    branchId,
+    stockTransferFinishedGoodsId,
+    onlineSalesId,
+    searchStyleNo,
+    isForProductionDelivery,
+    toProcessId,
+  } = req.query;
+  let processId;
 
-    let toProcessData;
-    if (prevProcessId) {
-        toProcessData = await prisma.process.findUnique({
-            where: {
-                id: parseInt(toProcessId)
-            }
-        })
+  let toProcessData;
+  if (prevProcessId) {
+    toProcessData = await prisma.process.findUnique({
+      where: {
+        id: parseInt(toProcessId),
+      },
+    });
+  }
 
+  let processData;
+  if (prevProcessId) {
+    processData = await prisma.process.findUnique({
+      where: {
+        id: parseInt(prevProcessId),
+      },
+    });
 
-    }
-
-    let processData;
-    if (prevProcessId) {
-        processData = await prisma.process.findUnique({
-            where: {
-                id: parseInt(prevProcessId)
-            }
-        })
-
-        // processId = prevProcessId;
-        // if (processData?.isCutting) {
-        //     processId = null
-        // }
-    }
-    const storeFilter = `stockForPanels.storeId = ${storeId}`
-    const processFilter = processId ? `stockForPanels.prevProcessId = ${prevProcessId}` : `stockForPanels.prevProcessId IS NULL`
-    const productionDeliveryIdFilter = `(productionDelivery.id < ${productionDeliveryId} or productionDelivery.id IS NULL)`
-    const isPackingFilter = isPacking ? `process.isPacking = 1` : `(process.isPacking = 0 OR process.isPacking IS NULL)`
-    let filterConditions = []
-    if (itemId) {
-        filterConditions.push(`stockForPanels.itemId = ${itemId}`)
-    }
-    if (productionDeliveryId) {
-        filterConditions.push(productionDeliveryIdFilter)
-    }
-    if (finishedGoodsSalesId) {
-        filterConditions.push(`(finishedGoodsSales.id < ${finishedGoodsSalesId} or finishedGoodsSales.id IS NULL)`)
-    }
-    if (finishedGoodsSalesDeliveryId) {
-        filterConditions.push(`(finishedGoodsSalesDelivery.id < ${finishedGoodsSalesDeliveryId} or finishedGoodsSalesDelivery.id IS NULL)`)
-    }
-    if (stockTransferFinishedGoodsId) {
-        filterConditions.push(`(stockTransferdelivery.id < ${stockTransferFinishedGoodsId} or stockTransferdelivery.id IS NULL)
-            `)
-    }
-    if (onlineSalesId) {
-        filterConditions.push(`(onlineSales.id < ${onlineSalesId} or onlineSales.id IS NULL)
-            `)
-    }
-    // if (searchStyleNo) {
-    //     filterConditions.push(`LOWER(style.sku) LIKE LOWER('%${searchStyleNo}%')`)
+    // processId = prevProcessId;
+    // if (processData?.isCutting) {
+    //     processId = null
     // }
-    if (storeId) {
-        filterConditions.push(storeFilter)
-    }
-    if (processId) {
-        filterConditions.push(processFilter)
-    }
-    if (isPacking) {
-        filterConditions.push(isPackingFilter)
-    }
-    if (branchId) {
-        filterConditions.push(`stockForPanels.branchId = ${branchId}`)
-    }
+  }
+  const storeFilter = `stockForPanels.storeId = ${storeId}`;
+  const processFilter = processId
+    ? `stockForPanels.prevProcessId = ${prevProcessId}`
+    : `stockForPanels.prevProcessId IS NULL`;
+  const productionDeliveryIdFilter = `(productionDelivery.id < ${productionDeliveryId} or productionDelivery.id IS NULL)`;
+  const isPackingFilter = isPacking
+    ? `process.isPacking = 1`
+    : `(process.isPacking = 0 OR process.isPacking IS NULL)`;
+  let filterConditions = [];
+  if (itemId) {
+    filterConditions.push(`stockForPanels.itemId = ${itemId}`);
+  }
+  if (productionDeliveryId) {
+    filterConditions.push(productionDeliveryIdFilter);
+  }
+  if (finishedGoodsSalesId) {
+    filterConditions.push(
+      `(finishedGoodsSales.id < ${finishedGoodsSalesId} or finishedGoodsSales.id IS NULL)`
+    );
+  }
+  if (finishedGoodsSalesDeliveryId) {
+    filterConditions.push(
+      `(finishedGoodsSalesDelivery.id < ${finishedGoodsSalesDeliveryId} or finishedGoodsSalesDelivery.id IS NULL)`
+    );
+  }
+  if (stockTransferFinishedGoodsId) {
+    filterConditions.push(`(stockTransferdelivery.id < ${stockTransferFinishedGoodsId} or stockTransferdelivery.id IS NULL)
+            `);
+  }
+  if (onlineSalesId) {
+    filterConditions.push(`(onlineSales.id < ${onlineSalesId} or onlineSales.id IS NULL)
+            `);
+  }
+  // if (searchStyleNo) {
+  //     filterConditions.push(`LOWER(style.sku) LIKE LOWER('%${searchStyleNo}%')`)
+  // }
+  if (storeId) {
+    filterConditions.push(storeFilter);
+  }
+  if (processId) {
+    filterConditions.push(processFilter);
+  }
+  if (isPacking) {
+    filterConditions.push(isPackingFilter);
+  }
+  if (branchId) {
+    filterConditions.push(`stockForPanels.branchId = ${branchId}`);
+  }
 
-    const where = `where ${filterConditions.join(' and ')}`
-    let filterStockByProcess;
-    if (processData?.isIroning || processData?.isStitching || processData?.isPacking) {
-        filterStockByProcess = "Stitching"
-    }
-    else {
-        filterStockByProcess = "Panel"
-    }
+  const where = `where ${filterConditions.join(" and ")}`;
+  let filterStockByProcess;
+  if (
+    processData?.isIroning ||
+    processData?.isStitching ||
+    processData?.isPacking
+  ) {
+    filterStockByProcess = "Stitching";
+  } else {
+    filterStockByProcess = "Panel";
+  }
 
-    let sql;
-    if (isForProductionDelivery) {
-
-        if ((filterStockByProcess == "Stitching") || (toProcessData?.isPacking || toProcessData?.isIroning)) {
-            sql = `
+  let sql;
+  if (isForProductionDelivery) {
+    if (
+      filterStockByProcess == "Stitching" ||
+      toProcessData?.isPacking ||
+      toProcessData?.isIroning
+    ) {
+      sql = `
     select item.name as itemName,stockForPanels.itemId,stockForPanels.panelId,panel.name as panelName, stockForPanels.sizeId,stockForPanels.colorId,stockForPanels.panelColorId,color.name as colorName, stockForPanels.uomId, uom.name as uomName, 
       size.name as sizeName, stockForPanels.stage as stage, sum(stockForPanels.qty) as qty
       from stockForPanels
@@ -118,10 +151,9 @@ export async function getPcsStock(req) {
     ((stockForPanels.prevProcessId !=${toProcessId} OR stockForPanels.productionReceiptDetailsId is null) or stockForPanels.prevProcessId is null)    
       group by stockForPanels.itemId,stockForPanels.panelId, stockForPanels.sizeId, 
         stockForPanels.panelColorId, stockForPanels.uomId, stockForPanels.stage,stockForPanels.colorId;
-      `
-        }
-        else {
-            sql = `
+      `;
+    } else {
+      sql = `
     select item.name as itemName,stockForPanels.itemId,stockForPanels.panelId,panel.name as panelName, stockForPanels.sizeId,stockForPanels.panelColorId,stockForPanels.colorId,color.name as colorName, stockForPanels.uomId, uom.name as uomName, 
       size.name as sizeName, stockForPanels.stage as stage, sum(stockForPanels.qty) as qty
       from stockForPanels
@@ -138,12 +170,10 @@ export async function getPcsStock(req) {
      group by stockForPanels.itemId,stockForPanels.panelId, stockForPanels.sizeId,
       stockForPanels.panelColorId, stockForPanels.uomId, stockForPanels.stage,stockForPanels.colorId;
 
-      `
-        }
-
+      `;
     }
-    else {
-        sql = `
+  } else {
+    sql = `
     select item.name as itemName,stockForPanels.itemId,stockForPanels.panelId,panel.name as panelName,stockForPanels.panelColorId, stockForPanels.sizeId,stockForPanels.colorId,color.name as colorName, stockForPanels.uomId, uom.name as uomName, 
       size.name as sizeName, stockForPanels.stage as stage, sum(stockForPanels.qty) as qty
       from stockForPanels
@@ -159,320 +189,576 @@ export async function getPcsStock(req) {
       group by stockForPanels.itemId,stockForPanels.panelId, stockForPanels.sizeId, 
        stockForPanels.panelColorId, stockForPanels.uomId, stockForPanels.stage,stockForPanels.colorId;
      
-      `
-    }
+      `;
+  }
 
+  // group by stockForPanels.itemId,stockForPanels.panelId, stockForPanels.sizeId, ----
+  // stockForPanels.colorId, stockForPanels.uomId, stockForPanels.stage ;
 
+  let data = await prisma.$queryRawUnsafe(sql);
 
-    // group by stockForPanels.itemId,stockForPanels.panelId, stockForPanels.sizeId, ----
-    // stockForPanels.colorId, stockForPanels.uomId, stockForPanels.stage ;
+  data = data?.filter((val) => val.qty > 0);
 
-    let data = await prisma.$queryRawUnsafe(sql)
+  if (
+    processData?.isIroning ||
+    processData?.isStitching ||
+    processData?.isPacking
+  ) {
+    data = data?.filter((val) => val.stage !== "Panel");
+  }
 
-    data = data?.filter(val => val.qty > 0)
+  let totalCount = data.length;
+  if (pagination) {
+    data = data.slice(
+      (pageNumber - 1) * parseInt(dataPerPage),
+      pageNumber * dataPerPage
+    );
+  }
 
-    if (processData?.isIroning || processData?.isStitching || processData?.isPacking) {
-        data = data?.filter(val => val.stage !== "Panel")
-    }
-
-    let totalCount = data.length
-    if (pagination) {
-        data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
-    }
-
-    return { statusCode: 0, data, totalCount };
+  return { statusCode: 0, data, totalCount };
 }
 
 function manualFilterSearchData(searchYarnAliasName, searchColor, data) {
-    if (!searchYarnAliasName && !searchColor) return data
+  if (!searchYarnAliasName && !searchColor) return data;
 
-    let color = searchColor.toUpperCase();
-    let fabric = searchYarnAliasName.toUpperCase();
+  let color = searchColor.toUpperCase();
+  let fabric = searchYarnAliasName.toUpperCase();
 
-    if (searchYarnAliasName && searchColor) {
-
-        return data.filter(item =>
-            (color ? String(item.name).includes(color) : true && fabric ? String(item.fabricName).includes(fabric) : true)
-        )
-    }
-    else {
-        return data.filter(item =>
-            (color ? String(item.name).includes(color) : true || fabric ? String(item.fabricName).includes(fabric) : true)
-        )
-    }
-
+  if (searchYarnAliasName && searchColor) {
+    return data.filter((item) =>
+      color
+        ? String(item.name).includes(color)
+        : true && fabric
+        ? String(item.fabricName).includes(fabric)
+        : true
+    );
+  } else {
+    return data.filter((item) =>
+      color
+        ? String(item.name).includes(color)
+        : true || fabric
+        ? String(item.fabricName).includes(fabric)
+        : true
+    );
+  }
 }
+
+// async function get(req) {
+//   const {
+//     branchId,
+//     storeId,
+//     itemType,
+//     filterColors,
+//     isGetStockReport = false,
+//     pagination = false,
+//     dataPerPage = 5,
+//     pageNumber = 1,
+//     searchColor,
+//     searchUom,
+//     searchLotNo,
+//     searchPrevProcess,
+//     searchYarnAliasName,
+//     processInwardId,
+//     stockId,
+//     rawMaterialSalesId,
+//     yarnId,
+//     fabricId,
+//     designId,
+//     gaugeId,
+//     loopLengthId,
+//     gsmId,
+//     kDiaId,
+//     fDiaId,
+//     accessoryId,
+//     sizeId,
+//     colorId,
+//     uomId,
+//     lotNo,
+//     processId,
+//     stockReport,
+//     fromDate,
+//     toDate,
+//     finishedGoodsStockReport,
+//   } = req.query;
+//   let data;
+//   if (stockReport) {
+//     return {
+//       statusCode: 0,
+//       data: await getStockReport(itemType, storeId, toDate, branchId),
+//     };
+//   }
+//   if (finishedGoodsStockReport) {
+//     return {
+//       statusCode: 0,
+//       data: await getFinishedGoodsStockReport(storeId, toDate, branchId),
+//     };
+//   }
+
+//   if (isGetStockReport) {
+//     data = await getStockReportForCuttingDelivery(
+//       storeId,
+//       itemType,
+//       branchId,
+//       pageNumber,
+//       dataPerPage
+//     );
+//   } else {
+//     data = await xprisma.stock.groupBy({
+//       where: {
+//         branchId: branchId ? parseInt(branchId) : undefined,
+//         storeId: storeId ? parseInt(storeId) : undefined,
+//         itemType,
+//         yarnId: yarnId ? parseInt(yarnId) : undefined,
+//         fabricId: fabricId ? parseInt(fabricId) : undefined,
+//         designId: designId ? parseInt(designId) : undefined,
+//         gaugeId: gaugeId ? parseInt(gaugeId) : undefined,
+//         loopLengthId: loopLengthId ? parseInt(loopLengthId) : undefined,
+//         gsmId: gsmId ? parseInt(gsmId) : undefined,
+//         kDiaId: kDiaId ? parseInt(kDiaId) : undefined,
+//         fDiaId: fDiaId ? parseInt(fDiaId) : undefined,
+//         accessoryId: accessoryId ? parseInt(accessoryId) : undefined,
+//         sizeId: sizeId ? parseInt(sizeId) : undefined,
+//         colorId: colorId ? parseInt(colorId) : undefined,
+//         uomId: uomId ? parseInt(uomId) : undefined,
+//         lotNo,
+//         processId:
+//           processId && JSON.parse(processId) ? parseInt(processId) : undefined,
+//         Color: searchColor
+//           ? {
+//               name: {
+//                 contains: searchColor,
+//               },
+//             }
+//           : undefined,
+//         Uom: searchUom
+//           ? {
+//               name: {
+//                 contains: searchUom,
+//               },
+//             }
+//           : undefined,
+//         lotNo: searchLotNo
+//           ? {
+//               contains: searchLotNo,
+//             }
+//           : undefined,
+//         Process: searchPrevProcess
+//           ? {
+//               name: {
+//                 contains: searchPrevProcess,
+//               },
+//             }
+//           : undefined,
+//         Yarn: searchYarnAliasName
+//           ? {
+//               aliasName: {
+//                 contains: searchYarnAliasName,
+//               },
+//             }
+//           : undefined,
+//         colorId:
+//           filterColors && filterColors.length > 0
+//             ? {
+//                 in: filterColors.split(",").map((id) => parseInt(id)),
+//               }
+//             : undefined,
+//         id: stockId ? { lt: parseInt(stockId) } : undefined,
+//         OR: processInwardId
+//           ? [
+//               {
+//                 ProgramInwardLotDetails: {
+//                   processInwardProgramDetailsId: {
+//                     processInwardId: { lt: parseInt(processInwardId) },
+//                   },
+//                 },
+//               },
+//               { programInwardLotDetailsId: null },
+//             ]
+//           : undefined,
+//         OR: rawMaterialSalesId
+//           ? [
+//               {
+//                 RawMaterialsSalesDetails: {
+//                   rawMaterialsSalesId: {
+//                     lt: parseInt(rawMaterialSalesId),
+//                   },
+//                 },
+//               },
+//               { rawMaterialsSalesDetailsId: null },
+//             ]
+//           : undefined,
+//       },
+//       by: [
+//         "storeId",
+//         "itemType",
+//         "processId",
+//         "yarnId",
+//         "fabricId",
+//         "designId",
+//         "gaugeId",
+//         "loopLengthId",
+//         "gsmId",
+//         "kDiaId",
+//         "fDiaId",
+//         "accessoryId",
+//         "sizeId",
+//         "colorId",
+//         "uomId",
+//         "lotNo",
+//         "branchId",
+//         "inOrOut",
+//       ],
+//       _sum: {
+//         qty: true,
+//         gross: true,
+//         noOfRolls: true,
+//         noOfBags: true,
+//       },
+//     });
+//     data = data.filter((item) => item._sum.qty > 0);
+//   }
+
+//   // data = data.filter(item => !(item._sum.qty === 0));
+//   let newItemArray = [];
+//   data = await (async function getPrice() {
+//     for (let i = 0; i < data?.length; i++) {
+//       let item = data[i];
+//       let price = await getStockProperty(
+//         itemType,
+//         item,
+//         "price",
+//         item.storeId,
+//         branchId
+//       );
+//       let newObj = { ...item, price: price };
+//       newItemArray.push(newObj);
+//     }
+//     return Promise.all(newItemArray);
+//   })();
+
+//   data = newItemArray;
+
+//   data = manualFilterSearchData(searchYarnAliasName, searchColor, data);
+
+//   let totalCount = data.length;
+//   if (pagination) {
+//     data = data.slice(
+//       (pageNumber - 1) * parseInt(dataPerPage),
+//       pageNumber * dataPerPage
+//     );
+//   }
+//   return { statusCode: 0, data, totalCount };
+// }
 
 async function get(req) {
-    const { branchId, storeId, itemType, filterColors, isGetStockReport = false,
-        pagination = false, dataPerPage = 5, pageNumber = 1,
-        searchColor, searchUom, searchLotNo, searchPrevProcess, searchYarnAliasName, processInwardId, stockId, rawMaterialSalesId,
-        yarnId, fabricId, designId, gaugeId, loopLengthId, gsmId, kDiaId, fDiaId, accessoryId, sizeId, colorId, uomId, lotNo, processId, stockReport, fromDate, toDate, finishedGoodsStockReport
-    } = req.query
-    let data;
-    if (stockReport) {
-        return { statusCode: 0, data: await getStockReport(itemType, storeId, toDate, branchId) };
-    }
-    if (finishedGoodsStockReport) {
-        return { statusCode: 0, data: await getFinishedGoodsStockReport(storeId, toDate, branchId) };
-    };
+  const {
+    branchId,
+    pagination,
+    pageNumber,
+    dataPerPage,
+    searchStyle,
+    searchFabric,
+    searchBarcode,
+    searchStore,
+    finYearId,
+  } = req.query;
 
-
-    if (isGetStockReport) {
-        data = await getStockReportForCuttingDelivery(storeId, itemType, branchId, pageNumber, dataPerPage)
-    }
-    else {
-        data = await xprisma.stock.groupBy({
-            where: {
-                branchId: branchId ? parseInt(branchId) : undefined,
-                storeId: storeId ? parseInt(storeId) : undefined,
-                itemType,
-                yarnId: yarnId ? parseInt(yarnId) : undefined,
-                fabricId: fabricId ? parseInt(fabricId) : undefined,
-                designId: designId ? parseInt(designId) : undefined,
-                gaugeId: gaugeId ? parseInt(gaugeId) : undefined,
-                loopLengthId: loopLengthId ? parseInt(loopLengthId) : undefined,
-                gsmId: gsmId ? parseInt(gsmId) : undefined,
-                kDiaId: kDiaId ? parseInt(kDiaId) : undefined,
-                fDiaId: fDiaId ? parseInt(fDiaId) : undefined,
-                accessoryId: accessoryId ? parseInt(accessoryId) : undefined,
-                sizeId: sizeId ? parseInt(sizeId) : undefined,
-                colorId: colorId ? parseInt(colorId) : undefined,
-                uomId: uomId ? parseInt(uomId) : undefined,
-                lotNo,
-                processId: (processId && JSON.parse(processId)) ? parseInt(processId) : undefined,
-                Color: searchColor ? {
-                    name: {
-                        contains: searchColor
-                    }
-                } : undefined,
-                Uom: searchUom ? {
-                    name: {
-                        contains: searchUom
-                    }
-                } : undefined,
-                lotNo: searchLotNo ? {
-                    contains: searchLotNo
-                } : undefined,
-                Process: searchPrevProcess ? {
-                    name: {
-                        contains: searchPrevProcess
-                    }
-                } : undefined,
-                Yarn: searchYarnAliasName ? {
-                    aliasName: {
-                        contains: searchYarnAliasName
-                    }
-                } : undefined,
-                colorId: (filterColors && filterColors.length > 0) ? {
-                    in: filterColors.split(",").map(id => parseInt(id))
-                } : undefined,
-                id: stockId ? { lt: parseInt(stockId) } : undefined,
-                OR: processInwardId ? [
-                    {
-                        ProgramInwardLotDetails: {
-                            processInwardProgramDetailsId: {
-                                processInwardId: { lt: parseInt(processInwardId) }
-                            }
-                        }
-                    },
-                    { programInwardLotDetailsId: null }
-                ] : undefined,
-                OR: rawMaterialSalesId ? [
-                    {
-                        RawMaterialsSalesDetails: {
-                            rawMaterialsSalesId: {
-                                lt: parseInt(rawMaterialSalesId)
-                            }
-                        },
-                    },
-                    { rawMaterialsSalesDetailsId: null }
-                ] : undefined
+  let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+  let data;
+  let totalCount;
+  const where = {};
+  data = await prisma.stock.groupBy({
+    by: ["styleId", "sizeId", "styleNo", "barCode", "fabricId"],
+    where: {
+      branchId: branchId ? parseInt(branchId) : undefined,
+      AND: finYearDate
+        ? [
+            {
+              createdAt: {
+                gte: finYearDate.startTime,
+              },
             },
-            by: ["storeId", "itemType", "processId",
-                "yarnId",
-                "fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId",
-                "accessoryId", "sizeId",
-                "colorId",
-                "uomId",
-                "lotNo", "branchId", 'inOrOut'
-            ],
-            _sum: {
-                qty: true,
-                gross: true,
-                noOfRolls: true,
-                noOfBags: true,
+            {
+              createdAt: {
+                lte: finYearDate.endTime,
+              },
             },
-        })
-        data = data.filter(item => (item._sum.qty > 0));
-    }
-
-    // data = data.filter(item => !(item._sum.qty === 0));
-    let newItemArray = []
-    data = await (async function getPrice() {
-        for (let i = 0; i < data?.length; i++) {
-            let item = data[i]
-            let price = await getStockProperty(itemType, item, "price", item.storeId, branchId);
-            let newObj = { ...item, price: price }
-            newItemArray.push(newObj)
-        }
-        return Promise.all(newItemArray)
-    })()
-
-
-
-    data = newItemArray
-
-    data = manualFilterSearchData(searchYarnAliasName, searchColor, data)
-
-    let totalCount = data.length
-    if (pagination) {
-
-
-        data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
-    }
-    return { statusCode: 0, data, totalCount };
+          ]
+        : undefined,
+      barcode: Boolean(searchBarcode) ? { contains: searchBarcode } : undefined,
+      Style: {
+        name: searchStyle ? { contains: searchStyle } : undefined,
+      },
+      Fabric: {
+        name: searchFabric ? { contains: searchFabric } : undefined,
+      },
+      Store: {
+        storeName: searchStore ? { contains: searchStore } : undefined,
+      },
+    },
+    _sum: {
+      qty: true,
+    },
+  });
+  totalCount = data.length;
+  if (pagination) {
+    data = data.slice(
+      (pageNumber - 1) * parseInt(dataPerPage),
+      pageNumber * dataPerPage
+    );
+  }
+  return {
+    statusCode: 0,
+    data: data.map((d) => ({
+      styleNo: d.styleNo,
+      styleId: d.styleId,
+      sizeId: d.sizeId,
+      stkQty: d._sum.qty,
+      fabricId: d.fabricId,
+      barcode: d.barCode,
+    })),
+    totalCount,
+  };
 }
 
-
 async function getOne() {
-    const {
-        branchId,
-        storeId,
-        yarnId,
-        fabricId,
-        designId,
-        gaugeId,
-        loopLengthId,
-        gsmId,
-        kDiaId,
-        fDiaId,
-        accessoryId,
-        sizeId,
-        colorId,
-        uomId,
-        lotNo,
-        itemType
-    } = req.query
-    let data = await xprisma.stock.groupBy({
-        where: {
-            branchId: branchId ? parseInt(branchId) : undefined,
-            storeId: storeId ? parseInt(storeId) : undefined,
-            itemType,
-            yarnId: yarnId ? parseInt(yarnId) : undefined,
-            fabricId: fabricId ? parseInt(fabricId) : undefined,
-            designId: designId ? parseInt(designId) : undefined,
-            gaugeId: gaugeId ? parseInt(gaugeId) : undefined,
-            loopLengthId: loopLengthId ? parseInt(loopLengthId) : undefined,
-            gsmId: gsmId ? parseInt(gsmId) : undefined,
-            kDiaId: kDiaId ? parseInt(kDiaId) : undefined,
-            fDiaId: fDiaId ? parseInt(fDiaId) : undefined,
-            accessoryId: accessoryId ? parseInt(accessoryId) : undefined,
-            sizeId: sizeId ? parseInt(sizeId) : undefined,
-            colorId: colorId ? parseInt(colorId) : undefined,
-            uomId: uomId ? parseInt(uomId) : undefined,
-            lotNo,
-            processId: processId ? parseInt(processId) : undefined
-        },
-        by: ["storeId", "itemType", "processId",
-            "yarnId",
-            "fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId",
-            "accessoryId", "sizeId",
-            "colorId",
-            "uomId",
-            "lotNo"
-        ],
-        _sum: {
-            qty: true,
-            gross: true,
-            noOfRolls: true,
-            noOfBags: true,
-        },
-    })
-    data = await (async function getPrice() {
-        let promises = data.map(async (item) => {
-            let newItem = structuredClone(item);
-            newItem["price"] = await getStockProperty(itemType, item, "price", item.storeId, branchId);
-            return newItem
-        })
-        return Promise.all(promises)
-    })()
-    if (!data) return NoRecordFound("stock");
-    return { statusCode: 0, data };
+  const {
+    branchId,
+    storeId,
+    yarnId,
+    fabricId,
+    designId,
+    gaugeId,
+    loopLengthId,
+    gsmId,
+    kDiaId,
+    fDiaId,
+    accessoryId,
+    sizeId,
+    colorId,
+    uomId,
+    lotNo,
+    itemType,
+  } = req.query;
+  let data = await xprisma.stock.groupBy({
+    where: {
+      branchId: branchId ? parseInt(branchId) : undefined,
+      storeId: storeId ? parseInt(storeId) : undefined,
+      itemType,
+      yarnId: yarnId ? parseInt(yarnId) : undefined,
+      fabricId: fabricId ? parseInt(fabricId) : undefined,
+      designId: designId ? parseInt(designId) : undefined,
+      gaugeId: gaugeId ? parseInt(gaugeId) : undefined,
+      loopLengthId: loopLengthId ? parseInt(loopLengthId) : undefined,
+      gsmId: gsmId ? parseInt(gsmId) : undefined,
+      kDiaId: kDiaId ? parseInt(kDiaId) : undefined,
+      fDiaId: fDiaId ? parseInt(fDiaId) : undefined,
+      accessoryId: accessoryId ? parseInt(accessoryId) : undefined,
+      sizeId: sizeId ? parseInt(sizeId) : undefined,
+      colorId: colorId ? parseInt(colorId) : undefined,
+      uomId: uomId ? parseInt(uomId) : undefined,
+      lotNo,
+      processId: processId ? parseInt(processId) : undefined,
+    },
+    by: [
+      "storeId",
+      "itemType",
+      "processId",
+      "yarnId",
+      "fabricId",
+      "designId",
+      "gaugeId",
+      "loopLengthId",
+      "gsmId",
+      "kDiaId",
+      "fDiaId",
+      "accessoryId",
+      "sizeId",
+      "colorId",
+      "uomId",
+      "lotNo",
+    ],
+    _sum: {
+      qty: true,
+      gross: true,
+      noOfRolls: true,
+      noOfBags: true,
+    },
+  });
+  data = await (async function getPrice() {
+    let promises = data.map(async (item) => {
+      let newItem = structuredClone(item);
+      newItem["price"] = await getStockProperty(
+        itemType,
+        item,
+        "price",
+        item.storeId,
+        branchId
+      );
+      return newItem;
+    });
+    return Promise.all(promises);
+  })();
+  if (!data) return NoRecordFound("stock");
+  return { statusCode: 0, data };
 }
 
 async function getSearch(req) {
-    const { companyId, active } = req.query
-    const { searchKey } = req.params
-    const data = await prisma.stock.findMany({
-        where: {
-            country: {
-                companyId: companyId ? parseInt(companyId) : undefined,
-            },
-            active: active ? Boolean(active) : undefined,
-            OR: [
-                {
-                    aliasName: {
-                        contains: searchKey,
-                    },
-                }
-            ],
-        }
-    })
-    return { statusCode: 0, data: data };
+  const { companyId, active } = req.query;
+  const { searchKey } = req.params;
+  const data = await prisma.stock.findMany({
+    where: {
+      country: {
+        companyId: companyId ? parseInt(companyId) : undefined,
+      },
+      active: active ? Boolean(active) : undefined,
+      OR: [
+        {
+          aliasName: {
+            contains: searchKey,
+          },
+        },
+      ],
+    },
+  });
+  return { statusCode: 0, data: data };
 }
 
 async function create(body) {
-    const { aliasName, accessoryItemId, hsn, accessoryCategory, active, companyId } = await body
-    const data = await prisma.stock.create({
-        data: {
-            aliasName, accessoryItemId: parseInt(accessoryItemId), hsn, accessoryCategory,
-            active, companyId: parseInt(companyId)
-        },
-    });
-    return { statusCode: 0, data };
+  const {
+    aliasName,
+    accessoryItemId,
+    hsn,
+    accessoryCategory,
+    active,
+    companyId,
+  } = await body;
+  const data = await prisma.stock.create({
+    data: {
+      aliasName,
+      accessoryItemId: parseInt(accessoryItemId),
+      hsn,
+      accessoryCategory,
+      active,
+      companyId: parseInt(companyId),
+    },
+  });
+  return { statusCode: 0, data };
 }
 
 async function update(id, body) {
-    const { aliasName, accessoryItemId, hsn, accessoryCategory, active, companyId } = await body
-    const dataFound = await prisma.stock.findUnique({
-        where: {
-            id: parseInt(id)
-        }
-    })
-    if (!dataFound) return NoRecordFound("stock");
-    const data = await prisma.stock.update({
-        where: {
-            id: parseInt(id),
-        },
-        data: {
-            aliasName, accessoryItemId: parseInt(accessoryItemId), hsn, accessoryCategory,
-            active, companyId: parseInt(companyId)
-        },
-    })
-    return { statusCode: 0, data };
-};
+  const {
+    aliasName,
+    accessoryItemId,
+    hsn,
+    accessoryCategory,
+    active,
+    companyId,
+  } = await body;
+  const dataFound = await prisma.stock.findUnique({
+    where: {
+      id: parseInt(id),
+    },
+  });
+  if (!dataFound) return NoRecordFound("stock");
+  const data = await prisma.stock.update({
+    where: {
+      id: parseInt(id),
+    },
+    data: {
+      aliasName,
+      accessoryItemId: parseInt(accessoryItemId),
+      hsn,
+      accessoryCategory,
+      active,
+      companyId: parseInt(companyId),
+    },
+  });
+  return { statusCode: 0, data };
+}
 
 async function remove(id) {
-    const data = await prisma.stock.delete({
-        where: {
-            id: parseInt(id)
-        },
-    })
-    return { statusCode: 0, data };
+  const data = await prisma.stock.delete({
+    where: {
+      id: parseInt(id),
+    },
+  });
+  return { statusCode: 0, data };
 }
 
-export {
-    get,
-    getOne,
-    getSearch,
-    create,
-    update,
-    remove,
+// async function getStyleDetail(req) {
+//   const { styleNo } = req.query;
+//   const data = await prisma.stock.groupBy({
+//     by: ["styleId", "sizeId", "styleNo", "barCode", "fabricId"],
+//     where: {
+//       styleNo: styleNo,
+//       barCode: styleNo,
+//     },
+//     _sum: {
+//       qty: true,
+//     },
+//   });
+//   console.log(data);
+//   if (!data || data.length === 0) return NoRecordFound("style Or Barcode");
+//   return {
+//     statusCode: 0,
+//     data: data.map((d) => ({
+//       styleNo: d.styleNo,
+//       styleId: d.styleId,
+//       sizeId: d.sizeId,
+//       stkQty: d._sum.qty,
+//       fabricId: d.fabricId,
+//       barcode: d.barCode,
+//     })),
+//   };
+// }
+
+async function getStyleDetail(req) {
+  const { styleNo } = req.query;
+
+  // 1️⃣ First try fetching by styleNo
+  let data = await prisma.stock.groupBy({
+    by: ["styleId", "sizeId", "styleNo", "barCode", "fabricId"],
+    where: {
+      styleNo: styleNo,
+    },
+    _sum: {
+      qty: true,
+    },
+  });
+
+  // 2️⃣ If no data found, try fetching by barCode
+  if (!data || data.length === 0) {
+    data = await prisma.stock.groupBy({
+      by: ["styleId", "sizeId", "styleNo", "barCode", "fabricId"],
+      where: {
+        barCode: styleNo,
+      },
+      _sum: {
+        qty: true,
+      },
+    });
+  }
+
+  // 3️⃣ If still no data, return no record message
+  if (!data || data.length === 0)
+    return NoRecordFound("Style or Barcode not found");
+
+  // 4️⃣ Return formatted result
+  return {
+    statusCode: 0,
+    data: data.map((d) => ({
+      styleNo: d.styleNo,
+      styleId: d.styleId,
+      sizeId: d.sizeId,
+      stkQty: d._sum.qty,
+      fabricId: d.fabricId,
+      barcode: d.barCode,
+    })),
+  };
 }
 
-
-
+export { get, getOne, getSearch, create, update, remove, getStyleDetail };
 
 // import { PrismaClient, Prisma } from '@prisma/client'
 // import { NoRecordFound } from '../configs/Responses.js';
@@ -640,8 +926,6 @@ export {
 //     return { statusCode: 0, data, totalCount };
 // }
 
-
-
 // async function getOne(id, query) {
 //     const { productId, uomId, salePrice } = query;
 //     let data;
@@ -685,8 +969,6 @@ export {
 
 //     return { statusCode: 0, data };
 // }
-
-
 
 // async function getSearch(req) {
 //     const { companyId, active } = req.query
@@ -757,40 +1039,3 @@ export {
 //     update,
 //     remove,
 // }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1063,17 +1063,19 @@ model LineMaster {
 }
 
 model Fabric {
-  id                Int                 @id @default(autoincrement())
-  name              String?
-  number            Int?
-  active            Boolean?            @default(true)
-  Company           Company?            @relation(fields: [companyId], references: [id])
-  companyId         Int?
-  aliasName         String?
-  Stock             Stock[]
-  Style             Style[]
-  OpeningStockItems OpeningStockItems[]
-  StockInwardItems  StockInwardItems[]
+  id                   Int                    @id @default(autoincrement())
+  name                 String?
+  number               Int?
+  active               Boolean?               @default(true)
+  Company              Company?               @relation(fields: [companyId], references: [id])
+  companyId            Int?
+  aliasName            String?
+  Stock                Stock[]
+  Style                Style[]
+  OpeningStockItems    OpeningStockItems[]
+  StockInwardItems     StockInwardItems[]
+  StockAdjustmentItems StockAdjustmentItems[]
+  SalesEntryItems      SalesEntryItems[]
 }
 
 model Color {
@@ -1601,6 +1603,7 @@ model Stock {
   salesEntryItemsId    Int?
   StockInwardItems     StockInwardItems?     @relation(fields: [stockInwardItemsId], references: [id], onDelete: Cascade)
   stockInwardItemsId   Int?
+  styleNo              String?
 }
 
 model OpeningStock {
@@ -1672,6 +1675,9 @@ model StockAdjustmentItems {
   adjQty            Int?
   remarks           String?
   Stock             Stock[]
+  styleNo           String?
+  Fabric            Fabric?          @relation(fields: [fabricId], references: [id])
+  fabricId          Int?
 }
 
 model SalesEntry {
@@ -1710,6 +1716,9 @@ model SalesEntryItems {
   qty          Int?
   remarks      String?
   Stock        Stock[]
+  styleNo      String?
+  Fabric       Fabric?     @relation(fields: [fabricId], references: [id])
+  fabricId     Int?
 }
 
 model SizeTemplate {

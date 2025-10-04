@@ -64,6 +64,7 @@ import {
   salesEntry,
   sizeTemplate,
   stockInward,
+  stock,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";
@@ -160,6 +161,7 @@ app.use("/stockAdjustment", stockAdjustment);
 app.use("/salesEntry", salesEntry);
 app.use("/sizeTemplate", sizeTemplate);
 app.use("/stockInward", stockInward);
+app.use("/stock", stock);
 
 app.get("/retreiveFile/:fileName", (req, res) => {
   const { fileName } = req.params;

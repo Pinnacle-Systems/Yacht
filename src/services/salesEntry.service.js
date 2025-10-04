@@ -195,6 +195,8 @@ async function getOne(id) {
           qty: true,
           remarks: true,
           stkQty: true,
+          styleNo: true,
+          fabricId: true,
         },
       },
     },
@@ -374,6 +376,10 @@ async function updateSalesEntryItems(
               : null,
           barcode: stockDetail?.barcode ? stockDetail?.barcode : undefined,
           remarks: stockDetail?.remarks ? stockDetail?.remarks : undefined,
+          styleNo: stockDetail?.styleNo ?? undefined,
+          fabricId: stockDetail?.fabricId
+            ? parseInt(stockDetail.fabricId)
+            : null,
         },
       });
 
@@ -392,6 +398,10 @@ async function updateSalesEntryItems(
             qty,
             barCode: stockDetail?.barcode,
             updatedById: parseInt(userId),
+            styleNo: stockDetail?.styleNo ?? undefined,
+            fabricId: stockDetail?.fabricId
+              ? parseInt(stockDetail.fabricId)
+              : null,
           },
         });
       } else {
@@ -408,6 +418,10 @@ async function updateSalesEntryItems(
             qty,
             salesEntryItemsId: updatedItem.id,
             barCode: stockDetail?.barcode ? stockDetail?.barcode : undefined,
+            styleNo: stockDetail?.styleNo ?? undefined,
+            fabricId: stockDetail?.fabricId
+              ? parseInt(stockDetail.fabricId)
+              : null,
           },
         });
       }
@@ -426,6 +440,10 @@ async function updateSalesEntryItems(
           qty: stockDetail?.qty ? parseInt(stockDetail?.qty) : null,
           remarks: stockDetail?.remarks ? stockDetail?.remarks : undefined,
           barcode: stockDetail?.barcode ? stockDetail?.barcode : undefined,
+          styleNo: stockDetail?.styleNo ?? undefined,
+          fabricId: stockDetail?.fabricId
+            ? parseInt(stockDetail.fabricId)
+            : null,
         },
       });
       await tx.stock.create({
@@ -439,6 +457,10 @@ async function updateSalesEntryItems(
           qty: createdItem.qty ? -Math.abs(createdItem.qty) : null,
           salesEntryItemsId: createdItem.id,
           barCode: stockDetail?.barcode ? stockDetail?.barcode : undefined,
+          styleNo: stockDetail?.styleNo ?? undefined,
+          fabricId: stockDetail?.fabricId
+            ? parseInt(stockDetail.fabricId)
+            : null,
         },
       });
       return createdItem;
@@ -472,6 +494,8 @@ async function createSalesEntryItems(
             ? Math.round(parseFloat(itemDetail.qty))
             : null,
         remarks: itemDetail?.remarks ? itemDetail?.remarks : undefined,
+        styleNo: itemDetail?.styleNo ?? undefined,
+        fabricId: itemDetail?.fabricId ? parseInt(itemDetail.fabricId) : null,
       },
     });
     await tx.stock.create({
@@ -488,6 +512,8 @@ async function createSalesEntryItems(
             : null,
         salesEntryItemsId: createdItem.id,
         barCode: itemDetail?.barcode ? itemDetail?.barcode : undefined,
+        styleNo: itemDetail?.styleNo ?? undefined,
+        fabricId: itemDetail?.fabricId ? parseInt(itemDetail.fabricId) : null,
       },
     });
     return createdItem;

@@ -134,10 +134,9 @@ async function remove(id) {
 
 async function getStyleCode(req) {
   const { styleNo } = req.query;
-  console.log(first);
   const data = await prisma.style.findMany({
     where: {
-      sku: parseInt(styleNo),
+      sku: styleNo,
     },
   });
   if (!data) return NoRecordFound("style");

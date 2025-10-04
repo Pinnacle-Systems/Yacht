@@ -72,6 +72,7 @@ import PartyDetailModal from "../../../Uniform/Components/styleesheet/partyMaste
 import ShiftCommonTemplateMaster from "../ShiftCommonTemplate";
 import ShiftMaster from "../ShiftMaster";
 import ShiftTemplateMaster from "../ShiftTemplateMaster";
+import StockReport from "../../../Uniform/Components/StockReport/StockReport";
 
 const ActiveTabList = () => {
   const openTabs = useSelector((state) => state.openTabs);
@@ -141,7 +142,8 @@ const ActiveTabList = () => {
     "STOCK ADJUSTMENT": <StockAdjustment />,
     "SALES DELIVERY": <SalesEntry />,
     "SIZE TEMPLATE MASTER": <SizeTemplateMaster />,
-    "STOCK INWARD": <StockInward/>,
+    "STOCK INWARD": <StockInward />,
+    "STOCK REPORT": <StockReport />,
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

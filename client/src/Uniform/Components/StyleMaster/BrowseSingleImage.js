@@ -3,7 +3,6 @@ import empty from "../../../assets/empty.png";
 import { DeleteButton } from "../../../Buttons";
 
 const BrowseSingleImage = ({ picture, setPicture, readOnly }) => {
-  console.log(picture, "piccc");
   const imageFormatter = () => {
     if (picture) {
       if (typeof picture === "object") {

@@ -55,4 +55,5 @@ export { default as accessoryGroup } from "./accessoryGroup.route.js";
 export { default as stockAdjustment } from "./stockAdjustment.route.js";
 export { default as salesEntry } from "./salesEntry.route.js";
 export { default as sizeTemplate } from "./sizeTemplate.route.js";
-export { default as stockInward } from "./stockAdjustment.route.js";
+export { default as stockInward } from "./stockInward.route.js";
+export { default as stock } from "./stock.route.js";

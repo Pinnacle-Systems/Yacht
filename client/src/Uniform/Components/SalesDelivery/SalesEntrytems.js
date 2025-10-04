@@ -3,6 +3,10 @@ import { useEffect, useState } from "react";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useLazyGetBarcodeDetailQuery } from "../../../redux/uniformService/StockAdjustmentService";
 import Swal from "sweetalert2";
+import { ReusableInput } from "../../../Utils/CommonInput";
+import { FaPlus } from "react-icons/fa";
+import { useLazyGetStyleDetailQuery } from "../../../redux/services/StockService";
+import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
 
 export default function BillItems({
   salesEntryItems,
@@ -11,10 +15,13 @@ export default function BillItems({
   readOnly,
   id,
 }) {
+  const [styleNo, setStyleNo] = useState("");
   const [contextMenu, setContextMenu] = useState(null);
+  const [getStyleDetail] = useLazyGetStyleDetailQuery();
 
   const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
+  const { data: fabricList } = useGetFabricMasterQuery({ params });
 
   const [
     triggerGetBarcodeDetail,
@@ -29,6 +36,8 @@ export default function BillItems({
       stkQty: "",
       qty: "",
       remarks: "",
+      styleNo: "",
+      fabricId: "",
     };
     setSalesEntryItems([...salesEntryItems, newRow]);
   };
@@ -68,16 +77,18 @@ export default function BillItems({
       setSalesEntryItems((prev) => {
         const count = prev.length;
 
-        if (count < 6) {
+        if (count < 5) {
           return [
             ...prev,
-            ...Array.from({ length: 6 - count }, () => ({
+            ...Array.from({ length: 5 - count }, () => ({
               barcode: "",
               styleId: "",
               sizeId: "",
               stkQty: "",
               qty: "",
               remarks: "",
+              styleNo: "",
+              fabricId: "",
             })),
           ];
         }
@@ -86,13 +97,15 @@ export default function BillItems({
       });
     } else {
       setSalesEntryItems(
-        Array.from({ length: 6 }, () => ({
+        Array.from({ length: 5 }, () => ({
           barcode: "",
           styleId: "",
           sizeId: "",
           stkQty: "",
           qty: "",
           remarks: "",
+          styleNo: "",
+          fabricId: "",
         }))
       );
     }
@@ -144,6 +157,8 @@ export default function BillItems({
                       styleId: item.styleId,
                       sizeId: item.sizeId,
                       stkQty: response.totalQty,
+                      styleNo: item.styleNo,
+                      fabricId: item.fabricId,
                     }
                   : r
               )
@@ -158,6 +173,8 @@ export default function BillItems({
                       qty: "",
                       remarks: "",
                       stkQty: "",
+                      styleNo: "",
+                      fabricId: "",
                     }
                   : r
               )
@@ -167,6 +184,59 @@ export default function BillItems({
           console.error("Error fetching barcode details:", err);
         }
       }
+    }
+  };
+
+  const handleAddRow = async () => {
+    try {
+      const { data: styleData } = await getStyleDetail({
+        params: {
+          styleNo: styleNo,
+        },
+      });
+      const styleRows = styleData?.data;
+      if (!styleRows) return;
+
+      setSalesEntryItems((prev) => {
+        const updated = [...prev];
+        // Find first empty slot index
+        let startIndex = updated.findIndex(
+          (row) =>
+            !row.styleId &&
+            !row.sizeId &&
+            !row.styleNo &&
+            !row.fabricId &&
+            !row.barcode
+        );
+        if (startIndex === -1) startIndex = updated.length;
+
+        // Fill in sizeRows starting at first empty slot
+        styleRows.forEach((row, i) => {
+          if (startIndex + i < updated.length) {
+            updated[startIndex + i] = row;
+          } else {
+            updated.push(row); // append if no empty slot
+          }
+        });
+
+        // Ensure at least 6 rows
+        while (updated.length < 6) {
+          updated.push({
+            styleNo: "",
+            fabricId: "",
+            styleId: "",
+            sizeId: "",
+            qty: "",
+            remarks: "",
+            stkQty: "",
+            barcode: "",
+          });
+        }
+
+        return updated;
+      });
+    } catch (error) {
+      console.error("Error adding row:", error);
     }
   };
 
@@ -242,6 +312,24 @@ export default function BillItems({
   return (
     <>
       <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[300px] overflow-auto">
+        <div className="flex items-center gap-4">
+          <ReusableInput
+            label="Style / Barcode No"
+            value={styleNo}
+            setValue={setStyleNo}
+            type={"text"}
+            required={true}
+            readOnly={readOnly}
+          />
+          <button
+            className="hover:bg-green-700 h-6 mt-3 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-xs"
+            onClick={() => {
+              handleAddRow();
+            }}
+          >
+            <FaPlus /> Add
+          </button>
+        </div>
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">Sales Item Details</h2>
         </div>
@@ -260,9 +348,19 @@ export default function BillItems({
                   Barcode No
                 </th>
                 <th
+                  className={`w-28 px-4 py-2 text-center font-medium text-[13px]`}
+                >
+                  Style No
+                </th>
+                <th
                   className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style
+                </th>
+                <th
+                  className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
+                >
+                  Fabric
                 </th>
                 <th
                   className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
@@ -310,7 +408,7 @@ export default function BillItems({
                       className="text-left rounded py-1 px-1 w-full table-data-input"
                       onFocus={(e) => e.target.select()}
                       value={row?.barcode}
-                      disabled={readOnly}
+                      disabled={true}
                       onChange={(e) =>
                         handleInputChange(e.target.value, index, "barcode")
                       }
@@ -319,9 +417,29 @@ export default function BillItems({
                       }}
                     />
                   </td>
+                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                    <input
+                      onKeyDown={(e) => {
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "styleNo");
+                        }
+                      }}
+                      type="string"
+                      className="text-left rounded py-1 px-1 w-full table-data-input"
+                      onFocus={(e) => e.target.select()}
+                      value={row?.styleNo}
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "styleNo")
+                      }
+                      onBlur={(e) => {
+                        handleInputChange(e.target.value, index, "styleNo");
+                      }}
+                      disabled={true}
+                    />
+                  </td>
                   <td className="py-0.5 border border-gray-300 text-[11px] ">
                     <select
-                      disabled={readOnly}
+                      disabled={true}
                       className="text-left w-full rounded py-1 table-data-input"
                       value={row.styleId}
                       onKeyDown={(e) => {
@@ -347,9 +465,38 @@ export default function BillItems({
                       ))}
                     </select>
                   </td>
+                  <td className="py-0.5 border border-gray-300 text-[11px] ">
+                    <select
+                      onKeyDown={(e) => {
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "fabricId");
+                        }
+                      }}
+                      tabIndex={"0"}
+                      disabled={true}
+                      className="text-left w-full rounded py-1 table-data-input"
+                      value={row.fabricId}
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "fabricId")
+                      }
+                      onBlur={(e) => {
+                        handleInputChange(e.target.value, index, "fabricId");
+                      }}
+                    >
+                      <option></option>
+                      {(id
+                        ? fabricList?.data
+                        : fabricList?.data?.filter((item) => item.active)
+                      )?.map((blend) => (
+                        <option value={blend.id} key={blend.id}>
+                          {blend?.name}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
                   <td className="py-0.5 border border-gray-300 text-[11px]">
                     <select
-                      disabled={readOnly}
+                      disabled={true}
                       className="text-left w-full rounded py-1 table-data-input"
                       value={row.sizeId}
                       onKeyDown={(e) => {
@@ -463,7 +610,7 @@ export default function BillItems({
               <tr className="bg-gray-50 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={5}
+                  colSpan={7}
                 >
                   Total Qty
                 </td>

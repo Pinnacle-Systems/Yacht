@@ -377,6 +377,8 @@ async function getOne(id) {
           adjType: true,
           adjQty: true,
           remarks: true,
+          fabricId: true,
+          styleNo: true,
         },
       },
     },
@@ -460,6 +462,8 @@ async function createStockAdjustmentItems(
             ? Math.round(parseFloat(stockDetail.adjQty))
             : null,
         remarks: stockDetail?.remarks ? stockDetail?.remarks : undefined,
+        styleNo: stockDetail?.styleNo ?? undefined,
+        fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
       },
     });
     let qty = null;
@@ -478,6 +482,8 @@ async function createStockAdjustmentItems(
         qty,
         stockAdjustmentId: createdItem.id,
         barCode: stockDetail?.barcode ? stockDetail?.barcode : "",
+        styleNo: stockDetail?.styleNo ?? undefined,
+        fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
       },
     });
     return createdItem;
@@ -570,6 +576,10 @@ async function updateOpeningStockItems(
               ? Math.round(parseFloat(stockDetail.adjQty))
               : null,
           remarks: stockDetail?.remarks || undefined,
+          styleNo: stockDetail?.styleNo ?? undefined,
+          fabricId: stockDetail?.fabricId
+            ? parseInt(stockDetail.fabricId)
+            : null,
         },
       });
       let qty = null;
@@ -588,6 +598,10 @@ async function updateOpeningStockItems(
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
           qty,
           barCode: stockDetail?.barcode || "",
+          styleNo: stockDetail?.styleNo ?? undefined,
+          fabricId: stockDetail?.fabricId
+            ? parseInt(stockDetail.fabricId)
+            : null,
         },
       });
       return updatedItem;
@@ -608,6 +622,10 @@ async function updateOpeningStockItems(
               ? Math.round(parseFloat(stockDetail.adjQty))
               : null,
           remarks: stockDetail?.remarks || undefined,
+          styleNo: stockDetail?.styleNo ?? undefined,
+          fabricId: stockDetail?.fabricId
+            ? parseInt(stockDetail.fabricId)
+            : null,
         },
       });
       let qty = null;
@@ -626,6 +644,10 @@ async function updateOpeningStockItems(
           qty,
           stockAdjustmentId: createdItem.id,
           barCode: stockDetail?.barcode || "",
+          styleNo: stockDetail?.styleNo ?? undefined,
+          fabricId: stockDetail?.fabricId
+            ? parseInt(stockDetail.fabricId)
+            : null,
         },
       });
       return createdItem;

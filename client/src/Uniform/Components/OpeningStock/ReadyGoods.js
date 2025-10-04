@@ -151,7 +151,11 @@ export default function ReadyGoods({
   // };
   const handleAddRow = async () => {
     try {
-      const { data: styleData } = await getStyleCodeDetail({ params });
+      const { data: styleData } = await getStyleCodeDetail({
+        params: {
+          styleNo: styleNo,
+        },
+      });
       const style = styleData?.data && Object.values(styleData.data)[0];
       if (!style) return;
 
@@ -244,19 +248,19 @@ export default function ReadyGoods({
                   S.No
                 </th>
                 <th
-                  className={`w-20 px-4 py-2 text-center font-medium text-[13px]`}
+                  className={`w-24 px-4 py-2 text-center font-medium text-[13px]`}
                 >
-                  Style.No
+                  Style No
                 </th>{" "}
-                <th
-                  className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
-                >
-                  Fabric
-                </th>
                 <th
                   className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style
+                </th>
+                <th
+                  className={`w-44 px-4 py-2 text-center font-medium text-[13px]`}
+                >
+                  Fabric
                 </th>
                 <th
                   className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
@@ -308,35 +312,7 @@ export default function ReadyGoods({
                         disabled={true}
                       />
                     </td>
-                    <td className="py-0.5 border border-gray-300 text-[11px] ">
-                      <select
-                        onKeyDown={(e) => {
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "fabricId");
-                          }
-                        }}
-                        tabIndex={"0"}
-                        disabled={true}
-                        className="text-left w-full rounded py-1 table-data-input"
-                        value={row.fabricId}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "fabricId")
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "fabricId");
-                        }}
-                      >
-                        <option></option>
-                        {(id
-                          ? fabricList?.data
-                          : fabricList?.data?.filter((item) => item.active)
-                        )?.map((blend) => (
-                          <option value={blend.id} key={blend.id}>
-                            {blend?.name}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
+
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                       <select
                         onKeyDown={(e) => {
@@ -359,6 +335,35 @@ export default function ReadyGoods({
                         {(id
                           ? styleList?.data
                           : styleList?.data?.filter((item) => item.active)
+                        )?.map((blend) => (
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px] ">
+                      <select
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "fabricId");
+                          }
+                        }}
+                        tabIndex={"0"}
+                        disabled={true}
+                        className="text-left w-full rounded py-1 table-data-input"
+                        value={row.fabricId}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "fabricId")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "fabricId");
+                        }}
+                      >
+                        <option></option>
+                        {(id
+                          ? fabricList?.data
+                          : fabricList?.data?.filter((item) => item.active)
                         )?.map((blend) => (
                           <option value={blend.id} key={blend.id}>
                             {blend?.name}

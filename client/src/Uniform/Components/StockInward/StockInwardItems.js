@@ -110,7 +110,11 @@ export default function StockInwardItems({
 
   const handleAddRow = async () => {
     try {
-      const { data: styleData } = await getStyleCodeDetail({ params });
+      const { data: styleData } = await getStyleCodeDetail({
+        params: {
+          styleNo: styleNo,
+        },
+      });
       const style = styleData?.data && Object.values(styleData.data)[0];
       if (!style) return;
 

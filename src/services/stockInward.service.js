@@ -236,7 +236,7 @@ async function create(body) {
     docDate,
     draftSave,
     locationId,
-  } = await body;
+  } = body;
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(
@@ -252,7 +252,8 @@ async function create(body) {
     draftSave
   );
   let data;
-  console.log(newDocId);
+  // console.log("No stockInwardItems passed");
+  // console.log(newDocId);
   await prisma.$transaction(async (tx) => {
     data = await tx.stockInward.create({
       data: {
@@ -504,7 +505,6 @@ async function createStockInwardItems(
     // Extract the numeric part from barcode like 'YS0005' -> 5
     lastNumber = parseInt(lastItem.barcode.replace(/^YS0*/, "")) || 0;
   }
-
   // 2️⃣ Map through all items and create them with sequential barcodes
   const promises = stockInwardItems.map(async (stockDetail, index) => {
     const qty = stockDetail?.qty
