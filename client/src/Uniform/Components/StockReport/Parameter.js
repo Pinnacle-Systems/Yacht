@@ -5,19 +5,32 @@ import { getCommonParams } from "../../../Utils/helper";
 import { toast } from "react-toastify";
 import { DropdownInput } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
+import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
 
 const Parameter = ({
   locationId,
   setLocationId,
   storeId,
   setStoreId,
-
+  styleId,
+  setStyleId,
+  sizeId,
+  setSizeId,
+  fabricId,
+  setFabricId,
   onClose,
 }) => {
   const [localStoreId, setLocalStoreId] = useState(storeId);
   const [localLocationId, setLocalLocationId] = useState(locationId);
 
   function handleDone() {
+    if (!localLocationId) {
+      return toast.info(" Location", {
+        position: "top-center",
+      });
+    }
     if (!localStoreId)
       return toast.info(" Store", {
         position: "top-center",
@@ -33,6 +46,11 @@ const Parameter = ({
     params: { branchId },
   });
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
+  const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
+  const { data: sizeList } = useGetSizeMasterQuery({ params: { companyId } });
+  const { data: fabricList } = useGetFabricMasterQuery({
+    params: { companyId },
+  });
 
   const storeOptions = locationData
     ? locationData.data.filter(
@@ -41,7 +59,7 @@ const Parameter = ({
     : [];
   return (
     <div className="flex justify-between items-center p-1 text-center bg-blue-200 rounded-b-md mb-7 sticky top-0 ">
-      <div className="grid grid-cols-5">
+      <div className="grid grid-cols-5 gap-5 p-2">
         <DropdownInput
           name="Location"
           options={
@@ -63,8 +81,41 @@ const Parameter = ({
           setValue={setLocalStoreId}
           required={true}
         />
+        <DropdownInput
+          name="Style"
+          options={
+            styleList ? dropDownListObject(styleList.data, "name", "id") : []
+          }
+          value={styleId}
+          setValue={(value) => {
+            setStyleId(value);
+          }}
+          required={false}
+        />
+        <DropdownInput
+          name="Fabric"
+          options={
+            fabricList ? dropDownListObject(fabricList.data, "name", "id") : []
+          }
+          value={fabricId}
+          setValue={(value) => {
+            setFabricId(value);
+          }}
+          required={false}
+        />
+        <DropdownInput
+          name="Size"
+          options={
+            sizeList ? dropDownListObject(sizeList.data, "name", "id") : []
+          }
+          value={sizeId}
+          setValue={(value) => {
+            setSizeId(value);
+          }}
+          required={false}
+        />
       </div>
-      <div className="flex justify-end gap-4  items-center">
+      <div className="flex justify-end gap-4  items-center mr-2">
         <button
           onClick={handleDone}
           className="bg-lime-400 hover:bg-lime-600 hover:text-white p-1 px-3 text-sm rounded font-semibold transition"

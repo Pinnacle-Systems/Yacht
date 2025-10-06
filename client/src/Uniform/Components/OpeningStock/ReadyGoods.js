@@ -8,6 +8,8 @@ import { ReusableInput } from "../../../Utils/CommonInput";
 import { FaPlus } from "react-icons/fa";
 import { useLazyGetSizeTemplateByIdQuery } from "../../../redux/uniformService/SizeTemplateMasterServices";
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
+import { findFromList } from "../../../Utils/helper";
+import { IMAGE_UPLOAD_URL } from "../../../Constants";
 
 export default function ReadyGoods({
   openingStockItems,
@@ -18,6 +20,7 @@ export default function ReadyGoods({
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [styleNo, setStyleNo] = useState("");
+  const [previewImage, setPreviewImage] = useState(null);
   const [getStyleCodeDetail] = useLazyGetStyleCodeDetailQuery();
   const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
   const { data: styleList } = useGetStyleMasterQuery({ params });
@@ -214,6 +217,12 @@ export default function ReadyGoods({
     }
   };
 
+  function imageFormatter(styleId) {
+    const fileName = findFromList(styleId, styleList?.data, "img");
+    if (!fileName) return "/no-image.png"; // fallback image if missing
+    return `${IMAGE_UPLOAD_URL}${fileName}`;
+  }
+
   return (
     <>
       <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[350px] overflow-auto">
@@ -251,6 +260,11 @@ export default function ReadyGoods({
                   className={`w-24 px-4 py-2 text-center font-medium text-[13px]`}
                 >
                   Style No
+                </th>{" "}
+                <th
+                  className={`w-20 px-4 py-2 text-center  font-medium text-[13px]`}
+                >
+                  Img
                 </th>{" "}
                 <th
                   className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
@@ -312,7 +326,29 @@ export default function ReadyGoods({
                         disabled={true}
                       />
                     </td>
-
+                    <td className="border border-gray-300 py-1 h-10">
+                      {row?.styleId ? (
+                        <img
+                          style={{
+                            height: "35px",
+                            width: "35px",
+                            objectFit: "cover",
+                            borderRadius: "2px",
+                            margin: "auto",
+                            cursor: "pointer",
+                          }}
+                          src={imageFormatter(row?.styleId)}
+                          alt="style"
+                          onError={(e) => (e.target.src = "/no-image.png")} // fallback if not found
+                          onMouseEnter={() =>
+                            setPreviewImage(imageFormatter(row?.styleId))
+                          }
+                          onMouseLeave={() => setPreviewImage(null)}
+                        />
+                      ) : (
+                        <></>
+                      )}
+                    </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                       <select
                         onKeyDown={(e) => {
@@ -478,10 +514,32 @@ export default function ReadyGoods({
                     0
                   )}
                 </td>
-                <td className="border border-gray-300" colSpan={2}></td>
+                <td className="border border-gray-300" colSpan={3}></td>
               </tr>
             </tfoot>
           </table>
+          {previewImage && (
+            <div
+              className="fixed inset-0 flex items-center justify-center z-50 bg-black/40 backdrop-blur-sm"
+              onMouseEnter={() => setPreviewImage(previewImage)}
+              onMouseLeave={() => setPreviewImage(null)}
+            >
+              <div className="relative z-50 ">
+                <button
+                  className="absolute top-[-10px] right-[-10px] bg-red-600 rounded-full w-6 h-6 flex items-center justify-center text-white shadow-md hover:bg-red-700 transition"
+                  onClick={() => setPreviewImage(null)}
+                >
+                  ×
+                </button>
+
+                <img
+                  src={previewImage}
+                  alt="Preview"
+                  className="max-h-[80vh] max-w-[80vw] rounded-lg shadow-lg"
+                />
+              </div>
+            </div>
+          )}
         </div>
         {contextMenu && (
           <div

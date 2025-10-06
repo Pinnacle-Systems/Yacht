@@ -7,6 +7,8 @@ import { ReusableInput } from "../../../Utils/CommonInput";
 import { FaPlus } from "react-icons/fa";
 import { useLazyGetStyleDetailQuery } from "../../../redux/services/StockService";
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
+import { findFromList } from "../../../Utils/helper";
+import { IMAGE_UPLOAD_URL } from "../../../Constants";
 
 export default function BillItems({
   salesEntryItems,
@@ -18,6 +20,8 @@ export default function BillItems({
   const [styleNo, setStyleNo] = useState("");
   const [contextMenu, setContextMenu] = useState(null);
   const [getStyleDetail] = useLazyGetStyleDetailQuery();
+  const [focusedRowIndex, setFocusedRowIndex] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
 
   const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
@@ -332,6 +336,11 @@ export default function BillItems({
   //     }
   //   }
   // };
+  function imageFormatter(styleId) {
+    const fileName = findFromList(styleId, styleList?.data, "img");
+    if (!fileName) return "/no-image.png"; // fallback image if missing
+    return `${IMAGE_UPLOAD_URL}${fileName}`;
+  }
 
   return (
     <>
@@ -381,6 +390,11 @@ export default function BillItems({
                 >
                   Style
                 </th>
+                <th
+                  className={`w-20 px-4 py-2 text-center  font-medium text-[13px]`}
+                >
+                  Img
+                </th>{" "}
                 <th
                   className={`w-44 px-4 py-2 text-center font-medium text-[13px]`}
                 >
@@ -504,6 +518,29 @@ export default function BillItems({
                       ))}
                     </select>
                   </td>
+                  <td className="border border-gray-300 py-1 h-10">
+                    {row?.styleId ? (
+                      <img
+                        style={{
+                          height: "35px",
+                          width: "35px",
+                          objectFit: "cover",
+                          borderRadius: "2px",
+                          margin: "auto",
+                          cursor: "pointer",
+                        }}
+                        src={imageFormatter(row?.styleId)}
+                        alt="style"
+                        onError={(e) => (e.target.src = "/no-image.png")} // fallback if not found
+                        onMouseEnter={() =>
+                          setPreviewImage(imageFormatter(row?.styleId))
+                        }
+                        onMouseLeave={() => setPreviewImage(null)}
+                      />
+                    ) : (
+                      <></>
+                    )}
+                  </td>
                   <td className="py-0.5 border border-gray-300 text-[11px] ">
                     <select
                       onKeyDown={(e) => {
@@ -609,7 +646,13 @@ export default function BillItems({
                     <input
                       type="number"
                       className="text-right rounded py-1 px-1 w-full table-data-input"
-                      value={row?.price}
+                      value={
+                        focusedRowIndex === index
+                          ? row?.price ?? "" // show raw value while editing
+                          : row?.price
+                          ? Number(row.price).toFixed(2) // format nicely otherwise
+                          : ""
+                      }
                       disabled={readOnly}
                       onKeyDown={(e) => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract")
@@ -618,12 +661,16 @@ export default function BillItems({
                           handleInputChange("", index, "price");
                         }
                       }}
-                      onFocus={(e) => e.target.select()}
+                      onFocus={(e) => {
+                        setFocusedRowIndex(index);
+                        e.target.select();
+                      }}
                       onChange={(e) =>
                         handleInputChange(e.target.value, index, "price")
                       }
                       onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "price");
+                        handleInputChange(e.target.value, index, "amount");
+                        setFocusedRowIndex(null);
                       }}
                     />
                   </td>
@@ -713,7 +760,7 @@ export default function BillItems({
             </tbody>
             <tfoot>
               <tr className="bg-gray-50 font-medium text-gray-800">
-                <td
+                {/* <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
                   colSpan={7}
                 >
@@ -724,10 +771,10 @@ export default function BillItems({
                     (sum, row) => sum + (Number(row.qty) || 0),
                     0
                   )}
-                </td>
+                </td> */}
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={2}
+                  colSpan={11}
                 >
                   Total Amt
                 </td>
@@ -740,6 +787,28 @@ export default function BillItems({
               </tr>
             </tfoot>
           </table>
+          {previewImage && (
+            <div
+              className="fixed inset-0 flex items-center justify-center z-50 bg-black/40 backdrop-blur-sm"
+              onMouseEnter={() => setPreviewImage(previewImage)}
+              onMouseLeave={() => setPreviewImage(null)}
+            >
+              <div className="relative z-50 ">
+                <button
+                  className="absolute top-[-10px] right-[-10px] bg-red-600 rounded-full w-6 h-6 flex items-center justify-center text-white shadow-md hover:bg-red-700 transition"
+                  onClick={() => setPreviewImage(null)}
+                >
+                  ×
+                </button>
+
+                <img
+                  src={previewImage}
+                  alt="Preview"
+                  className="max-h-[80vh] max-w-[80vw] rounded-lg shadow-lg"
+                />
+              </div>
+            </div>
+          )}
         </div>
         {contextMenu && (
           <div

@@ -462,16 +462,21 @@ async function get(req) {
     searchBarcode,
     searchStore,
     finYearId,
+    styleId,
+    sizeId,
+    fabricId,
   } = req.query;
 
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   let data;
   let totalCount;
   data = await prisma.stock.groupBy({
-    by: ["styleId", "sizeId", "styleNo", "barCode", "fabricId"],
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
       storeId: storeId ? parseInt(storeId) : undefined,
+      styleId: styleId ? parseInt(styleId) : undefined,
+      sizeId: sizeId ? parseInt(sizeId) : undefined,
+      fabricId: fabricId ? parseInt(fabricId) : undefined,
       AND: finYearDate
         ? [
             {
@@ -487,9 +492,9 @@ async function get(req) {
           ]
         : undefined,
       barcode: Boolean(searchBarcode) ? { contains: searchBarcode } : undefined,
-      Style: {
-        name: searchStyle ? { contains: searchStyle } : undefined,
-      },
+      // Style: {
+      //   name: searchStyle ? { contains: searchStyle } : undefined,
+      // },
       Fabric: {
         name: searchFabric ? { contains: searchFabric } : undefined,
       },
@@ -497,6 +502,7 @@ async function get(req) {
         storeName: searchStore ? { contains: searchStore } : undefined,
       },
     },
+    by: ["styleId", "sizeId", "styleNo", "barCode", "fabricId"],
     _sum: {
       qty: true,
     },
