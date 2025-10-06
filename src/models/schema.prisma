@@ -1719,6 +1719,9 @@ model SalesEntryItems {
   styleNo      String?
   Fabric       Fabric?     @relation(fields: [fabricId], references: [id])
   fabricId     Int?
+  price        Int?
+  disc         Int?
+  amount       Int?
 }
 
 model SizeTemplate {

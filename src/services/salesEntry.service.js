@@ -197,6 +197,9 @@ async function getOne(id) {
           stkQty: true,
           styleNo: true,
           fabricId: true,
+          disc: true,
+          amount: true,
+          price: true,
         },
       },
     },
@@ -380,6 +383,9 @@ async function updateSalesEntryItems(
           fabricId: stockDetail?.fabricId
             ? parseInt(stockDetail.fabricId)
             : null,
+          price: stockDetail?.price ? parseInt(stockDetail.price) : null,
+          disc: stockDetail?.disc ? parseInt(stockDetail.disc) : null,
+          amount: stockDetail?.amount ? parseInt(stockDetail.amount) : null,
         },
       });
 
@@ -402,6 +408,7 @@ async function updateSalesEntryItems(
             fabricId: stockDetail?.fabricId
               ? parseInt(stockDetail.fabricId)
               : null,
+            price: stockDetail?.price ? parseInt(stockDetail.price) : null,
           },
         });
       } else {
@@ -422,6 +429,7 @@ async function updateSalesEntryItems(
             fabricId: stockDetail?.fabricId
               ? parseInt(stockDetail.fabricId)
               : null,
+            price: stockDetail?.price ? parseInt(stockDetail.price) : null,
           },
         });
       }
@@ -444,6 +452,9 @@ async function updateSalesEntryItems(
           fabricId: stockDetail?.fabricId
             ? parseInt(stockDetail.fabricId)
             : null,
+          price: stockDetail?.price ? parseInt(stockDetail.price) : null,
+          disc: stockDetail?.disc ? parseInt(stockDetail.disc) : null,
+          amount: stockDetail?.amount ? parseInt(stockDetail.amount) : null,
         },
       });
       await tx.stock.create({
@@ -496,6 +507,9 @@ async function createSalesEntryItems(
         remarks: itemDetail?.remarks ? itemDetail?.remarks : undefined,
         styleNo: itemDetail?.styleNo ?? undefined,
         fabricId: itemDetail?.fabricId ? parseInt(itemDetail.fabricId) : null,
+        price: itemDetail?.price ? parseInt(itemDetail.price) : null,
+        disc: itemDetail?.disc ? parseInt(itemDetail.disc) : null,
+        amount: itemDetail?.amount ? parseInt(itemDetail.amount) : null,
       },
     });
     await tx.stock.create({
@@ -514,6 +528,7 @@ async function createSalesEntryItems(
         barCode: itemDetail?.barcode ? itemDetail?.barcode : undefined,
         styleNo: itemDetail?.styleNo ?? undefined,
         fabricId: itemDetail?.fabricId ? parseInt(itemDetail.fabricId) : null,
+        price: itemDetail?.price ? parseInt(itemDetail.price) : null,
       },
     });
     return createdItem;

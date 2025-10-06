@@ -453,6 +453,7 @@ function manualFilterSearchData(searchYarnAliasName, searchColor, data) {
 async function get(req) {
   const {
     branchId,
+    storeId,
     pagination,
     pageNumber,
     dataPerPage,
@@ -466,11 +467,11 @@ async function get(req) {
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   let data;
   let totalCount;
-  const where = {};
   data = await prisma.stock.groupBy({
     by: ["styleId", "sizeId", "styleNo", "barCode", "fabricId"],
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
+      storeId: storeId ? parseInt(storeId) : undefined,
       AND: finYearDate
         ? [
             {

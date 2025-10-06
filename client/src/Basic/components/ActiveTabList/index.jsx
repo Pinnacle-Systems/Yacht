@@ -61,6 +61,7 @@ import {
   SizeTemplateMaster,
   StockAdjustment,
   StockInward,
+  StockReport,
   StyleMaster,
   TagTypeMater,
 } from "../../../Uniform/Components";
@@ -72,7 +73,6 @@ import PartyDetailModal from "../../../Uniform/Components/styleesheet/partyMaste
 import ShiftCommonTemplateMaster from "../ShiftCommonTemplate";
 import ShiftMaster from "../ShiftMaster";
 import ShiftTemplateMaster from "../ShiftTemplateMaster";
-import StockReport from "../../../Uniform/Components/StockReport/StockReport";
 
 const ActiveTabList = () => {
   const openTabs = useSelector((state) => state.openTabs);

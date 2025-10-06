@@ -38,6 +38,9 @@ export default function BillItems({
       remarks: "",
       styleNo: "",
       fabricId: "",
+      price: "",
+      disc: "",
+      amount: "",
     };
     setSalesEntryItems([...salesEntryItems, newRow]);
   };
@@ -89,6 +92,9 @@ export default function BillItems({
               remarks: "",
               styleNo: "",
               fabricId: "",
+              price: "",
+              disc: "",
+              amount: "",
             })),
           ];
         }
@@ -106,6 +112,9 @@ export default function BillItems({
           remarks: "",
           styleNo: "",
           fabricId: "",
+          price: "",
+          disc: "",
+          amount: "",
         }))
       );
     }
@@ -129,6 +138,17 @@ export default function BillItems({
     setSalesEntryItems((prev) => {
       const newItems = structuredClone(prev);
       newItems[index][field] = value;
+      if (["qty", "price", "disc"].includes(field)) {
+        const qty = parseFloat(newItems[index].qty) || 0;
+        const price = parseFloat(newItems[index].price) || 0;
+        const disc = parseFloat(newItems[index].disc) || 0;
+
+        const grossAmount = qty * price;
+        const discountAmount = grossAmount * (disc / 100);
+        const netAmount = grossAmount - discountAmount;
+
+        newItems[index].amount = netAmount.toFixed(2);
+      }
       return newItems;
     });
 
@@ -175,6 +195,8 @@ export default function BillItems({
                       stkQty: "",
                       styleNo: "",
                       fabricId: "",
+                      price: "",
+                      disc: "",
                     }
                   : r
               )
@@ -230,6 +252,8 @@ export default function BillItems({
             remarks: "",
             stkQty: "",
             barcode: "",
+            price: "",
+            disc: "",
           });
         }
 
@@ -343,22 +367,22 @@ export default function BillItems({
                   S.No
                 </th>
                 <th
-                  className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
-                >
-                  Barcode No
-                </th>
-                <th
-                  className={`w-28 px-4 py-2 text-center font-medium text-[13px]`}
+                  className={`w-24 px-4 py-2 text-center font-medium text-[13px]`}
                 >
                   Style No
                 </th>
                 <th
-                  className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Barcode No
+                </th>
+                <th
+                  className={`w-56 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style
                 </th>
                 <th
-                  className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
+                  className={`w-44 px-4 py-2 text-center font-medium text-[13px]`}
                 >
                   Fabric
                 </th>
@@ -368,14 +392,29 @@ export default function BillItems({
                   Size
                 </th>
                 <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Stock Qty
                 </th>
                 <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Qty
+                </th>
+                <th
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Price
+                </th>
+                <th
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Disc %
+                </th>
+                <th
+                  className={`w-28 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Amt
                 </th>
                 <th
                   className={`w-48 px-1 py-2 text-center font-medium text-[13px] `}
@@ -401,26 +440,6 @@ export default function BillItems({
                     <input
                       onKeyDown={(e) => {
                         if (e.key === "Delete") {
-                          handleInputChange("", index, "barcode");
-                        }
-                      }}
-                      type="string"
-                      className="text-left rounded py-1 px-1 w-full table-data-input"
-                      onFocus={(e) => e.target.select()}
-                      value={row?.barcode}
-                      disabled={true}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "barcode")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "barcode");
-                      }}
-                    />
-                  </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
                           handleInputChange("", index, "styleNo");
                         }
                       }}
@@ -435,6 +454,26 @@ export default function BillItems({
                         handleInputChange(e.target.value, index, "styleNo");
                       }}
                       disabled={true}
+                    />
+                  </td>
+                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                    <input
+                      onKeyDown={(e) => {
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "barcode");
+                        }
+                      }}
+                      type="string"
+                      className="text-left rounded py-1 px-1 w-full table-data-input"
+                      onFocus={(e) => e.target.select()}
+                      value={row?.barcode}
+                      disabled={true}
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "barcode")
+                      }
+                      onBlur={(e) => {
+                        handleInputChange(e.target.value, index, "barcode");
+                      }}
                     />
                   </td>
                   <td className="py-0.5 border border-gray-300 text-[11px] ">
@@ -568,6 +607,72 @@ export default function BillItems({
                   </td>
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                     <input
+                      type="number"
+                      className="text-right rounded py-1 px-1 w-full table-data-input"
+                      value={row?.price}
+                      disabled={readOnly}
+                      onKeyDown={(e) => {
+                        if (e.code === "Minus" || e.code === "NumpadSubtract")
+                          e.preventDefault();
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "price");
+                        }
+                      }}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "price")
+                      }
+                      onBlur={(e) => {
+                        handleInputChange(e.target.value, index, "price");
+                      }}
+                    />
+                  </td>
+                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                    <input
+                      type="number"
+                      className="text-right rounded py-1 px-1 w-full table-data-input"
+                      value={row?.disc}
+                      disabled={readOnly}
+                      onKeyDown={(e) => {
+                        if (e.code === "Minus" || e.code === "NumpadSubtract")
+                          e.preventDefault();
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "disc");
+                        }
+                      }}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "disc")
+                      }
+                      onBlur={(e) => {
+                        handleInputChange(e.target.value, index, "disc");
+                      }}
+                    />
+                  </td>
+                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                    <input
+                      type="number"
+                      className="text-right rounded py-1 px-1 w-full table-data-input"
+                      value={row?.amount ? Number(row.amount).toFixed(2) : ""}
+                      disabled={true}
+                      onKeyDown={(e) => {
+                        if (e.code === "Minus" || e.code === "NumpadSubtract")
+                          e.preventDefault();
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "amount");
+                        }
+                      }}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "amount")
+                      }
+                      onBlur={(e) => {
+                        handleInputChange(e.target.value, index, "amount");
+                      }}
+                    />
+                  </td>
+                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                    <input
                       onKeyDown={(e) => {
                         if (e.key === "Delete") {
                           handleInputChange("", index, "remarks");
@@ -619,6 +724,17 @@ export default function BillItems({
                     (sum, row) => sum + (Number(row.qty) || 0),
                     0
                   )}
+                </td>
+                <td
+                  className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
+                  colSpan={2}
+                >
+                  Total Amt
+                </td>
+                <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
+                  {salesEntryItems
+                    .reduce((sum, row) => sum + (Number(row.amount) || 0), 0)
+                    .toFixed(2)}
                 </td>
                 <td className="border border-gray-300" colSpan={2}></td>
               </tr>
