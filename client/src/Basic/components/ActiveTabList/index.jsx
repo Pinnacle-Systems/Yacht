@@ -47,6 +47,7 @@ import {
   AccessoryGroupMaster,
   AccessoryItemMaster,
   AccessoryMaster,
+  ItemMaster,
   LabDip,
   MaxcontrolPanel,
   MaxHomePage,
@@ -62,6 +63,7 @@ import {
   StockAdjustment,
   StockInward,
   StockReport,
+  StyleItemMaster,
   StyleMaster,
   TagTypeMater,
 } from "../../../Uniform/Components";
@@ -144,6 +146,7 @@ const ActiveTabList = () => {
     "SIZE TEMPLATE MASTER": <SizeTemplateMaster />,
     "STOCK INWARD": <StockInward />,
     "STOCK REPORT": <StockReport />,
+    "STYLE ITEM MASTER": <StyleItemMaster />,
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

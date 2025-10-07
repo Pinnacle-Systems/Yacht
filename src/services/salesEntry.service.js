@@ -409,6 +409,7 @@ async function updateSalesEntryItems(
               ? parseInt(stockDetail.fabricId)
               : null,
             price: stockDetail?.price ? parseInt(stockDetail.price) : null,
+            storeId: parseInt(storeId),
           },
         });
       } else {

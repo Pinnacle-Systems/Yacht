@@ -501,10 +501,10 @@ export default function ReadyGoods({
               )}
             </tbody>
             <tfoot>
-              <tr className="bg-gray-50 font-medium text-gray-800">
+              <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={5}
+                  colSpan={6}
                 >
                   Total Qty
                 </td>
@@ -514,7 +514,7 @@ export default function ReadyGoods({
                     0
                   )}
                 </td>
-                <td className="border border-gray-300" colSpan={3}></td>
+                <td className="border border-gray-300" colSpan={2}></td>
               </tr>
             </tfoot>
           </table>

@@ -366,7 +366,7 @@ export default function BillItems({
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">Sales Item Details</h2>
         </div>
-        <div className={`w-full overflow-y-auto py-1 relative`}>
+        <div className={`w-full  overflow-x-auto py-1`}>
           <table className="w-auto border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800">
               <tr>
@@ -442,324 +442,362 @@ export default function BillItems({
             </thead>
             <tbody>
               {(salesEntryItems ? salesEntryItems : [])?.map((row, index) => (
-                <tr
-                  className="border border-blue-gray-200 cursor-pointer "
-                  key={index}
-                >
-                  <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
-                    {index + 1}
-                  </td>
+                <>
+                  <tr
+                    className="border border-blue-gray-200 cursor-pointer "
+                    key={index}
+                  >
+                    <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
+                      {index + 1}
+                    </td>
 
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "styleNo");
-                        }
-                      }}
-                      type="string"
-                      className="text-left rounded py-1 px-1 w-full table-data-input"
-                      onFocus={(e) => e.target.select()}
-                      value={row?.styleNo}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "styleNo")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "styleNo");
-                      }}
-                      disabled={true}
-                    />
-                  </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "barcode");
-                        }
-                      }}
-                      type="string"
-                      className="text-left rounded py-1 px-1 w-full table-data-input"
-                      onFocus={(e) => e.target.select()}
-                      value={row?.barcode}
-                      disabled={true}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "barcode")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "barcode");
-                      }}
-                    />
-                  </td>
-                  <td className="py-0.5 border border-gray-300 text-[11px] ">
-                    <select
-                      disabled={true}
-                      className="text-left w-full rounded py-1 table-data-input"
-                      value={row.styleId}
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "styleId");
-                        }
-                      }}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "styleId")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "styleId");
-                      }}
-                    >
-                      <option></option>
-                      {(id
-                        ? styleList?.data
-                        : styleList?.data?.filter((item) => item.active)
-                      )?.map((blend) => (
-                        <option value={blend.id} key={blend.id}>
-                          {blend?.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="border border-gray-300 py-1 h-10">
-                    {row?.styleId ? (
-                      <img
-                        style={{
-                          height: "35px",
-                          width: "35px",
-                          objectFit: "cover",
-                          borderRadius: "2px",
-                          margin: "auto",
-                          cursor: "pointer",
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "styleNo");
+                          }
                         }}
-                        src={imageFormatter(row?.styleId)}
-                        alt="style"
-                        onError={(e) => (e.target.src = "/no-image.png")} // fallback if not found
-                        onMouseEnter={() =>
-                          setPreviewImage(imageFormatter(row?.styleId))
+                        type="string"
+                        className="text-left rounded py-1 px-1 w-full table-data-input"
+                        onFocus={(e) => e.target.select()}
+                        value={row?.styleNo}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "styleNo")
                         }
-                        onMouseLeave={() => setPreviewImage(null)}
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "styleNo");
+                        }}
+                        disabled={true}
                       />
-                    ) : (
-                      <></>
-                    )}
-                  </td>
-                  <td className="py-0.5 border border-gray-300 text-[11px] ">
-                    <select
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "fabricId");
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "barcode");
+                          }
+                        }}
+                        type="string"
+                        className="text-left rounded py-1 px-1 w-full table-data-input"
+                        onFocus={(e) => e.target.select()}
+                        value={row?.barcode}
+                        disabled={true}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "barcode")
                         }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "barcode");
+                        }}
+                      />
+                    </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px] ">
+                      <select
+                        disabled={true}
+                        className="text-left w-full rounded py-1 table-data-input"
+                        value={row.styleId}
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "styleId");
+                          }
+                        }}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "styleId")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "styleId");
+                        }}
+                      >
+                        <option></option>
+                        {(id
+                          ? styleList?.data
+                          : styleList?.data?.filter((item) => item.active)
+                        )?.map((blend) => (
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="border border-gray-300 py-1 h-10">
+                      {row?.styleId ? (
+                        <img
+                          style={{
+                            height: "35px",
+                            width: "35px",
+                            objectFit: "cover",
+                            borderRadius: "2px",
+                            margin: "auto",
+                            cursor: "pointer",
+                          }}
+                          src={imageFormatter(row?.styleId)}
+                          alt="style"
+                          onError={(e) => (e.target.src = "/no-image.png")} // fallback if not found
+                          onMouseEnter={() =>
+                            setPreviewImage(imageFormatter(row?.styleId))
+                          }
+                          onMouseLeave={() => setPreviewImage(null)}
+                        />
+                      ) : (
+                        <></>
+                      )}
+                    </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px] ">
+                      <select
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "fabricId");
+                          }
+                        }}
+                        tabIndex={"0"}
+                        disabled={true}
+                        className="text-left w-full rounded py-1 table-data-input"
+                        value={row.fabricId}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "fabricId")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "fabricId");
+                        }}
+                      >
+                        <option></option>
+                        {(id
+                          ? fabricList?.data
+                          : fabricList?.data?.filter((item) => item.active)
+                        )?.map((blend) => (
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <select
+                        disabled={true}
+                        className="text-left w-full rounded py-1 table-data-input"
+                        value={row.sizeId}
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "sizeId");
+                          }
+                        }}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "sizeId")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "sizeId");
+                        }}
+                      >
+                        <option></option>
+                        {(id
+                          ? sizeList?.data
+                          : sizeList?.data?.filter((item) => item.active)
+                        )?.map((blend) => (
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        type="number"
+                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        value={row?.stkQty}
+                        disabled={true}
+                        onKeyDown={(e) => {
+                          if (e.code === "Minus" || e.code === "NumpadSubtract")
+                            e.preventDefault();
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "stkQty");
+                          }
+                        }}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "stkQty")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "stkQty");
+                        }}
+                      />
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        type="number"
+                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        value={row?.qty}
+                        disabled={readOnly}
+                        onKeyDown={(e) => {
+                          if (e.code === "Minus" || e.code === "NumpadSubtract")
+                            e.preventDefault();
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "qty");
+                          }
+                        }}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "qty")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "qty");
+                        }}
+                      />
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        type="number"
+                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        value={
+                          focusedRowIndex === index
+                            ? row?.price ?? "" // show raw value while editing
+                            : row?.price
+                            ? Number(row.price).toFixed(2) // format nicely otherwise
+                            : ""
+                        }
+                        disabled={readOnly}
+                        onKeyDown={(e) => {
+                          if (e.code === "Minus" || e.code === "NumpadSubtract")
+                            e.preventDefault();
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "price");
+                          }
+                        }}
+                        onFocus={(e) => {
+                          setFocusedRowIndex(index);
+                          e.target.select();
+                        }}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "price")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "price");
+                          setFocusedRowIndex(null);
+                        }}
+                      />
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        type="number"
+                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        value={row?.disc}
+                        disabled={readOnly}
+                        onKeyDown={(e) => {
+                          if (e.code === "Minus" || e.code === "NumpadSubtract")
+                            e.preventDefault();
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "disc");
+                          }
+                        }}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "disc")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "disc");
+                        }}
+                      />
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        type="number"
+                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        value={row?.amount ? Number(row.amount).toFixed(2) : ""}
+                        disabled={true}
+                        onKeyDown={(e) => {
+                          if (e.code === "Minus" || e.code === "NumpadSubtract")
+                            e.preventDefault();
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "amount");
+                          }
+                        }}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "amount")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "amount");
+                        }}
+                      />
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "remarks");
+                          }
+                        }}
+                        type="string"
+                        className="text-left rounded py-1 px-1 w-full table-data-input"
+                        onFocus={(e) => e.target.select()}
+                        value={row?.remarks}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "remarks")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "remarks");
+                        }}
+                        disabled={readOnly}
+                      />
+                    </td>
+                    <td className="w-2 border border-gray-300">
+                      <input
+                        onContextMenu={(e) => {
+                          if (!readOnly) {
+                            handleRightClick(e, index, "notes");
+                          }
+                        }}
+                        className="w-full "
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addRow();
+                          }
+                        }}
+                        disabled={readOnly}
+                      />
+                    </td>
+                  </tr>
+                  {contextMenu && (
+                    <div
+                      style={{
+                        position: "fixed",
+                        top: `${contextMenu.mouseY - 50}px`,
+                        left: `${contextMenu.mouseX + 20}px`,
+                        boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                        padding: "8px",
+                        borderRadius: "4px",
+                        zIndex: 1000,
                       }}
-                      tabIndex={"0"}
-                      disabled={true}
-                      className="text-left w-full rounded py-1 table-data-input"
-                      value={row.fabricId}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "fabricId")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "fabricId");
-                      }}
+                      className="bg-gray-100"
+                      onMouseLeave={handleCloseContextMenu}
                     >
-                      <option></option>
-                      {(id
-                        ? fabricList?.data
-                        : fabricList?.data?.filter((item) => item.active)
-                      )?.map((blend) => (
-                        <option value={blend.id} key={blend.id}>
-                          {blend?.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="py-0.5 border border-gray-300 text-[11px]">
-                    <select
-                      disabled={true}
-                      className="text-left w-full rounded py-1 table-data-input"
-                      value={row.sizeId}
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "sizeId");
-                        }
-                      }}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "sizeId")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "sizeId");
-                      }}
-                    >
-                      <option></option>
-                      {(id
-                        ? sizeList?.data
-                        : sizeList?.data?.filter((item) => item.active)
-                      )?.map((blend) => (
-                        <option value={blend.id} key={blend.id}>
-                          {blend?.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      type="number"
-                      className="text-right rounded py-1 px-1 w-full table-data-input"
-                      value={row?.stkQty}
-                      disabled={true}
-                      onKeyDown={(e) => {
-                        if (e.code === "Minus" || e.code === "NumpadSubtract")
-                          e.preventDefault();
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "stkQty");
-                        }
-                      }}
-                      onFocus={(e) => e.target.select()}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "stkQty")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "stkQty");
-                      }}
-                    />
-                  </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      type="number"
-                      className="text-right rounded py-1 px-1 w-full table-data-input"
-                      value={row?.qty}
-                      disabled={readOnly}
-                      onKeyDown={(e) => {
-                        if (e.code === "Minus" || e.code === "NumpadSubtract")
-                          e.preventDefault();
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "qty");
-                        }
-                      }}
-                      onFocus={(e) => e.target.select()}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "qty")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "qty");
-                      }}
-                    />
-                  </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      type="number"
-                      className="text-right rounded py-1 px-1 w-full table-data-input"
-                      value={
-                        focusedRowIndex === index
-                          ? row?.price ?? "" // show raw value while editing
-                          : row?.price
-                          ? Number(row.price).toFixed(2) // format nicely otherwise
-                          : ""
-                      }
-                      disabled={readOnly}
-                      onKeyDown={(e) => {
-                        if (e.code === "Minus" || e.code === "NumpadSubtract")
-                          e.preventDefault();
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "price");
-                        }
-                      }}
-                      onFocus={(e) => {
-                        setFocusedRowIndex(index);
-                        e.target.select();
-                      }}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "price")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "amount");
-                        setFocusedRowIndex(null);
-                      }}
-                    />
-                  </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      type="number"
-                      className="text-right rounded py-1 px-1 w-full table-data-input"
-                      value={row?.disc}
-                      disabled={readOnly}
-                      onKeyDown={(e) => {
-                        if (e.code === "Minus" || e.code === "NumpadSubtract")
-                          e.preventDefault();
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "disc");
-                        }
-                      }}
-                      onFocus={(e) => e.target.select()}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "disc")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "disc");
-                      }}
-                    />
-                  </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      type="number"
-                      className="text-right rounded py-1 px-1 w-full table-data-input"
-                      value={row?.amount ? Number(row.amount).toFixed(2) : ""}
-                      disabled={true}
-                      onKeyDown={(e) => {
-                        if (e.code === "Minus" || e.code === "NumpadSubtract")
-                          e.preventDefault();
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "amount");
-                        }
-                      }}
-                      onFocus={(e) => e.target.select()}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "amount")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "amount");
-                      }}
-                    />
-                  </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "remarks");
-                        }
-                      }}
-                      type="string"
-                      className="text-left rounded py-1 px-1 w-full table-data-input"
-                      onFocus={(e) => e.target.select()}
-                      value={row?.remarks}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "remarks")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "remarks");
-                      }}
-                      disabled={readOnly}
-                    />
-                  </td>
-                  <td className="w-2 border border-gray-300">
-                    <input
-                      onContextMenu={(e) => {
-                        if (!readOnly) {
-                          handleRightClick(e, index, "notes");
-                        }
-                      }}
-                      className="w-full "
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          addRow();
-                        }
-                      }}
-                      disabled={readOnly}
-                    />
-                  </td>
-                </tr>
+                      <div className="flex flex-col gap-1">
+                        <button
+                          className=" text-black text-[12px] text-left rounded px-1"
+                          onClick={() => {
+                            deleteRow(contextMenu.rowId);
+                            handleCloseContextMenu();
+                          }}
+                        >
+                          Delete
+                        </button>
+                        <button
+                          className=" text-black text-[12px] text-left rounded px-1"
+                          onClick={() => {
+                            handleDeleteAllRows();
+                            handleCloseContextMenu();
+                          }}
+                        >
+                          Delete All
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               ))}
             </tbody>
             <tfoot>
-              <tr className="bg-gray-50 font-medium text-gray-800">
+              <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 {/* <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
                   colSpan={7}
@@ -810,42 +848,6 @@ export default function BillItems({
             </div>
           )}
         </div>
-        {contextMenu && (
-          <div
-            style={{
-              position: "absolute",
-              top: `${contextMenu.mouseY - 50}px`,
-              left: `${contextMenu.mouseX + 20}px`,
-              boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
-              padding: "8px",
-              borderRadius: "4px",
-              zIndex: 1000,
-            }}
-            className="bg-gray-100"
-            onMouseLeave={handleCloseContextMenu}
-          >
-            <div className="flex flex-col gap-1">
-              <button
-                className=" text-black text-[12px] text-left rounded px-1"
-                onClick={() => {
-                  deleteRow(contextMenu.rowId);
-                  handleCloseContextMenu();
-                }}
-              >
-                Delete
-              </button>
-              <button
-                className=" text-black text-[12px] text-left rounded px-1"
-                onClick={() => {
-                  handleDeleteAllRows();
-                  handleCloseContextMenu();
-                }}
-              >
-                Delete All
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </>
   );

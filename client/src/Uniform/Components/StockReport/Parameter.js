@@ -91,6 +91,7 @@ const Parameter = ({
             setStyleId(value);
           }}
           required={false}
+          clear={true}
         />
         <DropdownInput
           name="Fabric"
@@ -102,6 +103,7 @@ const Parameter = ({
             setFabricId(value);
           }}
           required={false}
+          clear={true}
         />
         <DropdownInput
           name="Size"
@@ -111,8 +113,9 @@ const Parameter = ({
           value={sizeId}
           setValue={(value) => {
             setSizeId(value);
-          }}
+          }}  
           required={false}
+          clear={true}
         />
       </div>
       <div className="flex justify-end gap-4  items-center mr-2">
