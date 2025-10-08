@@ -74,6 +74,7 @@ model Company {
   Accessory           Accessory[]
   AccessoryItem       AccessoryItem[]
   SizeTemplate        SizeTemplate[]
+  StyleItem           StyleItem[]
 }
 
 model Subscription {
@@ -1477,6 +1478,8 @@ model Style {
   companyId            Int?
   Fabric               Fabric?                @relation(fields: [fabricId], references: [id])
   fabricId             Int?
+  StyleItem            StyleItem?             @relation(fields: [styleItemId], references: [id])
+  styleItemId          Int?
   SizeTemplate         SizeTemplate?          @relation(fields: [sizeTemplateId], references: [id])
   sizeTemplateId       Int?
   Stock                Stock[]
@@ -1604,6 +1607,8 @@ model Stock {
   StockInwardItems     StockInwardItems?     @relation(fields: [stockInwardItemsId], references: [id], onDelete: Cascade)
   stockInwardItemsId   Int?
   styleNo              String?
+  StyleItem            StyleItem?            @relation(fields: [styleItemId], references: [id])
+  styleItemId          Int?
 }
 
 model OpeningStock {
@@ -1640,6 +1645,8 @@ model OpeningStockItems {
   qty            Int?
   remarks        String?
   barcode        String?
+  StyleItem      StyleItem?   @relation(fields: [styleItemId], references: [id])
+  styleItemId    Int?
   Stock          Stock[]
 }
 
@@ -1678,6 +1685,8 @@ model StockAdjustmentItems {
   styleNo           String?
   Fabric            Fabric?          @relation(fields: [fabricId], references: [id])
   fabricId          Int?
+  StyleItem         StyleItem?       @relation(fields: [styleItemId], references: [id])
+  styleItemId       Int?
 }
 
 model SalesEntry {
@@ -1722,6 +1731,8 @@ model SalesEntryItems {
   price        Int?
   disc         Int?
   amount       Int?
+  StyleItem    StyleItem?  @relation(fields: [styleItemId], references: [id])
+  styleItemId  Int?
 }
 
 model SizeTemplate {
@@ -1775,4 +1786,17 @@ model StockInwardItems {
   remarks       String?
   barcode       String?
   Stock         Stock[]
+}
+
+model StyleItem {
+  id                   Int                    @id @default(autoincrement())
+  name                 String?
+  Company              Company?               @relation(fields: [companyId], references: [id])
+  companyId            Int?
+  active               Boolean?               @default(true)
+  Style                Style[]
+  OpeningStockItems    OpeningStockItems[]
+  Stock                Stock[]
+  StockAdjustmentItems StockAdjustmentItems[]
+  SalesEntryItems      SalesEntryItems[]
 }

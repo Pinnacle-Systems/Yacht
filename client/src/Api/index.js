@@ -51,6 +51,7 @@ export const YARN_TYPE_API = "yarnType";
 export const YARN_BLEND_API = "yarnBlend";
 export const FABRIC_TYPE_API = "fabricType";
 export const ITEM_API = "item";
+export const STYLE_ITEM_API = "styleItem"
 export const ITEM_TYPE_API = "itemType";
 export const CUTTING_ORDER_API = "cuttingOrder";
 export const ORDER_API = "order";

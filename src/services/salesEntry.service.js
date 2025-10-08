@@ -200,6 +200,7 @@ async function getOne(id) {
           disc: true,
           amount: true,
           price: true,
+          styleItemId: true,
         },
       },
     },
@@ -386,6 +387,9 @@ async function updateSalesEntryItems(
           price: stockDetail?.price ? parseInt(stockDetail.price) : null,
           disc: stockDetail?.disc ? parseInt(stockDetail.disc) : null,
           amount: stockDetail?.amount ? parseInt(stockDetail.amount) : null,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
+            : null,
         },
       });
 
@@ -410,6 +414,9 @@ async function updateSalesEntryItems(
               : null,
             price: stockDetail?.price ? parseInt(stockDetail.price) : null,
             storeId: parseInt(storeId),
+            styleItemId: stockDetail?.styleItemId
+              ? parseInt(stockDetail.styleItemId)
+              : null,
           },
         });
       } else {
@@ -431,6 +438,9 @@ async function updateSalesEntryItems(
               ? parseInt(stockDetail.fabricId)
               : null,
             price: stockDetail?.price ? parseInt(stockDetail.price) : null,
+            styleItemId: stockDetail?.styleItemId
+              ? parseInt(stockDetail.styleItemId)
+              : null,
           },
         });
       }
@@ -456,6 +466,9 @@ async function updateSalesEntryItems(
           price: stockDetail?.price ? parseInt(stockDetail.price) : null,
           disc: stockDetail?.disc ? parseInt(stockDetail.disc) : null,
           amount: stockDetail?.amount ? parseInt(stockDetail.amount) : null,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
+            : null,
         },
       });
       await tx.stock.create({
@@ -472,6 +485,9 @@ async function updateSalesEntryItems(
           styleNo: stockDetail?.styleNo ?? undefined,
           fabricId: stockDetail?.fabricId
             ? parseInt(stockDetail.fabricId)
+            : null,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
             : null,
         },
       });
@@ -511,6 +527,9 @@ async function createSalesEntryItems(
         price: itemDetail?.price ? parseInt(itemDetail.price) : null,
         disc: itemDetail?.disc ? parseInt(itemDetail.disc) : null,
         amount: itemDetail?.amount ? parseInt(itemDetail.amount) : null,
+        styleItemId: itemDetail?.styleItemId
+          ? parseInt(itemDetail.styleItemId)
+          : null,
       },
     });
     await tx.stock.create({
@@ -530,6 +549,9 @@ async function createSalesEntryItems(
         styleNo: itemDetail?.styleNo ?? undefined,
         fabricId: itemDetail?.fabricId ? parseInt(itemDetail.fabricId) : null,
         price: itemDetail?.price ? parseInt(itemDetail.price) : null,
+        styleItemId: itemDetail?.styleItemId
+          ? parseInt(itemDetail.styleItemId)
+          : null,
       },
     });
     return createdItem;

@@ -8,6 +8,7 @@ import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
+import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 
 const Parameter = ({
   locationId,
@@ -21,6 +22,8 @@ const Parameter = ({
   fabricId,
   setFabricId,
   onClose,
+  styleItemId,
+  setStyleItemId
 }) => {
   const [localStoreId, setLocalStoreId] = useState(storeId);
   const [localLocationId, setLocalLocationId] = useState(locationId);
@@ -49,6 +52,9 @@ const Parameter = ({
   const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
   const { data: sizeList } = useGetSizeMasterQuery({ params: { companyId } });
   const { data: fabricList } = useGetFabricMasterQuery({
+    params: { companyId },
+  });
+  const { data: styleItemList } = useGetStyleItemMasterQuery({
     params: { companyId },
   });
 
@@ -84,11 +90,11 @@ const Parameter = ({
         <DropdownInput
           name="Style"
           options={
-            styleList ? dropDownListObject(styleList.data, "name", "id") : []
+            styleItemList ? dropDownListObject(styleItemList.data, "name", "id") : []
           }
-          value={styleId}
+          value={styleItemId}
           setValue={(value) => {
-            setStyleId(value);
+            setStyleItemId(value);
           }}
           required={false}
           clear={true}
@@ -113,7 +119,7 @@ const Parameter = ({
           value={sizeId}
           setValue={(value) => {
             setSizeId(value);
-          }}  
+          }}
           required={false}
           clear={true}
         />

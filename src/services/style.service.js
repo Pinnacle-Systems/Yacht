@@ -11,6 +11,9 @@ async function get(req) {
 
       active: active ? Boolean(active) : undefined,
     },
+    include: {
+      StyleItem: true,
+    },
   });
   return { statusCode: 0, data };
 }
@@ -59,28 +62,19 @@ export async function upload(req) {
   return { statusCode: 0, data };
 }
 
-async function getNextStyleSku(companyId, prefix) {
-  const lastStyle = await prisma.style.findFirst({
-    where: { companyId: parseInt(companyId) },
-    orderBy: { id: "desc" },
-  });
-
-  let nextNumber = 1;
-  if (lastStyle?.styleNo) {
-    const match = lastStyle.styleNo.match(/(\d+)$/);
-    if (match) {
-      nextNumber = parseInt(match[1]) + 1;
-    }
-  }
-  const padded = String(nextNumber).padStart(4, "0");
-  return `${prefix}${padded}`;
-}
-
 async function create(req) {
-  const { name, companyId, active, sku, alias, img, fabricId, sizeTemplateId } =
-    await req;
+  const {
+    name,
+    companyId,
+    active,
+    sku,
+    alias,
+    img,
+    fabricId,
+    sizeTemplateId,
+    styleItemId,
+  } = await req;
   // const file = req.file;
-  // let styleNo = await getNextStyleSku(companyId, name);
   const data = await prisma.style.create({
     data: {
       name,
@@ -89,7 +83,7 @@ async function create(req) {
       active: active !== undefined ? JSON.parse(active) : undefined,
       companyId: companyId ? parseInt(companyId) : null,
       img,
-      // styleNo,
+      styleItemId: styleItemId ? parseInt(styleItemId) : undefined,
       sizeTemplateId: sizeTemplateId ? parseInt(sizeTemplateId) : undefined,
       fabricId: fabricId ? parseInt(fabricId) : undefined,
     },
@@ -98,8 +92,17 @@ async function create(req) {
 }
 
 async function update(id, body) {
-  const { name, companyId, active, sku, alias, img, fabricId, sizeTemplateId } =
-    await body;
+  const {
+    name,
+    companyId,
+    active,
+    sku,
+    alias,
+    img,
+    fabricId,
+    sizeTemplateId,
+    styleItemId,
+  } = await body;
 
   const dataFound = await prisma.style.findUnique({
     where: { id: parseInt(id) },
@@ -118,6 +121,7 @@ async function update(id, body) {
       img,
       fabricId: fabricId ? parseInt(fabricId) : undefined,
       sizeTemplateId: sizeTemplateId ? parseInt(sizeTemplateId) : undefined,
+      styleItemId: styleItemId ? parseInt(styleItemId) : undefined,
     },
   });
   return { statusCode: 0, data };
@@ -133,9 +137,10 @@ async function remove(id) {
 }
 
 async function getStyleCode(req) {
-  const { styleNo } = req.query;
+  const { styleNo, companyId } = req.query;
   const data = await prisma.style.findMany({
     where: {
+      companyId: companyId ? parseInt(companyId) : undefined,
       sku: styleNo,
     },
   });

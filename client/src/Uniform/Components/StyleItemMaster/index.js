@@ -3,15 +3,15 @@ import secureLocalStorage from "react-secure-storage";
 import { ReusableTable, TextInput, ToggleButton } from "../../../Inputs";
 import { Check, Power } from "lucide-react";
 import { statusDropdown } from "../../../Utils/DropdownData";
-import {
-  useAddMeasurementMasterMutation,
-  useDeleteMeasurementMasterMutation,
-  useGetMeasurementMasterByIdQuery,
-  useGetMeasurementMasterQuery,
-  useUpdateMeasurementMasterMutation,
-} from "../../../redux/uniformService/MeasurementMasterService";
 import Modal from "../../../UiComponents/Modal";
 import Swal from "sweetalert2";
+import {
+  useAddStyleItemMasterMutation,
+  useDeleteStyleItemMasterMutation,
+  useGetStyleItemMasterByIdQuery,
+  useGetStyleItemMasterQuery,
+  useUpdateStyleItemMasterMutation,
+} from "../../../redux/uniformService/StyleItemMasterService";
 
 const MODEL = "Style Item Master";
 export default function Form() {
@@ -32,13 +32,11 @@ export default function Form() {
     ),
   };
 
-  console.log(params, "params");
-
   const {
     data: allData,
     isLoading,
     isFetching,
-  } = useGetMeasurementMasterQuery({ params, searchParams: searchValue });
+  } = useGetStyleItemMasterQuery({ params, searchParams: searchValue });
 
   console.log(allData, "datatat");
 
@@ -46,11 +44,11 @@ export default function Form() {
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
-  } = useGetMeasurementMasterByIdQuery(id, { skip: !id });
+  } = useGetStyleItemMasterByIdQuery(id, { skip: !id });
 
-  const [addData] = useAddMeasurementMasterMutation();
-  const [updateData] = useUpdateMeasurementMasterMutation();
-  const [removeData] = useDeleteMeasurementMasterMutation();
+  const [addData] = useAddStyleItemMasterMutation();
+  const [updateData] = useUpdateStyleItemMasterMutation();
+  const [removeData] = useDeleteStyleItemMasterMutation();
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -197,10 +195,10 @@ export default function Form() {
       search: "",
     },
     {
-      header: "Measurement Name",
+      header: "Item Name",
       accessor: (item) => item.name,
       className: "font-medium text-gray-900  w-[200px]  py-1  px-2",
-      search: "Measurement Name",
+      search: "Item Name",
     },
     {
       header: "Status",
@@ -226,7 +224,7 @@ export default function Form() {
     <div onKeyDown={handleKeyDown} className="p-1">
       <div className="w-full flex bg-white p-1 justify-between  items-center">
         <h5 className="text-2xl font-bold font-segoe text-gray-800 ">
-          Measurement Master
+          Style Item Master
         </h5>
         <div className="flex items-center">
           <button
@@ -236,7 +234,7 @@ export default function Form() {
             }}
             className="bg-white border font-segoe border-green-600 text-green-600 hover:bg-green-700 hover:text-white text-sm px-2  rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >
-            + Add New Measurement
+            + Add New Style Item
           </button>
         </div>
       </div>
@@ -265,9 +263,9 @@ export default function Form() {
                 <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
                   {id
                     ? !readOnly
-                      ? "Edit Measurement"
-                      : "Measurement Master"
-                    : "Add New Measurement"}
+                      ? "Edit Style Item"
+                      : "Style Item Master"
+                    : "Add New Style Item"}
                 </h2>
               </div>
               <div className="flex gap-2">
@@ -309,7 +307,7 @@ export default function Form() {
                         <div className="flex flex-wrap justify-between">
                           <div className="mb-3 w-[48%]">
                             <TextInput
-                              name="Measurement"
+                              name="Style Item"
                               type="text"
                               value={name}
                               setValue={setName}

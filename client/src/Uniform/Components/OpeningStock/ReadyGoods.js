@@ -10,6 +10,8 @@ import { useLazyGetSizeTemplateByIdQuery } from "../../../redux/uniformService/S
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
 import { findFromList } from "../../../Utils/helper";
 import { IMAGE_UPLOAD_URL } from "../../../Constants";
+import secureLocalStorage from "react-secure-storage";
+import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 
 export default function ReadyGoods({
   openingStockItems,
@@ -26,6 +28,11 @@ export default function ReadyGoods({
   const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: fabricList } = useGetFabricMasterQuery({ params });
+  const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
+
+  const companyId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "userCompanyId"
+  );
 
   const addRow = () => {
     const newRow = {
@@ -35,6 +42,7 @@ export default function ReadyGoods({
       sizeId: "",
       qty: "",
       remarks: "",
+      styleItemId: "",
     };
     setOpeningStockItems([...openingStockItems, newRow]);
   };
@@ -91,6 +99,7 @@ export default function ReadyGoods({
               sizeId: "",
               qty: "",
               remarks: "",
+              styleItemId: "",
             })),
           ];
         }
@@ -106,6 +115,7 @@ export default function ReadyGoods({
           sizeId: "",
           qty: "",
           remarks: "",
+          styleItemId: "",
         }))
       );
     }
@@ -157,6 +167,7 @@ export default function ReadyGoods({
       const { data: styleData } = await getStyleCodeDetail({
         params: {
           styleNo: styleNo,
+          companyId,
         },
       });
       const style = styleData?.data && Object.values(styleData.data)[0];
@@ -170,12 +181,13 @@ export default function ReadyGoods({
 
         if (sizeData?.data?.SizeTemplateList?.length) {
           sizeRows = sizeData.data.SizeTemplateList.map((s) => ({
-            styleNo: styleNo || "",
+            styleNo: style.sku || "",
             fabricId: style.fabricId || "",
             styleId: style.id || "",
             sizeId: s.sizeId,
             qty: "",
             remarks: "",
+            styleItemId: style.styleItemId || "",
           }));
           console.log("Mapped size rows:", sizeRows);
         }
@@ -207,6 +219,7 @@ export default function ReadyGoods({
             sizeId: "",
             qty: "",
             remarks: "",
+            styleItemId: "",
           });
         }
 
@@ -353,24 +366,32 @@ export default function ReadyGoods({
                       <select
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
-                            handleInputChange("", index, "styleId");
+                            handleInputChange("", index, "styleItemId");
                           }
                         }}
                         tabIndex={"0"}
                         disabled={true}
                         className="text-left w-full rounded py-1 table-data-input"
-                        value={row.styleId}
+                        value={row.styleItemId}
                         onChange={(e) =>
-                          handleInputChange(e.target.value, index, "styleId")
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "styleItemId"
+                          )
                         }
                         onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "styleId");
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "styleItemId"
+                          );
                         }}
                       >
                         <option></option>
                         {(id
-                          ? styleList?.data
-                          : styleList?.data?.filter((item) => item.active)
+                          ? styleItemList?.data
+                          : styleItemList?.data?.filter((item) => item.active)
                         )?.map((blend) => (
                           <option value={blend.id} key={blend.id}>
                             {blend?.name}

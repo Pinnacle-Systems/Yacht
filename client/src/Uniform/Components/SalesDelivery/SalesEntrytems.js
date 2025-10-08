@@ -9,6 +9,7 @@ import { useLazyGetStyleDetailQuery } from "../../../redux/services/StockService
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
 import { findFromList } from "../../../Utils/helper";
 import { IMAGE_UPLOAD_URL } from "../../../Constants";
+import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 
 export default function BillItems({
   salesEntryItems,
@@ -26,6 +27,7 @@ export default function BillItems({
   const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: fabricList } = useGetFabricMasterQuery({ params });
+  const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
 
   const [
     triggerGetBarcodeDetail,
@@ -45,6 +47,7 @@ export default function BillItems({
       price: "",
       disc: "",
       amount: "",
+      styleItemId: "",
     };
     setSalesEntryItems([...salesEntryItems, newRow]);
   };
@@ -99,6 +102,7 @@ export default function BillItems({
               price: "",
               disc: "",
               amount: "",
+              styleItemId: "",
             })),
           ];
         }
@@ -119,6 +123,7 @@ export default function BillItems({
           price: "",
           disc: "",
           amount: "",
+          styleItemId: "",
         }))
       );
     }
@@ -201,6 +206,7 @@ export default function BillItems({
                       fabricId: "",
                       price: "",
                       disc: "",
+                      styleItemId: "",
                     }
                   : r
               )
@@ -258,6 +264,7 @@ export default function BillItems({
             barcode: "",
             price: "",
             disc: "",
+            styleItemId: "",
           });
         }
 
@@ -495,23 +502,31 @@ export default function BillItems({
                       <select
                         disabled={true}
                         className="text-left w-full rounded py-1 table-data-input"
-                        value={row.styleId}
+                        value={row.styleItemId}
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
-                            handleInputChange("", index, "styleId");
+                            handleInputChange("", index, "styleItemId");
                           }
                         }}
                         onChange={(e) =>
-                          handleInputChange(e.target.value, index, "styleId")
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "styleItemId"
+                          )
                         }
                         onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "styleId");
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "styleItemId"
+                          );
                         }}
                       >
                         <option></option>
                         {(id
-                          ? styleList?.data
-                          : styleList?.data?.filter((item) => item.active)
+                          ? styleItemList?.data
+                          : styleItemList?.data?.filter((item) => item.active)
                         )?.map((blend) => (
                           <option value={blend.id} key={blend.id}>
                             {blend?.name}

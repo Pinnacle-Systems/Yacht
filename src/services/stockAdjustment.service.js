@@ -379,6 +379,7 @@ async function getOne(id) {
           remarks: true,
           fabricId: true,
           styleNo: true,
+          styleItemId: true,
         },
       },
     },
@@ -464,6 +465,9 @@ async function createStockAdjustmentItems(
         remarks: stockDetail?.remarks ? stockDetail?.remarks : undefined,
         styleNo: stockDetail?.styleNo ?? undefined,
         fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
+        styleItemId: stockDetail?.styleItemId
+          ? parseInt(stockDetail.styleItemId)
+          : null,
       },
     });
     let qty = null;
@@ -484,6 +488,9 @@ async function createStockAdjustmentItems(
         barCode: stockDetail?.barcode ? stockDetail?.barcode : "",
         styleNo: stockDetail?.styleNo ?? undefined,
         fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
+        styleItemId: stockDetail?.styleItemId
+          ? parseInt(stockDetail.styleItemId)
+          : null,
       },
     });
     return createdItem;
@@ -580,6 +587,9 @@ async function updateOpeningStockItems(
           fabricId: stockDetail?.fabricId
             ? parseInt(stockDetail.fabricId)
             : null,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
+            : null,
         },
       });
       let qty = null;
@@ -601,6 +611,9 @@ async function updateOpeningStockItems(
           styleNo: stockDetail?.styleNo ?? undefined,
           fabricId: stockDetail?.fabricId
             ? parseInt(stockDetail.fabricId)
+            : null,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
             : null,
         },
       });
@@ -626,6 +639,9 @@ async function updateOpeningStockItems(
           fabricId: stockDetail?.fabricId
             ? parseInt(stockDetail.fabricId)
             : null,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
+            : null,
         },
       });
       let qty = null;
@@ -647,6 +663,9 @@ async function updateOpeningStockItems(
           styleNo: stockDetail?.styleNo ?? undefined,
           fabricId: stockDetail?.fabricId
             ? parseInt(stockDetail.fabricId)
+            : null,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
             : null,
         },
       });

@@ -57,3 +57,4 @@ export { default as salesEntry } from "./salesEntry.route.js";
 export { default as sizeTemplate } from "./sizeTemplate.route.js";
 export { default as stockInward } from "./stockInward.route.js";
 export { default as stock } from "./stock.route.js";
+export { default as styleItem } from "./styleItem.route.js";

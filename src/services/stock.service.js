@@ -465,6 +465,7 @@ async function get(req) {
     styleId,
     sizeId,
     fabricId,
+    styleItemId,
   } = req.query;
 
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -477,6 +478,7 @@ async function get(req) {
       styleId: styleId ? parseInt(styleId) : undefined,
       sizeId: sizeId ? parseInt(sizeId) : undefined,
       fabricId: fabricId ? parseInt(fabricId) : undefined,
+      styleItemId: styleItemId ? parseInt(styleItemId) : undefined,
       AND: finYearDate
         ? [
             {
@@ -502,7 +504,7 @@ async function get(req) {
         storeName: searchStore ? { contains: searchStore } : undefined,
       },
     },
-    by: ["styleId", "sizeId", "styleNo", "barCode", "fabricId"],
+    by: ["styleId", "sizeId", "styleNo", "barCode", "fabricId", "styleItemId"],
     _sum: {
       qty: true,
     },
@@ -523,6 +525,7 @@ async function get(req) {
       stkQty: d._sum.qty,
       fabricId: d.fabricId,
       barcode: d.barCode,
+      styleItemId: d.styleItemId,
     })),
     totalCount,
   };
@@ -725,7 +728,7 @@ async function getStyleDetail(req) {
 
   // 1️⃣ First try fetching by styleNo
   let data = await prisma.stock.groupBy({
-    by: ["styleId", "sizeId", "styleNo", "barCode", "fabricId"],
+    by: ["styleId", "sizeId", "styleNo", "barCode", "fabricId", "styleItemId"],
     where: {
       styleNo: styleNo,
     },
@@ -737,7 +740,14 @@ async function getStyleDetail(req) {
   // 2️⃣ If no data found, try fetching by barCode
   if (!data || data.length === 0) {
     data = await prisma.stock.groupBy({
-      by: ["styleId", "sizeId", "styleNo", "barCode", "fabricId"],
+      by: [
+        "styleId",
+        "sizeId",
+        "styleNo",
+        "barCode",
+        "fabricId",
+        "styleItemId",
+      ],
       where: {
         barCode: styleNo,
       },
@@ -757,6 +767,7 @@ async function getStyleDetail(req) {
     data: data.map((d) => ({
       styleNo: d.styleNo,
       styleId: d.styleId,
+      styleItemId: d.styleItemId,
       sizeId: d.sizeId,
       stkQty: d._sum.qty,
       fabricId: d.fabricId,

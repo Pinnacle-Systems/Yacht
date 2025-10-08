@@ -23,6 +23,7 @@ import { getImageUrlPath } from "../../../Constants";
 import { useGetSizeTemplateQuery } from "../../../redux/uniformService/SizeTemplateMasterServices";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
+import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 
 const StyleMaster = () => {
   const [form, setForm] = useState(false);
@@ -38,6 +39,7 @@ const StyleMaster = () => {
   const [img, setImg] = useState("");
   const [sizeTemplateId, setSizeTemplateId] = useState("");
   const [fabricId, setFabricId] = useState("");
+  const [styleItemId, setStyleItemId] = useState("");
   const [addData] = useAddStyleMasterMutation();
   const [updateData] = useUpdateStyleMasterMutation();
   const [removeData] = useDeleteStyleMasterMutation();
@@ -63,6 +65,9 @@ const StyleMaster = () => {
   const { data: fabricList } = useGetFabricMasterQuery({
     params,
   });
+  const { data: styleItemList } = useGetStyleItemMasterQuery({
+    params,
+  });
 
   const data = {
     id,
@@ -75,10 +80,11 @@ const StyleMaster = () => {
     ),
     sizeTemplateId,
     fabricId,
+    styleItemId,
   };
 
   const validateData = (data) => {
-    if (data.name && data.sku && data.sizeTemplateId) {
+    if (data.styleItemId && data.sku && data.sizeTemplateId) {
       return true;
     }
     return false;
@@ -102,6 +108,7 @@ const StyleMaster = () => {
     formData.append("name", name);
     formData.append("alias", alias);
     formData.append("active", active);
+    formData.append("styleItemId", styleItemId);
     formData.append(
       "companyId",
       secureLocalStorage.getItem(
@@ -140,6 +147,7 @@ const StyleMaster = () => {
       setImg(data?.img ? getImageUrlPath(data?.img) : "");
       setSizeTemplateId(data?.sizeTemplateId ? data?.sizeTemplateId : "");
       setFabricId(data?.fabricId ? data?.fabricId : "");
+      setStyleItemId(data?.styleItemId ? data?.styleItemId : "");
     },
     [id]
   );
@@ -195,7 +203,7 @@ const StyleMaster = () => {
     },
     {
       header: "Style Name",
-      accessor: (item) => item.name,
+      accessor: (item) => item?.StyleItem?.name,
       className: "font-medium text-gray-900 w-[250px]  py-1  px-2",
       search: "Name",
       value: searchName,
@@ -363,11 +371,23 @@ const StyleMaster = () => {
                             />
                           </div>
                           <div className="mb-3 w-48">
-                            <TextInput
+                            <DropdownInput
                               name="Style Name"
-                              type="text"
-                              value={name}
-                              setValue={setName}
+                              options={
+                                styleItemList
+                                  ? dropDownListObject(
+                                      id
+                                        ? styleItemList?.data
+                                        : styleItemList?.data?.filter(
+                                            (item) => item.active
+                                          ),
+                                      "name",
+                                      "id"
+                                    )
+                                  : []
+                              }
+                              value={styleItemId}
+                              setValue={setStyleItemId}
                               required={true}
                               readOnly={readOnly}
                             />

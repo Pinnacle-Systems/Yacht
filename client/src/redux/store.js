@@ -105,6 +105,7 @@ import OpeningStockApi from "./uniformService/OpeningStockService";
 import StockAdjustmentApi from "./uniformService/StockAdjustmentService";
 import SalesEntryApi from "./uniformService/SalesEntryService";
 import StockInwardApi from "./uniformService/StockInwardService";
+import StyleItemMasterApi from "./uniformService/StyleItemMasterService";
 
 const commonReducers = {
   openTabs,
@@ -209,6 +210,7 @@ const commonReducers = {
   SalesEntry: SalesEntryApi.reducer,
   SizeTemplate: sizeTemplateApi.reducer,
   StockInward: StockInwardApi.reducer,
+  StyleItemMaster: StyleItemMasterApi.reducer,
 };
 const commonMiddleware = [
   countryMasterApi.middleware,
@@ -310,6 +312,7 @@ const commonMiddleware = [
   StockAdjustmentApi.middleware,
   SalesEntryApi.middleware,
   StockInwardApi.middleware,
+  StyleItemMasterApi.middleware,
 ];
 
 const store = configureStore({

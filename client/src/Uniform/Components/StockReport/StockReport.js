@@ -14,6 +14,7 @@ import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMaste
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { EMPTY_ICON } from "../../../icons";
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
+import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 
 const StockReport = forwardRef(
   (
@@ -45,6 +46,7 @@ const StockReport = forwardRef(
     const [styleId, setStyleId] = useState("");
     const [sizeId, setSizeId] = useState("");
     const [fabricId, setFabricId] = useState("");
+    const [styleItemId, setStyleItemId] = useState("");
     const handleOnclick = (e) => {
       setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
     };
@@ -70,6 +72,7 @@ const StockReport = forwardRef(
     const { data: styleList } = useGetStyleMasterQuery({ params });
     const { data: sizeList } = useGetSizeMasterQuery({ params });
     const { data: fabricList } = useGetFabricMasterQuery({ params });
+    const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
 
     const {
       data: allData,
@@ -88,6 +91,7 @@ const StockReport = forwardRef(
           styleId,
           sizeId,
           fabricId,
+          styleItemId,
         },
       },
       {
@@ -224,6 +228,8 @@ const StockReport = forwardRef(
             sizeId={sizeId}
             fabricId={fabricId}
             setFabricId={setFabricId}
+            styleItemId={styleItemId}
+            setStyleItemId={setStyleItemId}
             onClose={() => setParameter(false)}
           />
         </Modal>
@@ -333,8 +339,8 @@ const StockReport = forwardRef(
                               </td>
                               <td className="py-1.5 text-center">
                                 {findFromList(
-                                  dataObj?.styleId,
-                                  styleList?.data,
+                                  dataObj?.styleItemId,
+                                  styleItemList?.data,
                                   "name"
                                 )}
                               </td>

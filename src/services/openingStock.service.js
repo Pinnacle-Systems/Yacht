@@ -195,6 +195,7 @@ async function getOne(id) {
           remarks: true,
           styleNo: true,
           fabricId: true,
+          styleItemId: true,
         },
       },
     },
@@ -549,6 +550,9 @@ async function updateOpeningStockItems(
             ? parseInt(stockDetail.fabricId)
             : null,
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
+            : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
           qty,
           remarks: stockDetail?.remarks ?? undefined,
@@ -567,6 +571,9 @@ async function updateOpeningStockItems(
           data: {
             styleId: stockDetail?.styleId
               ? parseInt(stockDetail.styleId)
+              : null,
+            styleItemId: stockDetail?.styleItemId
+              ? parseInt(stockDetail.styleItemId)
               : null,
             sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
             qty,
@@ -596,6 +603,9 @@ async function updateOpeningStockItems(
             fabricId: stockDetail?.fabricId
               ? parseInt(stockDetail.fabricId)
               : null,
+            styleItemId: stockDetail?.styleItemId
+              ? parseInt(stockDetail.styleItemId)
+              : null,
           },
         });
       }
@@ -615,6 +625,9 @@ async function updateOpeningStockItems(
             ? parseInt(stockDetail.fabricId)
             : null,
           styleNo: stockDetail?.styleNo ?? undefined,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
+            : null,
         },
       });
 
@@ -634,6 +647,9 @@ async function updateOpeningStockItems(
           OpeningStockItemsId: createdItem.id,
           barCode: barcode,
           styleNo: stockDetail?.styleNo ?? undefined,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
+            : null,
         },
       });
 
@@ -681,6 +697,9 @@ async function createOpeningStockItems(
         styleNo: stockDetail?.styleNo ?? undefined,
         fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
         styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+        styleItemId: stockDetail?.styleItemId
+          ? parseInt(stockDetail.styleItemId)
+          : null,
         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
         qty,
         remarks: stockDetail?.remarks ?? undefined,
@@ -702,6 +721,9 @@ async function createOpeningStockItems(
         OpeningStockItemsId: createdItem.id,
         barCode: barcode,
         styleNo: stockDetail?.styleNo ?? undefined,
+        styleItemId: stockDetail?.styleItemId
+          ? parseInt(stockDetail.styleItemId)
+          : null,
       },
     });
 
