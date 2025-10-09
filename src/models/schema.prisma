@@ -545,6 +545,12 @@ model Party {
   CustomerPo                Po[]                        @relation(name: "CustomerPo")
   SampleEntry               SampleEntry[]               @relation(name: "supplier")
   SalesEntry                SalesEntry[]
+  landMark                  String?
+  designation               String?
+  department                String?
+  contactPersonEmail        String?
+  contactNumber             Int?
+  alterContactNumber        Int?
 }
 
 model PartyBranch {
@@ -630,6 +636,7 @@ model TaxTemplate {
   companyId          Int
   active             Boolean              @default(true)
   TaxTemplateDetails TaxTemplateDetails[]
+  SalesEntry         SalesEntry[]
 }
 
 model TaxTemplateDetails {
@@ -1709,30 +1716,35 @@ model SalesEntry {
   customerId      Int?
   contactPerson   String?
   contactNumber   String?
+  taxTemplate     TaxTemplate?      @relation(fields: [taxTemplateId], references: [id])
+  taxTemplateId   Int?
   SalesEntryItems SalesEntryItems[]
 }
 
 model SalesEntryItems {
-  id           Int         @id @default(autoincrement())
-  SalesEntry   SalesEntry? @relation(fields: [salesEntryId], references: [id], onDelete: Cascade)
-  salesEntryId Int?
-  barcode      String?
-  Style        Style?      @relation(fields: [styleId], references: [id])
-  styleId      Int?
-  Size         Size?       @relation(fields: [sizeId], references: [id])
-  sizeId       Int?
-  stkQty       Int?
-  qty          Int?
-  remarks      String?
-  Stock        Stock[]
-  styleNo      String?
-  Fabric       Fabric?     @relation(fields: [fabricId], references: [id])
-  fabricId     Int?
-  price        Int?
-  disc         Int?
-  amount       Int?
-  StyleItem    StyleItem?  @relation(fields: [styleItemId], references: [id])
-  styleItemId  Int?
+  id            Int         @id @default(autoincrement())
+  SalesEntry    SalesEntry? @relation(fields: [salesEntryId], references: [id], onDelete: Cascade)
+  salesEntryId  Int?
+  barcode       String?
+  Style         Style?      @relation(fields: [styleId], references: [id])
+  styleId       Int?
+  Size          Size?       @relation(fields: [sizeId], references: [id])
+  sizeId        Int?
+  stkQty        Int?
+  qty           Int?
+  remarks       String?
+  Stock         Stock[]
+  styleNo       String?
+  Fabric        Fabric?     @relation(fields: [fabricId], references: [id])
+  fabricId      Int?
+  price         Int?
+  disc          Int?
+  amount        Int?
+  StyleItem     StyleItem?  @relation(fields: [styleItemId], references: [id])
+  styleItemId   Int?
+  discountType  String?
+  taxPercent    Int?
+  discountValue Int?
 }
 
 model SizeTemplate {

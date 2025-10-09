@@ -38,6 +38,8 @@ import {
   CompanyPaycode,
   Measurement,
   FabricMaster,
+  TaxTemplate,
+  TaxTermMaster,
 } from "../../components";
 
 import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
@@ -147,6 +149,8 @@ const ActiveTabList = () => {
     "STOCK INWARD": <StockInward />,
     "STOCK REPORT": <StockReport />,
     "STYLE ITEM MASTER": <StyleItemMaster />,
+    "TAX TEMPLATE": <TaxTemplate />,
+    "TAX TERM MASTER": <TaxTermMaster />,
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

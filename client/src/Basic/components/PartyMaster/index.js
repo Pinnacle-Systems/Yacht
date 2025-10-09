@@ -39,7 +39,6 @@ export default function Form({ partyId, onCloseForm }) {
   const [panNo, setPanNo] = useState("");
   const [name, setName] = useState("");
   const [aliasName, setAliasName] = useState("");
-  const [displayName, setDisplayName] = useState("");
   const [tinNo, setTinNo] = useState("");
   const [cstNo, setCstNo] = useState("");
   const [cinNo, setCinNo] = useState("");
@@ -52,7 +51,6 @@ export default function Form({ partyId, onCloseForm }) {
   const [igst, setIgst] = useState(false);
   const [gstNo, setGstNo] = useState("");
   const [costCode, setCostCode] = useState("");
-  const [contactMobile, setContactMobile] = useState("");
   const [isGy, setIsGy] = useState(false);
   const [isDy, setIsDy] = useState(false);
   const [isAcc, setIsAcc] = useState(false);
@@ -77,12 +75,10 @@ export default function Form({ partyId, onCloseForm }) {
   const [step, setStep] = useState(1);
   const [branchModelOpen, setBranchModelOpen] = useState(false);
   const [branchForm, setBranchForm] = useState(true);
-  const [partyCode, setPartyCode] = useState("");
   const [landMark, setlandMark] = useState("");
   const [country, setCountry] = useState("");
-  const [contact, setContact] = useState("");
   const [bankname, setBankName] = useState("");
-  const [bankBranchName, setBankBranchName] = useState("");
+  const [branchName, setBranchName] = useState("");
   const [ifscCode, setIfscCode] = useState("");
   const [contactPersonName, setContactPersonName] = useState("");
   const [designation, setDesignation] = useState("");
@@ -153,13 +149,11 @@ export default function Form({ partyId, onCloseForm }) {
         setName("");
         setImage("");
         setAliasName("");
-        setDisplayName("");
         setAddress("");
         setTinNo("");
         setCstNo("");
         setCinNo("");
         setFaxNo("");
-        setCinNo("");
         setGstNo("");
         setCostCode("");
         setPayTermDay("0");
@@ -172,18 +166,28 @@ export default function Form({ partyId, onCloseForm }) {
         setActive(id ? data?.active : true);
         setSupplier(false);
         setClient(false);
-        setContactMobile("");
         setAccessoryGroup(false);
         setAccessoryItemList([]);
         setPriceTemplateId("");
         setProcessDetails([]);
+        setlandMark("");
+        setDepartment("");
+        setContactPersonName("");
+        setDesignation("");
+        setAlterContactNumber("");
+        setContactNumber("");
+        setContactPersonEmail("");
+        setMsmeNo("");
+        setIfscCode("");
+        setBankName("");
+        setBranchName("");
+        setAccountNumber("");
       } else {
         setPanNo(data?.panNo || "");
         setName(data?.name || "");
-        setMail(data?.mailId || "");
+        setMail(data?.email || "");
         setAliasName(data?.aliasName || "");
         setImage(data?.image || "");
-        setDisplayName(data?.displayName || "");
         setAddress(data?.address || "");
         setTinNo(data?.tinNo || "");
         setCstNo(data?.cstNo || "");
@@ -192,7 +196,6 @@ export default function Form({ partyId, onCloseForm }) {
         setIsAcc(data?.isAcc || false);
         setCinNo(data?.cinNo || "");
         setFaxNo(data?.faxNo || "");
-        setCinNo(data?.cinNo || "");
         setMobileNumber(data?.mobileNumber || "");
         setGstNo(data?.gstNo || "");
         setCostCode(data?.costCode || "");
@@ -221,6 +224,18 @@ export default function Form({ partyId, onCloseForm }) {
         setContactDetails(data?.ContactDetails ? data.ContactDetails : "");
         setSupplier(data?.isSupplier || false);
         setClient(data?.isClient || false);
+        setlandMark(data?.landMark || "");
+        setDepartment(data?.department || "");
+        setContactPersonName(data?.contactPersonName || "");
+        setDesignation(data?.designation || "");
+        setAlterContactNumber(data?.alterContactNumber || "");
+        setContactNumber(data?.contactNumber || "");
+        setContactPersonEmail(data?.contactPersonEmail || "");
+        setMsmeNo(data?.msmeNo || "");
+        setIfscCode(data?.ifscCode || "");
+        setBankName(data?.bankname || "");
+        setBranchName(data?.setBranchName || "");
+        setAccountNumber(data?.accountNumber || "");
         setProcessDetails(
           data?.PartyOnProcess
             ? data.PartyOnProcess.map((item) => {
@@ -241,36 +256,47 @@ export default function Form({ partyId, onCloseForm }) {
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
   const data = {
+    isSupplier,
+    isClient,
     name,
-    code,
     aliasName,
-    displayName,
+    code,
+    active,
     address,
+    landMark,
     cityId: city,
     pincode,
+    email,
+    mobileNumber,
+    contactPersonName,
+    designation,
+    department,
+    contactPersonEmail,
+    alterContactNumber,
+    contactNumber,
+    payTermDay,
     panNo,
+    gstNo,
+    msmeNo,
+    cinNo,
+    ifscCode,
+    bankname,
+    branchName,
+    accountNumber,
+
     tinNo,
     certificate,
     cstNo,
     cstDate,
-    cinNo,
     faxNo,
-    email,
     website,
-    contactPersonName,
     igst,
     companyId,
     costCode,
-    contactMobile,
-    gstNo,
-    active,
-    isSupplier,
-    isClient,
     accessoryGroup,
     companyId,
     shippingAddress,
     contactDetails,
-    payTermDay,
     accessoryItemList,
     processDetails: processDetails
       ? processDetails.map((item) => item.value)
@@ -284,7 +310,6 @@ export default function Form({ partyId, onCloseForm }) {
     mail,
     isGy,
     isDy,
-    mobileNumber,
   };
 
   const {
@@ -754,7 +779,7 @@ export default function Form({ partyId, onCloseForm }) {
               </div>
 
               <div className="flex gap-2">
-                <div className="  ">
+                {/* <div className="  ">
                   <button
                     onClick={() => {
                       if (name) {
@@ -788,7 +813,7 @@ export default function Form({ partyId, onCloseForm }) {
                     </svg>
                     Add Branch
                   </button>
-                </div>
+                </div> */}
                 <div>
                   {!readOnly && (
                     <button
@@ -855,22 +880,6 @@ export default function Form({ partyId, onCloseForm }) {
                         </div>
                         <div className="col-span-4 flex flex-row">
                           {/* {isSupplier && (
-                            <div className="w-48">
-                              <MultiSelectDropdown
-                                // name={"Material List"}
-                                options={multiSelectOption(
-                                  allData ? allData?.materialData : [],
-                                  "name",
-                                  "id"
-                                )}
-                                labelName="name"
-                                setSelected={setSelected}
-                                selected={selected}
-                              />
-                            </div>
-                          )} */}
-
-                          {/* {isSupplier && (
                             <div className="mt-3 px-3 relative inline-block">
                               <button
                                 className="w-7 h-6 border border-green-500 rounded-md mt-2
@@ -925,7 +934,7 @@ export default function Form({ partyId, onCloseForm }) {
                           inputClass="h-8"
                           value={aliasName}
                           setValue={setAliasName}
-                          required={true}
+                          required={false}
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100"
@@ -935,8 +944,8 @@ export default function Form({ partyId, onCloseForm }) {
                         <TextInput
                           name="Party Code"
                           type="text"
-                          value={partyCode}
-                          setValue={setPartyCode}
+                          value={code}
+                          setValue={setCode}
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100 w-10"
@@ -1036,8 +1045,8 @@ export default function Form({ partyId, onCloseForm }) {
                           <TextInput
                             name={"Contact Number"}
                             type="number"
-                            value={contact}
-                            setValue={setContact}
+                            value={mobileNumber}
+                            setValue={setMobileNumber}
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
                             className="focus:ring-2 focus:ring-blue-100 w-10"
@@ -1236,8 +1245,8 @@ export default function Form({ partyId, onCloseForm }) {
                         <TextInput
                           name="Branch Name"
                           type="text"
-                          value={bankBranchName}
-                          setValue={setBankBranchName}
+                          value={branchName}
+                          setValue={setBranchName}
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100 w-10"

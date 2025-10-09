@@ -10,6 +10,10 @@ import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMas
 import { findFromList } from "../../../Utils/helper";
 import { IMAGE_UPLOAD_URL } from "../../../Constants";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
+import { toast } from "react-toastify";
+import Modal from "../../../UiComponents/Modal";
+import TaxDetailsFullTemplate from "../TaxDetailsCompleteTemplate";
+import { VIEW } from "../../../icons";
 
 export default function BillItems({
   salesEntryItems,
@@ -17,12 +21,16 @@ export default function BillItems({
   params,
   readOnly,
   id,
+  storeId,
+  branchId,
+  taxTemplateId,
 }) {
   const [styleNo, setStyleNo] = useState("");
   const [contextMenu, setContextMenu] = useState(null);
   const [getStyleDetail] = useLazyGetStyleDetailQuery();
   const [focusedRowIndex, setFocusedRowIndex] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
+  const [currentSelectedIndex, setCurrentSelectedIndex] = useState("");
 
   const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
@@ -45,7 +53,9 @@ export default function BillItems({
       styleNo: "",
       fabricId: "",
       price: "",
-      disc: "",
+      taxPercent: "",
+      discountType: "",
+      discountValue: "",
       amount: "",
       styleItemId: "",
     };
@@ -100,7 +110,9 @@ export default function BillItems({
               styleNo: "",
               fabricId: "",
               price: "",
-              disc: "",
+              taxPercent: "",
+              discountType: "",
+              discountValue: "",
               amount: "",
               styleItemId: "",
             })),
@@ -121,7 +133,9 @@ export default function BillItems({
           styleNo: "",
           fabricId: "",
           price: "",
-          disc: "",
+          taxPercent: "",
+          discountType: "",
+          discountValue: "",
           amount: "",
           styleItemId: "",
         }))
@@ -147,17 +161,16 @@ export default function BillItems({
     setSalesEntryItems((prev) => {
       const newItems = structuredClone(prev);
       newItems[index][field] = value;
-      if (["qty", "price", "disc"].includes(field)) {
-        const qty = parseFloat(newItems[index].qty) || 0;
-        const price = parseFloat(newItems[index].price) || 0;
-        const disc = parseFloat(newItems[index].disc) || 0;
+      // if (["qty", "price", "discountValue"].includes(field)) {
+      //   const qty = parseFloat(newItems[index].qty) || 0;
+      //   const price = parseFloat(newItems[index].price) || 0;
+      //   const discountValue = parseFloat(newItems[index].discountValue) || 0;
 
-        const grossAmount = qty * price;
-        const discountAmount = grossAmount * (disc / 100);
-        const netAmount = grossAmount - discountAmount;
+      //   const grossAmount = qty * price;
+      //   const netAmount = grossAmount - discountValue;
 
-        newItems[index].amount = netAmount.toFixed(2);
-      }
+      //   newItems[index].amount = netAmount.toFixed(2);
+      // }
       return newItems;
     });
 
@@ -205,7 +218,9 @@ export default function BillItems({
                       styleNo: "",
                       fabricId: "",
                       price: "",
-                      disc: "",
+                      taxPercent: "",
+                      discountType: "",
+                      discountValue: "",
                       styleItemId: "",
                     }
                   : r
@@ -219,59 +234,76 @@ export default function BillItems({
     }
   };
 
+  const validateData = () => {
+    if (storeId) {
+      return true;
+    }
+    return false;
+  };
+
   const handleAddRow = async () => {
-    try {
-      const { data: styleData } = await getStyleDetail({
-        params: {
-          styleNo: styleNo,
-        },
+    if (!validateData()) {
+      toast.info("Please Choose Store...!", {
+        position: "top-center",
       });
-      const styleRows = styleData?.data;
-      if (!styleRows) return;
-
-      setSalesEntryItems((prev) => {
-        const updated = [...prev];
-        // Find first empty slot index
-        let startIndex = updated.findIndex(
-          (row) =>
-            !row.styleId &&
-            !row.sizeId &&
-            !row.styleNo &&
-            !row.fabricId &&
-            !row.barcode
-        );
-        if (startIndex === -1) startIndex = updated.length;
-
-        // Fill in sizeRows starting at first empty slot
-        styleRows.forEach((row, i) => {
-          if (startIndex + i < updated.length) {
-            updated[startIndex + i] = row;
-          } else {
-            updated.push(row); // append if no empty slot
-          }
+    } else {
+      try {
+        const { data: styleData } = await getStyleDetail({
+          params: {
+            styleNo: styleNo,
+            storeId,
+            branchId,
+          },
         });
+        const styleRows = styleData?.data;
+        if (!styleRows) return;
 
-        // Ensure at least 6 rows
-        while (updated.length < 6) {
-          updated.push({
-            styleNo: "",
-            fabricId: "",
-            styleId: "",
-            sizeId: "",
-            qty: "",
-            remarks: "",
-            stkQty: "",
-            barcode: "",
-            price: "",
-            disc: "",
-            styleItemId: "",
+        setSalesEntryItems((prev) => {
+          const updated = [...prev];
+          // Find first empty slot index
+          let startIndex = updated.findIndex(
+            (row) =>
+              !row.styleId &&
+              !row.sizeId &&
+              !row.styleNo &&
+              !row.fabricId &&
+              !row.barcode
+          );
+          if (startIndex === -1) startIndex = updated.length;
+
+          // Fill in sizeRows starting at first empty slot
+          styleRows.forEach((row, i) => {
+            if (startIndex + i < updated.length) {
+              updated[startIndex + i] = row;
+            } else {
+              updated.push(row); // append if no empty slot
+            }
           });
-        }
 
-        return updated;
-      });
-    } catch (error) {
-      console.error("Error adding row:", error);
+          // Ensure at least 6 rows
+          while (updated.length < 6) {
+            updated.push({
+              styleNo: "",
+              fabricId: "",
+              styleId: "",
+              sizeId: "",
+              qty: "",
+              remarks: "",
+              stkQty: "",
+              barcode: "",
+              price: "",
+              taxPercent: "",
+              discountType: "",
+              discountValue: "",
+              styleItemId: "",
+            });
+          }
+
+          return updated;
+        });
+      } catch (error) {
+        console.error("Error adding row:", error);
+      }
     }
   };
 
@@ -351,6 +383,19 @@ export default function BillItems({
 
   return (
     <>
+      <Modal
+        isOpen={Number.isInteger(currentSelectedIndex)}
+        onClose={() => setCurrentSelectedIndex("")}
+      >
+        <TaxDetailsFullTemplate
+          readOnly={readOnly}
+          setCurrentSelectedIndex={setCurrentSelectedIndex}
+          taxTypeId={taxTemplateId}
+          currentIndex={currentSelectedIndex}
+          salesEntryItems={salesEntryItems}
+          handleInputChange={handleInputChange}
+        />
+      </Modal>
       <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[300px] overflow-auto">
         <div className="flex items-center gap-4">
           <ReusableInput
@@ -430,12 +475,12 @@ export default function BillItems({
                 <th
                   className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Disc %
+                  View Tax
                 </th>
                 <th
                   className={`w-28 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Amt
+                  Gross
                 </th>
                 <th
                   className={`w-48 px-1 py-2 text-center font-medium text-[13px] `}
@@ -690,7 +735,7 @@ export default function BillItems({
                         }}
                       />
                     </td>
-                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                    {/* <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
                         type="number"
                         className="text-right rounded py-1 px-1 w-full table-data-input"
@@ -711,27 +756,49 @@ export default function BillItems({
                           handleInputChange(e.target.value, index, "disc");
                         }}
                       />
+                    </td> */}
+                    <td className=" py-0.5 border border-gray-300 text-[11px] text-right">
+                      <button
+                        className="text-center rounded py-1 w-20"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            setCurrentSelectedIndex(index);
+                          }
+                        }}
+                        disabled={readOnly}
+                        onClick={() => {
+                          if (!taxTemplateId)
+                            return toast.info("Please select Tax Type", {
+                              position: "top-center",
+                            });
+                          setCurrentSelectedIndex(index);
+                        }}
+                      >
+                        {VIEW}
+                      </button>
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
                         type="number"
                         className="text-right rounded py-1 px-1 w-full table-data-input"
-                        value={row?.amount ? Number(row.amount).toFixed(2) : ""}
+                        value={(
+                          parseFloat(row.qty || 0) * parseFloat(row.price || 0)
+                        ).toFixed(2)}
                         disabled={true}
-                        onKeyDown={(e) => {
-                          if (e.code === "Minus" || e.code === "NumpadSubtract")
-                            e.preventDefault();
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "amount");
-                          }
-                        }}
+                        // onKeyDown={(e) => {
+                        //   if (e.code === "Minus" || e.code === "NumpadSubtract")
+                        //     e.preventDefault();
+                        //   if (e.key === "Delete") {
+                        //     handleInputChange("", index, "amount");
+                        //   }
+                        // }}
                         onFocus={(e) => e.target.select()}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "amount")
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "amount");
-                        }}
+                        // onChange={(e) =>
+                        //   handleInputChange(e.target.value, index, "amount")
+                        // }
+                        // onBlur={(e) => {
+                        //   handleInputChange(e.target.value, index, "amount");
+                        // }}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
@@ -813,27 +880,34 @@ export default function BillItems({
             </tbody>
             <tfoot>
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
+                <td
+                  className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
+                  colSpan={8}
+                >
+                  Total
+                </td>
                 {/* <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
                   colSpan={7}
                 >
                   Total Qty
-                </td>
-                <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
+                </td> */}
+                <td className="text-right border border-gray-300 px-1 font-medium text-[12px] py-0.5">
                   {salesEntryItems.reduce(
                     (sum, row) => sum + (Number(row.qty) || 0),
                     0
                   )}
-                </td> */}
-                <td
-                  className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={11}
-                >
-                  Total Amt
                 </td>
-                <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
+                <td className="border border-gray-300"></td>
+                <td className="border border-gray-300"></td>
+                <td className="text-right border border-gray-300 px-1 font-medium text-[12px] py-0.5">
                   {salesEntryItems
-                    .reduce((sum, row) => sum + (Number(row.amount) || 0), 0)
+                    .reduce(
+                      (sum, row) =>
+                        sum +
+                        parseFloat(row.qty || 0) * parseFloat(row.price || 0),
+                      0
+                    )
                     .toFixed(2)}
                 </td>
                 <td className="border border-gray-300" colSpan={2}></td>

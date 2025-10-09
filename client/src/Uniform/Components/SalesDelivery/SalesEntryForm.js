@@ -18,6 +18,7 @@ import {
   useUpdateSalesEntryMutation,
 } from "../../../redux/uniformService/SalesEntryService";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
+import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServices";
 
 export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
   const [searchValue, setSearchValue] = useState("");
@@ -29,12 +30,18 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
   const [customerId, setCustomerId] = useState("");
   const [contactPerson, setContactPerson] = useState("");
   const [contactNumber, setContactNumber] = useState("");
+  const [taxTemplateId, setTaxTemplateId] = useState("");
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
 
   const { data: partyList } = useGetPartyQuery({
+    params: { companyId },
+    searchParams: searchValue,
+  });
+
+  const { data: taxTypeList } = useGetTaxTemplateQuery({
     params: { branchId },
     searchParams: searchValue,
   });
@@ -51,7 +58,12 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
     : [];
 
   const validateData = (data) => {
-    if (salesEntryItems?.length > 0 && data.storeId && data.customerId) {
+    if (
+      salesEntryItems?.length > 0 &&
+      data.storeId &&
+      data.customerId &&
+      data.taxTemplateId
+    ) {
       return true;
     }
     return false;
@@ -77,6 +89,7 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
     customerId,
     contactPerson,
     contactNumber,
+    taxTemplateId,
   };
 
   const syncFormWithDb = useCallback(
@@ -101,6 +114,7 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
       setCustomerId(data?.customerId ? data?.customerId : "");
       setContactNumber(data?.contactNumber ? data?.contactNumber : "");
       setContactPerson(data?.contactPerson ? data?.contactPerson : "");
+      setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "");
     },
     [id]
   );
@@ -310,6 +324,18 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
                 readOnly={true}
                 disabled
               />
+              <DropdownInput
+                name="Tax Type"
+                options={dropDownListObject(
+                  taxTypeList ? taxTypeList?.data : [],
+                  "name",
+                  "id"
+                )}
+                value={taxTemplateId}
+                setValue={setTaxTemplateId}
+                required={true}
+                readOnly={readOnly}
+              />
             </div>
           </div>
         </div>
@@ -318,6 +344,9 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
             salesEntryItems={salesEntryItems}
             setSalesEntryItems={setSalesEntryItems}
             readOnly={readOnly}
+            branchId={branchId}
+            storeId={storeId}
+            taxTemplateId={taxTemplateId}
           />
         </fieldset>
         <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">

@@ -254,6 +254,8 @@ export default function StockAdjustmentForm({
             stockAdjustmentItems={stockAdjustmentItems}
             setStockAdjustmentItems={setStockAdjustmentItems}
             readOnly={readOnly}
+            branchId={branchId}
+            storeId={storeId}
           />
         </fieldset>
         <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">

@@ -10,6 +10,7 @@ import { useLazyGetStyleDetailQuery } from "../../../redux/services/StockService
 import { findFromList } from "../../../Utils/helper";
 import { IMAGE_UPLOAD_URL } from "../../../Constants";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
+import { toast } from "react-toastify";
 
 export default function AdjustItems({
   stockAdjustmentItems,
@@ -17,6 +18,8 @@ export default function AdjustItems({
   params,
   readOnly,
   id,
+  storeId,
+  branchId,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [styleNo, setStyleNo] = useState("");
@@ -259,56 +262,64 @@ export default function AdjustItems({
   };
 
   const handleAddRow = async () => {
-    try {
-      const { data: styleData } = await getStyleDetail({
-        params: {
-          styleNo: styleNo,
-        },
+    if (!validateData()) {
+      toast.info("Please Choose Store...!", {
+        position: "top-center",
       });
-      const styleRows = styleData?.data;
-      if (!styleRows) return;
-
-      setStockAdjustmentItems((prev) => {
-        const updated = [...prev];
-        // Find first empty slot index
-        let startIndex = updated.findIndex(
-          (row) =>
-            !row.styleId &&
-            !row.sizeId &&
-            !row.styleNo &&
-            !row.fabricId &&
-            !row.barcode
-        );
-        if (startIndex === -1) startIndex = updated.length;
-
-        // Fill in sizeRows starting at first empty slot
-        styleRows.forEach((row, i) => {
-          if (startIndex + i < updated.length) {
-            updated[startIndex + i] = row;
-          } else {
-            updated.push(row); // append if no empty slot
-          }
+    } else {
+      try {
+        const { data: styleData } = await getStyleDetail({
+          params: {
+            styleNo: styleNo,
+            storeId,
+            branchId,
+          },
         });
+        const styleRows = styleData?.data;
+        if (!styleRows) return;
 
-        // Ensure at least 6 rows
-        while (updated.length < 6) {
-          updated.push({
-            styleNo: "",
-            fabricId: "",
-            styleId: "",
-            sizeId: "",
-            qty: "",
-            remarks: "",
-            stkQty: "",
-            barcode: "",
-            styleItemId: "",
+        setStockAdjustmentItems((prev) => {
+          const updated = [...prev];
+          // Find first empty slot index
+          let startIndex = updated.findIndex(
+            (row) =>
+              !row.styleId &&
+              !row.sizeId &&
+              !row.styleNo &&
+              !row.fabricId &&
+              !row.barcode
+          );
+          if (startIndex === -1) startIndex = updated.length;
+
+          // Fill in sizeRows starting at first empty slot
+          styleRows.forEach((row, i) => {
+            if (startIndex + i < updated.length) {
+              updated[startIndex + i] = row;
+            } else {
+              updated.push(row); // append if no empty slot
+            }
           });
-        }
 
-        return updated;
-      });
-    } catch (error) {
-      console.error("Error adding row:", error);
+          // Ensure at least 6 rows
+          while (updated.length < 6) {
+            updated.push({
+              styleNo: "",
+              fabricId: "",
+              styleId: "",
+              sizeId: "",
+              qty: "",
+              remarks: "",
+              stkQty: "",
+              barcode: "",
+              styleItemId: "",
+            });
+          }
+
+          return updated;
+        });
+      } catch (error) {
+        console.error("Error adding row:", error);
+      }
     }
   };
 
@@ -317,6 +328,13 @@ export default function AdjustItems({
     if (!fileName) return "/no-image.png"; // fallback image if missing
     return `${IMAGE_UPLOAD_URL}${fileName}`;
   }
+
+  const validateData = () => {
+    if (storeId) {
+      return true;
+    }
+    return false;
+  };
 
   return (
     <>

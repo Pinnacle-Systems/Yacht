@@ -201,6 +201,9 @@ async function getOne(id) {
           amount: true,
           price: true,
           styleItemId: true,
+          discountType: true,
+          taxPercent: true,
+          discountValue: true,
         },
       },
     },
@@ -243,6 +246,7 @@ async function create(body) {
     customerId,
     contactPerson,
     contactNumber,
+    taxTemplateId,
   } = await body;
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate
@@ -272,6 +276,7 @@ async function create(body) {
         customerId: parseInt(customerId),
         contactPerson,
         contactNumber,
+        taxTemplateId: parseInt(taxTemplateId),
       },
     });
     await createSalesEntryItems(
@@ -298,6 +303,7 @@ async function update(id, body) {
     customerId,
     contactPerson,
     contactNumber,
+    taxTemplateId,
   } = await body;
   let data;
   const dataFound = await prisma.salesEntry.findUnique({
@@ -333,6 +339,7 @@ async function update(id, body) {
         docDate: docDate ? new Date(docDate) : null,
         locationId: parseInt(locationId),
         customerId: parseInt(customerId),
+        taxTemplateId: parseInt(taxTemplateId),
         contactPerson,
         contactNumber,
       },
@@ -389,6 +396,15 @@ async function updateSalesEntryItems(
           amount: stockDetail?.amount ? parseInt(stockDetail.amount) : null,
           styleItemId: stockDetail?.styleItemId
             ? parseInt(stockDetail.styleItemId)
+            : null,
+          discountType: stockDetail?.discountType
+            ? stockDetail?.discountType
+            : undefined,
+          discountValue: stockDetail?.discountValue
+            ? parseInt(stockDetail.discountValue)
+            : null,
+          taxPercent: stockDetail?.taxPercent
+            ? parseInt(stockDetail.taxPercent)
             : null,
         },
       });
@@ -469,6 +485,15 @@ async function updateSalesEntryItems(
           styleItemId: stockDetail?.styleItemId
             ? parseInt(stockDetail.styleItemId)
             : null,
+          discountType: stockDetail?.discountType
+            ? stockDetail?.discountType
+            : undefined,
+          discountValue: stockDetail?.discountValue
+            ? parseInt(stockDetail.discountValue)
+            : null,
+          taxPercent: stockDetail?.taxPercent
+            ? parseInt(stockDetail.taxPercent)
+            : null,
         },
       });
       await tx.stock.create({
@@ -529,6 +554,15 @@ async function createSalesEntryItems(
         amount: itemDetail?.amount ? parseInt(itemDetail.amount) : null,
         styleItemId: itemDetail?.styleItemId
           ? parseInt(itemDetail.styleItemId)
+          : null,
+        discountType: itemDetail?.discountType
+          ? itemDetail?.discountType
+          : undefined,
+        discountValue: itemDetail?.discountValue
+          ? parseInt(itemDetail.discountValue)
+          : null,
+        taxPercent: itemDetail?.taxPercent
+          ? parseInt(itemDetail.taxPercent)
           : null,
       },
     });

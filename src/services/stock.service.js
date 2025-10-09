@@ -724,12 +724,14 @@ async function remove(id) {
 // }
 
 async function getStyleDetail(req) {
-  const { styleNo } = req.query;
+  const { styleNo, storeId, branchId } = req.query;
 
   // 1️⃣ First try fetching by styleNo
   let data = await prisma.stock.groupBy({
     by: ["styleId", "sizeId", "styleNo", "barCode", "fabricId", "styleItemId"],
     where: {
+      branchId: branchId ? parseInt(branchId) : undefined,
+      storeId: storeId ? parseInt(storeId) : undefined,
       styleNo: styleNo,
     },
     _sum: {
