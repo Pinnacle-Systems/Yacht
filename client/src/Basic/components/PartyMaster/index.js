@@ -54,7 +54,7 @@ export default function Form({ partyId, onCloseForm }) {
   const [isGy, setIsGy] = useState(false);
   const [isDy, setIsDy] = useState(false);
   const [isAcc, setIsAcc] = useState(false);
-  const [payTermDay, setPayTermDay] = useState("0");
+  const [payTermId, setPayTermId] = useState("0");
   const [processDetails, setProcessDetails] = useState([]);
   const [cstDate, setCstDate] = useState("");
   const [mail, setMail] = useState("");
@@ -77,7 +77,7 @@ export default function Form({ partyId, onCloseForm }) {
   const [branchForm, setBranchForm] = useState(true);
   const [landMark, setlandMark] = useState("");
   const [country, setCountry] = useState("");
-  const [bankname, setBankName] = useState("");
+  const [bankName, setBankName] = useState("");
   const [branchName, setBranchName] = useState("");
   const [ifscCode, setIfscCode] = useState("");
   const [contactPersonName, setContactPersonName] = useState("");
@@ -156,7 +156,7 @@ export default function Form({ partyId, onCloseForm }) {
         setFaxNo("");
         setGstNo("");
         setCostCode("");
-        setPayTermDay("0");
+        setPayTermId("");
         setCstDate("");
         setCode("");
         setPincode("");
@@ -202,7 +202,7 @@ export default function Form({ partyId, onCloseForm }) {
         setCstDate(
           data?.cstDate ? moment.utc(data?.cstDate).format("YYYY-MM-DD") : ""
         );
-        setPayTermDay(data?.payTermDay);
+        setPayTermId(data?.payTermId);
         setCode(data?.code || "");
         setPincode(data?.pincode || "");
         setWebsite(data?.website || "");
@@ -233,8 +233,8 @@ export default function Form({ partyId, onCloseForm }) {
         setContactPersonEmail(data?.contactPersonEmail || "");
         setMsmeNo(data?.msmeNo || "");
         setIfscCode(data?.ifscCode || "");
-        setBankName(data?.bankname || "");
-        setBranchName(data?.setBranchName || "");
+        setBankName(data?.bankName || "");
+        setBranchName(data?.branchName || "");
         setAccountNumber(data?.accountNumber || "");
         setProcessDetails(
           data?.PartyOnProcess
@@ -274,13 +274,13 @@ export default function Form({ partyId, onCloseForm }) {
     contactPersonEmail,
     alterContactNumber,
     contactNumber,
-    payTermDay,
+    payTermId,
     panNo,
     gstNo,
     msmeNo,
     cinNo,
     ifscCode,
-    bankname,
+    bankName,
     branchName,
     accountNumber,
 
@@ -1181,8 +1181,8 @@ export default function Form({ partyId, onCloseForm }) {
                             "name",
                             "id"
                           )}
-                          value={payTermDay}
-                          setValue={setPayTermDay}
+                          value={payTermId}
+                          setValue={setPayTermId}
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100"
@@ -1235,7 +1235,7 @@ export default function Form({ partyId, onCloseForm }) {
                       <TextInput
                         name="Bank Name"
                         type="text"
-                        value={bankname}
+                        value={bankName}
                         setValue={setBankName}
                         readOnly={readOnly}
                         disabled={childRecord.current > 0}

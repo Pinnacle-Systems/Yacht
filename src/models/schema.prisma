@@ -524,6 +524,7 @@ model Party {
   isVendor                  Boolean?                    @default(false)
   isBuyer                   Boolean?                    @default(false)
   payTermDay                String?
+  payTermId                 Int?
   msmeNo                    String?
   bankName                  String?
   branchName                String?

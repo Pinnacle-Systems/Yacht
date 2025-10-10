@@ -202,7 +202,7 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
 
     if (field === "customer") {
       setCustomerId(selectedParty?.id);
-      setContactNumber(selectedParty?.mobileNumber);
+      setContactNumber(selectedParty?.contactNumber);
       setContactPerson(selectedParty?.contactPersonName || "");
     }
   };
