@@ -173,65 +173,31 @@ export default function BillItems({
       // }
       return newItems;
     });
+  };
 
-    // Trigger API call only for barcode, styleId, or sizeId
-    if (["barcode", "styleId", "sizeId"].includes(field)) {
-      const row = structuredClone(salesEntryItems[index]);
-      row[field] = value; // use updated value
-      // Only call API if at least barcode or (style+size) is filled
-      if (row.barcode || (row.styleId && row.sizeId)) {
-        try {
-          const response = await triggerGetBarcodeDetail({
-            params: {
-              barcode: row.barcode,
-              styleId: row.styleId,
-              sizeId: row.sizeId,
-            },
-          }).unwrap();
-          if (response?.data?.length > 0) {
-            const item = response.data[0];
-            setSalesEntryItems((prev) =>
-              prev.map((r, i) =>
-                i === index
-                  ? {
-                      ...r,
-                      barcode: item.barCode,
-                      styleId: item.styleId,
-                      sizeId: item.sizeId,
-                      stkQty: response.totalQty,
-                      styleNo: item.styleNo,
-                      fabricId: item.fabricId,
-                    }
-                  : r
-              )
-            );
-          } else {
-            setSalesEntryItems((prev) =>
-              prev.map((r, i) =>
-                i === index
-                  ? {
-                      styleId: "",
-                      sizeId: "",
-                      qty: "",
-                      remarks: "",
-                      stkQty: "",
-                      styleNo: "",
-                      fabricId: "",
-                      price: "",
-                      taxPercent: "",
-                      discountType: "",
-                      discountValue: "",
-                      styleItemId: "",
-                    }
-                  : r
-              )
-            );
-          }
-        } catch (err) {
-          console.error("Error fetching barcode details:", err);
-        }
-      }
-    }
+  const calculateNetAmount = (item) => {
+    const qty = parseFloat(item.qty) || 0;
+    const price = parseFloat(item.price) || 0;
+    const taxPercent = parseFloat(item.taxPercent) || 0;
+    const discountValue = parseFloat(item.discountValue) || 0;
+    const discountType = item.discountType || "";
+
+    // Gross amount
+    const grossAmount = qty * price;
+
+    // GST Subtracted
+    const amountAfterGST = grossAmount - (grossAmount * taxPercent) / 100;
+
+    // Apply Discount
+    let discountAmt = 0;
+    if (discountType === "Flat") discountAmt = discountValue;
+    else if (discountType === "Percent")
+      discountAmt = (amountAfterGST * discountValue) / 100;
+
+    // Final net amount
+    const netAmount = amountAfterGST - discountAmt;
+
+    return netAmount.toFixed(2);
   };
 
   const validateData = () => {
@@ -418,8 +384,8 @@ export default function BillItems({
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">Sales Item Details</h2>
         </div>
-        <div className={`w-full  overflow-x-auto py-1`}>
-          <table className="w-auto border-collapse table-fixed">
+        <div className={`w-full   py-1`}>
+          <table className="overflow-x-scroll border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800">
               <tr>
                 <th
@@ -475,12 +441,27 @@ export default function BillItems({
                 <th
                   className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  View Tax
+                  Tax %
                 </th>
                 <th
                   className={`w-28 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Gross
+                  Disc Type
+                </th>
+                <th
+                  className={`w-28 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Discount
+                </th>
+                <th
+                  className={`w-28 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Gross Amt
+                </th>
+                <th
+                  className={`w-28 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Net Amt
                 </th>
                 <th
                   className={`w-48 px-1 py-2 text-center font-medium text-[13px] `}
@@ -735,48 +716,92 @@ export default function BillItems({
                         }}
                       />
                     </td>
-                    {/* <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
                         type="number"
                         className="text-right rounded py-1 px-1 w-full table-data-input"
-                        value={row?.disc}
+                        value={row?.taxPercent}
                         disabled={readOnly}
                         onKeyDown={(e) => {
                           if (e.code === "Minus" || e.code === "NumpadSubtract")
                             e.preventDefault();
                           if (e.key === "Delete") {
-                            handleInputChange("", index, "disc");
+                            handleInputChange("", index, "taxPercent");
                           }
                         }}
-                        onFocus={(e) => e.target.select()}
+                        onFocus={(e) => {
+                          setFocusedRowIndex(index);
+                          e.target.select();
+                        }}
                         onChange={(e) =>
-                          handleInputChange(e.target.value, index, "disc")
+                          handleInputChange(e.target.value, index, "taxPercent")
                         }
                         onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "disc");
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "taxPercent"
+                          );
+                          setFocusedRowIndex(null);
                         }}
                       />
-                    </td> */}
-                    <td className=" py-0.5 border border-gray-300 text-[11px] text-right">
-                      <button
-                        className="text-center rounded py-1 w-20"
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <select
+                        className="text-left rounded py-1 px-1 w-full table-data-input"
+                        value={row?.discountType || ""}
+                        disabled={readOnly}
+                        onFocus={() => setFocusedRowIndex(index)}
+                        onBlur={() => setFocusedRowIndex(null)}
+                        onChange={(e) =>
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "discountType"
+                          )
+                        }
+                      >
+                        <option value="">Select</option>
+                        <option value="Flat">Flat</option>
+                        <option value="Percent">Percent</option>
+                      </select>
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        type="number"
+                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        value={row?.discountValue}
+                        disabled={readOnly}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            setCurrentSelectedIndex(index);
+                          if (e.code === "Minus" || e.code === "NumpadSubtract")
+                            e.preventDefault();
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "discountValue");
                           }
                         }}
-                        disabled={readOnly}
-                        onClick={() => {
-                          if (!taxTemplateId)
-                            return toast.info("Please select Tax Type", {
-                              position: "top-center",
-                            });
-                          setCurrentSelectedIndex(index);
+                        onFocus={(e) => {
+                          setFocusedRowIndex(index);
+                          e.target.select();
                         }}
-                      >
-                        {VIEW}
-                      </button>
+                        onChange={(e) =>
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "discountValue"
+                          )
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "discountValue"
+                          );
+                          setFocusedRowIndex(null);
+                        }}
+                      />
                     </td>
+
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
                         type="number"
@@ -785,20 +810,16 @@ export default function BillItems({
                           parseFloat(row.qty || 0) * parseFloat(row.price || 0)
                         ).toFixed(2)}
                         disabled={true}
-                        // onKeyDown={(e) => {
-                        //   if (e.code === "Minus" || e.code === "NumpadSubtract")
-                        //     e.preventDefault();
-                        //   if (e.key === "Delete") {
-                        //     handleInputChange("", index, "amount");
-                        //   }
-                        // }}
                         onFocus={(e) => e.target.select()}
-                        // onChange={(e) =>
-                        //   handleInputChange(e.target.value, index, "amount")
-                        // }
-                        // onBlur={(e) => {
-                        //   handleInputChange(e.target.value, index, "amount");
-                        // }}
+                      />
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        type="number"
+                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        value={calculateNetAmount(row)}
+                        disabled={true}
+                        onFocus={(e) => e.target.select()}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
@@ -898,14 +919,15 @@ export default function BillItems({
                     0
                   )}
                 </td>
-                <td className="border border-gray-300"></td>
-                <td className="border border-gray-300"></td>
-                <td className="text-right border border-gray-300 px-1 font-medium text-[12px] py-0.5">
+                {/* <td className="border border-gray-300"></td> */}
+                {/* <td className="border border-gray-300"></td> */}
+                <td
+                  className="text-right border border-gray-300 px-1 font-medium text-[12px] py-0.5"
+                  colSpan={6}
+                >
                   {salesEntryItems
                     .reduce(
-                      (sum, row) =>
-                        sum +
-                        parseFloat(row.qty || 0) * parseFloat(row.price || 0),
+                      (sum, row) => sum + parseFloat(calculateNetAmount(row)),
                       0
                     )
                     .toFixed(2)}

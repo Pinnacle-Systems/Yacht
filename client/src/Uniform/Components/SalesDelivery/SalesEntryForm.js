@@ -61,8 +61,7 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
     if (
       salesEntryItems?.length > 0 &&
       data.storeId &&
-      data.customerId &&
-      data.taxTemplateId
+      data.customerId 
     ) {
       return true;
     }
@@ -89,7 +88,6 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
     customerId,
     contactPerson,
     contactNumber,
-    taxTemplateId,
   };
 
   const syncFormWithDb = useCallback(
@@ -114,7 +112,6 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
       setCustomerId(data?.customerId ? data?.customerId : "");
       setContactNumber(data?.contactNumber ? data?.contactNumber : "");
       setContactPerson(data?.contactPerson ? data?.contactPerson : "");
-      setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "");
     },
     [id]
   );
@@ -324,18 +321,6 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
                 readOnly={true}
                 disabled
               />
-              <DropdownInput
-                name="Tax Type"
-                options={dropDownListObject(
-                  taxTypeList ? taxTypeList?.data : [],
-                  "name",
-                  "id"
-                )}
-                value={taxTemplateId}
-                setValue={setTaxTemplateId}
-                required={true}
-                readOnly={readOnly}
-              />
             </div>
           </div>
         </div>
@@ -346,7 +331,7 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
             readOnly={readOnly}
             branchId={branchId}
             storeId={storeId}
-            taxTemplateId={taxTemplateId}
+            // taxTemplateId={taxTemplateId}
           />
         </fieldset>
         <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">

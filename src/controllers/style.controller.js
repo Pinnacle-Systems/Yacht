@@ -1,5 +1,4 @@
 import { Prisma } from "@prisma/client";
-
 import {
   get as _get,
   getOne as _getOne,
@@ -10,6 +9,10 @@ import {
   upload as _upload,
   getStyleCode as _getStyleCode,
 } from "../services/style.service.js";
+import { PrismaClient } from "@prisma/client";
+import fs from "fs";
+import path from "path";
+const prisma = new PrismaClient();
 
 async function get(req, res, next) {
   try {
@@ -113,20 +116,64 @@ async function update(req, res, next) {
   }
 }
 
+// async function remove(req, res, next) {
+//   try {
+//     res.json(await _remove(req.params.id));
+//     console.log(res.statusCode);
+//   } catch (error) {
+//     if (error.code === "P2025") {
+//       res.statusCode = 200;
+//       res.json({ statusCode: 1, message: `Record Not Found` });
+//       console.log(res.statusCode);
+//     } else if (error.code === "P2003") {
+//       res.statusCode = 200;
+//       res.json({ statusCode: 1, message: "Child record Exists" });
+//     }
+//     console.error(`Error`, error.message);
+//   }
+// }
+
 async function remove(req, res, next) {
   try {
-    res.json(await _remove(req.params.id));
+    const id = parseInt(req.params.id);
+
+    // 🖼️ Step 1: Find style first to get image filename
+    const style = await prisma.style.findUnique({
+      where: { id },
+    });
+
+    if (style && style.img) {
+      const imagePath = path.join(process.cwd(), "uploads", style.img);
+
+      // Delete image if it exists
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+        console.log(`🗑️ Deleted image: ${imagePath}`);
+      } else {
+        console.warn(`⚠️ Image not found: ${imagePath}`);
+      }
+    }
+
+    // 🗃️ Step 2: Delete record from DB
+    res.json(await _remove(id));
     console.log(res.statusCode);
   } catch (error) {
+    // 🧩 Handle Prisma errors
     if (error.code === "P2025") {
       res.statusCode = 200;
-      res.json({ statusCode: 1, message: `Record Not Found` });
+      res.json({ statusCode: 1, message: "Record Not Found" });
       console.log(res.statusCode);
     } else if (error.code === "P2003") {
       res.statusCode = 200;
       res.json({ statusCode: 1, message: "Child record Exists" });
+    } else {
+      console.error("Error", error.message);
+      res.status(500).json({
+        statusCode: 1,
+        message: "Error deleting style",
+        error,
+      });
     }
-    console.error(`Error`, error.message);
   }
 }
 

@@ -550,8 +550,8 @@ model Party {
   designation               String?
   department                String?
   contactPersonEmail        String?
-  contactNumber             Int?
-  alterContactNumber        Int?
+  contactNumber             String?
+  alterContactNumber        String?
 }
 
 model PartyBranch {

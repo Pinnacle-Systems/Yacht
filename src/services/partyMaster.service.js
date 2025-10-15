@@ -131,7 +131,7 @@ async function create(body) {
     payTermId,
   } = await body;
   let data;
-
+  console.log(contactNumber)
   data = await prisma.party.create({
     data: {
       isClient,
@@ -171,11 +171,9 @@ async function create(body) {
       branchName,
       accountNumber,
       accessoryGroup,
-      alterContactNumber: alterContactNumber
-        ? parseInt(alterContactNumber)
-        : undefined,
-      contactNumber: contactNumber ? parseInt(contactNumber) : undefined,
-      contactPersonName: contactPersonName ? contactPersonName : undefined,
+      alterContactNumber,
+      contactNumber,
+      contactPersonName,
       partyType: partyType ? partyType : null,
       Currency: currencyId
         ? { connect: { id: parseInt(currencyId) } }
@@ -298,10 +296,8 @@ async function update(id, body) {
         accessoryGroup,
         partyType: partyType ? partyType : null,
         contactPersonName: contactPersonName ? contactPersonName : "",
-        alterContactNumber: alterContactNumber
-          ? parseInt(alterContactNumber)
-          : undefined,
-        contactNumber: contactNumber ? parseInt(contactNumber) : undefined,
+        alterContactNumber,
+        contactNumber,
         designation,
         department,
         contactPersonEmail,

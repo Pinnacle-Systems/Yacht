@@ -13,6 +13,7 @@ async function get(req) {
     },
     include: {
       StyleItem: true,
+      Fabric:true
     },
   });
   return { statusCode: 0, data };
@@ -118,7 +119,7 @@ async function update(id, body) {
       alias,
       active: active !== undefined ? JSON.parse(active) : undefined,
       companyId: companyId ? parseInt(companyId) : null,
-      img,
+      img : img ? img : undefined,
       fabricId: fabricId ? parseInt(fabricId) : undefined,
       sizeTemplateId: sizeTemplateId ? parseInt(sizeTemplateId) : undefined,
       styleItemId: styleItemId ? parseInt(styleItemId) : undefined,

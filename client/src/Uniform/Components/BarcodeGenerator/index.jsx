@@ -9,7 +9,7 @@ const BarcodeGenerator = ({ value, isUi = false }) => {
 
   useEffect(() => {
     const canvas = document.createElement("canvas");
-    JsBarcode(canvas, value);
+    JsBarcode(canvas, value,{ displayValue: false });
     setBarcode(canvas.toDataURL());
   }, [value]);
   if (isUi)

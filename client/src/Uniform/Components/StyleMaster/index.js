@@ -210,6 +210,12 @@ const StyleMaster = () => {
       setValue: setSearchName,
     },
     {
+      header: "Fabric Name",
+      accessor: (item) => item?.Fabric?.name,
+      className: "font-medium text-gray-900 w-[250px]  py-1  px-2",
+      search: "Fabric",
+    },
+    {
       header: "Status",
       accessor: (item) => (item.active ? ACTIVE : INACTIVE),
       className: "font-medium text-gray-900 text-center w-[10px] py-1",

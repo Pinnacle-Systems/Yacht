@@ -258,7 +258,7 @@ export default function Form() {
     <div onKeyDown={handleKeyDown} className="p-1">
       <div className="w-full flex bg-white p-1 justify-between  items-center">
         <h5 className="text-2xl font-bold font-segoe text-gray-800 ">
-          Location Master
+          Store Master
         </h5>
         <div className="flex items-center">
           <button
@@ -268,7 +268,7 @@ export default function Form() {
             }}
             className="bg-white border font-segoe border-green-600 text-green-600 hover:bg-green-700 hover:text-white text-sm px-2  rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >
-            + Add New Location
+            + Add New Store
           </button>
         </div>
       </div>
@@ -298,9 +298,9 @@ export default function Form() {
                 <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
                   {id
                     ? !readOnly
-                      ? "Edit Location  "
-                      : "Location Master"
-                    : "Add New  Location "}
+                      ? "Edit Store  "
+                      : "Store Master"
+                    : "Add New  Store "}
                 </h2>
               </div>
               <div className="flex gap-2">

@@ -4,7 +4,7 @@ import { ReusableInput } from "../../../Utils/CommonInput";
 import { DropdownInput } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
-import { getCommonParams } from "../../../Utils/helper";
+import { getCommonParams, params } from "../../../Utils/helper";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import Swal from "sweetalert2";

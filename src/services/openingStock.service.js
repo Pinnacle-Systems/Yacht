@@ -187,6 +187,23 @@ async function getOne(id) {
       OpeningStockItems: {
         select: {
           Stock: true,
+          // Stock: {
+          //   select: {
+          //     barCode: true,
+          //     Style: {
+          //       select: {
+          //         id: true,
+          //         name: true, // use the actual field name in your Style model
+          //       },
+          //     },
+          //     Size: {
+          //       select: {
+          //         id: true,
+          //         name: true, // use the actual field name in your Size model
+          //       },
+          //     },
+          //   },
+          // },
           id: true,
           openingStockId: true,
           styleId: true,
