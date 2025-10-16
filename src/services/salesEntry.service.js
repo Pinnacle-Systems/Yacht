@@ -276,7 +276,7 @@ async function create(body) {
         customerId: parseInt(customerId),
         contactPerson,
         contactNumber,
-        taxTemplateId: parseInt(taxTemplateId),
+        taxTemplateId: taxTemplateId ?  parseInt(taxTemplateId) : null,
       },
     });
     await createSalesEntryItems(
@@ -339,7 +339,7 @@ async function update(id, body) {
         docDate: docDate ? new Date(docDate) : null,
         locationId: parseInt(locationId),
         customerId: parseInt(customerId),
-        taxTemplateId: parseInt(taxTemplateId),
+        taxTemplateId: taxTemplateId ?  parseInt(taxTemplateId) : null,
         contactPerson,
         contactNumber,
       },
