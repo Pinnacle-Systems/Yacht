@@ -351,15 +351,15 @@ export default function ReadyGoods({
                             cursor: "pointer",
                           }}
                           src={imageFormatter(row?.styleId)}
-                          alt="style"
-                          onError={(e) => (e.target.src = "/no-image.png")} // fallback if not found
+                          // alt="style"
+                          // onError={(e) => (e.target.src = "/no-image.png")} // fallback if not found
                           onMouseEnter={() =>
                             setPreviewImage(imageFormatter(row?.styleId))
                           }
                           onMouseLeave={() => setPreviewImage(null)}
                         />
                       ) : (
-                        <></>
+                        <>No Image</>
                       )}
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">

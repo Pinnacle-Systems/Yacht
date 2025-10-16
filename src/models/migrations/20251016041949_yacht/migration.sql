@@ -122,50 +122,95 @@ CREATE TABLE `User` (
 -- CreateTable
 CREATE TABLE `Employee` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `name` VARCHAR(191) NULL,
+    `firstName` VARCHAR(191) NULL,
+    `employeeType` VARCHAR(191) NULL,
+    `middleName` VARCHAR(191) NULL,
+    `lastName` VARCHAR(191) NULL,
     `email` VARCHAR(191) NULL,
-    `regNo` VARCHAR(191) NULL,
-    `chamberNo` VARCHAR(191) NULL,
+    `fatherName` VARCHAR(191) NULL,
+    `motherName` VARCHAR(191) NULL,
+    `gender` VARCHAR(191) NULL,
+    `disability` VARCHAR(191) NULL,
+    `identificationMark` VARCHAR(191) NULL,
+    `dob` DATETIME(3) NULL,
+    `bloodGroup` VARCHAR(191) NULL,
+    `height` VARCHAR(191) NULL,
+    `weight` VARCHAR(191) NULL,
+    `maritalStatus` VARCHAR(191) NULL,
+    `joiningDate` DATETIME(3) NULL,
+    `payCategory` VARCHAR(191) NULL,
+    `pf` VARCHAR(191) NULL,
+    `esi` VARCHAR(191) NULL,
+    `salary` VARCHAR(191) NULL,
+    `aadharNo` VARCHAR(191) NULL,
+    `panNo` VARCHAR(191) NULL,
+    `esiNo` VARCHAR(191) NULL,
+    `pfNo` VARCHAR(191) NULL,
+    `uanNo` VARCHAR(191) NULL,
+    `salaryMethod` VARCHAR(191) NULL,
+    `religion` VARCHAR(191) NULL,
+    `idNumber` VARCHAR(191) NULL,
+    `permanentAddress` VARCHAR(191) NULL,
+    `permanentVillage` VARCHAR(191) NULL,
+    `permanentPincode` VARCHAR(191) NULL,
+    `permanentMobile` VARCHAR(191) NULL,
+    `presentAddress` VARCHAR(191) NULL,
+    `presentVillage` VARCHAR(191) NULL,
+    `presentPincode` VARCHAR(191) NULL,
+    `presentMobile` VARCHAR(191) NULL,
+    `shiftTemplateId` INTEGER NULL,
     `departmentId` INTEGER NULL,
     `designationId` INTEGER NULL,
-    `joiningDate` DATETIME(3) NULL,
-    `fatherName` VARCHAR(191) NULL,
-    `dob` DATETIME(3) NULL,
-    `gender` ENUM('MALE', 'FEMALE', 'OTHER') NULL,
-    `maritalStatus` ENUM('SINGLE', 'MARRIED', 'SEPARATED') NULL,
-    `bloodGroup` ENUM('AP', 'BP', 'AN', 'BN', 'ABP', 'ABN', 'OP', 'ON') NULL,
-    `panNo` VARCHAR(191) NULL,
-    `consultFee` VARCHAR(191) NULL,
-    `salaryPerMonth` VARCHAR(191) NULL,
-    `commissionCharges` VARCHAR(191) NULL,
-    `mobile` BIGINT NULL,
-    `accountNo` VARCHAR(191) NULL,
-    `ifscNo` VARCHAR(191) NULL,
-    `branchName` VARCHAR(191) NULL,
-    `degree` VARCHAR(191) NULL,
-    `specialization` VARCHAR(191) NULL,
-    `localAddress` VARCHAR(191) NULL,
-    `localCityId` INTEGER NULL,
-    `localPincode` INTEGER NULL,
-    `permAddress` VARCHAR(191) NULL,
-    `permCityId` INTEGER NULL,
-    `permPincode` INTEGER NULL,
-    `active` BOOLEAN NULL DEFAULT true,
-    `image` LONGBLOB NULL,
+    `permanentCityId` INTEGER NULL,
+    `presentCityId` INTEGER NULL,
+    `presentCountryId` INTEGER NULL,
+    `permanentCountryId` INTEGER NULL,
+    `presentStateId` INTEGER NULL,
+    `permanentStateId` INTEGER NULL,
     `branchId` INTEGER NULL,
     `employeeCategoryId` INTEGER NULL,
-    `permanent` BOOLEAN NULL DEFAULT false,
-    `leavingReason` VARCHAR(191) NULL,
-    `leavingDate` DATETIME(3) NULL,
-    `canRejoin` BOOLEAN NULL DEFAULT true,
-    `rejoinReason` VARCHAR(191) NULL,
-    `createdAt` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NULL,
     `createdById` INTEGER NULL,
     `updatedById` INTEGER NULL,
 
     UNIQUE INDEX `Employee_email_key`(`email`),
-    UNIQUE INDEX `Employee_regNo_key`(`regNo`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `EmployeeBankDetails` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `employeeId` INTEGER NULL,
+    `bankName` VARCHAR(191) NULL,
+    `branchName` VARCHAR(191) NULL,
+    `accountNumber` VARCHAR(191) NULL,
+    `ifscCode` VARCHAR(191) NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `EmployeeEducationDetails` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `employeeId` INTEGER NULL,
+    `courseName` VARCHAR(191) NULL,
+    `universityName` VARCHAR(191) NULL,
+    `institutionName` VARCHAR(191) NULL,
+    `yearOfPass` VARCHAR(191) NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `EmployeeFamilyDetails` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `employeeId` INTEGER NULL,
+    `name` VARCHAR(191) NULL,
+    `dob` DATETIME(3) NULL,
+    `age` INTEGER NULL,
+    `relationShip` VARCHAR(191) NULL,
+    `occupation` VARCHAR(191) NULL,
+    `nominee` VARCHAR(191) NULL,
+
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -221,7 +266,7 @@ CREATE TABLE `City` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NULL,
     `code` VARCHAR(191) NULL,
-    `stateId` INTEGER NULL,
+    `stateId` INTEGER NOT NULL,
     `active` BOOLEAN NULL DEFAULT true,
 
     PRIMARY KEY (`id`)
@@ -308,9 +353,23 @@ CREATE TABLE `Party` (
     `isClient` BOOLEAN NULL DEFAULT false,
     `isIgst` BOOLEAN NULL DEFAULT false,
     `isVendor` BOOLEAN NULL DEFAULT false,
+    `isBuyer` BOOLEAN NULL DEFAULT false,
+    `payTermDay` VARCHAR(191) NULL,
+    `payTermId` INTEGER NULL,
+    `msmeNo` VARCHAR(191) NULL,
+    `bankName` VARCHAR(191) NULL,
+    `branchName` VARCHAR(191) NULL,
+    `accountNumber` VARCHAR(191) NULL,
+    `ifscCode` VARCHAR(191) NULL,
     `partyType` VARCHAR(191) NULL,
     `mobileNumber` VARCHAR(191) NULL,
     `mailId` VARCHAR(191) NULL,
+    `landMark` VARCHAR(191) NULL,
+    `designation` VARCHAR(191) NULL,
+    `department` VARCHAR(191) NULL,
+    `contactPersonEmail` VARCHAR(191) NULL,
+    `contactNumber` VARCHAR(191) NULL,
+    `alterContactNumber` VARCHAR(191) NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -382,6 +441,7 @@ CREATE TABLE `PayTerm` (
     `days` INTEGER NOT NULL,
     `companyId` INTEGER NOT NULL,
     `active` BOOLEAN NOT NULL DEFAULT true,
+    `aliasName` VARCHAR(191) NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -429,6 +489,7 @@ CREATE TABLE `Location` (
     `isGarments` BOOLEAN NOT NULL DEFAULT true,
     `active` BOOLEAN NOT NULL DEFAULT true,
     `companyId` INTEGER NOT NULL,
+    `locationId` INTEGER NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -806,6 +867,9 @@ CREATE TABLE `Fabric` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NULL,
     `number` INTEGER NULL,
+    `active` BOOLEAN NULL DEFAULT true,
+    `companyId` INTEGER NULL,
+    `aliasName` VARCHAR(191) NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -814,11 +878,11 @@ CREATE TABLE `Fabric` (
 CREATE TABLE `Color` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
-    `pantone` VARCHAR(191) NOT NULL,
+    `pantone` VARCHAR(191) NULL,
     `companyId` INTEGER NOT NULL,
     `active` BOOLEAN NOT NULL DEFAULT true,
-    `isGrey` BOOLEAN NOT NULL DEFAULT false,
-    `number` INTEGER NOT NULL,
+    `isGrey` BOOLEAN NULL DEFAULT false,
+    `number` INTEGER NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -1000,6 +1064,8 @@ CREATE TABLE `Shift` (
     `description` VARCHAR(191) NULL,
     `docId` VARCHAR(191) NULL,
     `active` BOOLEAN NULL DEFAULT true,
+    `from` VARCHAR(191) NULL,
+    `to` VARCHAR(191) NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -1033,6 +1099,7 @@ CREATE TABLE `ShiftTemplate` (
     `docId` VARCHAR(191) NULL,
     `active` BOOLEAN NULL DEFAULT true,
     `category` VARCHAR(191) NULL,
+    `date` DATETIME(3) NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -1045,11 +1112,9 @@ CREATE TABLE `ShiftTemplateItems` (
     `updatedAt` DATETIME(3) NOT NULL,
     `createdById` INTEGER NULL,
     `updatedById` INTEGER NULL,
-    `name` VARCHAR(191) NULL,
-    `docId` VARCHAR(191) NULL,
     `active` BOOLEAN NULL DEFAULT true,
-    `templateId` INTEGER NULL,
-    `shiftId` INTEGER NULL,
+    `templateId` INTEGER NOT NULL,
+    `shiftId` INTEGER NOT NULL,
     `inNextDay` VARCHAR(191) NULL,
     `toleranceInBeforeStart` VARCHAR(191) NULL,
     `startTime` VARCHAR(191) NULL,
@@ -1069,6 +1134,7 @@ CREATE TABLE `ShiftTemplateItems` (
     `shiftTimeHrs` VARCHAR(191) NULL,
     `otHrs` VARCHAR(191) NULL,
     `quater` VARCHAR(191) NULL,
+    `date` DATETIME(3) NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -1082,7 +1148,6 @@ CREATE TABLE `PayFrequency` (
     `updatedById` INTEGER NULL,
     `name` VARCHAR(191) NULL,
     `active` BOOLEAN NULL DEFAULT true,
-    `payFrequencyType` VARCHAR(191) NULL,
     `finYearId` INTEGER NULL,
     `companyId` INTEGER NULL,
     `branchId` INTEGER NULL,
@@ -1091,13 +1156,373 @@ CREATE TABLE `PayFrequency` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `PayFrequencyType` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `payFrequencyType` VARCHAR(191) NULL,
+    `payFrequencyId` INTEGER NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `EmployeSubCategory` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `companyId` INTEGER NULL,
+    `branchId` INTEGER NULL,
+    `employeeCategoryId` INTEGER NULL,
+    `gradeName` VARCHAR(191) NULL,
+    `active` BOOLEAN NULL DEFAULT true,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `PayFrequencyItems` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `payFrequencyId` INTEGER NULL,
+    `payFrequencyTypeId` INTEGER NULL,
     `startDate` DATETIME(3) NULL,
     `endDate` DATETIME(3) NULL,
     `salaryDate` DATETIME(3) NULL,
     `notes` VARCHAR(191) NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `PayComponents` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+    `createdById` INTEGER NULL,
+    `updatedById` INTEGER NULL,
+    `companyId` INTEGER NULL,
+    `branchId` INTEGER NULL,
+    `payCode` VARCHAR(191) NULL,
+    `payDescription` TEXT NULL,
+    `earningsType` VARCHAR(191) NULL,
+    `taxable` VARCHAR(191) NULL,
+    `notes` TEXT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `CompanyPaycode` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+    `createdById` INTEGER NULL,
+    `updatedById` INTEGER NULL,
+    `companyId` INTEGER NULL,
+    `branchId` INTEGER NULL,
+    `date` DATETIME(3) NULL,
+    `docId` VARCHAR(191) NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `PayDetails` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `companyPayCodeId` INTEGER NOT NULL,
+    `payComponentId` INTEGER NOT NULL,
+    `lop` VARCHAR(191) NULL,
+    `pf` VARCHAR(191) NULL,
+    `esi` VARCHAR(191) NULL,
+    `pickFrom` VARCHAR(191) NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Style` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NULL,
+    `sku` VARCHAR(191) NULL,
+    `alias` VARCHAR(191) NULL,
+    `active` BOOLEAN NULL,
+    `img` VARCHAR(191) NULL,
+    `styleNo` VARCHAR(191) NULL,
+    `companyId` INTEGER NULL,
+    `fabricId` INTEGER NULL,
+    `styleItemId` INTEGER NULL,
+    `sizeTemplateId` INTEGER NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Size` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NULL,
+    `isAccessory` BOOLEAN NULL DEFAULT false,
+    `companyId` INTEGER NULL,
+    `active` BOOLEAN NULL DEFAULT true,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Measurement` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NULL,
+    `companyId` INTEGER NULL,
+    `active` BOOLEAN NULL DEFAULT true,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `AccessoryGroup` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NOT NULL,
+    `companyId` INTEGER NULL,
+    `active` BOOLEAN NULL DEFAULT true,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Yarn` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NULL,
+    `contentId` INTEGER NULL,
+    `aliasName` VARCHAR(191) NULL,
+    `hsn` VARCHAR(191) NULL,
+    `taxPercent` DOUBLE NULL DEFAULT 0,
+    `companyId` INTEGER NULL,
+    `active` BOOLEAN NULL DEFAULT true,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Accessory` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `aliasName` VARCHAR(191) NULL,
+    `accessoryItemId` INTEGER NULL,
+    `hsn` VARCHAR(191) NULL,
+    `companyId` INTEGER NULL,
+    `active` BOOLEAN NULL DEFAULT true,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `AccessoryItem` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NOT NULL,
+    `active` BOOLEAN NULL DEFAULT true,
+    `accessoryGroupId` INTEGER NULL,
+    `companyId` INTEGER NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Stock` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `docId` VARCHAR(191) NULL,
+    `docDate` DATETIME(3) NULL,
+    `inOrOut` VARCHAR(191) NULL,
+    `fabricId` INTEGER NULL,
+    `yarnId` INTEGER NULL,
+    `accessoryId` INTEGER NULL,
+    `accessoryGroupId` INTEGER NULL,
+    `accessoryItemId` INTEGER NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NULL,
+    `createdById` INTEGER NULL,
+    `updatedById` INTEGER NULL,
+    `branchId` INTEGER NULL,
+    `storeId` INTEGER NULL,
+    `notes` VARCHAR(191) NULL,
+    `term` VARCHAR(191) NULL,
+    `colorId` INTEGER NULL,
+    `uomId` INTEGER NULL,
+    `styleId` INTEGER NULL,
+    `sizeId` INTEGER NULL,
+    `qty` DOUBLE NULL,
+    `price` DOUBLE NULL,
+    `active` BOOLEAN NULL DEFAULT true,
+    `OpeningStockItemsId` INTEGER NULL,
+    `barCode` VARCHAR(191) NULL,
+    `stockAdjustmentId` INTEGER NULL,
+    `salesEntryItemsId` INTEGER NULL,
+    `stockInwardItemsId` INTEGER NULL,
+    `styleNo` VARCHAR(191) NULL,
+    `styleItemId` INTEGER NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `OpeningStock` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `docId` VARCHAR(191) NOT NULL,
+    `docDate` DATETIME(3) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+    `createdById` INTEGER NULL,
+    `updatedById` INTEGER NULL,
+    `branchId` INTEGER NULL,
+    `locationId` INTEGER NULL,
+    `storeId` INTEGER NULL,
+    `notes` VARCHAR(191) NULL,
+    `term` VARCHAR(191) NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `OpeningStockItems` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `openingStockId` INTEGER NOT NULL,
+    `styleNo` VARCHAR(191) NULL,
+    `fabricId` INTEGER NULL,
+    `styleId` INTEGER NULL,
+    `sizeId` INTEGER NULL,
+    `qty` INTEGER NULL,
+    `remarks` VARCHAR(191) NULL,
+    `barcode` VARCHAR(191) NULL,
+    `styleItemId` INTEGER NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `StockAdjustment` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `docId` VARCHAR(191) NOT NULL,
+    `docDate` DATETIME(3) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+    `createdById` INTEGER NULL,
+    `updatedById` INTEGER NULL,
+    `branchId` INTEGER NULL,
+    `locationId` INTEGER NULL,
+    `storeId` INTEGER NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `StockAdjustmentItems` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `stockAdjustmentId` INTEGER NULL,
+    `barcode` VARCHAR(191) NULL,
+    `styleId` INTEGER NULL,
+    `sizeId` INTEGER NULL,
+    `stkQty` INTEGER NULL,
+    `adjType` VARCHAR(191) NULL,
+    `adjQty` INTEGER NULL,
+    `remarks` VARCHAR(191) NULL,
+    `styleNo` VARCHAR(191) NULL,
+    `fabricId` INTEGER NULL,
+    `styleItemId` INTEGER NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `SalesEntry` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `docId` VARCHAR(191) NOT NULL,
+    `docDate` DATETIME(3) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+    `createdById` INTEGER NULL,
+    `updatedById` INTEGER NULL,
+    `branchId` INTEGER NULL,
+    `locationId` INTEGER NULL,
+    `storeId` INTEGER NULL,
+    `customerId` INTEGER NULL,
+    `contactPerson` VARCHAR(191) NULL,
+    `contactNumber` VARCHAR(191) NULL,
+    `taxTemplateId` INTEGER NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `SalesEntryItems` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `salesEntryId` INTEGER NULL,
+    `barcode` VARCHAR(191) NULL,
+    `styleId` INTEGER NULL,
+    `sizeId` INTEGER NULL,
+    `stkQty` INTEGER NULL,
+    `qty` INTEGER NULL,
+    `remarks` VARCHAR(191) NULL,
+    `styleNo` VARCHAR(191) NULL,
+    `fabricId` INTEGER NULL,
+    `price` INTEGER NULL,
+    `disc` INTEGER NULL,
+    `amount` INTEGER NULL,
+    `styleItemId` INTEGER NULL,
+    `discountType` VARCHAR(191) NULL,
+    `taxPercent` INTEGER NULL,
+    `discountValue` INTEGER NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `SizeTemplate` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NULL,
+    `companyId` INTEGER NULL,
+    `active` BOOLEAN NULL DEFAULT true,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `SizeTemplateList` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `sizeTemplateId` INTEGER NULL,
+    `sizeId` INTEGER NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `StockInward` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `docId` VARCHAR(191) NOT NULL,
+    `docDate` DATETIME(3) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+    `createdById` INTEGER NULL,
+    `updatedById` INTEGER NULL,
+    `branchId` INTEGER NULL,
+    `locationId` INTEGER NULL,
+    `storeId` INTEGER NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `StockInwardItems` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `stockInwardId` INTEGER NULL,
+    `styleNo` VARCHAR(191) NULL,
+    `fabricId` INTEGER NULL,
+    `styleId` INTEGER NULL,
+    `sizeId` INTEGER NULL,
+    `qty` INTEGER NULL,
+    `remarks` VARCHAR(191) NULL,
+    `barcode` VARCHAR(191) NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `StyleItem` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NULL,
+    `companyId` INTEGER NULL,
+    `active` BOOLEAN NULL DEFAULT true,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -1133,16 +1558,31 @@ ALTER TABLE `User` ADD CONSTRAINT `User_employeeId_fkey` FOREIGN KEY (`employeeI
 ALTER TABLE `User` ADD CONSTRAINT `User_roleId_fkey` FOREIGN KEY (`roleId`) REFERENCES `Role`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `Employee` ADD CONSTRAINT `Employee_shiftTemplateId_fkey` FOREIGN KEY (`shiftTemplateId`) REFERENCES `ShiftTemplate`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `Employee` ADD CONSTRAINT `Employee_departmentId_fkey` FOREIGN KEY (`departmentId`) REFERENCES `Department`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Employee` ADD CONSTRAINT `Employee_designationId_fkey` FOREIGN KEY (`designationId`) REFERENCES `Designation`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Employee` ADD CONSTRAINT `Employee_localCityId_fkey` FOREIGN KEY (`localCityId`) REFERENCES `City`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `Employee` ADD CONSTRAINT `Employee_permanentCityId_fkey` FOREIGN KEY (`permanentCityId`) REFERENCES `City`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Employee` ADD CONSTRAINT `Employee_permCityId_fkey` FOREIGN KEY (`permCityId`) REFERENCES `City`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `Employee` ADD CONSTRAINT `Employee_presentCityId_fkey` FOREIGN KEY (`presentCityId`) REFERENCES `City`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Employee` ADD CONSTRAINT `Employee_presentCountryId_fkey` FOREIGN KEY (`presentCountryId`) REFERENCES `Country`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Employee` ADD CONSTRAINT `Employee_permanentCountryId_fkey` FOREIGN KEY (`permanentCountryId`) REFERENCES `Country`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Employee` ADD CONSTRAINT `Employee_presentStateId_fkey` FOREIGN KEY (`presentStateId`) REFERENCES `State`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Employee` ADD CONSTRAINT `Employee_permanentStateId_fkey` FOREIGN KEY (`permanentStateId`) REFERENCES `State`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Employee` ADD CONSTRAINT `Employee_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `Branch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
@@ -1157,6 +1597,15 @@ ALTER TABLE `Employee` ADD CONSTRAINT `Employee_createdById_fkey` FOREIGN KEY (`
 ALTER TABLE `Employee` ADD CONSTRAINT `Employee_updatedById_fkey` FOREIGN KEY (`updatedById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `EmployeeBankDetails` ADD CONSTRAINT `EmployeeBankDetails_employeeId_fkey` FOREIGN KEY (`employeeId`) REFERENCES `Employee`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `EmployeeEducationDetails` ADD CONSTRAINT `EmployeeEducationDetails_employeeId_fkey` FOREIGN KEY (`employeeId`) REFERENCES `Employee`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `EmployeeFamilyDetails` ADD CONSTRAINT `EmployeeFamilyDetails_employeeId_fkey` FOREIGN KEY (`employeeId`) REFERENCES `Employee`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `FinYear` ADD CONSTRAINT `FinYear_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `Company`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1169,7 +1618,7 @@ ALTER TABLE `Country` ADD CONSTRAINT `Country_companyId_fkey` FOREIGN KEY (`comp
 ALTER TABLE `State` ADD CONSTRAINT `State_countryId_fkey` FOREIGN KEY (`countryId`) REFERENCES `Country`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `City` ADD CONSTRAINT `City_stateId_fkey` FOREIGN KEY (`stateId`) REFERENCES `State`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `City` ADD CONSTRAINT `City_stateId_fkey` FOREIGN KEY (`stateId`) REFERENCES `State`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Department` ADD CONSTRAINT `Department_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `Company`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1230,6 +1679,9 @@ ALTER TABLE `TaxTemplateDetails` ADD CONSTRAINT `TaxTemplateDetails_taxTermId_fk
 
 -- AddForeignKey
 ALTER TABLE `Location` ADD CONSTRAINT `Location_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `Company`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Location` ADD CONSTRAINT `Location_locationId_fkey` FOREIGN KEY (`locationId`) REFERENCES `Branch`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `TermsAndConditions` ADD CONSTRAINT `TermsAndConditions_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `Company`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1394,6 +1846,9 @@ ALTER TABLE `MailTransAttachments` ADD CONSTRAINT `MailTransAttachments_mailTran
 ALTER TABLE `LineMaster` ADD CONSTRAINT `LineMaster_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `Company`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `Fabric` ADD CONSTRAINT `Fabric_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `Company`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `Color` ADD CONSTRAINT `Color_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `Company`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1526,13 +1981,19 @@ ALTER TABLE `ShiftTemplate` ADD CONSTRAINT `ShiftTemplate_companyId_fkey` FOREIG
 ALTER TABLE `ShiftTemplate` ADD CONSTRAINT `ShiftTemplate_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `Branch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ShiftTemplateItems` ADD CONSTRAINT `ShiftTemplateItems_shiftTemplateId_fkey` FOREIGN KEY (`shiftTemplateId`) REFERENCES `ShiftTemplate`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `ShiftTemplateItems` ADD CONSTRAINT `ShiftTemplateItems_shiftTemplateId_fkey` FOREIGN KEY (`shiftTemplateId`) REFERENCES `ShiftTemplate`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `ShiftTemplateItems` ADD CONSTRAINT `ShiftTemplateItems_createdById_fkey` FOREIGN KEY (`createdById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `ShiftTemplateItems` ADD CONSTRAINT `ShiftTemplateItems_updatedById_fkey` FOREIGN KEY (`updatedById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ShiftTemplateItems` ADD CONSTRAINT `ShiftTemplateItems_templateId_fkey` FOREIGN KEY (`templateId`) REFERENCES `ShiftCommonTemplate`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ShiftTemplateItems` ADD CONSTRAINT `ShiftTemplateItems_shiftId_fkey` FOREIGN KEY (`shiftId`) REFERENCES `Shift`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `PayFrequency` ADD CONSTRAINT `PayFrequency_createdById_fkey` FOREIGN KEY (`createdById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
@@ -1550,4 +2011,262 @@ ALTER TABLE `PayFrequency` ADD CONSTRAINT `PayFrequency_companyId_fkey` FOREIGN 
 ALTER TABLE `PayFrequency` ADD CONSTRAINT `PayFrequency_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `Branch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `PayFrequencyItems` ADD CONSTRAINT `PayFrequencyItems_payFrequencyId_fkey` FOREIGN KEY (`payFrequencyId`) REFERENCES `PayFrequency`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `PayFrequencyType` ADD CONSTRAINT `PayFrequencyType_payFrequencyId_fkey` FOREIGN KEY (`payFrequencyId`) REFERENCES `PayFrequency`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `EmployeSubCategory` ADD CONSTRAINT `EmployeSubCategory_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `Company`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `EmployeSubCategory` ADD CONSTRAINT `EmployeSubCategory_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `Branch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `EmployeSubCategory` ADD CONSTRAINT `EmployeSubCategory_employeeCategoryId_fkey` FOREIGN KEY (`employeeCategoryId`) REFERENCES `EmployeeCategory`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `PayFrequencyItems` ADD CONSTRAINT `PayFrequencyItems_payFrequencyTypeId_fkey` FOREIGN KEY (`payFrequencyTypeId`) REFERENCES `PayFrequencyType`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `PayComponents` ADD CONSTRAINT `PayComponents_createdById_fkey` FOREIGN KEY (`createdById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `PayComponents` ADD CONSTRAINT `PayComponents_updatedById_fkey` FOREIGN KEY (`updatedById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `PayComponents` ADD CONSTRAINT `PayComponents_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `Company`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `PayComponents` ADD CONSTRAINT `PayComponents_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `Branch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CompanyPaycode` ADD CONSTRAINT `CompanyPaycode_createdById_fkey` FOREIGN KEY (`createdById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CompanyPaycode` ADD CONSTRAINT `CompanyPaycode_updatedById_fkey` FOREIGN KEY (`updatedById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CompanyPaycode` ADD CONSTRAINT `CompanyPaycode_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `Company`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CompanyPaycode` ADD CONSTRAINT `CompanyPaycode_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `Branch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `PayDetails` ADD CONSTRAINT `PayDetails_companyPayCodeId_fkey` FOREIGN KEY (`companyPayCodeId`) REFERENCES `CompanyPaycode`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `PayDetails` ADD CONSTRAINT `PayDetails_payComponentId_fkey` FOREIGN KEY (`payComponentId`) REFERENCES `PayComponents`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Style` ADD CONSTRAINT `Style_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `Company`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Style` ADD CONSTRAINT `Style_fabricId_fkey` FOREIGN KEY (`fabricId`) REFERENCES `Fabric`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Style` ADD CONSTRAINT `Style_styleItemId_fkey` FOREIGN KEY (`styleItemId`) REFERENCES `StyleItem`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Style` ADD CONSTRAINT `Style_sizeTemplateId_fkey` FOREIGN KEY (`sizeTemplateId`) REFERENCES `SizeTemplate`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Size` ADD CONSTRAINT `Size_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `Company`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Measurement` ADD CONSTRAINT `Measurement_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `Company`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `AccessoryGroup` ADD CONSTRAINT `AccessoryGroup_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `Company`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Yarn` ADD CONSTRAINT `Yarn_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `Company`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Accessory` ADD CONSTRAINT `Accessory_accessoryItemId_fkey` FOREIGN KEY (`accessoryItemId`) REFERENCES `AccessoryItem`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Accessory` ADD CONSTRAINT `Accessory_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `Company`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `AccessoryItem` ADD CONSTRAINT `AccessoryItem_accessoryGroupId_fkey` FOREIGN KEY (`accessoryGroupId`) REFERENCES `AccessoryGroup`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `AccessoryItem` ADD CONSTRAINT `AccessoryItem_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `Company`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Stock` ADD CONSTRAINT `Stock_fabricId_fkey` FOREIGN KEY (`fabricId`) REFERENCES `Fabric`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Stock` ADD CONSTRAINT `Stock_yarnId_fkey` FOREIGN KEY (`yarnId`) REFERENCES `Yarn`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Stock` ADD CONSTRAINT `Stock_accessoryId_fkey` FOREIGN KEY (`accessoryId`) REFERENCES `Accessory`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Stock` ADD CONSTRAINT `Stock_accessoryGroupId_fkey` FOREIGN KEY (`accessoryGroupId`) REFERENCES `AccessoryGroup`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Stock` ADD CONSTRAINT `Stock_accessoryItemId_fkey` FOREIGN KEY (`accessoryItemId`) REFERENCES `AccessoryItem`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Stock` ADD CONSTRAINT `Stock_createdById_fkey` FOREIGN KEY (`createdById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Stock` ADD CONSTRAINT `Stock_updatedById_fkey` FOREIGN KEY (`updatedById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Stock` ADD CONSTRAINT `Stock_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `Branch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Stock` ADD CONSTRAINT `Stock_storeId_fkey` FOREIGN KEY (`storeId`) REFERENCES `Location`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Stock` ADD CONSTRAINT `Stock_colorId_fkey` FOREIGN KEY (`colorId`) REFERENCES `Color`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Stock` ADD CONSTRAINT `Stock_uomId_fkey` FOREIGN KEY (`uomId`) REFERENCES `UnitOfMeasurement`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Stock` ADD CONSTRAINT `Stock_styleId_fkey` FOREIGN KEY (`styleId`) REFERENCES `Style`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Stock` ADD CONSTRAINT `Stock_sizeId_fkey` FOREIGN KEY (`sizeId`) REFERENCES `Size`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Stock` ADD CONSTRAINT `Stock_OpeningStockItemsId_fkey` FOREIGN KEY (`OpeningStockItemsId`) REFERENCES `OpeningStockItems`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Stock` ADD CONSTRAINT `Stock_stockAdjustmentId_fkey` FOREIGN KEY (`stockAdjustmentId`) REFERENCES `StockAdjustmentItems`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Stock` ADD CONSTRAINT `Stock_salesEntryItemsId_fkey` FOREIGN KEY (`salesEntryItemsId`) REFERENCES `SalesEntryItems`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Stock` ADD CONSTRAINT `Stock_stockInwardItemsId_fkey` FOREIGN KEY (`stockInwardItemsId`) REFERENCES `StockInwardItems`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Stock` ADD CONSTRAINT `Stock_styleItemId_fkey` FOREIGN KEY (`styleItemId`) REFERENCES `StyleItem`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `OpeningStock` ADD CONSTRAINT `OpeningStock_createdById_fkey` FOREIGN KEY (`createdById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `OpeningStock` ADD CONSTRAINT `OpeningStock_updatedById_fkey` FOREIGN KEY (`updatedById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `OpeningStock` ADD CONSTRAINT `OpeningStock_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `Branch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `OpeningStock` ADD CONSTRAINT `OpeningStock_storeId_fkey` FOREIGN KEY (`storeId`) REFERENCES `Location`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `OpeningStockItems` ADD CONSTRAINT `OpeningStockItems_openingStockId_fkey` FOREIGN KEY (`openingStockId`) REFERENCES `OpeningStock`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `OpeningStockItems` ADD CONSTRAINT `OpeningStockItems_fabricId_fkey` FOREIGN KEY (`fabricId`) REFERENCES `Fabric`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `OpeningStockItems` ADD CONSTRAINT `OpeningStockItems_styleId_fkey` FOREIGN KEY (`styleId`) REFERENCES `Style`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `OpeningStockItems` ADD CONSTRAINT `OpeningStockItems_sizeId_fkey` FOREIGN KEY (`sizeId`) REFERENCES `Size`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `OpeningStockItems` ADD CONSTRAINT `OpeningStockItems_styleItemId_fkey` FOREIGN KEY (`styleItemId`) REFERENCES `StyleItem`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `StockAdjustment` ADD CONSTRAINT `StockAdjustment_createdById_fkey` FOREIGN KEY (`createdById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `StockAdjustment` ADD CONSTRAINT `StockAdjustment_updatedById_fkey` FOREIGN KEY (`updatedById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `StockAdjustment` ADD CONSTRAINT `StockAdjustment_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `Branch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `StockAdjustment` ADD CONSTRAINT `StockAdjustment_storeId_fkey` FOREIGN KEY (`storeId`) REFERENCES `Location`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `StockAdjustmentItems` ADD CONSTRAINT `StockAdjustmentItems_stockAdjustmentId_fkey` FOREIGN KEY (`stockAdjustmentId`) REFERENCES `StockAdjustment`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `StockAdjustmentItems` ADD CONSTRAINT `StockAdjustmentItems_styleId_fkey` FOREIGN KEY (`styleId`) REFERENCES `Style`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `StockAdjustmentItems` ADD CONSTRAINT `StockAdjustmentItems_sizeId_fkey` FOREIGN KEY (`sizeId`) REFERENCES `Size`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `StockAdjustmentItems` ADD CONSTRAINT `StockAdjustmentItems_fabricId_fkey` FOREIGN KEY (`fabricId`) REFERENCES `Fabric`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `StockAdjustmentItems` ADD CONSTRAINT `StockAdjustmentItems_styleItemId_fkey` FOREIGN KEY (`styleItemId`) REFERENCES `StyleItem`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SalesEntry` ADD CONSTRAINT `SalesEntry_createdById_fkey` FOREIGN KEY (`createdById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SalesEntry` ADD CONSTRAINT `SalesEntry_updatedById_fkey` FOREIGN KEY (`updatedById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SalesEntry` ADD CONSTRAINT `SalesEntry_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `Branch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SalesEntry` ADD CONSTRAINT `SalesEntry_locationId_fkey` FOREIGN KEY (`locationId`) REFERENCES `Branch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SalesEntry` ADD CONSTRAINT `SalesEntry_storeId_fkey` FOREIGN KEY (`storeId`) REFERENCES `Location`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SalesEntry` ADD CONSTRAINT `SalesEntry_customerId_fkey` FOREIGN KEY (`customerId`) REFERENCES `Party`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SalesEntry` ADD CONSTRAINT `SalesEntry_taxTemplateId_fkey` FOREIGN KEY (`taxTemplateId`) REFERENCES `TaxTemplate`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SalesEntryItems` ADD CONSTRAINT `SalesEntryItems_salesEntryId_fkey` FOREIGN KEY (`salesEntryId`) REFERENCES `SalesEntry`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SalesEntryItems` ADD CONSTRAINT `SalesEntryItems_styleId_fkey` FOREIGN KEY (`styleId`) REFERENCES `Style`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SalesEntryItems` ADD CONSTRAINT `SalesEntryItems_sizeId_fkey` FOREIGN KEY (`sizeId`) REFERENCES `Size`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SalesEntryItems` ADD CONSTRAINT `SalesEntryItems_fabricId_fkey` FOREIGN KEY (`fabricId`) REFERENCES `Fabric`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SalesEntryItems` ADD CONSTRAINT `SalesEntryItems_styleItemId_fkey` FOREIGN KEY (`styleItemId`) REFERENCES `StyleItem`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SizeTemplate` ADD CONSTRAINT `SizeTemplate_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `Company`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SizeTemplateList` ADD CONSTRAINT `SizeTemplateList_sizeTemplateId_fkey` FOREIGN KEY (`sizeTemplateId`) REFERENCES `SizeTemplate`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SizeTemplateList` ADD CONSTRAINT `SizeTemplateList_sizeId_fkey` FOREIGN KEY (`sizeId`) REFERENCES `Size`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `StockInward` ADD CONSTRAINT `StockInward_createdById_fkey` FOREIGN KEY (`createdById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `StockInward` ADD CONSTRAINT `StockInward_updatedById_fkey` FOREIGN KEY (`updatedById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `StockInward` ADD CONSTRAINT `StockInward_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `Branch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `StockInward` ADD CONSTRAINT `StockInward_storeId_fkey` FOREIGN KEY (`storeId`) REFERENCES `Location`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `StockInwardItems` ADD CONSTRAINT `StockInwardItems_stockInwardId_fkey` FOREIGN KEY (`stockInwardId`) REFERENCES `StockInward`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `StockInwardItems` ADD CONSTRAINT `StockInwardItems_fabricId_fkey` FOREIGN KEY (`fabricId`) REFERENCES `Fabric`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `StockInwardItems` ADD CONSTRAINT `StockInwardItems_styleId_fkey` FOREIGN KEY (`styleId`) REFERENCES `Style`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `StockInwardItems` ADD CONSTRAINT `StockInwardItems_sizeId_fkey` FOREIGN KEY (`sizeId`) REFERENCES `Size`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `StyleItem` ADD CONSTRAINT `StyleItem_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `Company`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

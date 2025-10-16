@@ -524,8 +524,8 @@ export default function AdjustItems({
                             cursor: "pointer",
                           }}
                           src={imageFormatter(row?.styleId)}
-                          alt="style"
-                          onError={(e) => (e.target.src = "/no-image.png")} // fallback if not found
+                          // alt="style"
+                          // onError={(e) => (e.target.src = "/no-image.png")} // fallback if not found
                           onMouseEnter={() =>
                             setPreviewImage(imageFormatter(row?.styleId))
                           }

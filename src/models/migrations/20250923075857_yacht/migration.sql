@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE `style` ADD COLUMN `img` VARCHAR(191) NULL,
-    ADD COLUMN `styleNo` VARCHAR(191) NULL;
