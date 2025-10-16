@@ -184,6 +184,7 @@ async function getOne(id) {
           locationId: true,
         },
       },
+      Customer: true,
       SalesEntryItems: {
         select: {
           Stock: true,
@@ -206,6 +207,8 @@ async function getOne(id) {
           discountValue: true,
         },
       },
+      Location: true,
+      Store: true
     },
   });
   if (!data) return NoRecordFound("salesEntry");
@@ -276,7 +279,7 @@ async function create(body) {
         customerId: parseInt(customerId),
         contactPerson,
         contactNumber,
-        taxTemplateId: taxTemplateId ?  parseInt(taxTemplateId) : null,
+        taxTemplateId: taxTemplateId ? parseInt(taxTemplateId) : null,
       },
     });
     await createSalesEntryItems(
@@ -339,7 +342,7 @@ async function update(id, body) {
         docDate: docDate ? new Date(docDate) : null,
         locationId: parseInt(locationId),
         customerId: parseInt(customerId),
-        taxTemplateId: taxTemplateId ?  parseInt(taxTemplateId) : null,
+        taxTemplateId: taxTemplateId ? parseInt(taxTemplateId) : null,
         contactPerson,
         contactNumber,
       },

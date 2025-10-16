@@ -15,12 +15,18 @@ import BillItems from "./SalesEntrytems";
 import {
   useAddSalesEntryMutation,
   useGetSalesEntryByIdQuery,
+  useGetSalesEntryQuery,
   useUpdateSalesEntryMutation,
 } from "../../../redux/uniformService/SalesEntryService";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServices";
+import { PDFViewer } from "@react-pdf/renderer";
+import Modal from "../../../UiComponents/Modal";
+import tw from "../../../Utils/tailwind-react-pdf";
+import PDF from "./PrintFormat/PDF";
 
 export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
+  const [pdfOpen, setPdfOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [docId, setDocId] = useState("New");
   const [docDate, setDocDate] = useState("");
@@ -58,11 +64,7 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
     : [];
 
   const validateData = (data) => {
-    if (
-      salesEntryItems?.length > 0 &&
-      data.storeId &&
-      data.customerId 
-    ) {
+    if (salesEntryItems?.length > 0 && data.storeId && data.customerId) {
       return true;
     }
     return false;
@@ -73,6 +75,16 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetSalesEntryByIdQuery(id, { skip: !id });
+
+  const {
+    data: allData,
+    isFetching,
+    isLoading,
+  } = useGetSalesEntryQuery({
+    params: {
+      branchId,
+    },
+  });
 
   const data = {
     id,
@@ -212,6 +224,15 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
 
   return (
     <div className="">
+      <Modal
+        isOpen={pdfOpen}
+        onClose={() => setPdfOpen(false)}
+        widthClass={"w-[90%] h-[90%]"}
+      >
+        <PDFViewer style={tw("w-full h-full")}>
+          <PDF singleData={singleData?.data} allData={allData?.data} />
+        </PDFViewer>
+      </Modal>
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
           <h1 className="text-2xl font-bold text-gray-800"> Delivery</h1>
@@ -373,6 +394,9 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
             <button
               className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
               disabled={!id}
+              onClick={() => {
+                setPdfOpen(true);
+              }}
             >
               <FiPrinter className="w-4 h-4 mr-2" />
               Print

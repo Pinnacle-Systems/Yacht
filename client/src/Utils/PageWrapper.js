@@ -7,7 +7,7 @@ import FactoryAddress from './FactoryAddress'
 
 const PageWrapper = ({ heading, singleData, DeliveryNo, DeliveryDate, children, styles,value }) => {
     return (
-        <Page size={"A4"} wrap style={[tw("p-2 pb-[75px] mt-5 text-sm flex flex-col h-full relative  "), { fontFamily: "Segoe-UI" }]} >
+        <Page size={"A4"} wrap style={[tw("p-2 pb-[75px] mt-5 text-sm flex flex-col h-full relative  "), { fontFamily: "Helvetica" }]} >
 
             <WaterMarkSymbol />
             <View fixed>
