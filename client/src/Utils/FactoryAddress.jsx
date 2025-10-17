@@ -42,16 +42,16 @@ const FactoryAddress = () => (
             <View>
                 <Text></Text>
             </View>
-            <Text style={tw("")}>
+            {/* <Text style={tw("")}>
                 Authorized By
 
-            </Text>
+            </Text> */}
 
 
 
         </View>
-        <View style={tw("w-full flex flex-col items-center justify-center ml-48    ")}>
-            <Text style={[styles.title]}>
+        <View style={tw("w-full flex flex-col items-center justify-center")}>
+            <Text style={[styles.title,tw("mx-auto")]}>
                 Thank you for your business!
             </Text>
 

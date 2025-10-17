@@ -431,7 +431,7 @@ export default function BillItems({
                 <th
                   className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Qty
+                  Sales Qty
                 </th>
                 <th
                   className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
