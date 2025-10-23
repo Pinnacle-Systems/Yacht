@@ -43,7 +43,7 @@ export default function Form() {
 
   const childRecord = useRef(0);
   const dispatch = useDispatch();
-   const cityNameRef = useRef(null);
+  const cityNameRef = useRef(null);
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -138,7 +138,7 @@ export default function Form() {
       });
       return;
     }
-   
+
     if (id) {
       handleSubmitCustom(updateData, data, "Updated");
     } else {
@@ -154,15 +154,14 @@ export default function Form() {
       try {
         const deldata = await removeData(id).unwrap();
         if (deldata?.statusCode == 1) {
-          // toast.error(deldata?.message);
-          setForm(false);
+          Swal.fire({
+            icon: "error",
+            title: "Child record Exists",
+            text: deldata.data?.message || "Data cannot be deleted!",
+          });
           return;
         }
         setId("");
-        dispatch({
-          type: `StateMaster/invalidateTags`,
-          payload: ["State"],
-        });
         Swal.fire({
           title: "Deleted Successfully",
           icon: "success",
@@ -171,10 +170,11 @@ export default function Form() {
         setForm(false);
       } catch (error) {
         Swal.fire({
-          title: "Deleted Successfully",
-          icon: "success",
-          timer: 1000,
+          icon: "error",
+          title: "Submission error",
+          text: error.data?.message || "Something went wrong!",
         });
+        setForm(false);
       }
     }
   };
@@ -312,7 +312,7 @@ export default function Form() {
             data={allData?.data}
             onView={handleView}
             onEdit={handleEdit}
-            onDelete={deleteData}
+            onDelete={deleteData(id)}
             itemsPerPage={10}
           />
         </div>
@@ -332,9 +332,7 @@ export default function Form() {
                 <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg  py-0.5 font-semibold  text-gray-800">
-                      
-                          City Master
-                        
+                      City Master
                     </h2>
                   </div>
                   <div className="flex gap-2">
@@ -385,7 +383,7 @@ export default function Form() {
                                   disabled={
                                     childRecord.current > 0 ? true : undefined
                                   }
-                                   ref={cityNameRef}
+                                  ref={cityNameRef}
                                 />
                               </div>
                               <div className="mb-3 w-[150px] ml-6">

@@ -72,6 +72,8 @@ async function remove(req, res, next) {
         res.json(await _remove(req.params.id));
         console.log(res.statusCode);
     } catch (error) {
+                console.log(error, "errorrrr")
+
         if (error.code === 'P2025') {
             res.statusCode = 200;
             res.json({ statusCode: 1, message: `Record Not Found` })

@@ -128,7 +128,7 @@ export default function Form() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (id ) => {
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
