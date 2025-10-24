@@ -24,12 +24,12 @@ const BarCodePrintFormat = ({
   labelConfig = {
     labelWidth: 25, // mm
     labelHeight: 20, // mm
-    stickersPerRow: 3,
+    stickersPerRow: 4,
     horizontalGap: 0, // mm
     verticalGap: 0, // mm
   },
 }) => {
-  const barCodePerPage = 18
+  const barCodePerPage = 28
   const params = {
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -86,9 +86,8 @@ const BarCodePrintFormat = ({
               flexDirection: "row",
               flexWrap: "wrap",
               justifyContent: "flex-start",
-              paddingHorizontal: 10,
-              paddingVertical: 10,
               gap: gapX,
+              padding: 2,
             }}
           >
             {chunk.map((code, i) => (
