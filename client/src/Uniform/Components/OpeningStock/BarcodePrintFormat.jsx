@@ -8,6 +8,8 @@ import { findFromList } from "../../../Utils/helper";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 import secureLocalStorage from "react-secure-storage";
 
+const mmToPt = (mm) => (mm / 25.4) * 72; // conversion helper
+
 const chunkArray = (arr, size) => {
   const result = [];
   for (let i = 0; i < arr.length; i += size) {
@@ -16,7 +18,18 @@ const chunkArray = (arr, size) => {
   return result;
 };
 
-const BarCodePrintFormat = ({ data, barCodePerPage = 10 }) => {
+const BarCodePrintFormat = ({
+  data,
+   // 3 columns × 8 rows = 24 labels per A4 landscape section
+  labelConfig = {
+    labelWidth: 25, // mm
+    labelHeight: 20, // mm
+    stickersPerRow: 3,
+    horizontalGap: 0, // mm
+    verticalGap: 0, // mm
+  },
+}) => {
+  const barCodePerPage = 18
   const params = {
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -26,7 +39,7 @@ const BarCodePrintFormat = ({ data, barCodePerPage = 10 }) => {
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
 
-  // ✅ flatten all barcodes from all items
+  // ✅ Flatten all barcodes
   const allBarcodes = data.flatMap((item) =>
     Array.from({ length: parseInt(item?.qty || 0) }, () => ({
       barCode: item.barCode,
@@ -36,11 +49,29 @@ const BarCodePrintFormat = ({ data, barCodePerPage = 10 }) => {
     }))
   );
 
-  // ✅ split into pages
   const chunks = chunkArray(allBarcodes, barCodePerPage);
 
+  const {
+    labelWidth,
+    labelHeight,
+    stickersPerRow,
+    horizontalGap,
+    verticalGap,
+  } = labelConfig;
+
+  // Convert mm → pt
+  const labelWidthPt = mmToPt(labelWidth);
+  const labelHeightPt = mmToPt(labelHeight);
+  const gapX = mmToPt(horizontalGap);
+  const gapY = mmToPt(verticalGap);
+
+  // 👇 TVS LP 46 Lite printable area (approx)
+  // 4-inch width = 101.6 mm, 6-inch height = 152.4 mm
+  const pageWidthPt = mmToPt(101.6);
+  const pageHeightPt = mmToPt(152.4);
+
   useEffect(() => {
-    console.log(data, "allBarcodes");
+    console.log("Barcode Data:", allBarcodes);
   }, [data]);
 
   return (
@@ -48,24 +79,47 @@ const BarCodePrintFormat = ({ data, barCodePerPage = 10 }) => {
       <Document>
         {chunks.map((chunk, pageIdx) => (
           <Page
-            size="A4"
             key={pageIdx}
-            style={tw("flex flex-row flex-wrap gap-5 justify-center")}
+            size={{ width: pageWidthPt, height: pageHeightPt }}
+            orientation="portrait"
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              justifyContent: "flex-start",
+              paddingHorizontal: 10,
+              paddingVertical: 10,
+              gap: gapX,
+            }}
           >
-            <Text
-              render={({ pageNumber, totalPages }) =>
-                `${pageNumber} / ${totalPages}`
-              }
-              fixed
-            />
             {chunk.map((code, i) => (
-              <View key={i} style={tw("p-2")}>
-                <BarcodeGenerator value={code.barCode} />
-                <View style={tw("flex flex-row gap-20 px-2 mt-1")}>
-                  <Text style={tw("text-sm")}>
-                    Style No: {code.styleNo || ""}
-                  </Text>
-                  <Text style={tw("text-sm ")}>Size: {code.sizeName || ""}</Text>
+              <View
+                key={i}
+                style={{
+                  width: labelWidthPt,
+                  height: labelHeightPt,
+                  border: "0.5pt solid #aaa",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  marginBottom: gapY,
+                  padding: 2,
+                }}
+              >
+                <BarcodeGenerator
+                  value={code.barCode}
+                  width={labelWidthPt * 0.85}
+                  height={labelHeightPt * 0.5}
+                />
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    width: "100%",
+                    marginTop: 2,
+                    paddingHorizontal: 2,
+                  }}
+                >
+                  <Text style={tw("text-[5px]")}>Style: {code.styleNo}</Text>
+                  <Text style={tw("text-[5px]")}>Size: {code.sizeName}</Text>
                 </View>
               </View>
             ))}

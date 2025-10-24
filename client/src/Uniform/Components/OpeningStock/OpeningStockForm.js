@@ -37,7 +37,7 @@ export default function OpeningStockForm({
   const [storeId, setStoreId] = useState("");
   const [openingStockItems, setOpeningStockItems] = useState([]);
   const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
-  const [barCodePerPage, setBarCodePerPage] = useState(10);
+  const [barCodePerPage, setBarCodePerPage] = useState(18);
   const [barcodeItems, setBarcodeItems] = useState([]);
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
@@ -336,7 +336,7 @@ export default function OpeningStockForm({
       >
         <BarCodePrintFormat
           data={barcodeItems.filter((i) => i?.styleId)}
-          barCodePerPage={barCodePerPage}
+          // barCodePerPage={barCodePerPage}
         />
       </Modal>
     </>
