@@ -19,6 +19,7 @@ import moment from "moment";
 import Modal from "../../../UiComponents/Modal/index.js";
 import BarCodePrintFormat from "./BarcodePrintFormat.jsx";
 import { toast } from "react-toastify";
+import BarCodePrintThermalRoll from "./BarCodePrintThermalRoll.jsx";
 
 export default function OpeningStockForm({
   onClose,
@@ -329,7 +330,7 @@ export default function OpeningStockForm({
           </div>
         </div>
       </div>
-      <Modal
+      {/* <Modal
         isOpen={barcodePrintOpen}
         onClose={() => setBarcodePrintOpen(false)}
         widthClass={"px-2 h-[90%] w-[90%]"}
@@ -338,7 +339,13 @@ export default function OpeningStockForm({
           data={barcodeItems.filter((i) => i?.styleId)}
           // barCodePerPage={barCodePerPage}
         />
-      </Modal>
+      </Modal> */}
+      {barcodePrintOpen && (
+        <BarCodePrintThermalRoll
+          data={barcodeItems.filter((i) => i?.styleId)}
+          autoPrint={true}
+        />
+      )}
     </>
   );
 }

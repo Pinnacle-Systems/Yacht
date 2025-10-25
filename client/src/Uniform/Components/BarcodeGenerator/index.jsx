@@ -3,24 +3,28 @@ import JsBarcode from "jsbarcode";
 import { Image } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf";
 
-const BarcodeGenerator = ({ value, isUi = false, width = 200, height = 60 }) => {
+const BarcodeGenerator = ({ value, isUi = false, width = 100, height = 30 }) => {
   const [barcode, setBarcode] = useState("");
 
   useEffect(() => {
+    if (!value) return;
     const canvas = document.createElement("canvas");
-    JsBarcode(canvas, value, { displayValue: false });
-    setBarcode(canvas.toDataURL());
+    JsBarcode(canvas, value, {
+      format: "CODE128",
+      width: 1.5,
+      height: 40,
+      displayValue: false,
+      margin: 0,
+    });
+    setBarcode(canvas.toDataURL("image/png"));
   }, [value]);
+
+  if (!barcode) return null;
 
   if (isUi)
     return (
       <div className="flex justify-center items-center">
-        <img
-          src={barcode}
-          alt=""
-          className="object-contain"
-          style={{ width, height }}
-        />
+        <img src={barcode} alt="barcode" style={{ width, height }} />
       </div>
     );
 

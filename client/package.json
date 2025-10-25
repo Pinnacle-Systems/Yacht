@@ -26,6 +26,7 @@
     "cors": "^2.8.5",
     "country-state-city": "^3.2.1",
     "dom-to-image": "^2.6.0",
+    "esc-pos-encoder": "^3.0.0",
     "exceljs": "^4.4.0",
     "html2canvas": "^1.4.1",
     "joi": "^17.13.3",
