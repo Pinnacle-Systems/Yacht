@@ -1,13 +1,31 @@
 import React, { useEffect } from "react";
-import { Document, Page, View, PDFViewer, Text } from "@react-pdf/renderer";
+import { Document, Page, View, Text, PDFViewer } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf";
 import BarcodeGenerator from "../BarcodeGenerator";
-import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
-import secureLocalStorage from "react-secure-storage";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { findFromList } from "../../../Utils/helper";
+import secureLocalStorage from "react-secure-storage";
 
-const BarCodePrintFormatThermal = ({ data }) => {
+const mmToPt = (mm) => (mm / 25.4) * 72; // mm → pt
+const chunkArray = (arr, size) => {
+  const result = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
+};
+
+const BarCodePrintFormat = ({
+  data,
+  labelConfig = {
+    labelWidth: 25, // mm
+    labelHeight: 20, // mm
+    stickersPerRow: 4,
+    horizontalGap: 1, // mm
+    verticalGap: 1, // mm
+  },
+}) => {
   const params = {
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -17,7 +35,7 @@ const BarCodePrintFormatThermal = ({ data }) => {
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
 
-  // ✅ Expand each item into multiple labels based on qty
+  // 🔁 Generate labels per quantity
   const allBarcodes = data.flatMap((item) =>
     Array.from({ length: parseInt(item?.qty || 0) }, () => ({
       barCode: item.barCode,
@@ -27,33 +45,84 @@ const BarCodePrintFormatThermal = ({ data }) => {
     }))
   );
 
+  const {
+    labelWidth,
+    labelHeight,
+    stickersPerRow,
+    horizontalGap,
+    verticalGap,
+  } = labelConfig;
+
+  const labelWidthPt = mmToPt(labelWidth);
+  const labelHeightPt = mmToPt(labelHeight);
+  const gapX = mmToPt(horizontalGap);
+  const gapY = mmToPt(verticalGap);
+
+  const pageWidthPt =
+    labelWidthPt * stickersPerRow + gapX * (stickersPerRow - 1);
+  const pageHeightPt = labelHeightPt;
+
+  const rows = chunkArray(allBarcodes, stickersPerRow);
+
   useEffect(() => {
-    console.log("Thermal barcode data:", allBarcodes);
+    console.log("Barcode data:", allBarcodes);
   }, [data]);
 
   return (
-    <PDFViewer style={tw("h-full w-full")}>
+    <PDFViewer style={tw("w-full h-full")}>
       <Document>
-        {allBarcodes.map((code, i) => (
+        {rows.map((row, rowIndex) => (
           <Page
-            key={i}
-            // ✅ Custom size for 50mm x 25mm sticker (in points: 1mm ≈ 2.83465)
-            size={{ width: 142, height: 71 }} // ~50mm x 25mm
-            style={tw(
-              "flex flex-col justify-center items-center p-1 border border-gray-200"
-            )}
+            key={rowIndex}
+            size={{ width: pageWidthPt, height: pageHeightPt }}
+            style={{
+              flexDirection: "row",
+              justifyContent: "flex-start",
+              alignItems: "center",
+              padding: 0,
+              gap: gapX,
+            }}
           >
-            <View style={tw("flex justify-center items-center")}>
-              <BarcodeGenerator value={code.barCode} width={100} height={30} />
-            </View>
-            <View style={tw("flex flex-row justify-between w-full px-1 mt-1")}>
-              <Text style={tw("text-[8px] leading-none")}>
-                Style: {code.styleNo || ""}
-              </Text>
-              <Text style={tw("text-[8px] leading-none")}>
-                Size: {code.sizeName || ""}
-              </Text>
-            </View>
+            {row.map((code, i) => (
+              <View
+                key={i}
+                style={{
+                  width: labelWidthPt,
+                  height: labelHeightPt,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                {/* 🧾 Barcode */}
+                <BarcodeGenerator
+                  value={code.barCode}
+                  width={labelWidthPt * 0.85}
+                  height={labelHeightPt * 0.55}
+                />
+
+                {/* 🧵 Style No */}
+                <Text
+                  style={{
+                    fontSize: 7,
+                    marginTop: 1,
+                    textAlign: "center",
+                  }}
+                >
+                  { code.styleNo ? `Style: ${code.styleNo}` : ""}
+                </Text>
+
+                {/* 📏 Size */}
+                <Text
+                  style={{
+                    fontSize: 7,
+                    marginTop: 1,
+                    textAlign: "center",
+                  }}
+                >
+                  {code.sizeName ? `Size: ${code.sizeName}` : ""}
+                </Text>
+              </View>
+            ))}
           </Page>
         ))}
       </Document>
@@ -61,4 +130,4 @@ const BarCodePrintFormatThermal = ({ data }) => {
   );
 };
 
-export default BarCodePrintFormatThermal;
+export default BarCodePrintFormat;

@@ -323,7 +323,7 @@ export default function OpeningStockForm({
                 );
                 setBarcodeItems(allStockRows);
                 setBarcodePrintOpen(true);
-                printBarcode({barcodeDetails:barcodeItems.filter((i) => i?.styleId),
+                printBarcode({barcodeDetails:allStockRows.filter((i) => i?.styleId),
                 labelsPerRow: 4,
                 })
               }}
@@ -335,7 +335,7 @@ export default function OpeningStockForm({
           </div>
         </div>
       </div>
-      {/* <Modal
+      <Modal
         isOpen={barcodePrintOpen}
         onClose={() => setBarcodePrintOpen(false)}
         widthClass={"px-2 h-[90%] w-[90%]"}
@@ -344,7 +344,7 @@ export default function OpeningStockForm({
           data={barcodeItems.filter((i) => i?.styleId)}
           // barCodePerPage={barCodePerPage}
         />
-      </Modal> */}
+      </Modal>
       {/* {barcodePrintOpen && (
         <BarCodePrintThermalRoll
           data={barcodeItems.filter((i) => i?.styleId)}
