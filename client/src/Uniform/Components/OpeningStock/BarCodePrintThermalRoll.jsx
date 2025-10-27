@@ -76,8 +76,10 @@ const BarCodePrintThermalRoll = ({ data ,autoPrint }) => {
   };
 
   useEffect(() => {
-  if (autoPrint) printThermalLabels();
-}, [autoPrint]);
+  if (autoPrint && data.length > 0) {
+    printThermalLabels();
+  } 
+}, [autoPrint, data]);
 
   return (
     // <button

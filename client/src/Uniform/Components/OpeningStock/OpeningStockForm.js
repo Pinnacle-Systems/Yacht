@@ -13,6 +13,7 @@ import ReadyGoods from "./ReadyGoods.js";
 import {
   useAddOpeningStockMutation,
   useGetOpeningStockByIdQuery,
+  usePrintBarcodeMutation,
   useUpdateOpeningStockMutation,
 } from "../../../redux/uniformService/OpeningStockService.js";
 import moment from "moment";
@@ -93,6 +94,7 @@ export default function OpeningStockForm({
 
   const [addData] = useAddOpeningStockMutation();
   const [updateData] = useUpdateOpeningStockMutation();
+  const [printBarcode] = usePrintBarcodeMutation();
 
   const storeOptions = locationData
     ? locationData.data.filter(
@@ -321,6 +323,9 @@ export default function OpeningStockForm({
                 );
                 setBarcodeItems(allStockRows);
                 setBarcodePrintOpen(true);
+                printBarcode({barcodeDetails:barcodeItems.filter((i) => i?.styleId),
+                labelsPerRow: 4,
+                })
               }}
               disabled={!id}
             >
@@ -340,12 +345,12 @@ export default function OpeningStockForm({
           // barCodePerPage={barCodePerPage}
         />
       </Modal> */}
-      {barcodePrintOpen && (
+      {/* {barcodePrintOpen && (
         <BarCodePrintThermalRoll
           data={barcodeItems.filter((i) => i?.styleId)}
           autoPrint={true}
         />
-      )}
+      )} */}
     </>
   );
 }

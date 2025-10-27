@@ -7,6 +7,7 @@ import {
   create as _create,
   update as _update,
   remove as _remove,
+  printBarcode as _printBarcode
 } from "../services/openingStock.service.js";
 
 async function get(req, res, next) {
@@ -116,4 +117,13 @@ async function remove(req, res, next) {
   }
 }
 
-export { get, getOne, getSearch, create, update, remove };
+async function printBarcode(req,res,next) {
+  try {
+    res.json(await _printBarcode(req.body));
+    console.log(res.statusCode);
+  } catch (err) {
+    console.error(`Error `, err.message);
+  }
+}
+
+export { get, getOne, getSearch, create, update, remove,printBarcode };

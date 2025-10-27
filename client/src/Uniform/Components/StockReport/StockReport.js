@@ -235,7 +235,7 @@ const StockReport = forwardRef(
         </Modal>
         <div className="flex flex-col w-full h-[93%] overflow-auto">
           <>
-            <div className="h-[100%] rounded-lg bg-[#F1F1F0] shadow-sm">
+            <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
               <div className="h-[90%]">
                 {allDataDetail && allDataDetail.length !== 0 ? (
                   <table className="">

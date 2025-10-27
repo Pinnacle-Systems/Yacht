@@ -7,6 +7,9 @@ import {
 } from "../utils/helper.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 import { PrismaClient } from "@prisma/client";
+import fs from "fs";
+import { exec } from "child_process";
+
 const prisma = new PrismaClient();
 
 async function getNextDocId(
@@ -783,4 +786,54 @@ async function remove(id) {
   return { statusCode: 0, data };
 }
 
-export { get, getOne, getSearch, create, update, remove };
+function printTSPL(tsplCommands, printerName) {
+  const tempFile = "temp_tspl.txt";
+  fs.writeFileSync(tempFile, tsplCommands, "utf8");
+
+  // Windows: copy file to printer
+  exec(
+    `copy /b ${tempFile} "\\\\localhost\\${printerName}"`,
+    (err, stdout, stderr) => {
+      if (err) console.error("Printing failed:", err);
+      else console.log("Printed successfully");
+      fs.unlinkSync(tempFile);
+    }
+  );
+}
+
+async function printBarcode(body) {
+  const { barcodeDetails, labelsPerRow = 4 } = body;
+  const labelWidth = 25; // mm
+  const labelHeight = 20; // mm
+  const gap = 2; // mm
+  let tspl = `
+SIZE ${
+    labelWidth * labelsPerRow + gap * (labelsPerRow - 1)
+  } mm, ${labelHeight} mm
+GAP ${gap} mm,0
+DIRECTION 1
+CLS
+`;
+
+  barcodeDetails.forEach((item, index) => {
+    const col = index % labelsPerRow;
+    const row = Math.floor(index / labelsPerRow);
+    const x = col * (labelWidth + gap);
+    const y = row * (labelHeight + gap);
+
+    tspl += `
+TEXT ${x + 5},${y + 5},"3",0,1,1,"${item.styleNo} ${item.size}"
+BARCODE ${x + 5},${y + 20},"128",40,1,0,2,2,"${item.barcodeNo}"
+`;
+  });
+
+  tspl += "\nPRINT\n";
+
+  // Replace with your printer name exactly as in Windows
+  const printerName = "TVS LP 46 LITE";
+  const data = printTSPL(tspl, printerName);
+  console.log(data, "data");
+  return  { statusCode: 0, data };
+}
+
+export { get, getOne, getSearch, create, update, remove,printBarcode };

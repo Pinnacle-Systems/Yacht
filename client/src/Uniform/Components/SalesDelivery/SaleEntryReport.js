@@ -168,7 +168,7 @@ const SalesEntryReport = ({
   return (
     <div className="flex flex-col w-full h-[93%] overflow-auto">
       <>
-        <div className="h-[100%] rounded-lg bg-[#F1F1F0] shadow-sm">
+        <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
           <div className="h-[90%]">
             <table className="">
               <thead className="bg-gray-200 text-gray-800 ">
