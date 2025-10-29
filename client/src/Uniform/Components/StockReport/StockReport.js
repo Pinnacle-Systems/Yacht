@@ -27,6 +27,7 @@ const StockReport = forwardRef(
       rowActions = true,
       parameter,
       setParameter,
+      onDataLoaded,
     },
     ref
   ) => {
@@ -98,6 +99,12 @@ const StockReport = forwardRef(
         skip: !(branchId && storeId),
       }
     );
+
+    useEffect(() => {
+      if (allData && onDataLoaded) {
+        onDataLoaded(allData);
+      }
+    }, [allData, onDataLoaded]);
 
     const allDataDetail = allData?.data;
 

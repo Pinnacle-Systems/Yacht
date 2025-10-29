@@ -20,7 +20,8 @@ import moment from "moment";
 import Modal from "../../../UiComponents/Modal/index.js";
 import BarCodePrintFormat from "./BarcodePrintFormat.jsx";
 import { toast } from "react-toastify";
-import BarCodePrintThermalRoll from "./BarCodePrintThermalRoll.jsx";
+import { useDispatch } from "react-redux";
+import StyleMasterApi from "../../../redux/uniformService/StyleMasterService.js";
 
 export default function OpeningStockForm({
   onClose,
@@ -41,6 +42,8 @@ export default function OpeningStockForm({
   const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
   const [barCodePerPage, setBarCodePerPage] = useState(18);
   const [barcodeItems, setBarcodeItems] = useState([]);
+
+  const dispatch = useDispatch();
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
@@ -130,6 +133,7 @@ export default function OpeningStockForm({
             Swal.showLoading();
           },
         });
+       dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
       } else {
         toast.error(returnData?.message);
       }

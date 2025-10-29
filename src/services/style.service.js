@@ -3,24 +3,55 @@ import { NoRecordFound } from "../configs/Responses.js";
 
 const prisma = new PrismaClient();
 
+// async function get(req) {
+//   const { companyId, active } = req.query;
+//   const data = await prisma.style.findMany({
+//     where: {
+//       companyId: companyId ? parseInt(companyId) : undefined,
+
+//       active: active ? Boolean(active) : undefined,
+//     },
+//     include: {
+//       StyleItem: true,
+//       Fabric:true
+//     },
+//   });
+//   return { statusCode: 0, data };
+// }
+
 async function get(req) {
   const { companyId, active } = req.query;
+
   const data = await prisma.style.findMany({
     where: {
       companyId: companyId ? parseInt(companyId) : undefined,
-
       active: active ? Boolean(active) : undefined,
     },
     include: {
       StyleItem: true,
-      Fabric:true
+      Fabric: true,
     },
   });
-  return { statusCode: 0, data };
+
+  // Add childRecord count for each style
+  const enrichedData = await Promise.all(
+    data.map(async (style) => {
+      const childCount = await prisma.openingStockItems.count({
+        where: { styleId: style.id },
+      });
+      return {
+        ...style,
+        childRecord: childCount,
+      };
+    })
+  );
+
+  return { statusCode: 0, data: enrichedData };
 }
 
+
 async function getOne(id) {
-  const childRecord = 0;
+  const childRecord = await prisma.openingStockItems.count({where:{styleId : parseInt(id)}});
   const data = await prisma.style.findUnique({
     where: {
       id: parseInt(id),

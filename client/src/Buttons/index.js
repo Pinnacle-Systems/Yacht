@@ -101,7 +101,7 @@ export const CloseButton = ({ onClick }) => {
 export const DeleteButton = ({ onClick,disabled }) => {
     return (
         <button className='text-red-700 text-sm py-1 px-4 rounded focus:outline-none focus:shadow-outline' disabled={disabled} onClick={() => onClick()}>
-            {<FontAwesomeIcon icon={faTrashCan} />} Delete
+            {<FontAwesomeIcon icon={faTrashCan} />} 
         </button>
     )
 }

@@ -353,6 +353,11 @@ export default function AdjustItems({
             onClick={() => {
               handleAddRow();
             }}
+             onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleAddRow();
+              }
+            }}
           >
             <FaPlus /> Add
           </button>
@@ -524,12 +529,7 @@ export default function AdjustItems({
                             cursor: "pointer",
                           }}
                           src={imageFormatter(row?.styleId)}
-                          // alt="style"
-                          // onError={(e) => (e.target.src = "/no-image.png")} // fallback if not found
-                          onMouseEnter={() =>
-                            setPreviewImage(imageFormatter(row?.styleId))
-                          }
-                          onMouseLeave={() => setPreviewImage(null)}
+                          onClick={() =>setPreviewImage(imageFormatter(row?.styleId)) }
                         />
                       ) : (
                         <></>
@@ -617,7 +617,8 @@ export default function AdjustItems({
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px]">
                       <select
-                        tabIndex={"0"}
+                      id={`adjType-${index}`}
+                        tabIndex={0}
                         disabled={readOnly}
                         className={`text-left w-full rounded py-1 table-data-input 
     ${row.adjType === "PLUS" ? "text-green-600" : ""}
@@ -669,6 +670,16 @@ export default function AdjustItems({
                           if (e.key === "Delete") {
                             handleInputChange("", index, "remarks");
                           }
+                          if (e.key === "Enter") {
+      e.preventDefault(); // prevent form submit or line break
+      e.stopPropagation();
+      const nextSelect = document.querySelector(`#adjType-${index + 1}`);
+      if (nextSelect) {
+      nextSelect.focus();
+      // Optional: visually show focus (since select.open() is not allowed)
+      setTimeout(() => (nextSelect.style.outline = ""), 800);
+    }
+    }
                         }}
                         disabled={readOnly}
                         type="string"

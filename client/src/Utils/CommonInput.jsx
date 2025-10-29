@@ -93,7 +93,7 @@ export const handleOnChange = (event, setValue) => {
 
 
 export function ReusableInput(
-  { setValue, label, type, value, className = "", placeholder, readOnly, disabled }
+  { setValue, label, type, value, className = "", placeholder, readOnly, disabled,autoFocus }
 ) {
   return (
     <div className="mb-2">
@@ -115,6 +115,7 @@ export function ReusableInput(
           focus:border-indigo-300 focus:outline-none transition-all duration-200
           hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""
           } ${className}`}
+          autoFocus={autoFocus}
       />
     </div>
   );

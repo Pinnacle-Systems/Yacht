@@ -253,6 +253,11 @@ export default function ReadyGoods({
             onClick={() => {
               handleAddRow();
             }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleAddRow();
+              }
+            }}
           >
             <FaPlus /> Add
           </button>
@@ -351,12 +356,11 @@ export default function ReadyGoods({
                             cursor: "pointer",
                           }}
                           src={imageFormatter(row?.styleId)}
-                          // alt="style"
-                          // onError={(e) => (e.target.src = "/no-image.png")} // fallback if not found
-                          onMouseEnter={() =>
-                            setPreviewImage(imageFormatter(row?.styleId))
-                          }
-                          onMouseLeave={() => setPreviewImage(null)}
+                          onClick={() =>setPreviewImage(imageFormatter(row?.styleId)) }
+                          // onMouseEnter={() =>
+                          //   setPreviewImage(imageFormatter(row?.styleId))
+                          // }
+                          // onMouseLeave={() => setPreviewImage(null)}
                         />
                       ) : (
                         <>No Image</>
@@ -459,6 +463,7 @@ export default function ReadyGoods({
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
+                        id={`qty-input-${index}`}
                         onKeyDown={(e) => {
                           if (e.code === "Minus" || e.code === "NumpadSubtract")
                             e.preventDefault();
@@ -483,6 +488,16 @@ export default function ReadyGoods({
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
                         onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault(); // prevent form submit or line break
+                            e.stopPropagation();
+                            const nextQtyInput = document.querySelector(
+                              `#qty-input-${index + 1}`
+                            );
+                            if (nextQtyInput) {
+                              nextQtyInput.focus();
+                            }
+                          }
                           if (e.key === "Delete") {
                             handleInputChange("", index, "remarks");
                           }

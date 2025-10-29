@@ -4,11 +4,14 @@ import OpeningStockForm from "./OpeningStockForm";
 import OpeningStockFormReport from "./OpeningStockFormReport";
 import { FaPlus } from "react-icons/fa";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
+import StyleMasterApi from "../../../redux/uniformService/StyleMasterService.js";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
   const [id, setId] = useState("");
   const [readOnly, setReadOnly] = useState(false);
+  const dispatch = useDispatch();
 
   const [removeData] = useDeleteOpeningStockMutation();
 
@@ -46,6 +49,7 @@ export default function Form() {
           timer: 1000,
         });
         setShowForm(false);
+        dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
       } catch (error) {
         Swal.fire({
           icon: "error",

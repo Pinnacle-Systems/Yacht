@@ -80,6 +80,7 @@ const StyleItemMasterApi = createApi({
 export const {
     useGetStyleItemMasterQuery,
     useGetStyleItemMasterByIdQuery,
+    useLazyGetStyleItemMasterByIdQuery,
     useAddStyleItemMasterMutation,
     useUpdateStyleItemMasterMutation,
     useDeleteStyleItemMasterMutation,

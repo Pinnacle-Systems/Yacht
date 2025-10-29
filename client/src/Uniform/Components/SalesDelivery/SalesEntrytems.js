@@ -31,6 +31,7 @@ export default function BillItems({
   const [focusedRowIndex, setFocusedRowIndex] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
   const [currentSelectedIndex, setCurrentSelectedIndex] = useState("");
+  const [barcodeText, setBarcodeText] = useState("");
 
   const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
@@ -273,79 +274,33 @@ export default function BillItems({
     }
   };
 
-  // const handleInputChange = async (value, index, field) => {
-  //   if (field === "qty") {
-  //     const row = salesEntryItems[index];
-  //     const balanceQty = row?.stkQty || 0;
-
-  //     if (parseFloat(balanceQty) < parseFloat(value)) {
-  //       Swal.fire({
-  //         icon: "warning",
-  //         title: "Invalid Quantity",
-  //         text: "Sales Qty cannot be more than Stock Qty!",
-  //         confirmButtonText: "OK",
-  //       });
-  //       return;
-  //     }
-  //   }
-
-  //   setSalesEntryItems((prev) => {
-  //     const newItems = structuredClone(prev);
-  //     newItems[index][field] = value;
-  //     return newItems;
-  //   });
-
-  //   // Only trigger API if search field changes
-  //   if (field === "barcode") {
-  //     const row = structuredClone(salesEntryItems[index]);
-  //     row.barcode = value;
-
-  //     if (row.search) {
-  //       try {
-  //         const response = await triggerGetBarcodeDetail({
-  //           params: { search: row.search }, // 👈 only one param now
-  //         }).unwrap();
-
-  //         if (response?.data?.length > 0) {
-  //           const item = response.data[0];
-  //           setSalesEntryItems((prev) =>
-  //             prev.map((r, i) =>
-  //               i === index
-  //                 ? {
-  //                     ...r,
-  //                     barcode: item.barCode,
-  //                     styleId: item.styleId,
-  //                     sizeId: item.sizeId,
-  //                     stkQty: response.totalQty,
-  //                   }
-  //                 : r
-  //             )
-  //           );
-  //         } else {
-  //           setSalesEntryItems((prev) =>
-  //             prev.map((r, i) =>
-  //               i === index
-  //                 ? {
-  //                     search: "",
-  //                     qty: "",
-  //                     remarks: "",
-  //                     stkQty: "",
-  //                   }
-  //                 : r
-  //             )
-  //           );
-  //         }
-  //       } catch (err) {
-  //         console.error("Error fetching stock details:", err);
-  //       }
-  //     }
-  //   }
-  // };
   function imageFormatter(styleId) {
     const fileName = findFromList(styleId, styleList?.data, "img");
     if (!fileName) return "/no-image.png"; // fallback image if missing
     return `${IMAGE_UPLOAD_URL}${fileName}`;
   }
+
+  useEffect(() => {
+    let timeout;
+    const handleKeyDown = (e) => {
+      if (e.key === "Enter") {
+        if (barcodeText) {
+          setStyleNo(barcodeText);
+          handleAddRow();
+          setBarcodeText("");
+        }
+        return;
+      }
+      if (e.key.length === 1) {
+        setBarcodeText((prev) => prev + e.key);
+        clearTimeout(timeout);
+        timeout = setTimeout(() => setBarcodeText(""), 200);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    console.log("barcodeText", barcodeText);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [barcodeText]);
 
   return (
     <>
@@ -371,11 +326,17 @@ export default function BillItems({
             type={"text"}
             required={true}
             readOnly={readOnly}
+            autoFocus={true}
           />
           <button
             className="hover:bg-green-700 h-6 mt-3 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-xs"
             onClick={() => {
               handleAddRow();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleAddRow();
+              }
             }}
           >
             <FaPlus /> Add
@@ -572,12 +533,9 @@ export default function BillItems({
                             cursor: "pointer",
                           }}
                           src={imageFormatter(row?.styleId)}
-                          // alt="style"
-                          // onError={(e) => (e.target.src = "/no-image.png")} // fallback if not found
-                          onMouseEnter={() =>
+                          onClick={() =>
                             setPreviewImage(imageFormatter(row?.styleId))
                           }
-                          onMouseLeave={() => setPreviewImage(null)}
                         />
                       ) : (
                         <></>
@@ -665,6 +623,7 @@ export default function BillItems({
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
                         type="number"
+                        id={`qty-input-${index}`}
                         className="text-right rounded py-1 px-1 w-full table-data-input"
                         value={row?.qty}
                         disabled={readOnly}
@@ -827,6 +786,16 @@ export default function BillItems({
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
                             handleInputChange("", index, "remarks");
+                          }
+                          if (e.key === "Enter") {
+                            e.preventDefault(); // prevent form submit or line break
+                            e.stopPropagation();
+                            const nextQtyInput = document.querySelector(
+                              `#qty-input-${index + 1}`
+                            );
+                            if (nextQtyInput) {
+                              nextQtyInput.focus();
+                            }
                           }
                         }}
                         type="string"
