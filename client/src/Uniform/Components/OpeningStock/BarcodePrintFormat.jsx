@@ -95,7 +95,7 @@ const BarCodePrintFormat = ({
               >
                 {/* 🧾 Barcode */}
                 <BarcodeGenerator
-                  value={code.barCode}
+                  value={code.styleNo}
                   width={labelWidthPt * 0.85}
                   height={labelHeightPt * 0.55}
                 />

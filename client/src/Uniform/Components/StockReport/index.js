@@ -7,12 +7,29 @@ import { PDFViewer } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf";
 import Modal from "../../../UiComponents/Modal";
 import PDF from "./PrintFormat/PDF";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
+import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
+import secureLocalStorage from "react-secure-storage";
 
 export default function Form() {
   const [parameter, setParameter] = useState(false);
   const [pdfOpen, setPdfOpen] = useState(false);
   const [allData, setAllData] = useState(null);
 
+  const branchId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "currentBranchId"
+  );
+  const companyId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "userCompanyId"
+  );
+  const params = {
+    branchId,
+    companyId,
+  };
+  const { data: sizeList } = useGetSizeMasterQuery({ params });
+  const { data: fabricList } = useGetFabricMasterQuery({ params });
+  const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const stockReportRef = useRef();
   return (
     <div className="p-1 bg-[#F1F1F0] h-[85%]">
@@ -23,7 +40,10 @@ export default function Form() {
       >
         <PDFViewer style={tw("w-full h-full")}>
           <PDF
-           allData={allData?.data} 
+            allData={allData?.data}
+            sizeList={sizeList?.data}
+            fabricList={fabricList?.data}
+            styleItemList={styleItemList?.data}
           />
         </PDFViewer>
       </Modal>
@@ -37,7 +57,7 @@ export default function Form() {
             // disabled={!id}
             onClick={() => {
               setPdfOpen(true);
-              console.log("allData",allData)
+              console.log("allData", allData);
             }}
           >
             <FiPrinter className="w-4 h-4 mr-2" />

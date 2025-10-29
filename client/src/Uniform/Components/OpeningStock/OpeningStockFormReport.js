@@ -72,7 +72,7 @@ const OpeningStockFormReport = ({
 
   const isLoadingIndicator = isLoading || isFetching;
 
-  const totalPages = Math?.ceil(allData?.data?.length / itemsPerPage);
+  const totalPages = Math?.ceil(allData?.totalCount  / itemsPerPage);
   const indexOfLastItem = currentPage * parseInt(10);
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
@@ -80,17 +80,23 @@ const OpeningStockFormReport = ({
   console.log(indexOfLastItem, "indexOfLastItem");
 
   const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
-    }
-  };
+  if (newPage >= 1 && newPage <= totalPages) {
+    setCurrentPage(newPage);
+    setCurrentPageNumber(newPage); // ensures API fetches that page
+  }
+};
   const Pagination = () => {
     return (
       <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
-        <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+        {/* <div className="text-sm text-gray-600 mb-2 sm:mb-0">
           Showing {indexOfFirstItem + 1} to{" "}
           {Math.min(indexOfLastItem, allData?.data?.length)} of{" "}
           {allData?.length} entries
+        </div> */}
+        <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+          Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+          {Math.min(currentPage * itemsPerPage, allData?.totalCount || 0)} of{" "}
+          {allData?.totalCount || 0} entries
         </div>
         <div className="flex gap-1">
           <button

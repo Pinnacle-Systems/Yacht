@@ -4,7 +4,8 @@ import PageWrapper from "../../../../Utils/PageWrapper";
 import tw from "../../../../Utils/tailwind-react-pdf";
 import { findFromList } from "../../../../Utils/helper";
 
-const PDF = ({ allData }) => {
+const PDF = ({ allData, sizeList, fabricList, styleItemList }) => {
+   
     const styles = StyleSheet.create({
         page: { padding: 5 },
         infoRow: {
@@ -281,6 +282,8 @@ const PDF = ({ allData }) => {
             borderTopWidth: 0, // Optional: if you want to remove top line
         },
     });
+
+
     useEffect(() => {
         console.log("Single Data Fetched", allData,)
     }, [allData])
@@ -304,12 +307,6 @@ const PDF = ({ allData }) => {
                                 { label: "Fabric", flex: 2 },
                                 { label: "Size", flex: 0.8 },
                                 { label: "Qty", flex: 0.8 },
-                                { label: "Price", flex: 1 },
-                                { label: "Tax", flex: 0.8 },
-                                { label: "Disc Type", flex: 1 },
-                                { label: "Discount", flex: 1 },
-                                { label: "Gross Amount", flex: 1.3 },
-                                { label: "Net Amount", flex: 1.3 },
                             ].map((header, index) => (
                                 <Text
                                     key={index}
@@ -330,8 +327,7 @@ const PDF = ({ allData }) => {
                         </View>
                         {/*  Grouped Rows */}
 
-                        {(allData?.SalesEntryItems || []).map((item, index) => {
-                            const gross = item.price * item.qty;
+                        {(allData || []).map((item, index) => {
                             return (
                                 <View
                                     key={index}
@@ -355,31 +351,28 @@ const PDF = ({ allData }) => {
                                         {item?.barcode || "-"}
                                     </Text>
                                     <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
-                                        {item?.StyleItem?.name || "-"}
+                                        {findFromList(
+                                            item?.styleItemId,
+                                            styleItemList?.data,
+                                            "name"
+                                        )}
                                     </Text>
                                     <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
-                                        {item?.Fabric?.name || "-"}
+                                        {findFromList(
+                                            item?.fabricId,
+                                            fabricList?.data,
+                                            "name"
+                                        )}
                                     </Text>
                                     <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7 }]}>
-                                        {item.Size?.name || "-"}
+                                        {findFromList(
+                                            item?.sizeId,
+                                            sizeList?.data,
+                                            "name"
+                                        )}
                                     </Text>
                                     <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7, textAlign: "right" }]}>
-                                        {item.qty || 0}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7, textAlign: "right" }]}>
-                                        {item.price?.toFixed(2) || "0.00"}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7, textAlign: "right" }]}>
-                                        {item.taxPercent || 0}%
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
-                                        {item.discountType || "-"}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7, textAlign: "right" }]}>
-                                        {item.discountValue || 0}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1.3, fontSize: 7, textAlign: "right" }]}>
-                                        {gross.toFixed(2)}
+                                        {item.stkQty || 0}
                                     </Text>
                                 </View>
                             );
