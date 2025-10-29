@@ -121,7 +121,7 @@ const StockReport = forwardRef(
     const isLoadingIndicator = isLoading || isFetching;
 
     const totalPages = Math?.ceil(allData?.totalCount / itemsPerPage);
-    const indexOfLastItem = currentPage * parseInt(10);
+    const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = allData?.data?.slice(
       indexOfFirstItem,
@@ -131,90 +131,96 @@ const StockReport = forwardRef(
     console.log(indexOfLastItem, "indexOfLastItem");
 
     const handlePageChange = (newPage) => {
-      if (newPage >= 1 && newPage <= totalPages) {
-        setCurrentPage(newPage);
-      }
-    };
-    const Pagination = () => {
-      return (
-        <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
-          <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-             Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+  if (newPage >= 1 && newPage <= totalPages) {
+    setCurrentPage(newPage);
+    setCurrentPageNumber(newPage); // ensures API fetches that page
+  }
+};
+  const Pagination = () => {
+    return (
+      <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
+        {/* <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+          Showing {indexOfFirstItem + 1} to{" "}
+          {Math.min(indexOfLastItem, allData?.data?.length)} of{" "}
+          {allData?.length} entries
+        </div> */}
+        <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+          Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
           {Math.min(currentPage * itemsPerPage, allData?.totalCount || 0)} of{" "}
           {allData?.totalCount || 0} entries
-          </div>
-          <div className="flex gap-1">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`px-3 py-1 rounded-md ${
-                currentPage === 1
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-white text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              <FaChevronLeft className="inline" />
-            </button>
+        </div>
+        <div className="flex gap-1">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`px-3 py-1 rounded-md ${
+              currentPage === 1
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-white text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            <FaChevronLeft className="inline" />
+          </button>
 
-            {Array?.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (currentPage <= 3) {
-                pageNum = i + 1;
-              } else if (currentPage >= totalPages - 2) {
-                pageNum = totalPages - 4 + i;
-              } else {
-                pageNum = currentPage - 2 + i;
-              }
+          {Array?.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let pageNum;
+            if (totalPages <= 5) {
+              pageNum = i + 1;
+            } else if (currentPage <= 3) {
+              pageNum = i + 1;
+            } else if (currentPage >= totalPages - 2) {
+              pageNum = totalPages - 4 + i;
+            } else {
+              pageNum = currentPage - 2 + i;
+            }
 
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => handlePageChange(pageNum)}
-                  className={`px-3 py-1 rounded-md ${
-                    currentPage === pageNum
-                      ? "bg-indigo-800 text-white"
-                      : "bg-white text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
-
-            {totalPages > 5 && currentPage < totalPages - 2 && (
-              <span className="px-3 py-1">...</span>
-            )}
-
-            {totalPages > 5 && currentPage < totalPages - 2 && (
+            return (
               <button
-                onClick={() => handlePageChange(totalPages)}
+                key={pageNum}
+                onClick={() => handlePageChange(pageNum)}
                 className={`px-3 py-1 rounded-md ${
-                  currentPage === totalPages
+                  currentPage === pageNum
                     ? "bg-indigo-800 text-white"
                     : "bg-white text-gray-600 hover:bg-gray-100"
                 }`}
               >
-                {totalPages}
+                {pageNum}
               </button>
-            )}
+            );
+          })}
 
+          {totalPages > 5 && currentPage < totalPages - 2 && (
+            <span className="px-3 py-1">...</span>
+          )}
+
+          {totalPages > 5 && currentPage < totalPages - 2 && (
             <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
+              onClick={() => handlePageChange(totalPages)}
               className={`px-3 py-1 rounded-md ${
                 currentPage === totalPages
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  ? "bg-indigo-800 text-white"
                   : "bg-white text-gray-600 hover:bg-gray-100"
               }`}
             >
-              <FaChevronRight className="inline" />
+              {totalPages}
             </button>
-          </div>
+          )}
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`px-3 py-1 rounded-md ${
+              currentPage === totalPages
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-white text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            <FaChevronRight className="inline" />
+          </button>
         </div>
-      );
-    };
+      </div>
+    );
+  };
 
     return (
       <>
