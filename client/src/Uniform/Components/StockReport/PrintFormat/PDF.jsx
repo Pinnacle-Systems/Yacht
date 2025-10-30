@@ -327,7 +327,7 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList }) => {
                         </View>
                         {/*  Grouped Rows */}
 
-                        {(allData || []).map((item, index) => {
+                        {(allData?.data || []).map((item, index) => {
                             return (
                                 <View
                                     key={index}

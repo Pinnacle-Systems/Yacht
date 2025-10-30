@@ -50,8 +50,8 @@ const FactoryAddress = () => (
 
 
         </View>
-        <View style={tw("w-full flex flex-col items-center justify-center")}>
-            <Text style={[styles.title,tw("mx-auto")]}>
+        <View style={tw("ml-100 flex flex-col items-center justify-center")}>
+            <Text style={[styles.title,tw("")]}>
                 Thank you for your business!
             </Text>
 

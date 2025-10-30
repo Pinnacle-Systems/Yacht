@@ -40,10 +40,10 @@ export default function Form() {
       >
         <PDFViewer style={tw("w-full h-full")}>
           <PDF
-            allData={allData?.data}
-            sizeList={sizeList?.data}
-            fabricList={fabricList?.data}
-            styleItemList={styleItemList?.data}
+            allData={allData}
+            sizeList={sizeList}
+            fabricList={fabricList}
+            styleItemList={styleItemList}
           />
         </PDFViewer>
       </Modal>

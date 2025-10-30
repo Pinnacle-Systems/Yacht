@@ -17,7 +17,7 @@ const PageWrapper = ({ heading, singleData, DeliveryNo, DeliveryDate, children, 
                 {children}
             </View>
             <View fixed style={tw("pr-2 pb-2 mt-[50px] absolute bottom-3  ")}>
-                <View style={tw("")}>
+                <View style={tw("mx-auto")}>
                     {value ? "" : <FactoryAddress />}
                 </View>
                 <View style={tw("text-right w-full pb-1 pt-1")}>
