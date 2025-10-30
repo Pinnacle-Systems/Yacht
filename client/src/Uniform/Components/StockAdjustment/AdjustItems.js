@@ -347,8 +347,13 @@ export default function AdjustItems({
             type={"text"}
             required={true}
             readOnly={readOnly}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleAddRow();
+              }
+            }}
           />
-          <button
+          {/* <button
             className="hover:bg-green-700 h-6 mt-3 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-xs"
             onClick={() => {
               handleAddRow();
@@ -360,7 +365,7 @@ export default function AdjustItems({
             }}
           >
             <FaPlus /> Add
-          </button>
+          </button> */}
         </div>
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">Adjustment Details</h2>

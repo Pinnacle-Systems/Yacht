@@ -93,7 +93,7 @@ export const handleOnChange = (event, setValue) => {
 
 
 export function ReusableInput(
-  { setValue, label, type, value, className = "", placeholder, readOnly, disabled,autoFocus }
+  { setValue, label, type, value, className = "", placeholder, readOnly, disabled,autoFocus,onKeyDown }
 ) {
   return (
     <div className="mb-2">
@@ -110,6 +110,7 @@ export function ReusableInput(
         }
         placeholder={placeholder}
         readOnly={readOnly}
+        onKeyDown={onKeyDown}
         disabled={disabled}
         className={`w-full px-2 py-1 text-xs border border-slate-300 rounded-md 
           focus:border-indigo-300 focus:outline-none transition-all duration-200
