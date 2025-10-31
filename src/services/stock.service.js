@@ -471,6 +471,7 @@ async function get(req) {
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   let data;
   let totalCount;
+  let totalQty;
   data = await prisma.stock.groupBy({
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
@@ -508,8 +509,12 @@ async function get(req) {
     _sum: {
       qty: true,
     },
+     orderBy: {
+    styleNo: "asc",
+  },
   });
   totalCount = data.length;
+  totalQty = data?.reduce((sum,item) => sum + (item._sum?.qty || 0),0)
   if (pagination) {
     data = data.slice(
       (pageNumber - 1) * parseInt(dataPerPage),
@@ -528,6 +533,7 @@ async function get(req) {
       styleItemId: d.styleItemId,
     })),
     totalCount,
+    totalQty
   };
 }
 

@@ -53,8 +53,8 @@ const ShiftMaster = () => {
   const [to, setTo] = useState("");
   const MODEL = "DESIGNATION";
   console.log(form, "form");
-   const dispatch = useDispatch();
- 
+  const dispatch = useDispatch();
+
   const params = getCommonParams();
 
   console.log(params, "params");
@@ -90,23 +90,23 @@ const ShiftMaster = () => {
   const [addData] = useAddshiftMasterMutation();
   const [updateData] = useUpdateshiftMasterMutation();
   const [removeData] = useDeleteshiftMasterMutation();
-  
+
   const syncFormWithDb = useCallback(
     (data) => {
-    
-      
-        setName(data?.name || "");
-        setDocId(data?.docId || "");
-        setDescription(data?.description || "");
-        setActive(id ? data?.active ?? false : true);
-        setFrom(data?.from || "");
-        setTo(data?.to || "");
-        childRecord.current = data?.childRecord ? data?.childRecord : 0;
-      
+
+
+      setName(data?.name || "");
+      setDocId(data?.docId || "");
+      setDescription(data?.description || "");
+      setActive(id ? data?.active ?? false : true);
+      setFrom(data?.from || "");
+      setTo(data?.to || "");
+      childRecord.current = data?.childRecord ? data?.childRecord : 0;
+
     },
     [id, company]
   );
-console.log(docId,'doc');
+  console.log(docId, 'doc');
 
   useEffect(() => {
     syncFormWithDb(singleData?.data);
@@ -158,6 +158,26 @@ console.log(docId,'doc');
   };
 
   const saveData = () => {
+    let foundItem;
+    if (id) {
+      foundItem = allData?.data
+        ?.filter((i) => i.id !== id)
+        ?.some((item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase());
+    } else {
+      foundItem = allData?.data?.some(
+        (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+      );
+    }
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The Shift already exists.",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return false;
+    }
     if (!validateData(data)) {
       Swal.fire({
         icon: "error",
@@ -175,38 +195,38 @@ console.log(docId,'doc');
   };
 
   const deleteData = async (id) => {
-     if (id) {
-       if (!window.confirm("Are you sure to delete...?")) {
-         return;
-       }
-       try {
-         let deldata = await removeData(id).unwrap();
-         if (deldata?.statusCode == 1) {
-           Swal.fire({
-             icon: "error",
-             title: "Child record Exists",
-             text: deldata.data?.message || "Data cannot be deleted!",
-           });
-           return;
-         }
-         setId("");
-         Swal.fire({
-           title: "Deleted Successfully",
-           icon: "success",
-           timer: 1000,
-         });
-         setForm(false);
-        
-       } catch (error) {
-         Swal.fire({
-           icon: "error",
-           title: "Submission error",
-           text: error.data?.message || "Something went wrong!",
-         });
-         setForm(false);
-       }
-     }
-   };
+    if (id) {
+      if (!window.confirm("Are you sure to delete...?")) {
+        return;
+      }
+      try {
+        let deldata = await removeData(id).unwrap();
+        if (deldata?.statusCode == 1) {
+          Swal.fire({
+            icon: "error",
+            title: "Child record Exists",
+            text: deldata.data?.message || "Data cannot be deleted!",
+          });
+          return;
+        }
+        setId("");
+        Swal.fire({
+          title: "Deleted Successfully",
+          icon: "success",
+          timer: 1000,
+        });
+        setForm(false);
+
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Submission error",
+          text: error.data?.message || "Something went wrong!",
+        });
+        setForm(false);
+      }
+    }
+  };
 
   const handleKeyDown = (event) => {
     let charCode = String.fromCharCode(event.which).toLowerCase();

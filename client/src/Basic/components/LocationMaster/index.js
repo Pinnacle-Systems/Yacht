@@ -143,6 +143,29 @@ export default function Form() {
   };
 
   const saveData = () => {
+    let foundItem;
+    if (id) {
+      foundItem = allData?.data
+        ?.filter((i) => i.id !== id)
+        ?.some(
+          (item) =>
+            item.storeName?.trim().toLowerCase() === storeName?.trim().toLowerCase()
+        );
+    } else {
+      foundItem = allData?.data?.some(
+        (item) => item.storeName?.trim().toLowerCase() === storeName?.trim().toLowerCase()
+      );
+    }
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The Location Name already exists.",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return false;
+    }
     if (!validateData(data)) {
       Swal.fire({
         title: "Please fill all required fields...!",

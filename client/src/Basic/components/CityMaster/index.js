@@ -130,6 +130,29 @@ export default function Form() {
   };
 
   const saveData = () => {
+    let foundItem;
+    if (id) {
+      foundItem = allData?.data
+        ?.filter((i) => i.id !== id)
+        ?.some(
+          (item) =>
+            item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+        );
+    } else {
+      foundItem = allData?.data?.some(
+        (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+      );
+    }
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The City Name already exists.",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return false;
+    }
     if (!validateData(data)) {
       Swal.fire({
         icon: "error",

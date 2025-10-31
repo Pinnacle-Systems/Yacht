@@ -105,6 +105,7 @@ const Profile = ({ dp, setProfile, items = [] , setLogout , logout }) => {
                     className="flex items-center cursor-pointer w-full nav-dropdown-bg z-99"   
                     onClick={() => {
                         setLogout(true)
+                        console.log(logout,"logout")
                     }
                     }
                      

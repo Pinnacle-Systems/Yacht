@@ -64,8 +64,8 @@ const Parameter = ({
       )
     : [];
   return (
-    <div className="flex justify-between items-center p-1 text-center bg-blue-200 rounded-b-md mb-7 sticky top-0 ">
-      <div className="grid grid-cols-5 gap-5 p-2">
+    <div className="  items-center p-1 text-center bg-blue-200 rounded-b-md  sticky top-0 ">
+      <div className="grid grid-cols-6 gap-5 p-2">
         <DropdownInput
           name="Location"
           options={
@@ -86,6 +86,18 @@ const Parameter = ({
           value={localStoreId}
           setValue={setLocalStoreId}
           required={true}
+        />
+        <DropdownInput
+          name="Style No"
+          options={
+            styleList ? dropDownListObject(styleList.data, "sku", "id") : []
+          }
+          value={styleId}
+          setValue={(value) => {
+            setStyleId(value);
+          }}
+          required={false}
+          clear={true}
         />
         <DropdownInput
           name="Style"
@@ -124,7 +136,7 @@ const Parameter = ({
           clear={true}
         />
       </div>
-      <div className="flex justify-end gap-4  items-center mr-2">
+      <div className="flex justify-end gap-4 mb-4 items-center mr-2">
         <button
           onClick={handleDone}
           className="bg-lime-400 hover:bg-lime-600 hover:text-white p-1 px-3 text-sm rounded font-semibold transition"

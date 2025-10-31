@@ -74,9 +74,9 @@ const OpeningStockApi = createApi({
       }),
       invalidatesTags: ["OpeningStock"],
     }),
-     printBarcode: builder.mutation({
+    printBarcode: builder.mutation({
       query: (payload) => ({
-        url: OPENING_STOCK_API+"/barcode",
+        url: OPENING_STOCK_API + "/barcode",
         method: "POST",
         body: payload,
         headers: {
@@ -90,11 +90,13 @@ const OpeningStockApi = createApi({
 
 export const {
   useGetOpeningStockQuery,
+  useLazyGetOpeningStockQuery,
   useGetOpeningStockByIdQuery,
+  useLazyGetOpeningStockByIdQuery,
   useAddOpeningStockMutation,
   useUpdateOpeningStockMutation,
   useDeleteOpeningStockMutation,
-  usePrintBarcodeMutation
+  usePrintBarcodeMutation,
 } = OpeningStockApi;
 
 export default OpeningStockApi;

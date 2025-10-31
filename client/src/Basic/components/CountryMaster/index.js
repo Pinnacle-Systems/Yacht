@@ -141,16 +141,37 @@ export default function Form() {
   };
 
   const saveData = () => {
-    console.log("saveData hit");
+     let foundItem;
+      if (id) {
+        foundItem = allData?.data
+          ?.filter((i) => i.id !== id)
+          ?.some((item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase());
+      } else {
+        foundItem = allData?.data?.some(
+          (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+        );
+      }
+    
+      if (foundItem) {
+        Swal.fire({
+          text: "The Country Name already exists.",
+          icon: "warning",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+        return false;
+      }
     if (!validateData(data)) {
       Swal.fire({
-        icon: "error",
-        title: "Submission error",
-        text: "Please fill all required fields...!",
+        title: "Please fill all required fields...!",
+        icon: "success",
+        timer: 1000,
       });
       return;
     }
-
+    if (!window.confirm("Are you sure save the details ...?")) {
+      return;
+    }
     if (id) {
       handleSubmitCustom(updateData, data, "Updated");
     } else {

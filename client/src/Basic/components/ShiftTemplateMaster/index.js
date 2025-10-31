@@ -46,7 +46,7 @@ const ShiftTemplateMaster = () => {
   const [categoryId, setCategoryId] = useState("");
   const [date, setDate] = useState(null);
   const params = getCommonParams();
-  const[shiftId,setshiftId] = useState('')
+  const [shiftId, setshiftId] = useState("");
 
   const { branchId } = params;
   const dispatch = useDispatch();
@@ -217,12 +217,29 @@ const ShiftTemplateMaster = () => {
   };
 
   const saveData = () => {
-    // if (!validateData(data)) {
-    //     toast.error("Please fill all required fields...!", {
-    //         position: "top-center",
-    //     });
-    //     return;
-    // }
+    let foundItem;
+    if (id) {
+      foundItem = allData?.data
+        ?.filter((i) => i.id !== id)
+        ?.some(
+          (item) =>
+            item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+        );
+    } else {
+      foundItem = allData?.data?.some(
+        (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+      );
+    }
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The Sheft Template already exists.",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return false;
+    }
     if (!validateData(data)) {
       return;
     }
@@ -348,7 +365,6 @@ const ShiftTemplateMaster = () => {
       //   cellClass: () => "  text-gray-900",
       className: " text-gray-900 text-center uppercase w-32",
     },
-    
   ];
 
   return (

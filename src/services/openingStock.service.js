@@ -176,7 +176,6 @@ async function get(req) {
 }
 
 async function getOne(id) {
-  const childRecord = 0;
   const data = await prisma.openingStock.findUnique({
     where: {
       id: parseInt(id),
@@ -221,7 +220,17 @@ async function getOne(id) {
     },
   });
   if (!data) return NoRecordFound("openingStock");
-  return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+  const styleNos = data.OpeningStockItems.map((item) => item.styleNo).filter(
+    Boolean
+  );
+
+  // ✅ Count how many SalesEntryItems use those styleNos
+  const childRecordCount = await prisma.salesEntryItems.count({
+    where: {
+      styleNo: { in: styleNos },
+    },
+  });
+  return { statusCode: 0, data: { ...data,  childRecord: childRecordCount } };
 }
 
 async function getSearch(req) {
@@ -833,7 +842,7 @@ BARCODE ${x + 5},${y + 20},"128",40,1,0,2,2,"${item.barcodeNo}"
   const printerName = "BarCode";
   const data = printTSPL(tspl, printerName);
   console.log(data, "data");
-  return  { statusCode: 0, data };
+  return { statusCode: 0, data };
 }
 
-export { get, getOne, getSearch, create, update, remove,printBarcode };
+export { get, getOne, getSearch, create, update, remove, printBarcode };

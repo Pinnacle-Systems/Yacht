@@ -125,7 +125,9 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
         "STYLE MASTER":
             <img src={fabstyle} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
         ,
-
+         "STORE MASTER":
+            <img src={location} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
+        ,
 
         "FABRIC TYPE MASTER": <img />,
         "GSM MASTER": <img />,

@@ -1,5 +1,8 @@
 import Swal from "sweetalert2";
-import { useDeleteOpeningStockMutation } from "../../../redux/uniformService/OpeningStockService";
+import {
+  useDeleteOpeningStockMutation,
+  useLazyGetOpeningStockByIdQuery,
+} from "../../../redux/uniformService/OpeningStockService";
 import OpeningStockForm from "./OpeningStockForm";
 import OpeningStockFormReport from "./OpeningStockFormReport";
 import { FaPlus } from "react-icons/fa";
@@ -14,7 +17,8 @@ export default function Form() {
   const dispatch = useDispatch();
 
   const [removeData] = useDeleteOpeningStockMutation();
-
+  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
+    useLazyGetOpeningStockByIdQuery();
   const handleView = (orderId) => {
     setId(orderId);
     setShowForm(true);
@@ -28,35 +32,45 @@ export default function Form() {
   };
 
   const handleDelete = async (id) => {
+    setId(id);
+    const { data } = await trigger(id);
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-      try {
-        let deldata = await removeData(id).unwrap();
-        if (deldata?.statusCode == 1) {
-          Swal.fire({
-            icon: "error",
-            title: "Child record Exists",
-            text: deldata.data?.message || "Data cannot be deleted!",
-          });
-          return;
-        }
-        setId("");
-        Swal.fire({
-          title: "Deleted Successfully",
-          icon: "success",
-          timer: 1000,
-        });
-        setShowForm(false);
-        dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
-      } catch (error) {
+      if (data?.data?.childRecord > 0) {
         Swal.fire({
           icon: "error",
-          title: "Submission error",
-          text: error.data?.message || "Something went wrong!",
+          title: "Child record Exists In Sales Delivery",
+          text: "Data cannot be deleted!",
         });
-        setShowForm(false);
+      } else {
+        try {
+          let deldata = await removeData(id).unwrap();
+          if (deldata?.statusCode == 1) {
+            Swal.fire({
+              icon: "error",
+              title: "Child record Exists",
+              text: deldata.data?.message || "Data cannot be deleted!",
+            });
+            return;
+          }
+          setId("");
+          Swal.fire({
+            title: "Deleted Successfully",
+            icon: "success",
+            timer: 1000,
+          });
+          setShowForm(false);
+          dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
+        } catch (error) {
+          Swal.fire({
+            icon: "error",
+            title: "Submission error",
+            text: error.data?.message || "Something went wrong!",
+          });
+          setShowForm(false);
+        }
       }
     }
   };

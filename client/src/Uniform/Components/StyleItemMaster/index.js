@@ -47,7 +47,8 @@ export default function Form() {
     isLoading: isSingleLoading,
   } = useGetStyleItemMasterByIdQuery(id, { skip: !id });
 
-  const [trigger, { data: singleDataLazy, isFetchingLazy }] = useLazyGetStyleItemMasterByIdQuery();
+  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
+    useLazyGetStyleItemMasterByIdQuery();
 
   const [addData] = useAddStyleItemMasterMutation();
   const [updateData] = useUpdateStyleItemMasterMutation();
@@ -113,6 +114,29 @@ export default function Form() {
   };
 
   const saveData = () => {
+    let foundItem;
+    if (id) {
+      foundItem = allData?.data
+        ?.filter((i) => i.id !== id)
+        ?.some(
+          (item) =>
+            item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+        );
+    } else {
+      foundItem = allData?.data?.some(
+        (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+      );
+    }
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The Style Item Name already exists.",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return false;
+    }
     if (!validateData(data)) {
       Swal.fire({
         title: "Please fill all required fields...!",

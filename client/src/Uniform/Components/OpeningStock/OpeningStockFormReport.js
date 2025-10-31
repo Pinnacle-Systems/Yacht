@@ -28,6 +28,7 @@ const OpeningStockFormReport = ({
   const [currentPageNumber, setCurrentPageNumber] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
 
+
   const handleOnclick = (e) => {
     setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
   };
@@ -72,7 +73,7 @@ const OpeningStockFormReport = ({
 
   const isLoadingIndicator = isLoading || isFetching;
 
-  const totalPages = Math?.ceil(allData?.totalCount  / itemsPerPage);
+  const totalPages = Math?.ceil(allData?.totalCount / itemsPerPage);
   const indexOfLastItem = currentPage * parseInt(10);
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
@@ -80,11 +81,11 @@ const OpeningStockFormReport = ({
   console.log(indexOfLastItem, "indexOfLastItem");
 
   const handlePageChange = (newPage) => {
-  if (newPage >= 1 && newPage <= totalPages) {
-    setCurrentPage(newPage);
-    setCurrentPageNumber(newPage); // ensures API fetches that page
-  }
-};
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      setCurrentPageNumber(newPage); // ensures API fetches that page
+    }
+  };
   const Pagination = () => {
     return (
       <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">

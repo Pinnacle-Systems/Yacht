@@ -15,6 +15,7 @@ import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterS
 import { EMPTY_ICON } from "../../../icons";
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
+import { sum } from "lodash";
 
 const StockReport = forwardRef(
   (
@@ -379,6 +380,16 @@ const StockReport = forwardRef(
                         )}
                       </tbody>
                     )}
+                    <tfoot className="border-2">
+                      <tr className="bg-gray-100 font-medium text-[14px]  text-gray-900 border-b   border-gray-200">
+                          <td colSpan={6} className="text-right py-1.5">
+                           Total 
+                          </td>
+                          <td className="py-1.5 text-center">
+                            {allData?.totalQty}
+                          </td>
+                        </tr>
+                    </tfoot>
                   </table>
                 ) : (
                   <div className="flex justify-center items-center text-gray-500  text-3xl py-32">

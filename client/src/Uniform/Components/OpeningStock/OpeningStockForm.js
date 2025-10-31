@@ -13,6 +13,7 @@ import ReadyGoods from "./ReadyGoods.js";
 import {
   useAddOpeningStockMutation,
   useGetOpeningStockByIdQuery,
+  useLazyGetOpeningStockQuery,
   usePrintBarcodeMutation,
   useUpdateOpeningStockMutation,
 } from "../../../redux/uniformService/OpeningStockService.js";
@@ -59,6 +60,9 @@ export default function OpeningStockForm({
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetOpeningStockByIdQuery(id, { skip: !id });
+
+  const [trigger, { data: allDataLazy, isFetchingLazy }] =
+    useLazyGetOpeningStockQuery();
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -133,7 +137,7 @@ export default function OpeningStockForm({
             Swal.showLoading();
           },
         });
-       dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
+        dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
       } else {
         toast.error(returnData?.message);
       }

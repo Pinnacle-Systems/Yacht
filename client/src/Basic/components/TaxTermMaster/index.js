@@ -100,10 +100,27 @@ export default function Form() {
   };
 
   const saveData = () => {
+    let foundItem;
+          if (id) {
+            foundItem = allData?.data
+              ?.filter((i) => i.id !== id)
+              ?.some((item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase());
+          } else {
+            foundItem = allData?.data?.some(
+              (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+            );
+          }
+        
+          if (foundItem) {
+            Swal.fire({
+              text: "The Tax Term already exists.",
+              icon: "warning",
+              timer: 1500,
+              showConfirmButton: false,
+            });
+            return false;
+          }
     if (!validateData(data)) {
-      // toast.info("Please fill all required fields...!", {
-      //     position: "top-center",
-      // });
       Swal.fire({
         title: "Please fill all required fields...!",
         icon: "success",

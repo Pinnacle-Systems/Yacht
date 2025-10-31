@@ -28,7 +28,7 @@ export default function Form() {
   const [form, setForm] = useState(false);
 
   //  const [openTable,setOpenTable] = useState(false);
-   const employeeRef = useRef(null);
+  const employeeRef = useRef(null);
   const [readOnly, setReadOnly] = useState(false);
   const [id, setId] = useState("");
   const [name, setName] = useState("");
@@ -82,10 +82,10 @@ export default function Form() {
     id,
   };
   useEffect(() => {
-       if (form && !readOnly && employeeRef.current) {
-         employeeRef.current.focus();
-       }
-     }, [form, readOnly]);
+    if (form && !readOnly && employeeRef.current) {
+      employeeRef.current.focus();
+    }
+  }, [form, readOnly]);
   const validateData = (data) => {
     if (data.name && data.code) {
       return true;
@@ -119,6 +119,29 @@ export default function Form() {
   };
 
   const saveData = () => {
+    let foundItem;
+    if (id) {
+      foundItem = allData?.data
+        ?.filter((i) => i.id !== id)
+        ?.some(
+          (item) =>
+            item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+        );
+    } else {
+      foundItem = allData?.data?.some(
+        (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+      );
+    }
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The Employee Category already exists.",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return false;
+    }
     if (!validateData(data)) {
       Swal.fire({
         icon: "error",

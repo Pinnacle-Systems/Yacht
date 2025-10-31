@@ -374,18 +374,26 @@ export default function Form({ partyId, onCloseForm }) {
   }, [accessoryGroup, accessoryItemsMasterList]);
 
   const saveData = () => {
-    // if (isSupplier) {
-    //   console.log(selected.length <= 0, "condiion");
-    //   if (selected.length <= 0) {
-    //     Swal.fire({
-    //       icon: "error",
-    //       title: `Select One Material...!`,
-    //       showConfirmButton: false,
-    //       timer: 3000,
-    //     });
-    //     return false;
-    //   }
-    // }
+   let foundItem;
+         if (id) {
+           foundItem = allData?.data
+             ?.filter((i) => i.id !== id)
+             ?.some((item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase());
+         } else {
+           foundItem = allData?.data?.some(
+             (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+           );
+         }
+       
+         if (foundItem) {
+           Swal.fire({
+             text: "The Party Name already exists.",
+             icon: "warning",
+             timer: 1500,
+             showConfirmButton: false,
+           });
+           return false;
+         }
     if (!validateData(data)) {
       Swal.fire({
         icon: "warning",

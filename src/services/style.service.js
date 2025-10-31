@@ -31,6 +31,9 @@ async function get(req) {
       StyleItem: true,
       Fabric: true,
     },
+    orderBy: {
+      sku: "asc",
+    },
   });
 
   // Add childRecord count for each style
@@ -49,9 +52,10 @@ async function get(req) {
   return { statusCode: 0, data: enrichedData };
 }
 
-
 async function getOne(id) {
-  const childRecord = await prisma.openingStockItems.count({where:{styleId : parseInt(id)}});
+  const childRecord = await prisma.openingStockItems.count({
+    where: { styleId: parseInt(id) },
+  });
   const data = await prisma.style.findUnique({
     where: {
       id: parseInt(id),
@@ -150,7 +154,7 @@ async function update(id, body) {
       alias,
       active: active !== undefined ? JSON.parse(active) : undefined,
       companyId: companyId ? parseInt(companyId) : null,
-      img : img ? img : undefined,
+      img: img ? img : undefined,
       fabricId: fabricId ? parseInt(fabricId) : undefined,
       sizeTemplateId: sizeTemplateId ? parseInt(sizeTemplateId) : undefined,
       styleItemId: styleItemId ? parseInt(styleItemId) : undefined,

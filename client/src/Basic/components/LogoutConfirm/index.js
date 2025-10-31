@@ -1,5 +1,5 @@
 import React from "react";
-import { ExclamationCircleIcon } from "@heroicons/react/solid";
+import { ExclamationCircleIcon } from '@heroicons/react/24/solid';
 import { useNavigate } from "react-router-dom";
 import { LOGIN } from "../../../Route/urlPaths";
 
@@ -24,7 +24,10 @@ export default function Logout({ setLogout }) {
       localStorage.removeItem(i);
     }
     sessionStorage.removeItem("sessionId");
+    localStorage.clear();
+    sessionStorage.clear();
     navigate(LOGIN);
+     window.location.reload()
   };
 
   return (

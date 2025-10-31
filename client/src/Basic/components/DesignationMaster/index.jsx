@@ -51,7 +51,7 @@ const Designation = () => {
       sessionStorage.getItem("sessionId") + "userCompanyId"
     ),
   };
-   const designationRef = useRef(null);
+  const designationRef = useRef(null);
   const { data: company } = useGetCompanyQuery({ params });
   const {
     data: allData,
@@ -77,12 +77,12 @@ const Designation = () => {
 
   const syncFormWithDb = useCallback(
     (data) => {
-      
-        
-        setName(data?.name || "");
-        setCode(data?.code)
-        setActive(id ? data?.active ?? false : true);
-      
+
+
+      setName(data?.name || "");
+      setCode(data?.code)
+      setActive(id ? data?.active ?? false : true);
+
     },
     [id]
   );
@@ -107,11 +107,11 @@ const Designation = () => {
     }
     return false;
   };
-    useEffect(() => {
-      if (form && !readOnly && designationRef.current) {
-        designationRef.current.focus();
-      }
-    }, [form, readOnly]);
+  useEffect(() => {
+    if (form && !readOnly && designationRef.current) {
+      designationRef.current.focus();
+    }
+  }, [form, readOnly]);
   const handleSubmitCustom = async (callback, data, text) => {
     try {
       let returnData = await callback(data).unwrap();
@@ -137,6 +137,26 @@ const Designation = () => {
   };
 
   const saveData = () => {
+    let foundItem;
+    if (id) {
+      foundItem = allData?.data
+        ?.filter((i) => i.id !== id)
+        ?.some((item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase());
+    } else {
+      foundItem = allData?.data?.some(
+        (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+      );
+    }
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The Designation Name already exists.",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return false;
+    }
     if (!validateData(data)) {
       Swal.fire({
         icon: "error",
@@ -145,7 +165,7 @@ const Designation = () => {
       });
       return;
     }
-   
+
     if (id) {
       handleSubmitCustom(updateData, data, "Updated");
     } else {
