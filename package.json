@@ -8,7 +8,7 @@
     "migrate": "npx prisma migrate dev --schema ./src/models/schema.prisma",
     "studio": "npx prisma studio --schema ./src/models/schema.prisma",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "NODE_OPTIONS = --max-old-space-size=8192",
+    "server": "NODE_OPTIONS = --max-old-space-size=12288",
     "start": "nodemon server.js",
     "dev": "nodemon server.js"
   },
