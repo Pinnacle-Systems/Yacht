@@ -6,6 +6,7 @@ import {
   useDeleteSizeMasterMutation,
   useGetSizeMasterByIdQuery,
   useGetSizeMasterQuery,
+  useLazyGetSizeMasterByIdQuery,
   useUpdateSizeMasterMutation,
 } from "../../../redux/uniformService/SizeMasterService";
 import toast from "react-hot-toast";
@@ -42,6 +43,8 @@ export default function Form() {
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetSizeMasterByIdQuery(id, { skip: !id });
+  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
+    useLazyGetSizeMasterByIdQuery();
 
   const [addData] = useAddSizeMasterMutation();
   const [updateData] = useUpdateSizeMasterMutation();
@@ -148,35 +151,46 @@ export default function Form() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (id) => {
+    setId(id);
+    const { data } = await trigger(id);
+
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-      try {
-        let deldata = await removeData(id).unwrap();
-        if (deldata?.statusCode == 1) {
-          Swal.fire({
-            icon: "error",
-            title: "Child record Exists",
-            text: deldata.data?.message || "Data cannot be deleted!",
-          });
-          return;
-        }
-        setId("");
-        Swal.fire({
-          title: "Deleted Successfully",
-          icon: "success",
-          timer: 1000,
-        });
-        setForm(false);
-      } catch (error) {
+      if (data?.data?.childRecord > 0) {
         Swal.fire({
           icon: "error",
-          title: "Submission error",
-          text: error.data?.message || "Something went wrong!",
+          title: "Child record Exists",
+          text: "Data cannot be deleted!",
         });
-        setForm(false);
+      } else {
+        try {
+          let deldata = await removeData(id).unwrap();
+          if (deldata?.statusCode == 1) {
+            Swal.fire({
+              icon: "error",
+              title: "Child record Exists",
+              text: deldata.data?.message || "Data cannot be deleted!",
+            });
+            return;
+          }
+          setId("");
+          Swal.fire({
+            title: "Deleted Successfully",
+            icon: "success",
+            timer: 1000,
+          });
+          setForm(false);
+        } catch (error) {
+          Swal.fire({
+            icon: "error",
+            title: "Submission error",
+            text: error.data?.message || "Something went wrong!",
+          });
+          setForm(false);
+        }
       }
     }
   };

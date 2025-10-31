@@ -5,7 +5,7 @@ import tw from "../../../../Utils/tailwind-react-pdf";
 import { findFromList } from "../../../../Utils/helper";
 
 const PDF = ({ allData, sizeList, fabricList, styleItemList }) => {
-   
+
     const styles = StyleSheet.create({
         page: { padding: 5 },
         infoRow: {
@@ -296,7 +296,7 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList }) => {
                 <View style={styles.container}>
                     <Text style={tw("mx-auto     text-base text-black mt-2")}>Stock Report</Text>
 
-                    <View style={[styles.table, tw("mt-5")]}>
+                    <View style={[styles.table, tw("mt-5")]}  wrap>
                         {/* Table Header */}
                         <View fixed style={styles.tableHeader}>
                             {[
@@ -331,7 +331,7 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList }) => {
                             return (
                                 <View
                                     key={index}
-                                    wrap
+                                    wrap={false}
                                     style={{
                                         flexDirection: "row",
                                         width: "100%",

@@ -15,12 +15,12 @@ const Header = ({ heading, singleData, DeliveryNo, DeliveryDate, styles }) => {
           "flex flex-row   justify-between w-full h-[80px]  border-b border-teal-800"
         )}
       >
-        <View style={tw("")}>
-          <Image style={tw("h-12 w-auto mt-5")} src={logo} />
+        <View style={tw("w-[25%]")}>
+          <Image style={tw("h-12  mt-5")} src={logo} />
         </View>
-        <View style={tw("mt-4")}>
+        <View style={tw("mt-4 w-[50%]")}>
           <Text style={tw(" mx-auto text-lg text-black")}>
-            YACHT WOMENS
+            YACHT 
           </Text>
           <Text style={tw("mx-auto  text-xs ")}>No.24/47, RSR Complex,</Text>
           <Text style={tw("mx-auto  text-xs p-1 ")}>
@@ -31,13 +31,13 @@ const Header = ({ heading, singleData, DeliveryNo, DeliveryDate, styles }) => {
             TIRUPUR - 641 607.
           </Text>
         </View>
-        <View style={tw("flex flex-col mr-4 text-xl mt-5  item-center ")}>
+        <View style={tw("flex flex-col  text-xl mt-5  item-center w-[25%]")}>
           {/* <Text style={tw("text-teal-500")}>{heading}</Text> */}
 
           <Text style={tw("text-xs")}> {singleData?.docId || ""} </Text>
           {console.log(singleData?.docId,"docId")}
           
-          <Text style={tw("text-xs ml-0.5 mt-2")}>
+          <Text style={tw("text-xs ml-1 text-right mt-2")}>
             {moment(singleData?.date).format("DD-MM-YYYY") || ""}
           </Text>
         </View>

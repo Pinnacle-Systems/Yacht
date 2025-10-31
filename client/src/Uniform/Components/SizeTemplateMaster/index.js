@@ -16,6 +16,7 @@ import {
   useDeleteSizeTemplateMutation,
   useGetSizeTemplateByIdQuery,
   useGetSizeTemplateQuery,
+  useLazyGetSizeTemplateByIdQuery,
   useUpdateSizeTemplateMutation,
 } from "../../../redux/uniformService/SizeTemplateMasterServices";
 import Modal from "../../../UiComponents/Modal";
@@ -56,6 +57,8 @@ export default function Form() {
     isLoading: isSizeLoading,
     isFetching: isSizeFetching,
   } = useGetSizeMasterQuery({ params, searchParams: searchValue });
+  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
+    useLazyGetSizeTemplateByIdQuery();
 
   const [addData] = useAddSizeTemplateMutation();
   const [updateData] = useUpdateSizeTemplateMutation();
@@ -213,34 +216,45 @@ export default function Form() {
   };
 
   const handleDelete = async (orderId) => {
+    setId(orderId);
+    const { data } = await trigger(orderId);
+
     if (orderId) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-      try {
-        let deldata = await removeData(orderId).unwrap();
-        if (deldata?.statusCode == 1) {
-          Swal.fire({
-            icon: "error",
-            title: "Child record Exists",
-            text: deldata.data?.message || "Data cannot be deleted!",
-          });
-          return;
-        }
-        setId("");
-        Swal.fire({
-          title: "Deleted Successfully",
-          icon: "success",
-          timer: 1000,
-        });
-        setForm(false);
-      } catch (error) {
+      if (data?.data?.childRecord > 0) {
         Swal.fire({
           icon: "error",
-          title: "Submission error",
-          text: error.data?.message || "Something went wrong!",
+          title: "Child record Exists",
+          text: "Data cannot be deleted!",
         });
-        setForm(false);
+      } else {
+        try {
+          let deldata = await removeData(orderId).unwrap();
+          if (deldata?.statusCode == 1) {
+            Swal.fire({
+              icon: "error",
+              title: "Child record Exists",
+              text: deldata.data?.message || "Data cannot be deleted!",
+            });
+            return;
+          }
+          setId("");
+          Swal.fire({
+            title: "Deleted Successfully",
+            icon: "success",
+            timer: 1000,
+          });
+          setForm(false);
+        } catch (error) {
+          Swal.fire({
+            icon: "error",
+            title: "Submission error",
+            text: error.data?.message || "Something went wrong!",
+          });
+          setForm(false);
+        }
       }
     }
   };

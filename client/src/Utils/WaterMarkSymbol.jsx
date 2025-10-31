@@ -1,6 +1,6 @@
 import React from 'react'
 import { View, Image } from '@react-pdf/renderer';
-import logo from '../assets/Eunoia-logo.jpeg'
+import logo from '../assets/yacht.jpeg'
 
 
 import tw from '../Utils/tailwind-react-pdf'

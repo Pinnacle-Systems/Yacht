@@ -13,6 +13,7 @@ import ReadyGoods from "./ReadyGoods.js";
 import {
   useAddOpeningStockMutation,
   useGetOpeningStockByIdQuery,
+  useGetOpeningStockQuery,
   useLazyGetOpeningStockQuery,
   usePrintBarcodeMutation,
   useUpdateOpeningStockMutation,
@@ -63,6 +64,16 @@ export default function OpeningStockForm({
 
   const [trigger, { data: allDataLazy, isFetchingLazy }] =
     useLazyGetOpeningStockQuery();
+
+  const {
+    data: allData,
+    isFetching,
+    isLoading,
+  } = useGetOpeningStockQuery({
+    params: {
+      branchId,
+    },
+  });
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -157,6 +168,22 @@ export default function OpeningStockForm({
     if (!validateData(data)) {
       toast.info("Please fill all required fields...!", {
         position: "top-center",
+      });
+      return;
+    }
+    const existingItems =
+      allData?.data?.flatMap((d) => d.OpeningStockItems || []) || [];
+    console.log(allData?.data, "allData");
+    const newItems = openingStockItems || [];
+    const duplicate = newItems.some((newItem) =>
+      existingItems.some((existing) => existing.styleNo === newItem.styleNo)
+    );
+    console.log(duplicate, "duplicate");
+    if (duplicate) {
+      Swal.fire({
+        icon: "warning",
+        title: "This item already exists",
+        text: "Cannot Create items in opening stock.",
       });
       return;
     }

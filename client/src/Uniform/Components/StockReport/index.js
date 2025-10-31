@@ -40,7 +40,7 @@ export default function Form() {
       >
         <PDFViewer style={tw("w-full h-full")}>
           <PDF
-            allData={allData}
+            allData={allData || []}
             sizeList={sizeList}
             fabricList={fabricList}
             styleItemList={styleItemList}

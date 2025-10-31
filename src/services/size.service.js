@@ -15,7 +15,9 @@ async function get(req) {
 }
 
 async function getOne(id) {
-  const childRecord = 0;
+  const childRecord = await prisma.sizeTemplateList.count({
+    where: { sizeId: parseInt(id) },
+  });
   const data = await prisma.size.findUnique({
     where: {
       id: parseInt(id),

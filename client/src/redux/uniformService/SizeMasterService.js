@@ -80,6 +80,7 @@ const SizeMasterApi = createApi({
 export const {
     useGetSizeMasterQuery,
     useGetSizeMasterByIdQuery,
+    useLazyGetSizeMasterByIdQuery,
     useAddSizeMasterMutation,
     useUpdateSizeMasterMutation,
     useDeleteSizeMasterMutation,

@@ -121,113 +121,106 @@ const StockReport = forwardRef(
 
     const isLoadingIndicator = isLoading || isFetching;
 
-    const totalPages = Math?.ceil(allData?.totalCount / itemsPerPage);
+    const totalPages = Math?.ceil(allDataDetail?.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = allData?.data?.slice(
-      indexOfFirstItem,
-      indexOfLastItem
-    );
+    const currentItems =  (allDataDetail || []).slice(indexOfFirstItem, indexOfLastItem);
 
     console.log(indexOfLastItem, "indexOfLastItem");
 
     const handlePageChange = (newPage) => {
-  if (newPage >= 1 && newPage <= totalPages) {
-    setCurrentPage(newPage);
-    setCurrentPageNumber(newPage); // ensures API fetches that page
-  }
-};
-  const Pagination = () => {
-    return (
-      <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
-        {/* <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-          Showing {indexOfFirstItem + 1} to{" "}
-          {Math.min(indexOfLastItem, allData?.data?.length)} of{" "}
-          {allData?.length} entries
-        </div> */}
-        <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-          Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-          {Math.min(currentPage * itemsPerPage, allData?.totalCount || 0)} of{" "}
-          {allData?.totalCount || 0} entries
-        </div>
-        <div className="flex gap-1">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`px-3 py-1 rounded-md ${
-              currentPage === 1
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : "bg-white text-gray-600 hover:bg-gray-100"
-            }`}
-          >
-            <FaChevronLeft className="inline" />
-          </button>
+      if (newPage >= 1 && newPage <= totalPages) {
+        setCurrentPage(newPage);
+        setCurrentPageNumber(newPage); // ensures API fetches that page
+      }
+    };
+    const Pagination = () => {
+      return (
+        <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
+          <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+            Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+            {Math.min(currentPage * itemsPerPage, allData?.totalCount || 0)} of{" "}
+            {allData?.totalCount || 0} entries
+          </div>
+          <div className="flex gap-1">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 rounded-md ${
+                currentPage === 1
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <FaChevronLeft className="inline" />
+            </button>
 
-          {Array?.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            let pageNum;
-            if (totalPages <= 5) {
-              pageNum = i + 1;
-            } else if (currentPage <= 3) {
-              pageNum = i + 1;
-            } else if (currentPage >= totalPages - 2) {
-              pageNum = totalPages - 4 + i;
-            } else {
-              pageNum = currentPage - 2 + i;
-            }
+            {Array?.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
 
-            return (
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => handlePageChange(pageNum)}
+                  className={`px-3 py-1 rounded-md ${
+                    currentPage === pageNum
+                      ? "bg-indigo-800 text-white"
+                      : "bg-white text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+
+            {totalPages > 5 && currentPage < totalPages - 2 && (
+              <span className="px-3 py-1">...</span>
+            )}
+
+            {totalPages > 5 && currentPage < totalPages - 2 && (
               <button
-                key={pageNum}
-                onClick={() => handlePageChange(pageNum)}
+                onClick={() => handlePageChange(totalPages)}
                 className={`px-3 py-1 rounded-md ${
-                  currentPage === pageNum
+                  currentPage === totalPages
                     ? "bg-indigo-800 text-white"
                     : "bg-white text-gray-600 hover:bg-gray-100"
                 }`}
               >
-                {pageNum}
+                {totalPages}
               </button>
-            );
-          })}
+            )}
 
-          {totalPages > 5 && currentPage < totalPages - 2 && (
-            <span className="px-3 py-1">...</span>
-          )}
-
-          {totalPages > 5 && currentPage < totalPages - 2 && (
             <button
-              onClick={() => handlePageChange(totalPages)}
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
               className={`px-3 py-1 rounded-md ${
                 currentPage === totalPages
-                  ? "bg-indigo-800 text-white"
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                   : "bg-white text-gray-600 hover:bg-gray-100"
               }`}
             >
-              {totalPages}
+              <FaChevronRight className="inline" />
             </button>
-          )}
-
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded-md ${
-              currentPage === totalPages
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : "bg-white text-gray-600 hover:bg-gray-100"
-            }`}
-          >
-            <FaChevronRight className="inline" />
-          </button>
+          </div>
         </div>
-      </div>
-    );
-  };
+      );
+    };
 
     return (
       <>
         <Modal
           isOpen={parameter}
           onClose={() => {
+            setCurrentPage(1);
             setParameter(false);
           }}
         >
@@ -244,14 +237,17 @@ const StockReport = forwardRef(
             setFabricId={setFabricId}
             styleItemId={styleItemId}
             setStyleItemId={setStyleItemId}
-            onClose={() => setParameter(false)}
+            onClose={() => {
+              setCurrentPage(1);
+              setParameter(false);
+            }}
           />
         </Modal>
         <div className="flex flex-col w-full h-[93%] overflow-auto">
           <>
             <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
               <div className="h-[420px]">
-                {allDataDetail && allDataDetail.length !== 0 ? (
+                {currentItems.length > 0 ? (
                   <table className="">
                     <thead className="bg-gray-200 text-gray-800 ">
                       <tr className="">
@@ -278,44 +274,6 @@ const StockReport = forwardRef(
                           <div>Qty</div>
                         </th>
                       </tr>
-                      {/* <tr className="">
-                    <th className=" px-1  font-medium text-[13px] justify-end  text-gray-900  text-center  w-12">
-                      <div className="h-3"></div>
-                    </th>
-                    <th className=" px-1 font-medium text-[13px] border  text-gray-900  text-center w-32">
-                      <input
-                        type="text"
-                        className="text-black h-5   w-full  px-1 focus:outline-none border  border-gray-400 rounded-md"
-                        placeholder="Search"
-                        value={serachDocNo}
-                        onChange={(e) => {
-                          setSerachDocNo(e.target.value);
-                        }}
-                      />
-                    </th>
-                    <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
-                      <input
-                        type="text"
-                        className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
-                        placeholder="Search"
-                        value={searchDocDate}
-                        onChange={(e) => {
-                          setSearchDocDate(e.target.value);
-                        }}
-                      />
-                    </th>
-                    <th className="w-96  px-1 font-medium text-[13px]  text-gray-900  text-center ">
-                      <input
-                        type="text"
-                        className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
-                        placeholder="Search"
-                        value={searchStore}
-                        onChange={(e) => {
-                          setSearchStore(e.target.value);
-                        }}
-                      />
-                    </th>
-                  </tr> */}
                     </thead>
                     {isLoadingIndicator ? (
                       <tbody>
@@ -327,68 +285,66 @@ const StockReport = forwardRef(
                       </tbody>
                     ) : (
                       <tbody className="border-2">
-                        {(allData?.data ? allData?.data : []).map(
-                          (dataObj, index) => (
-                            <tr
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  onClick(dataObj.id);
-                                }
-                              }}
-                              tabIndex={0}
-                              key={dataObj.id}
-                              className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${
-                                index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                              }`}
-                              onClick={() => onClick(dataObj.id)}
-                            >
-                              <td className="text-center h-8">{index + 1}</td>
+                        {currentItems.map((dataObj, index) => (
+                          <tr
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                onClick(dataObj.id);
+                              }
+                            }}
+                            tabIndex={0}
+                            key={dataObj.id}
+                            className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${
+                              index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                            }`}
+                            onClick={() => onClick(dataObj.id)}
+                          >
+                            <td className="text-center h-8">{index + 1}</td>
 
-                              <td className="py-1.5 text-center">
-                                {dataObj.styleNo}{" "}
-                              </td>
+                            <td className="py-1.5 text-center">
+                              {dataObj.styleNo}{" "}
+                            </td>
 
-                              <td className="py-1.5 text-center">
-                                {dataObj?.barcode}
-                              </td>
-                              <td className="py-1.5 text-center">
-                                {findFromList(
-                                  dataObj?.styleItemId,
-                                  styleItemList?.data,
-                                  "name"
-                                )}
-                              </td>
-                              <td className="py-1.5 text-center">
-                                {findFromList(
-                                  dataObj?.fabricId,
-                                  fabricList?.data,
-                                  "name"
-                                )}
-                              </td>
-                              <td className="py-1.5 text-center">
-                                {findFromList(
-                                  dataObj?.sizeId,
-                                  sizeList?.data,
-                                  "name"
-                                )}
-                              </td>
-                              <td className="py-1.5 text-center">
-                                {dataObj?.stkQty}
-                              </td>
-                            </tr>
-                          )
-                        )}
+                            <td className="py-1.5 text-center">
+                              {dataObj?.barcode}
+                            </td>
+                            <td className="py-1.5 text-center">
+                              {findFromList(
+                                dataObj?.styleItemId,
+                                styleItemList?.data,
+                                "name"
+                              )}
+                            </td>
+                            <td className="py-1.5 text-center">
+                              {findFromList(
+                                dataObj?.fabricId,
+                                fabricList?.data,
+                                "name"
+                              )}
+                            </td>
+                            <td className="py-1.5 text-center">
+                              {findFromList(
+                                dataObj?.sizeId,
+                                sizeList?.data,
+                                "name"
+                              )}
+                            </td>
+                            <td className="py-1.5 text-center">
+                              {dataObj?.stkQty}
+                            </td>
+                          </tr>
+                        ))}
                       </tbody>
                     )}
                     <tfoot className="border-2">
                       <tr className="bg-gray-100 font-medium text-[14px]  text-gray-900 border-b   border-gray-200">
-                          <td colSpan={6} className="text-right py-1.5">
-                           Total 
-                          </td>
-                          <td className="py-1.5 text-center">
-                            {allData?.totalQty}
-                          </td>
-                        </tr>
+                        <td colSpan={6} className="text-right py-1.5">
+                          Total
+                        </td>
+                        <td className="py-1.5 text-center">
+                          {allData?.totalQty}
+                        </td>
+                      </tr>
                     </tfoot>
                   </table>
                 ) : (
