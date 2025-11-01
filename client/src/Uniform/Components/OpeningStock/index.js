@@ -38,10 +38,10 @@ export default function Form() {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-      if (data?.data?.childRecord > 0) {
+      if (data?.data?.childRecordSales > 0 || data?.data?.childRecordStock > 0) {
         Swal.fire({
           icon: "error",
-          title: "Child record Exists In Sales Delivery",
+          title: "Child record Exists",
           text: "Data cannot be deleted!",
         });
       } else {

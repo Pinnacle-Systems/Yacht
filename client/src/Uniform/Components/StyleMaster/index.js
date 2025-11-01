@@ -95,8 +95,7 @@ const StyleMaster = () => {
       foundItem = allData?.data
         ?.filter((i) => i.id !== id)
         ?.some(
-          (item) =>
-            item.sku?.trim().toLowerCase() === sku?.trim().toLowerCase()
+          (item) => item.sku?.trim().toLowerCase() === sku?.trim().toLowerCase()
         );
     } else {
       foundItem = allData?.data?.some(
@@ -140,8 +139,12 @@ const StyleMaster = () => {
     );
     formData.append("sizeTemplateId", sizeTemplateId);
     formData.append("fabricId", fabricId);
-    if (img instanceof File) formData.append("img", img);
-
+    // if (img instanceof File) formData.append("img", img);
+    if (img instanceof File) {
+      formData.append("img", img);
+    } else if (img === null) {
+      formData.append("img", "");
+    }
     if (id) {
       handleSubmitCustom(updateData, formData, "Updated", true);
     } else {

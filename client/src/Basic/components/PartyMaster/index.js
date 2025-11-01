@@ -7,6 +7,7 @@ import {
   useDeletePartyMutation,
   useGetPartyByIdQuery,
   useGetPartyQuery,
+  useLazyGetPartyByIdQuery,
   useUpdatePartyMutation,
 } from "../../../redux/services/PartyMasterService";
 import moment from "moment";
@@ -122,6 +123,9 @@ export default function Form({ partyId, onCloseForm }) {
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetPartyByIdQuery(id, { skip: !id });
+
+  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
+    useLazyGetPartyByIdQuery();
 
   const [addData] = useAddPartyMutation();
   const [updateData] = useUpdatePartyMutation();
@@ -374,26 +378,29 @@ export default function Form({ partyId, onCloseForm }) {
   }, [accessoryGroup, accessoryItemsMasterList]);
 
   const saveData = () => {
-   let foundItem;
-         if (id) {
-           foundItem = allData?.data
-             ?.filter((i) => i.id !== id)
-             ?.some((item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase());
-         } else {
-           foundItem = allData?.data?.some(
-             (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
-           );
-         }
-       
-         if (foundItem) {
-           Swal.fire({
-             text: "The Party Name already exists.",
-             icon: "warning",
-             timer: 1500,
-             showConfirmButton: false,
-           });
-           return false;
-         }
+    let foundItem;
+    if (id) {
+      foundItem = allData?.data
+        ?.filter((i) => i.id !== id)
+        ?.some(
+          (item) =>
+            item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+        );
+    } else {
+      foundItem = allData?.data?.some(
+        (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+      );
+    }
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The Party Name already exists.",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return false;
+    }
     if (!validateData(data)) {
       Swal.fire({
         icon: "warning",
@@ -428,39 +435,50 @@ export default function Form({ partyId, onCloseForm }) {
   console.log(id, "id");
 
   const deleteData = async (id) => {
-    if (!id) return;
-    if (!window.confirm("Are you sure to delete...?")) {
-      return;
-    }
-    try {
-      let deldata = await removeData(id).unwrap();
-      if (deldata?.statusCode == 1) {
-        toast.error(deldata?.message);
+    setId(id);
+    const { data } = await trigger(id);
+    if (id) {
+      if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-      dispatch({
-        type: `accessoryItemMaster/invalidateTags`,
-        payload: ["AccessoryItemMaster"],
-      });
-      setId("");
-      dispatch({
-        type: `CityMaster/invalidateTags`,
-        payload: ["City/State Name"],
-      });
-      syncFormWithDb(undefined);
-      Swal.fire({
-        icon: "success",
-        title: `Deleted Successfully`,
-        showConfirmButton: false,
-        timer: 2000,
-      });
-      setForm(false);
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Submission error",
-        text: error.data?.message || "Something went wrong!",
-      });
+      if (data?.data?.childRecord > 0) {
+        Swal.fire({
+          icon: "error",
+          title: "Child record Exists",
+          text: "Data cannot be deleted!",
+        });
+      } else {
+        try {
+          let deldata = await removeData(id).unwrap();
+          if (deldata?.statusCode == 1) {
+            toast.error(deldata?.message);
+            return;
+          }
+          dispatch({
+            type: `accessoryItemMaster/invalidateTags`,
+            payload: ["AccessoryItemMaster"],
+          });
+          setId("");
+          dispatch({
+            type: `CityMaster/invalidateTags`,
+            payload: ["City/State Name"],
+          });
+          syncFormWithDb(undefined);
+          Swal.fire({
+            icon: "success",
+            title: `Deleted Successfully`,
+            showConfirmButton: false,
+            timer: 2000,
+          });
+          setForm(false);
+        } catch (error) {
+          Swal.fire({
+            icon: "error",
+            title: "Submission error",
+            text: error.data?.message || "Something went wrong!",
+          });
+        }
+      }
     }
   };
 

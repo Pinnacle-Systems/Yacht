@@ -80,6 +80,7 @@ const LocationMasterApi = createApi({
 export const {
   useGetLocationMasterQuery,
   useGetLocationMasterByIdQuery,
+  useLazyGetLocationMasterByIdQuery,
   useAddLocationMasterMutation,
   useUpdateLocationMasterMutation,
   useDeleteLocationMasterMutation,

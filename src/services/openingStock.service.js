@@ -225,12 +225,24 @@ async function getOne(id) {
   );
 
   // ✅ Count how many SalesEntryItems use those styleNos
-  const childRecordCount = await prisma.salesEntryItems.count({
+  const childRecordSales = await prisma.salesEntryItems.count({
     where: {
       styleNo: { in: styleNos },
     },
   });
-  return { statusCode: 0, data: { ...data,  childRecord: childRecordCount } };
+  const childRecordStock = await prisma.stockAdjustmentItems.count({
+    where: {
+      styleNo: { in: styleNos },
+    },
+  });
+  return {
+    statusCode: 0,
+    data: {
+      ...data,
+      childRecordSales: childRecordSales,
+      childRecordStock: childRecordStock,
+    },
+  };
 }
 
 async function getSearch(req) {

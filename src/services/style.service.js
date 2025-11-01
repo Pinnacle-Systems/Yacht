@@ -154,7 +154,7 @@ async function update(id, body) {
       alias,
       active: active !== undefined ? JSON.parse(active) : undefined,
       companyId: companyId ? parseInt(companyId) : null,
-      img: img ? img : undefined,
+      img: img === "" ? null : img,
       fabricId: fabricId ? parseInt(fabricId) : undefined,
       sizeTemplateId: sizeTemplateId ? parseInt(sizeTemplateId) : undefined,
       styleItemId: styleItemId ? parseInt(styleItemId) : undefined,

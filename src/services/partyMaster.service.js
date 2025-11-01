@@ -25,7 +25,9 @@ async function get(req) {
 }
 
 async function getOne(id) {
-  const childRecord = 0;
+  const childRecord = await prisma.salesEntry.count({
+    where: { customerId: parseInt(id) },
+  });
   const data = await prisma.party.findUnique({
     where: {
       id: parseInt(id),
@@ -131,7 +133,7 @@ async function create(body) {
     payTermId,
   } = await body;
   let data;
-  console.log(contactNumber)
+  console.log(contactNumber);
   data = await prisma.party.create({
     data: {
       isClient,

@@ -12,13 +12,13 @@ const Header = ({ heading, singleData, DeliveryNo, DeliveryDate, styles }) => {
     <>
       <View
         style={tw(
-          "flex flex-row   justify-between w-full h-[80px]  border-b border-teal-800"
+          "flex flex-row   justify-between w-full h-[80px] mb-2  border-b border-teal-800"
         )}
       >
         <View style={tw("w-[25%]")}>
           <Image style={tw("h-12  mt-5")} src={logo} />
         </View>
-        <View style={tw("mt-4 w-[50%]")}>
+        <View style={tw("mt-3 w-[50%]")}>
           <Text style={tw(" mx-auto text-lg text-black")}>
             YACHT 
           </Text>

@@ -11,6 +11,8 @@ import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterS
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 import secureLocalStorage from "react-secure-storage";
+import ExcelJS from "exceljs";
+import { findFromList } from "../../../Utils/helper";
 
 export default function Form() {
   const [parameter, setParameter] = useState(false);
@@ -31,6 +33,116 @@ export default function Form() {
   const { data: fabricList } = useGetFabricMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const stockReportRef = useRef();
+
+  const DownloadExcel = async (allData) => {
+    const dataArray = allData?.data || [];
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Stock Report");
+
+    // Title
+    sheet.mergeCells("A1:G1");
+    const titleCell = sheet.getCell("A1");
+    titleCell.value = "Stock Report";
+    titleCell.font = { bold: true, size: 14 };
+    titleCell.alignment = { horizontal: "center", vertical: "middle" };
+
+    // Header row
+    const headerRow = [
+      "S.No",
+      "Style No",
+      "Barcode",
+      "Style Name",
+      "Fabric Name",
+      "Size",
+      "Qty",
+    ];
+    sheet.addRow(headerRow);
+
+    // Header styling
+    sheet.getRow(2).eachCell((cell) => {
+      cell.font = { bold: true };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFEFEFEF" },
+      };
+    });
+
+    // Data rows
+    dataArray.forEach((item, index) => {
+      sheet.addRow([
+        index + 1,
+        item?.styleNo || "",
+        item?.barcode || "",
+        findFromList(item?.styleItemId, styleItemList?.data, "name") || "",
+        findFromList(item?.fabricId, fabricList?.data, "name") || "",
+        findFromList(item?.sizeId, sizeList?.data, "name") || "",
+        item?.stkQty || 0,
+      ]);
+    });
+
+    // Add total row
+    const totalQty = dataArray.reduce(
+      (sum, item) => sum + (Number(item?.stkQty) || 0),
+      0
+    );
+    const totalRow = sheet.addRow(["", "", "", "", "", "Total", totalQty]);
+    totalRow.eachCell((cell, colNumber) => {
+      cell.font = { bold: true };
+      cell.alignment = { horizontal: "right" };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+    });
+
+    // Adjust column widths
+    sheet.columns = [
+      { key: "sno", width: 8 },
+      { key: "styleNo", width: 15 },
+      { key: "barcode", width: 18 },
+      { key: "styleName", width: 25 },
+      { key: "fabricName", width: 25 },
+      { key: "size", width: 12 },
+      { key: "qty", width: 10 },
+    ];
+
+    // Borders & alignment for all rows
+    sheet.eachRow((row, rowNumber) => {
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+        cell.alignment = { vertical: "middle", wrapText: true };
+      });
+    });
+
+    // Export workbook
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "StockReport.xlsx";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="p-1 bg-[#F1F1F0] h-[85%]">
       <Modal
@@ -62,6 +174,13 @@ export default function Form() {
           >
             <FiPrinter className="w-4 h-4 mr-2" />
             Print
+          </button>
+          <button
+            className="bg-green-700 text-white px-3 h-6 mt-1 rounded-md hover:bg-green-800 flex items-center text-sm"
+            onClick={() => DownloadExcel(allData)}
+          >
+            <FiPrinter className="w-4 h-4 mr-2" />
+            Excel
           </button>
           <ParameterButton onClick={() => setParameter(true)} />
           <button

@@ -87,6 +87,7 @@ const partyMasterApi = createApi({
 export const {
   useGetPartyQuery,
   useGetPartyByIdQuery,
+  useLazyGetPartyByIdQuery,
   useAddPartyMutation,
   useUpdatePartyMutation,
   useDeletePartyMutation,
