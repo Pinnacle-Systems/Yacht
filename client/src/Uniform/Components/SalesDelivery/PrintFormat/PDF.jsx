@@ -7,158 +7,25 @@ import { findFromList } from "../../../../Utils/helper";
 const PDF = ({ singleData, allData }) => {
     const styles = StyleSheet.create({
         page: { padding: 5 },
-        infoRow: {
-            flexDirection: "row",
-            justifyContent: "space-between",
-            marginBottom: 5,
-        },
+
         bold: {
             fontWeight: "bold",
             fontSize: 14,
-        },
-        valueText: {
-            fontSize: 7,
-            color: "#555",
-            paddingLeft: 3,
-        },
-        labelpo: {
-            fontSize: 7,
-            textAlign: "center",
-            paddingLeft: 6,
-        },
-        labelpo1: {
-            fontSize: 7,
-            textAlign: "right",
-            paddingRight: 8,
-        },
-        fromInfoContainer: {
-            width: "45%",
-            // backgroundColor: '#f3f4f6',
-            padding: 6,
-            borderRadius: 8,
-        },
-        rightContainer: {
-            flexDirection: "column",
-            backgroundColor: "#f9f9f9",
-            borderRadius: 8,
-            padding: 6,
-            shadowColor: "#E5E7EB",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            width: "33%",
-        },
-        labelContainer: {
-            fontSize: 10,
-            fontWeight: "bold",
-            color: "#333",
-        },
-        photoContainer: {
-            width: "15%",
-            height: 80,
-            marginRight: 10,
-            borderRadius: 4,
-            borderWidth: 1,
-            borderColor: "#e5e7eb",
-            padding: 2,
-            backgroundColor: "#f3f4f6",
-        },
-        infoCard: {
-            flexDirection: "row",
-            alignItems: "center",
-            backgroundColor: "#fff",
-            borderRadius: 6,
-            padding: 8,
-            marginHorizontal: 4,
-            marginVertical: 4,
-            shadowColor: "#E5E7EB",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.1,
-            shadowRadius: 2,
         },
         bold: {
             fontWeight: "bold",
             color: "#333",
             marginRight: 4,
         },
-
-        valueContainer: {
-            width: "60%",
-            color: "#555",
-        },
-
         container: {
             width: "100%",
             padding: 5,
-        },
-        headerContainer: {
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingBottom: 5,
-            marginBottom: 10,
-            borderBottomWidth: 1,
-            borderBottomColor: "#016B65",
-        },
-        title: {
-            textAlign: "center",
-            fontSize: 20,
-            fontWeight: "bold",
-            color: "#B81981",
-            letterSpacing: 0.5,
-            marginVertical: 5,
-        },
-        withBorder: {
-            borderRightWidth: 1,
-            borderRightColor: "#E5E7EB",
-        },
-        logo: {
-            width: 60,
-            height: 60,
-        },
-
-        billInfoContainer: {
-            flexDirection: "column",
-            alignItems: "flex-end",
-        },
-        infoWrapper: {
-            flexDirection: "row",
-            justifyContent: "space-between",
-            marginBottom: 5,
-        },
-
-        toInfoContainer: {
-            width: "33%",
-        },
-        infoText: {
-            fontSize: 7,
-            marginVertical: 2,
-            flexDirection: "row",
-            alignItems: "center",
-        },
-        infoText1: {
-            fontSize: 7,
-            marginVertical: 2,
-            flexDirection: "row",
-            alignItems: "center",
-            color: "#016B65",
-        },
-        infoText2: {
-            fontSize: 7,
-            marginVertical: 2,
-            flexDirection: "row",
-            alignItems: "center",
         },
         totalRow: {
             flexDirection: "row",
             backgroundColor: "#bfdbfe",
             padding: 5,
             fontWeight: "bold",
-        },
-        icon: {
-            marginRight: 6,
-            width: 12,
-            height: 12,
         },
         bold: {
             fontWeight: "bold",
@@ -169,39 +36,12 @@ const PDF = ({ singleData, allData }) => {
             marginVertical: 4,
         },
 
-        amountInWordsContainer: {
-            backgroundColor: "#f0f8ff", // Light blue background
-            padding: 10,
-            marginTop: 10,
-            borderRadius: 8,
-            borderWidth: 1,
-            borderColor: "#ccc",
-            alignItems: "center",
-        },
-        amountInWordsLabel: {
-            fontSize: 8,
-            fontWeight: "bold",
-            color: "#333",
-            marginBottom: 5,
-        },
-        amountInWordsText: {
-            fontSize: 8,
-            fontWeight: "600",
-            color: "#007bff", // Blue text for visibility
-            textAlign: "center",
-        },
-
         footer: {
             marginTop: 10,
             borderTopWidth: 1,
             borderTopColor: "#016B65",
             paddingTop: 10,
             alignItems: "center",
-        },
-        footerText: {
-            fontSize: 7,
-            color: "#555",
-            marginVertical: 2,
         },
         table: {
             display: "table",
@@ -248,12 +88,8 @@ const PDF = ({ singleData, allData }) => {
             borderLeftStyle: "solid",
             borderColor: "#D1D5DB",
         },
-        tableRowOdd: {
-            // backgroundColor: "#F9FAFB",
-            // textTransform:"capitalize"
-        },
         tableCell: {
-            padding: 5,
+            padding: 4,
             fontSize: 7,
             paddingTop: "5px",
             borderRightWidth: 1,
@@ -265,20 +101,8 @@ const PDF = ({ singleData, allData }) => {
             backgroundColor: "#E5E7EB",
             fontWeight: "bold",
         },
-        totalCell: {
-            flex: 1,
-            padding: 6,
-            fontSize: 7,
-            textAlign: "center",
-            fontWeight: "bold",
-            borderRightWidth: 1,
-            borderRightColor: "#D1D5DB",
-        },
         lastColumn: {
             borderRightWidth: 0, // Remove right border for the last column
-        },
-        firstRow: {
-            borderTopWidth: 0, // Optional: if you want to remove top line
         },
     });
     useEffect(() => {
@@ -631,21 +455,29 @@ const PDF = ({ singleData, allData }) => {
                                 </View>
                             );
                         })}
-                        <View style={[styles.totalRow]}>
+                        <View style={{
+                            flexDirection: "row",
+                            width: "100%",
+                            borderBottomWidth: 1,
+                            borderBottomColor: "#D1D5DB",
+                            borderLeftColor: "#D1D5DB",
+                            borderLeftWidth: 1
+                        }}>
                             <Text
                                 style={[
                                     styles.tableCell,
                                     {
-                                        flex: 13, backgroundColor: "white", borderLeftWidth: 1,
-                                        borderLeftStyle: "solid",
-                                        borderColor: "#D1D5DB", borderBottomWidth: 1,
-                                        borderBottomStyle: "solid",
+                                        flex: 12.7,
+                                        // backgroundColor: "white", borderLeftWidth: 1,
+                                        // borderLeftStyle: "solid",
+                                        // borderColor: "#D1D5DB", borderBottomWidth: 1,
+                                        // borderBottomStyle: "solid",
                                         fontSize: 8,
                                         textAlign: "right",
                                     },
                                 ]}
                             >
-                                  Grand Total:
+                                Grand Total
                             </Text>
                             {/* <Text
                                 style={[
@@ -669,13 +501,13 @@ const PDF = ({ singleData, allData }) => {
                                     styles.tableCell,
                                     {
                                         flex: 1,
-                                        fontWeight: "bold",
                                         fontSize: 8,
                                         textAlign: "right",
-                                        backgroundColor: "white",
+                                        // fontWeight: "bold",
+                                        // backgroundColor: "white",
                                         // marginTop:-1
-                                        borderColor: "#D1D5DB", borderBottomWidth: 1,
-                                        borderBottomStyle: "solid",
+                                        // borderColor: "#D1D5DB", borderBottomWidth: 1,
+                                        // borderBottomStyle: "solid",
                                     },
                                 ]}
                             >

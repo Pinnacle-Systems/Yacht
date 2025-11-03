@@ -171,26 +171,30 @@ export default function OpeningStockForm({
       });
       return;
     }
-    const existingItems =
-      allData?.data?.flatMap((d) => d.OpeningStockItems || []) || [];
-    console.log(allData?.data, "allData");
-    const newItems = openingStockItems || [];
-    const duplicate = newItems.some((newItem) =>
-      existingItems.some((existing) => existing.styleNo === newItem.styleNo)
-    );
-    console.log(duplicate, "duplicate");
-    if (duplicate) {
-      Swal.fire({
-        icon: "warning",
-        title: "This item already exists",
-        text: "Cannot Create items in opening stock.",
-      });
-      return;
-    }
     if (!window.confirm("Are you sure save the details ...?")) {
       return;
     }
     if (nextProcess == "draft" && !id) {
+      const existingItems =
+        allData?.data?.flatMap((d) => d.OpeningStockItems || []) || [];
+      console.log(allData?.data, "allData");
+      const newItems = openingStockItems || [];
+      const duplicate = newItems.some((newItem) =>
+        existingItems.some(
+          (existing) =>
+            existing.styleNo === newItem.styleNo &&
+            existing.sizeId === newItem.sizeId
+        )
+      );
+      console.log(duplicate, "duplicate");
+      if (duplicate) {
+        Swal.fire({
+          icon: "warning",
+          title: "This item already exists",
+          text: "Cannot Create items in opening stock.",
+        });
+        return;
+      }
       handleSubmitCustom(
         addData,
         { ...data, draftSave: true },
@@ -207,6 +211,26 @@ export default function OpeningStockForm({
     } else if (id) {
       handleSubmitCustom(updateData, data, "Updated", nextProcess);
     } else {
+      const existingItems =
+        allData?.data?.flatMap((d) => d.OpeningStockItems || []) || [];
+      console.log(allData?.data, "allData");
+      const newItems = openingStockItems || [];
+      const duplicate = newItems.some((newItem) =>
+        existingItems.some(
+          (existing) =>
+            existing.styleNo === newItem.styleNo &&
+            existing.sizeId === newItem.sizeId
+        )
+      );
+      console.log(duplicate, "duplicate");
+      if (duplicate) {
+        Swal.fire({
+          icon: "warning",
+          title: "This item already exists",
+          text: "Cannot Create items in opening stock.",
+        });
+        return;
+      }
       handleSubmitCustom(addData, data, "Added", nextProcess);
     }
   };

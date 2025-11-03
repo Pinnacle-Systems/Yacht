@@ -839,7 +839,7 @@ export default function BillItems({
                       style={{
                         position: "fixed",
                         top: `${contextMenu.mouseY - 50}px`,
-                        left: `${contextMenu.mouseX + 20}px`,
+                        left: `${contextMenu.mouseX - 80}px`,
                         boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
                         padding: "8px",
                         borderRadius: "4px",

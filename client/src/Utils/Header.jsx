@@ -34,12 +34,10 @@ const Header = ({ heading, singleData, DeliveryNo, DeliveryDate, styles }) => {
         <View style={tw("flex flex-col  text-xl mt-5  item-center w-[25%]")}>
           {/* <Text style={tw("text-teal-500")}>{heading}</Text> */}
 
-          <Text style={tw("text-xs")}> {singleData?.docId || ""} </Text>
+          <Text style={tw("text-xs ml-1 text-right")}>{singleData?.docId || ""}</Text>
           {console.log(singleData?.docId,"docId")}
           
-          <Text style={tw("text-xs ml-1 text-right mt-2")}>
-            {moment(singleData?.date).format("DD-MM-YYYY") || ""}
-          </Text>
+          <Text style={tw("text-xs ml-1 text-right mt-2")}>{moment(singleData?.date).format("DD-MM-YYYY") || ""}</Text>
         </View>
       </View>
     </>

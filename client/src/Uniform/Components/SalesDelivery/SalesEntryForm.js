@@ -235,7 +235,7 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
       </Modal>
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800"> Delivery</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Sales Delivery</h1>
           <button
             onClick={onClose}
             className="text-indigo-600 hover:text-indigo-700"
