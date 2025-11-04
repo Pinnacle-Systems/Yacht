@@ -335,7 +335,7 @@ export default function Form() {
             data={allData?.data}
             onView={handleView}
             onEdit={handleEdit}
-            onDelete={deleteData(id)}
+            onDelete={deleteData}
             itemsPerPage={10}
           />
         </div>

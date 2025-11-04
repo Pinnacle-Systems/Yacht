@@ -1528,6 +1528,7 @@ model AccessoryGroup {
   active        Boolean?        @default(true)
   AccessoryItem AccessoryItem[]
   Stock         Stock[]
+  Accessory     Accessory[]
 }
 
 model Yarn {
@@ -1544,15 +1545,18 @@ model Yarn {
 }
 
 model Accessory {
-  id              Int            @id @default(autoincrement())
-  aliasName       String?
-  accessoryItem   AccessoryItem? @relation(fields: [accessoryItemId], references: [id])
-  accessoryItemId Int?
-  hsn             String?
-  Company         Company?       @relation(fields: [companyId], references: [id])
-  companyId       Int?
-  active          Boolean?       @default(true)
-  Stock           Stock[]
+  id               Int             @id @default(autoincrement())
+  aliasName        String?
+  accessoryItem    AccessoryItem?  @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId  Int?
+  hsn              String?
+  Company          Company?        @relation(fields: [companyId], references: [id])
+  companyId        Int?
+  active           Boolean?        @default(true)
+  name             String?
+  AccessoryGroup   AccessoryGroup? @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId Int?
+  Stock            Stock[]
 }
 
 model AccessoryItem {

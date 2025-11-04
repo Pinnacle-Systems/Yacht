@@ -8,7 +8,7 @@ const AccessoryMasterApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: BASE_URL,
   }),
-  tagTypes: ["Party"],
+  tagTypes: ["AccessoryMaster"],
   endpoints: (builder) => ({
     getAccessoryMaster: builder.query({
       query: ({params, searchParams}) => {
@@ -31,7 +31,7 @@ const AccessoryMasterApi = createApi({
           params
         };
       },
-      providesTags: ["Party"],
+      providesTags: ["AccessoryMaster"],
     }),
     getAccessoryMasterById: builder.query({
       query: (id) => {
@@ -43,7 +43,7 @@ const AccessoryMasterApi = createApi({
           },
         };
       },
-      providesTags: ["Party"],
+      providesTags: ["AccessoryMaster"],
     }),
     addAccessoryMaster: builder.mutation({
       query: (payload) => ({
@@ -51,7 +51,7 @@ const AccessoryMasterApi = createApi({
         method: "POST",
         body: payload,
       }),
-      invalidatesTags: ["Party"],
+      invalidatesTags: ["AccessoryMaster"],
     }),
     updateAccessoryMaster: builder.mutation({
       query: ({id, body}) => {
@@ -61,14 +61,14 @@ const AccessoryMasterApi = createApi({
           body,
         };
       },
-      invalidatesTags: ["Party"],
+      invalidatesTags: ["AccessoryMaster"],
     }),
     deleteAccessoryMaster: builder.mutation({
       query: (id) => ({
         url: `${ACCESSORY_API}/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Party"],
+      invalidatesTags: ["AccessoryMaster"],
     }),
   }),
 });

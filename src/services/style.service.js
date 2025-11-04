@@ -20,13 +20,26 @@ const prisma = new PrismaClient();
 // }
 
 async function get(req) {
-  const { companyId, active } = req.query;
+  const {
+    companyId,
+    active,
+    searchStyleNo,
+    searchStylename,
+    searchFabricName,
+  } = req.query;
 
   const data = await prisma.style.findMany({
     where: {
       companyId: companyId ? parseInt(companyId) : undefined,
       active: active ? Boolean(active) : undefined,
-    },
+      sku: searchStyleNo ? { contains: searchStyleNo } : undefined,
+      Fabric: {
+        name : searchFabricName ? { contains : searchFabricName } : undefined,
+      },
+      StyleItem : {
+        name : searchStylename ? {contains : searchStylename } : undefined
+      }
+    },   
     include: {
       StyleItem: true,
       Fabric: true,

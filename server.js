@@ -66,6 +66,7 @@ import {
   stockInward,
   stock,
   styleItem,
+  accessory,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";
@@ -157,6 +158,7 @@ app.use("/size", size);
 app.use("/measurement", measurement);
 app.use("/fabric", fabric);
 app.use("/accessoryGroup", accessoryGroup);
+app.use("/accessory", accessory);
 app.use("/openingStock", openingStock);
 app.use("/stockAdjustment", stockAdjustment);
 app.use("/salesEntry", salesEntry);

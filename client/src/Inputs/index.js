@@ -1698,3 +1698,83 @@ export const ReusableSearchableInput = forwardRef(
     );
   }
 );
+
+export const customSelectStyles = {
+  control: (base, state) => ({
+    ...base,
+    minHeight: "13px",
+    height: "13px",
+    padding: "12px 4px",
+    fontSize: "12px",
+    borderRadius: "8px",
+    fontFamily: "Poppins",
+    color: state.isDisabled ? "#6b7280" : "black",
+    backgroundColor: state.isDisabled ? "#f3f4f6" : "white", // bg-gray-100 vs bg-white
+    cursor: state.isDisabled ? "not-allowed" : "default",
+    borderColor: state.isFocused ? "#3b82f6" : "#d1d5db", // blue-500 vs gray-300
+    boxShadow: state.isFocused ? "0 0 0 1px #3b82f6" : base.boxShadow,
+    "&:hover": {
+      borderColor: state.isDisabled ? "#d1d5db" : "#9ca3af", // keep gray when disabled
+    },
+  }),
+  valueContainer: (base, state) => ({
+    ...base,
+    padding: "0 3px",
+    marginTop: "-8px",
+    fontSize: "12px",
+    fontFamily: "Poppins",
+    color: state.isDisabled ? "#6b7280" : "black",
+  }),
+  input: (base, state) => ({
+    ...base,
+    margin: 0,
+    fontSize: "12px",
+    padding: 0,
+    fontFamily: "Poppins",
+    color: state.isDisabled ? "#6b7280" : "black",
+  }),
+  singleValue: (base, state) => ({
+    ...base,
+    fontFamily: "Poppins",
+    fontSize: "12px",
+    color: state.isDisabled ? "#6b7280" : "black",
+  }),
+  placeholder: (base) => ({
+    ...base,
+    fontFamily: "Poppins",
+    color: "black",
+    fontSize: "12px",
+  }),
+  menu: (base, state) => ({
+    ...base,
+    fontFamily: "Poppins",
+    maxHeight: 140,
+    // overflowY: "auto",
+    fontSize: "12px",
+    color: state.isDisabled ? "#6b7280" : "black",
+  }),
+  option: (base, state) => ({
+    ...base,
+    fontFamily: "Poppins",
+    fontSize: "12px",
+    color: state.isDisabled ? "#6b7280" : "black",
+    padding: "6px 8px",
+  }),
+  dropdownIndicator: (base) => ({
+    ...base,
+    padding: 2,
+    svg: {
+      width: 14, // icon width
+      height: 14, // icon height
+    },
+    color: "black",
+    marginTop: "-9px",
+  }),
+
+  indicatorSeparator: () => ({ display: "none" }),
+  menuList: (base) => ({
+    ...base,
+    maxHeight: 140,
+    // overflowY: "auto",
+  }),
+};

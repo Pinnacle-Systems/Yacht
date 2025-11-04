@@ -24,6 +24,7 @@ import { useGetSizeTemplateQuery } from "../../../redux/uniformService/SizeTempl
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
+import StyleReport from "./StyleReport";
 
 const StyleMaster = () => {
   const [form, setForm] = useState(false);
@@ -318,8 +319,8 @@ const StyleMaster = () => {
   };
 
   return (
-    <div onKeyDown={handleKeyDown} className="p-1">
-      <div className="w-full flex bg-white p-1 justify-between  items-center">
+    <div onKeyDown={handleKeyDown} className="p-1 bg-[#F1F1F0] h-[85%]">
+      <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
         <h5 className="text-2xl font-bold font-segoe text-gray-800 ">
           Style Master
         </h5>
@@ -335,10 +336,16 @@ const StyleMaster = () => {
           </button>
         </div>
       </div>
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
-        <ReusableTable
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        {/* <ReusableTable
           columns={columns}
           data={allData?.data || []}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          itemsPerPage={10}
+        /> */}
+        <StyleReport
           onView={handleView}
           onEdit={handleEdit}
           onDelete={handleDelete}
@@ -349,7 +356,7 @@ const StyleMaster = () => {
         <Modal
           isOpen={form}
           form={form}
-          widthClass={"w-[65%] h-[60%]"}
+          widthClass={"w-[1000px] h-[400px]"}
           onClose={() => {
             setForm(false);
           }}
