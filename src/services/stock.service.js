@@ -509,12 +509,12 @@ async function get(req) {
     _sum: {
       qty: true,
     },
-     orderBy: {
-    styleNo: "asc",
-  },
+    orderBy: {
+      styleNo: "asc",
+    },
   });
   totalCount = data.length;
-  totalQty = data?.reduce((sum,item) => sum + (item._sum?.qty || 0),0)
+  totalQty = data?.reduce((sum, item) => sum + (item._sum?.qty || 0), 0);
   // if (pagination) {
   //   data = data.slice(
   //     (pageNumber - 1) * parseInt(dataPerPage),
@@ -533,7 +533,7 @@ async function get(req) {
       styleItemId: d.styleItemId,
     })),
     totalCount,
-    totalQty
+    totalQty,
   };
 }
 
@@ -734,7 +734,16 @@ async function getStyleDetail(req) {
 
   // 1️⃣ First try fetching by styleNo
   let data = await prisma.stock.groupBy({
-    by: ["styleId", "sizeId", "styleNo", "barCode", "fabricId", "styleItemId"],
+    by: [
+      "styleId",
+      "sizeId",
+      "colorId",
+      "styleNo",
+      "barCode",
+      "fabricId",
+      "styleItemId",
+      "price"
+    ],
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
       storeId: storeId ? parseInt(storeId) : undefined,
@@ -751,12 +760,16 @@ async function getStyleDetail(req) {
       by: [
         "styleId",
         "sizeId",
+        "colorId",
         "styleNo",
         "barCode",
         "fabricId",
         "styleItemId",
+        "price"
       ],
       where: {
+        branchId: branchId ? parseInt(branchId) : undefined,
+        storeId: storeId ? parseInt(storeId) : undefined,
         barCode: styleNo,
       },
       _sum: {
@@ -777,9 +790,11 @@ async function getStyleDetail(req) {
       styleId: d.styleId,
       styleItemId: d.styleItemId,
       sizeId: d.sizeId,
+      colorId: d.colorId,
       stkQty: d._sum.qty,
       fabricId: d.fabricId,
       barcode: d.barCode,
+      price: d.price
     })),
   };
 }

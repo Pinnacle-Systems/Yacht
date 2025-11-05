@@ -41,6 +41,7 @@ const StyleMaster = () => {
   const [sizeTemplateId, setSizeTemplateId] = useState("");
   const [fabricId, setFabricId] = useState("");
   const [styleItemId, setStyleItemId] = useState("");
+  const [price, setPrice] = useState("");
   const [addData] = useAddStyleMasterMutation();
   const [updateData] = useUpdateStyleMasterMutation();
   const [removeData] = useDeleteStyleMasterMutation();
@@ -82,6 +83,7 @@ const StyleMaster = () => {
     sizeTemplateId,
     fabricId,
     styleItemId,
+    price
   };
 
   const validateData = (data) => {
@@ -132,6 +134,7 @@ const StyleMaster = () => {
     formData.append("alias", alias);
     formData.append("active", active);
     formData.append("styleItemId", styleItemId);
+    formData.append("price",price);
     formData.append(
       "companyId",
       secureLocalStorage.getItem(
@@ -175,6 +178,7 @@ const StyleMaster = () => {
       setSizeTemplateId(data?.sizeTemplateId ? data?.sizeTemplateId : "");
       setFabricId(data?.fabricId ? data?.fabricId : "");
       setStyleItemId(data?.styleItemId ? data?.styleItemId : "");
+      setPrice(data?.price ? data?.price : "")
     },
     [id]
   );
@@ -356,7 +360,7 @@ const StyleMaster = () => {
         <Modal
           isOpen={form}
           form={form}
-          widthClass={"w-[1000px] h-[400px]"}
+          widthClass={"w-[1000px] h-[430px]"}
           onClose={() => {
             setForm(false);
           }}
@@ -492,6 +496,16 @@ const StyleMaster = () => {
                               value={sizeTemplateId}
                               setValue={setSizeTemplateId}
                               required={true}
+                              readOnly={readOnly}
+                            />
+                          </div>
+                          <div className="mb-5 w-48">
+                            <TextInput
+                              name="Rate"
+                              type="number"
+                              value={price}
+                              setValue={setPrice}
+                              required={false}
                               readOnly={readOnly}
                             />
                           </div>

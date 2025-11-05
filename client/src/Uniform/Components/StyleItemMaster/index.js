@@ -290,7 +290,7 @@ export default function Form() {
         <Modal
           isOpen={form}
           form={form}
-          widthClass={"w-[30%] max-w-6xl h-[50vh]"}
+          widthClass={"w-[500px] max-w-6xl h-[350px]"}
           onClose={() => {
             setForm(false);
           }}

@@ -191,9 +191,9 @@ async function getOne(id) {
           id: true,
           salesEntryId: true,
           barcode: true,
-          StyleItem:true,
-          Size:true,
-          Fabric:true,
+          StyleItem: true,
+          Size: true,
+          Fabric: true,
           styleId: true,
           sizeId: true,
           qty: true,
@@ -208,10 +208,11 @@ async function getOne(id) {
           discountType: true,
           taxPercent: true,
           discountValue: true,
+          colorId: true,
         },
       },
       Location: true,
-      Store: true
+      Store: true,
     },
   });
   if (!data) return NoRecordFound("salesEntry");
@@ -383,6 +384,7 @@ async function updateSalesEntryItems(
           salesEntryId: parseInt(salesEntry.id),
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
           stkQty:
             stockDetail?.stkQty && !isNaN(parseFloat(stockDetail.stkQty))
               ? Math.round(parseFloat(stockDetail.stkQty))
@@ -427,6 +429,9 @@ async function updateSalesEntryItems(
               ? parseInt(stockDetail.styleId)
               : null,
             sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+            colorId: stockDetail?.colorId
+              ? parseInt(stockDetail.colorId)
+              : null,
             qty,
             barCode: stockDetail?.barcode,
             updatedById: parseInt(userId),
@@ -452,6 +457,9 @@ async function updateSalesEntryItems(
               ? parseInt(stockDetail.styleId)
               : null,
             sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+            colorId: stockDetail?.colorId
+              ? parseInt(stockDetail.colorId)
+              : null,
             qty,
             salesEntryItemsId: updatedItem.id,
             barCode: stockDetail?.barcode ? stockDetail?.barcode : undefined,
@@ -474,6 +482,7 @@ async function updateSalesEntryItems(
           salesEntryId: parseInt(salesEntry.id),
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
           stkQty:
             stockDetail?.stkQty && !isNaN(parseFloat(stockDetail.stkQty))
               ? Math.round(parseFloat(stockDetail.stkQty))
@@ -510,6 +519,7 @@ async function updateSalesEntryItems(
           storeId: parseInt(storeId),
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
           qty: createdItem.qty ? -Math.abs(createdItem.qty) : null,
           salesEntryItemsId: createdItem.id,
           barCode: stockDetail?.barcode ? stockDetail?.barcode : undefined,
@@ -544,6 +554,7 @@ async function createSalesEntryItems(
         barcode: itemDetail?.barcode ? itemDetail?.barcode : undefined,
         styleId: itemDetail?.styleId ? parseInt(itemDetail.styleId) : null,
         sizeId: itemDetail?.sizeId ? parseInt(itemDetail.sizeId) : null,
+        colorId: itemDetail?.colorId ? parseInt(itemDetail.colorId) : null,
         stkQty:
           itemDetail?.stkQty && !isNaN(parseFloat(itemDetail.stkQty))
             ? Math.round(parseFloat(itemDetail.stkQty))
@@ -580,6 +591,7 @@ async function createSalesEntryItems(
         storeId: parseInt(storeId),
         styleId: itemDetail?.styleId ? parseInt(itemDetail.styleId) : null,
         sizeId: itemDetail?.sizeId ? parseInt(itemDetail.sizeId) : null,
+        colorId: itemDetail?.colorId ? parseInt(itemDetail.colorId) : null,
         qty:
           itemDetail?.qty && !isNaN(parseFloat(itemDetail.qty))
             ? -Math.abs(parseInt(itemDetail.qty))

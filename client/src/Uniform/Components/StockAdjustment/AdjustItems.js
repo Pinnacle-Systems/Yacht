@@ -11,6 +11,7 @@ import { findFromList } from "../../../Utils/helper";
 import { IMAGE_UPLOAD_URL } from "../../../Constants";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 import { toast } from "react-toastify";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 
 export default function AdjustItems({
   stockAdjustmentItems,
@@ -28,6 +29,7 @@ export default function AdjustItems({
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: fabricList } = useGetFabricMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
+  const { data: colorList } = useGetColorMasterQuery({ params });
 
   const [getStyleDetail] = useLazyGetStyleDetailQuery();
 
@@ -48,6 +50,7 @@ export default function AdjustItems({
       styleNo: "",
       fabricId: "",
       styleItemId: "",
+      colorId: "",
     };
     setStockAdjustmentItems([...stockAdjustmentItems, newRow]);
   };
@@ -154,6 +157,7 @@ export default function AdjustItems({
               styleNo: "",
               fabricId: "",
               styleItemId: "",
+              colorId: "",
             })),
           ];
         }
@@ -173,6 +177,7 @@ export default function AdjustItems({
           styleNo: "",
           fabricId: "",
           styleItemId: "",
+          colorId: "",
         }))
       );
     }
@@ -249,6 +254,7 @@ export default function AdjustItems({
                       styleNo: "",
                       fabricId: "",
                       styleItemId: "",
+                      colorId: "",
                     }
                   : r
               )
@@ -312,6 +318,7 @@ export default function AdjustItems({
               stkQty: "",
               barcode: "",
               styleItemId: "",
+              colorId: "",
             });
           }
 
@@ -380,12 +387,12 @@ export default function AdjustItems({
                   S.No
                 </th>
                 <th
-                  className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-28 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Barcode No
                 </th>
                 <th
-                  className={`w-28 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style No
                 </th>
@@ -400,7 +407,7 @@ export default function AdjustItems({
                   Img
                 </th>{" "}
                 <th
-                  className={`w-40 px-4 py-2 text-center font-medium text-[13px]`}
+                  className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
                 >
                   Fabric
                 </th>
@@ -408,6 +415,11 @@ export default function AdjustItems({
                   className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Size
+                </th>
+                <th
+                  className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Color
                 </th>
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
@@ -534,7 +546,9 @@ export default function AdjustItems({
                             cursor: "pointer",
                           }}
                           src={imageFormatter(row?.styleId)}
-                          onClick={() =>setPreviewImage(imageFormatter(row?.styleId)) }
+                          onClick={() =>
+                            setPreviewImage(imageFormatter(row?.styleId))
+                          }
                         />
                       ) : (
                         <></>
@@ -598,6 +612,36 @@ export default function AdjustItems({
                         ))}
                       </select>
                     </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <select
+                        id={`qty-input-${index}`}
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "colorId");
+                          }
+                        }}
+                        tabIndex={"0"}
+                        disabled={true}
+                        className="text-left w-full rounded py-1 table-data-input"
+                        value={row.colorId}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "colorId")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "colorId");
+                        }}
+                      >
+                        <option></option>
+                        {(id
+                          ? colorList?.data
+                          : colorList?.data?.filter((item) => item.active)
+                        )?.map((blend) => (
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
                         type="number"
@@ -622,7 +666,7 @@ export default function AdjustItems({
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px]">
                       <select
-                      id={`adjType-${index}`}
+                        id={`adjType-${index}`}
                         tabIndex={0}
                         disabled={readOnly}
                         className={`text-left w-full rounded py-1 table-data-input 
@@ -676,15 +720,20 @@ export default function AdjustItems({
                             handleInputChange("", index, "remarks");
                           }
                           if (e.key === "Enter") {
-      e.preventDefault(); // prevent form submit or line break
-      e.stopPropagation();
-      const nextSelect = document.querySelector(`#adjType-${index + 1}`);
-      if (nextSelect) {
-      nextSelect.focus();
-      // Optional: visually show focus (since select.open() is not allowed)
-      setTimeout(() => (nextSelect.style.outline = ""), 800);
-    }
-    }
+                            e.preventDefault(); // prevent form submit or line break
+                            e.stopPropagation();
+                            const nextSelect = document.querySelector(
+                              `#adjType-${index + 1}`
+                            );
+                            if (nextSelect) {
+                              nextSelect.focus();
+                              // Optional: visually show focus (since select.open() is not allowed)
+                              setTimeout(
+                                () => (nextSelect.style.outline = ""),
+                                800
+                              );
+                            }
+                          }
                         }}
                         disabled={readOnly}
                         type="string"
@@ -747,9 +796,9 @@ export default function AdjustItems({
         {contextMenu && (
           <div
             style={{
-              position: "absolute",
-              top: `${contextMenu.mouseY - 50}px`,
-              left: `${contextMenu.mouseX + 20}px`,
+              position: "fixed",
+              top: `${contextMenu.mouseY - 0}px`,
+              left: `${contextMenu.mouseX - 80}px`,
               boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
               padding: "8px",
               borderRadius: "4px",

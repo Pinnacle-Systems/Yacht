@@ -6,6 +6,7 @@ import {
   useAddAccessoryGroupMasterMutation,
   useUpdateAccessoryGroupMasterMutation,
   useDeleteAccessoryGroupMasterMutation,
+  useLazyGetAccessoryGroupMasterByIdQuery,
 } from "../../../redux/uniformService/AccessoryGroupMasterServices";
 import { Check, Power } from "lucide-react";
 import { toast } from "react-toastify";
@@ -44,6 +45,8 @@ export default function Form() {
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetAccessoryGroupMasterByIdQuery(id, { skip: !id });
+  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
+    useLazyGetAccessoryGroupMasterByIdQuery();
 
   const [addData] = useAddAccessoryGroupMasterMutation();
   const [updateData] = useUpdateAccessoryGroupMasterMutation();
@@ -146,35 +149,45 @@ export default function Form() {
   };
 
   const handleDelete = async (id) => {
+    setId(id);
+    const { data } = await trigger(id);
     if (id) {
       console.log(id);
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-      try {
-        let deldata = await removeData(id).unwrap();
-        if (deldata?.statusCode == 1) {
-          Swal.fire({
-            icon: "error",
-            title: "Child record Exists",
-            text: deldata.data?.message || "Data cannot be deleted!",
-          });
-          return;
-        }
-        setId("");
-        Swal.fire({
-          title: "Deleted Successfully",
-          icon: "success",
-          timer: 1000,
-        });
-        setForm(false);
-      } catch (error) {
+      if (data?.data?.childRecord > 0) {
         Swal.fire({
           icon: "error",
-          title: "Submission error",
-          text: error.data?.message || "Something went wrong!",
+          title: "Child record Exists",
+          text: "Data cannot be deleted!",
         });
-        setForm(false);
+      } else {
+        try {
+          let deldata = await removeData(id).unwrap();
+          if (deldata?.statusCode == 1) {
+            Swal.fire({
+              icon: "error",
+              title: "Child record Exists",
+              text: deldata.data?.message || "Data cannot be deleted!",
+            });
+            return;
+          }
+          setId("");
+          Swal.fire({
+            title: "Deleted Successfully",
+            icon: "success",
+            timer: 1000,
+          });
+          setForm(false);
+        } catch (error) {
+          Swal.fire({
+            icon: "error",
+            title: "Submission error",
+            text: error.data?.message || "Something went wrong!",
+          });
+          setForm(false);
+        }
       }
     }
   };
@@ -276,7 +289,7 @@ export default function Form() {
         <Modal
           isOpen={form}
           form={form}
-          widthClass={"w-[40%]  h-[45%]"}
+          widthClass={"w-[40%]  h-[50%]"}
           onClose={() => {
             setForm(false);
             setId("");

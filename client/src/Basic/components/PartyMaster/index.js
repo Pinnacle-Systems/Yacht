@@ -287,7 +287,6 @@ export default function Form({ partyId, onCloseForm }) {
     bankName,
     branchName,
     accountNumber,
-
     tinNo,
     certificate,
     cstNo,
@@ -650,157 +649,11 @@ export default function Form({ partyId, onCloseForm }) {
         <Modal
           isOpen={form}
           form={form}
-          widthClass={"w-[90%] h-[95%]"}
+          widthClass={"w-[1250px] h-[570px]"}
           onClose={() => {
             setForm(false);
           }}
         >
-          {/* <Modal
-            isOpen={branchModelOpen}
-            form={form}
-            widthClass={` ${
-              branchForm ? "w-[60%] h-[80%]" : "w-[90%] h-[90%]"
-            } `}
-            setBranchModelOpen={setBranchModelOpen}
-            onClose={() => {
-              setBranchModelOpen(false);
-              refetch();
-            }}
-          >
-            <AddBranch
-              singleData={singleData}
-              partyId={id}
-              branchEmail={branchEmail}
-              setBranchEmail={setBranchEmail}
-              setBranchAddress={setBranchAddress}
-              branchName={branchName}
-              setBranchName={setBranchName}
-              branchCode={branchCode}
-              setBranchCode={setBranchCode}
-              branchAddress={branchAddress}
-              branchContact={branchContact}
-              setBranchContact={setBranchContact}
-              branchContactPerson={branchContactPerson}
-              setBranchcontactPerson={setBranchcontactPerson}
-              branchWebsite={branchWebsite}
-              setBranchWebsite={setBranchWebsite}
-              openingHours={openingHours}
-              setopeningHours={setopeningHours}
-              onNew={onNew}
-              branchType={branchType}
-              handleFun={handleFun}
-              setPartyId={setId}
-              childRecord={childRecord}
-              saveData={saveData}
-              saveExitData={saveExitData}
-              setReadOnly={setReadOnly}
-              deleteData={deleteData}
-              readOnly={readOnly}
-              onCloseForm={onCloseForm}
-              handleChange={handleChange}
-              contactDetails={contactDetails}
-              setContactDetails={setContactDetails}
-              shippingAddress={shippingAddress}
-              setForm={setForm}
-              onClose={() => {
-                setBranchModelOpen(false);
-              }}
-              branchForm={branchForm}
-              setBranchForm={setBranchForm}
-              removeItem={removeItem}
-              setBranchInfo={setBranchInfo}
-              branchInfo={branchInfo}
-              partyBranch={partyBranch}
-              setPartyBranch={setPartyBranch}
-              setBranchModelOpen={setBranchModelOpen}
-              name={name}
-              setBranchType={setBranchType}
-              handleInputbranch={handleInputbranch}
-              deleteBranch={deleteBranch}
-              cityList={cityList}
-              branchState={branchState}
-              refetch={refetch}
-              branchActive={branchActive}
-            />
-          </Modal> */}
-
-          {/* <Modal
-            isOpen={rawMaterial}
-            widthClass={`${"w-[50%] h-[70%]"}`}
-            setRawmeterial={setRawMaterial}
-            onClose={() => {
-              setRawMaterial(false);
-              setMaterialForm(false);
-            }}
-            allData={allData}
-          >
-            <RawMaterial
-              addData={addData}
-              updateData={updateData}
-              SaveBranch={SaveBranch}
-              material={material}
-              setMaterial={setMaterial}
-              setMaterialActive={setMaterialActive}
-              materialActive={materialActive}
-              allData={allData}
-              setMaterialForm={setMaterialForm}
-              materialForm={materialForm}
-              setMaterialId={setMaterialId}
-              materialId={materialId}
-            />
-          </Modal> */}
-          {/* <Modal
-            isOpen={isContactPerson}
-            widthClass={`${branchForm ? "w-[33%] h-[71%]" : "w-[60%] h-[68%]"}`}
-            setIsContactPerson={setIsContactPerson}
-            onClose={() => {
-              setIsContactPerson(false);
-              // setMaterialForm(false)
-            }}
-            allData={allData}
-          >
-            <ContactPersonDetails
-              partyData={singleData?.data}
-              partyId={id}
-              contactNumber={contactNumber}
-              setContactNumber={setContactNumber}
-              contactPersonName={contactPersonName}
-              setContactPersonName={setContactPersonName}
-              designation={designation}
-              setDesignation={setDesignation}
-              setDepartment={setDepartment}
-              department={department}
-              setIsContactPerson={setIsContactPerson}
-              setContactPersonEmail={setContactPersonEmail}
-              contactPersonEmail={contactPersonEmail}
-              branchForm={branchForm}
-              refetch={refetch}
-              syncFormWithDb={syncFormWithDb}
-              alterContactNumber={alterContactNumber}
-              setAlterContactNumber={setAlterContactNumber}
-              setBranchForm={setBranchForm}
-              onClose={() => {
-                setIsContactPerson(false);
-              }}
-            />
-          </Modal> */}
-          {/* <Modal
-            isOpen={formReport}
-            onClose={() => setFormReport(false)}
-            widthClass={"p-3 h-[70%] w-[70%]"}
-          >
-            <ArtDesignReport
-              // userRole={userRole}
-              setFormReport={setFormReport}
-              tableWidth="100%"
-              formReport={formReport}
-              setAttachments={setAttachments}
-              attachments={attachments}
-              searchValue={searchValue}
-              setSearchValue={setSearchValue}
-            />
-          </Modal> */}
-
           <div className="h-full flex flex-col bg-[f1f1f0] ">
             <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3 ">
               <div className="flex items-center gap-2">
@@ -814,41 +667,6 @@ export default function Form({ partyId, onCloseForm }) {
               </div>
 
               <div className="flex gap-2">
-                {/* <div className="  ">
-                  <button
-                    onClick={() => {
-                      if (name) {
-                        setBranchModelOpen(true);
-                        setBranchForm(false);
-                      } else {
-                        Swal.fire({
-                          icon: "warning",
-                          title: `Enter ${
-                            isSupplier ? "Supplier Details" : "Customer Details"
-                          } `,
-                          showConfirmButton: false,
-                          timer: 2000,
-                        });
-                      }
-                    }}
-                    readOnly={readOnly}
-                    className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    Add Branch
-                  </button>
-                </div> */}
                 <div>
                   {!readOnly && (
                     <button
@@ -914,34 +732,6 @@ export default function Form({ partyId, onCloseForm }) {
                           </label>
                         </div>
                         <div className="col-span-4 flex flex-row">
-                          {/* {isSupplier && (
-                            <div className="mt-3 px-3 relative inline-block">
-                              <button
-                                className="w-7 h-6 border border-green-500 rounded-md mt-2
-                hover:bg-green-500 text-green-600 hover:text-white
-                transition-colors flex items-center justify-center"
-                                onClick={() => setRawMaterial(true)}
-                                onMouseEnter={() =>
-                                  setTooltipVisibleForMaterial(true)
-                                }
-                                onMouseLeave={() =>
-                                  setTooltipVisibleForMaterial(false)
-                                }
-                              >
-                                <FaPlus className="text-sm w-3 h-4" />
-                              </button>
-
-                              {tooltipVisibleForMaterial && (
-                                <div className="absolute left-full top-0 ml-2 mt-1 w-56 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg z-10">
-                                  <div className="flex items-start">
-                                    <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
-                                    <span>Click to add a new Material</span>
-                                  </div>
-                                  <div className="absolute top-2 -left-1 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
-                                </div>
-                              )}
-                            </div>
-                          )} */}
                         </div>
                       </div>
 
@@ -1110,37 +900,6 @@ export default function Form({ partyId, onCloseForm }) {
                               className="focus:ring-2 focus:ring-blue-100 w-10"
                             />
                           </div>
-                          {/* <div className="relative inline-block">
-                            <button
-                              className="w-7 h-6 border border-green-500 rounded-md mt-6
-                                            hover:bg-green-500 text-green-600 hover:text-white
-                                            transition-colors flex items-center justify-center"
-                              disabled={readOnly}
-                              onClick={() => {
-                                // openAddModal();
-                                // setIsDropdownOpen(false);
-                                // setEditingItem("new");
-                                // setOpenModel(true);
-                                setBranchForm(false);
-                                setIsContactPerson(true);
-                              }}
-                              onMouseEnter={() => setTooltipVisible(true)}
-                              onMouseLeave={() => setTooltipVisible(false)}
-                              aria-label="Add supplier"
-                            >
-                              <FaPlus className="text-sm" />
-                            </button>
-
-                            {tooltipVisible && (
-                              <div className="absolute z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
-                                <div className="flex items-start">
-                                  <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
-                                  <span>Click to add a new Contact Person</span>
-                                </div>
-                                <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
-                              </div>
-                            )}
-                          </div> */}
                         </div>
                         <TextInput
                           name="Designation"
@@ -1204,15 +963,16 @@ export default function Form({ partyId, onCloseForm }) {
                       Business Details
                     </h3>
                     <div className="space-y-2">
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-2">  
                         <DropdownInput
                           name="PayTerm"
                           options={dropDownListObject(
+                            Array.isArray(payTermList?.data) ?
                             id
                               ? payTermList?.data
                               : payTermList?.data?.filter(
                                   (item) => item.active
-                                ),
+                                ) : [],
                             "name",
                             "id"
                           )}
@@ -1308,25 +1068,6 @@ export default function Form({ partyId, onCloseForm }) {
                     </div>
                   </div>
                 </div>
-                {/* <div className="lg:col-span-4 space-y-3">
-                  <div className="bg-white p-3 rounded-md border border-gray-200  h-[240px]">
-                    <h3 className="font-medium text-gray-800 mb-2 text-sm">
-                      Attchments
-                    </h3>
-                    <div className="space-y-2">
-                      <div className="flex pt-4">
-                        <button
-                          className="relative w-20 h-7 bg-gray-800    text-white rounded-md shadow-md hover:shadow-xl hover:scale-105 
-        transform transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center"
-                          onClick={() => setFormReport(true)}
-                        >
-                          <span className="absolute inset-0 bg-white opacity-10 rounded-md"></span>
-                          <Paperclip className="relative z-10 w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div> */}
               </div>
             </div>
           </div>

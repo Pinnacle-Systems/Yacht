@@ -1100,6 +1100,9 @@ model Color {
   posubGrid                  poSubGrid[]
   purchaseInwardEntrySubGrid purchaseInwardEntrySubGrid[]
   Stock                      Stock[]
+  OpeningStockItems          OpeningStockItems[]
+  StockAdjustmentItems       StockAdjustmentItems[]
+  SalesEntryItems            SalesEntryItems[]
 }
 
 model UnitOfMeasurement {
@@ -1490,6 +1493,7 @@ model Style {
   styleItemId          Int?
   SizeTemplate         SizeTemplate?          @relation(fields: [sizeTemplateId], references: [id])
   sizeTemplateId       Int?
+  price                Float?
   Stock                Stock[]
   OpeningStockItems    OpeningStockItems[]
   StockAdjustmentItems StockAdjustmentItems[]
@@ -1660,6 +1664,9 @@ model OpeningStockItems {
   StyleItem      StyleItem?   @relation(fields: [styleItemId], references: [id])
   styleItemId    Int?
   Stock          Stock[]
+  Color          Color?       @relation(fields: [colorId], references: [id])
+  colorId        Int?
+  price          Float?
 }
 
 model StockAdjustment {
@@ -1699,6 +1706,8 @@ model StockAdjustmentItems {
   fabricId          Int?
   StyleItem         StyleItem?       @relation(fields: [styleItemId], references: [id])
   styleItemId       Int?
+  Color             Color?           @relation(fields: [colorId], references: [id])
+  colorId           Int?
 }
 
 model SalesEntry {
@@ -1724,6 +1733,7 @@ model SalesEntry {
   taxTemplate     TaxTemplate?      @relation(fields: [taxTemplateId], references: [id])
   taxTemplateId   Int?
   SalesEntryItems SalesEntryItems[]
+  salesType       String?
 }
 
 model SalesEntryItems {
@@ -1750,6 +1760,8 @@ model SalesEntryItems {
   discountType  String?
   taxPercent    Int?
   discountValue Int?
+  Color         Color?      @relation(fields: [colorId], references: [id])
+  colorId       Int?
 }
 
 model SizeTemplate {

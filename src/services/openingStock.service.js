@@ -215,6 +215,7 @@ async function getOne(id) {
           styleNo: true,
           fabricId: true,
           styleItemId: true,
+          colorId: true,
         },
       },
     },
@@ -595,6 +596,8 @@ async function updateOpeningStockItems(
             ? parseInt(stockDetail.styleItemId)
             : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+          price: stockDetail?.price ? parseInt(stockDetail.price) : null,
           qty,
           remarks: stockDetail?.remarks ?? undefined,
           barcode,
@@ -617,6 +620,10 @@ async function updateOpeningStockItems(
               ? parseInt(stockDetail.styleItemId)
               : null,
             sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+            colorId: stockDetail?.colorId
+              ? parseInt(stockDetail.colorId)
+              : null,
+            price: stockDetail?.price ? parseInt(stockDetail.price) : null,
             qty,
             barCode: barcode,
             updatedById: parseInt(userId),
@@ -637,6 +644,10 @@ async function updateOpeningStockItems(
               ? parseInt(stockDetail.styleId)
               : null,
             sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+            colorId: stockDetail?.colorId
+              ? parseInt(stockDetail.colorId)
+              : null,
+            price: stockDetail?.price ? parseInt(stockDetail.price) : null,
             qty,
             OpeningStockItemsId: updatedItem.id,
             styleNo: stockDetail?.styleNo ?? undefined,
@@ -659,6 +670,8 @@ async function updateOpeningStockItems(
           openingStockId: parseInt(openingStock.id),
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+          price: stockDetail?.price ? parseInt(stockDetail.price) : null,
           qty,
           remarks: stockDetail?.remarks ?? undefined,
           barcode,
@@ -684,6 +697,8 @@ async function updateOpeningStockItems(
             : null,
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+          price: stockDetail?.price ? parseInt(stockDetail.price) : null,
           qty,
           OpeningStockItemsId: createdItem.id,
           barCode: barcode,
@@ -742,9 +757,11 @@ async function createOpeningStockItems(
           ? parseInt(stockDetail.styleItemId)
           : null,
         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+        colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
         qty,
         remarks: stockDetail?.remarks ?? undefined,
         barcode,
+        price: stockDetail?.price ? parseInt(stockDetail.price) : null,
       },
     });
 
@@ -757,6 +774,7 @@ async function createOpeningStockItems(
         storeId: parseInt(storeId),
         styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+        colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
         fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
         qty,
         OpeningStockItemsId: createdItem.id,
@@ -765,6 +783,7 @@ async function createOpeningStockItems(
         styleItemId: stockDetail?.styleItemId
           ? parseInt(stockDetail.styleItemId)
           : null,
+        price: stockDetail?.price ? parseInt(stockDetail.price) : null,
       },
     });
 

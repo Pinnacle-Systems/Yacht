@@ -14,6 +14,7 @@ import { toast } from "react-toastify";
 import Modal from "../../../UiComponents/Modal";
 import TaxDetailsFullTemplate from "../TaxDetailsCompleteTemplate";
 import { VIEW } from "../../../icons";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 
 export default function BillItems({
   salesEntryItems,
@@ -37,6 +38,7 @@ export default function BillItems({
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: fabricList } = useGetFabricMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
+  const { data: colorList } = useGetColorMasterQuery({ params });
 
   const [
     triggerGetBarcodeDetail,
@@ -59,6 +61,7 @@ export default function BillItems({
       discountValue: "",
       amount: "",
       styleItemId: "",
+      colorId: "",
     };
     setSalesEntryItems([...salesEntryItems, newRow]);
   };
@@ -116,6 +119,7 @@ export default function BillItems({
               discountValue: "",
               amount: "",
               styleItemId: "",
+              colorId: "",
             })),
           ];
         }
@@ -139,6 +143,7 @@ export default function BillItems({
           discountValue: "",
           amount: "",
           styleItemId: "",
+          colorId: "",
         }))
       );
     }
@@ -263,6 +268,7 @@ export default function BillItems({
               discountType: "",
               discountValue: "",
               styleItemId: "",
+              colorId: "",
             });
           }
 
@@ -317,7 +323,7 @@ export default function BillItems({
           handleInputChange={handleInputChange}
         />
       </Modal>
-      <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[300px] overflow-auto">
+      <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[300px] overflow-auto overflow-x-auto w-full">
         <div className="flex items-center gap-4">
           <ReusableInput
             label="Style / Barcode No"
@@ -327,7 +333,7 @@ export default function BillItems({
             required={true}
             readOnly={readOnly}
             autoFocus={true}
-             onKeyDown={(e) => {
+            onKeyDown={(e) => {
               if (e.key === "Enter") {
                 handleAddRow();
               }
@@ -350,8 +356,8 @@ export default function BillItems({
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">Sales Item Details</h2>
         </div>
-        <div className={`w-full   py-1`}>
-          <table className="overflow-x-scroll border-collapse table-fixed">
+        <div className={`w-full  py-1`}>
+          <table className=" border-collapse table-fixed w-full">
             <thead className="bg-gray-200 text-gray-800">
               <tr>
                 <th
@@ -365,12 +371,12 @@ export default function BillItems({
                   Style No
                 </th>
                 <th
-                  className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-28 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Barcode No
                 </th>
                 <th
-                  className={`w-56 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-60 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style
                 </th>
@@ -380,7 +386,7 @@ export default function BillItems({
                   Img
                 </th>{" "}
                 <th
-                  className={`w-44 px-4 py-2 text-center font-medium text-[13px]`}
+                  className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
                 >
                   Fabric
                 </th>
@@ -390,27 +396,32 @@ export default function BillItems({
                   Size
                 </th>
                 <th
-                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Color
+                </th>
+                <th
+                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Stock Qty
                 </th>
                 <th
-                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Sales Qty
                 </th>
                 <th
-                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Price
                 </th>
                 <th
-                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Tax %
                 </th>
                 <th
-                  className={`w-28 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-32 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Disc Type
                 </th>
@@ -596,6 +607,36 @@ export default function BillItems({
                         {(id
                           ? sizeList?.data
                           : sizeList?.data?.filter((item) => item.active)
+                        )?.map((blend) => (
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <select
+                        id={`qty-input-${index}`}
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "colorId");
+                          }
+                        }}
+                        tabIndex={"0"}
+                        disabled={true}
+                        className="text-left w-full rounded py-1 table-data-input"
+                        value={row.colorId}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "colorId")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "colorId");
+                        }}
+                      >
+                        <option></option>
+                        {(id
+                          ? colorList?.data
+                          : colorList?.data?.filter((item) => item.active)
                         )?.map((blend) => (
                           <option value={blend.id} key={blend.id}>
                             {blend?.name}
@@ -834,42 +875,6 @@ export default function BillItems({
                       />
                     </td>
                   </tr>
-                  {contextMenu && (
-                    <div
-                      style={{
-                        position: "fixed",
-                        top: `${contextMenu.mouseY - 50}px`,
-                        left: `${contextMenu.mouseX - 80}px`,
-                        boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
-                        padding: "8px",
-                        borderRadius: "4px",
-                        zIndex: 1000,
-                      }}
-                      className="bg-gray-100"
-                      onMouseLeave={handleCloseContextMenu}
-                    >
-                      <div className="flex flex-col gap-1">
-                        <button
-                          className=" text-black text-[12px] text-left rounded px-1"
-                          onClick={() => {
-                            deleteRow(contextMenu.rowId);
-                            handleCloseContextMenu();
-                          }}
-                        >
-                          Delete
-                        </button>
-                        <button
-                          className=" text-black text-[12px] text-left rounded px-1"
-                          onClick={() => {
-                            handleDeleteAllRows();
-                            handleCloseContextMenu();
-                          }}
-                        >
-                          Delete All
-                        </button>
-                      </div>
-                    </div>
-                  )}
                 </>
               ))}
             </tbody>
@@ -877,7 +882,7 @@ export default function BillItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={8}
+                  colSpan={9}
                 >
                   Total
                 </td>
@@ -929,6 +934,42 @@ export default function BillItems({
                   alt="Preview"
                   className="max-h-[80vh] max-w-[80vw] rounded-lg shadow-lg"
                 />
+              </div>
+            </div>
+          )}
+          {contextMenu && (
+            <div
+              style={{
+                position: "fixed",
+                top: `${contextMenu.mouseY - 0}px`,
+                left: `${contextMenu.mouseX - 80}px`,
+                boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                padding: "8px",
+                borderRadius: "4px",
+                zIndex: 1000,
+              }}
+              className="bg-gray-100"
+              onMouseLeave={handleCloseContextMenu}
+            >
+              <div className="flex flex-col gap-1">
+                <button
+                  className=" text-black text-[12px] text-left rounded px-1"
+                  onClick={() => {
+                    deleteRow(contextMenu.rowId);
+                    handleCloseContextMenu();
+                  }}
+                >
+                  Delete
+                </button>
+                <button
+                  className=" text-black text-[12px] text-left rounded px-1"
+                  onClick={() => {
+                    handleDeleteAllRows();
+                    handleCloseContextMenu();
+                  }}
+                >
+                  Delete All
+                </button>
               </div>
             </div>
           )}

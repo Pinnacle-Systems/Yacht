@@ -79,6 +79,7 @@ const AccessoryGroupMasterApi = createApi({
 
 export const {
   useGetAccessoryGroupMasterQuery,
+  useLazyGetAccessoryGroupMasterByIdQuery,
   useGetAccessoryGroupMasterByIdQuery,
   useAddAccessoryGroupMasterMutation,
   useUpdateAccessoryGroupMasterMutation,

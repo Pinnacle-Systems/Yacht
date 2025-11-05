@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import PageWrapper from "../../../../Utils/PageWrapper";
 import tw from "../../../../Utils/tailwind-react-pdf";
 import { findFromList } from "../../../../Utils/helper";
+import Header from "../../../../Utils/Header";
 
 const PDF = ({ allData, sizeList, fabricList, styleItemList }) => {
 
@@ -40,7 +41,7 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList }) => {
         },
         table: {
             display: "table",
-            marginTop: 10,
+            marginTop: 0,
             // borderTopWidth: 1,
             // borderTopStyle: "solid",
             // borderTopColor: "#D1D5DB",
@@ -123,12 +124,15 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList }) => {
 
     return (
         <Document>
-            <PageWrapper heading={"Stock Report"} allData={allData}>
+            <PageWrapper heading={"Stock Report"} allData={allData} header={false}>
+                <View>
+                    <Header styles={styles} />
+                </View>
+
                 <View style={styles.container}>
                     <Text style={tw("mx-auto     text-base text-black")}>Stock Report</Text>
-
-                    <View style={[styles.table, tw("mt-5")]} wrap>
-                        {/* Table Header */}
+                    <View style={{ height: 10 }} fixed/>
+                    <View style={[styles.table, ]} wrap>
                         <View fixed style={styles.tableHeader}>
                             {[
                                 { label: "S.No", flex: 0.5 },
@@ -211,11 +215,6 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList }) => {
                                 </View>
                             );
                         })}
-                        {/* <View style={tw("text-right justify-end flex-row mt-[25px] flex  text-base text-black ")}>
-                            <Text style={tw("mr-10")}>Total Qty :</Text>
-                            <Text>{allData?.totalQty}</Text>
-                        </View> */}
-                        {/* Table Footer */}
                         <View
                             style={[
                                 {

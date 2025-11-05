@@ -380,6 +380,7 @@ async function getOne(id) {
           fabricId: true,
           styleNo: true,
           styleItemId: true,
+          colorId: true,
         },
       },
     },
@@ -453,6 +454,7 @@ async function createStockAdjustmentItems(
         barcode: stockDetail?.barcode ? stockDetail?.barcode : undefined,
         styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+        colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
         stkQty:
           stockDetail?.stkQty && !isNaN(parseFloat(stockDetail.stkQty))
             ? Math.round(parseFloat(stockDetail.stkQty))
@@ -483,6 +485,7 @@ async function createStockAdjustmentItems(
         storeId: parseInt(storeId),
         styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+        colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
         qty,
         stockAdjustmentId: createdItem.id,
         barCode: stockDetail?.barcode ? stockDetail?.barcode : "",
@@ -573,6 +576,7 @@ async function updateOpeningStockItems(
           barcode: stockDetail?.barcode ? stockDetail.barCode : "",
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
           stkQty:
             stockDetail?.stkQty && !isNaN(parseFloat(stockDetail.stkQty))
               ? Math.round(parseFloat(stockDetail.stkQty))
@@ -606,6 +610,7 @@ async function updateOpeningStockItems(
           storeId: parseInt(storeId),
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
           qty,
           barCode: stockDetail?.barcode || "",
           styleNo: stockDetail?.styleNo ?? undefined,
@@ -625,6 +630,7 @@ async function updateOpeningStockItems(
           barcode: stockDetail?.barcode || undefined,
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
           stkQty:
             stockDetail?.stkQty && !isNaN(parseFloat(stockDetail.stkQty))
               ? Math.round(parseFloat(stockDetail.stkQty))
@@ -657,6 +663,7 @@ async function updateOpeningStockItems(
           storeId: parseInt(storeId),
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
           qty,
           stockAdjustmentId: createdItem.id,
           barCode: stockDetail?.barcode || "",

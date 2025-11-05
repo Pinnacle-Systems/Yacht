@@ -12,6 +12,7 @@ import { findFromList } from "../../../Utils/helper";
 import { IMAGE_UPLOAD_URL } from "../../../Constants";
 import secureLocalStorage from "react-secure-storage";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 
 export default function ReadyGoods({
   openingStockItems,
@@ -27,6 +28,7 @@ export default function ReadyGoods({
   const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
   const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
+  const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: fabricList } = useGetFabricMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
 
@@ -43,6 +45,7 @@ export default function ReadyGoods({
       qty: "",
       remarks: "",
       styleItemId: "",
+      colorId: "",
     };
     setOpeningStockItems([...openingStockItems, newRow]);
   };
@@ -100,6 +103,7 @@ export default function ReadyGoods({
               qty: "",
               remarks: "",
               styleItemId: "",
+              colorId: "",
             })),
           ];
         }
@@ -116,6 +120,7 @@ export default function ReadyGoods({
           qty: "",
           remarks: "",
           styleItemId: "",
+          colorId: "",
         }))
       );
     }
@@ -187,7 +192,9 @@ export default function ReadyGoods({
             sizeId: s.sizeId,
             qty: "",
             remarks: "",
+            colorId: "",
             styleItemId: style.styleItemId || "",
+            price: style.price || "",
           }));
           console.log("Mapped size rows:", sizeRows);
         }
@@ -220,6 +227,7 @@ export default function ReadyGoods({
             qty: "",
             remarks: "",
             styleItemId: "",
+            colorId: "",
           });
         }
 
@@ -247,8 +255,13 @@ export default function ReadyGoods({
             type={"text"}
             required={true}
             readOnly={readOnly}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleAddRow();
+              }
+            }}
           />
-          <button
+          {/* <button
             className="hover:bg-green-700 h-6 mt-3 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-xs"
             onClick={() => {
               handleAddRow();
@@ -260,7 +273,7 @@ export default function ReadyGoods({
             }}
           >
             <FaPlus /> Add
-          </button>
+          </button> */}
         </div>
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
@@ -290,7 +303,7 @@ export default function ReadyGoods({
                   Style
                 </th>
                 <th
-                  className={`w-44 px-4 py-2 text-center font-medium text-[13px]`}
+                  className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
                 >
                   Fabric
                 </th>
@@ -298,6 +311,11 @@ export default function ReadyGoods({
                   className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Size
+                </th>
+                <th
+                  className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Color
                 </th>
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
@@ -356,7 +374,9 @@ export default function ReadyGoods({
                             cursor: "pointer",
                           }}
                           src={imageFormatter(row?.styleId)}
-                          onClick={() =>setPreviewImage(imageFormatter(row?.styleId)) }
+                          onClick={() =>
+                            setPreviewImage(imageFormatter(row?.styleId))
+                          }
                           // onMouseEnter={() =>
                           //   setPreviewImage(imageFormatter(row?.styleId))
                           // }
@@ -461,9 +481,38 @@ export default function ReadyGoods({
                         ))}
                       </select>
                     </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <select
+                        id={`qty-input-${index}`}
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "colorId");
+                          }
+                        }}
+                        tabIndex={"0"}
+                        disabled={readOnly}
+                        className="text-left w-full rounded py-1 table-data-input"
+                        value={row.colorId}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "colorId")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "colorId");
+                        }}
+                      >
+                        <option></option>
+                        {(id
+                          ? colorList?.data
+                          : colorList?.data?.filter((item) => item.active)
+                        )?.map((blend) => (
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
-                        id={`qty-input-${index}`}
                         onKeyDown={(e) => {
                           if (e.code === "Minus" || e.code === "NumpadSubtract")
                             e.preventDefault();
@@ -540,7 +589,7 @@ export default function ReadyGoods({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={6}
+                  colSpan={7}
                 >
                   Total Qty
                 </td>

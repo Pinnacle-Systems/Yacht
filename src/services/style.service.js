@@ -34,12 +34,12 @@ async function get(req) {
       active: active ? Boolean(active) : undefined,
       sku: searchStyleNo ? { contains: searchStyleNo } : undefined,
       Fabric: {
-        name : searchFabricName ? { contains : searchFabricName } : undefined,
+        name: searchFabricName ? { contains: searchFabricName } : undefined,
       },
-      StyleItem : {
-        name : searchStylename ? {contains : searchStylename } : undefined
-      }
-    },   
+      StyleItem: {
+        name: searchStylename ? { contains: searchStylename } : undefined,
+      },
+    },
     include: {
       StyleItem: true,
       Fabric: true,
@@ -122,6 +122,7 @@ async function create(req) {
     fabricId,
     sizeTemplateId,
     styleItemId,
+    price,
   } = await req;
   // const file = req.file;
   const data = await prisma.style.create({
@@ -135,6 +136,7 @@ async function create(req) {
       styleItemId: styleItemId ? parseInt(styleItemId) : undefined,
       sizeTemplateId: sizeTemplateId ? parseInt(sizeTemplateId) : undefined,
       fabricId: fabricId ? parseInt(fabricId) : undefined,
+      price: price ? parseInt(price) : undefined,
     },
   });
   return { statusCode: 0, data };
@@ -151,6 +153,7 @@ async function update(id, body) {
     fabricId,
     sizeTemplateId,
     styleItemId,
+    price
   } = await body;
 
   const dataFound = await prisma.style.findUnique({
@@ -171,6 +174,7 @@ async function update(id, body) {
       fabricId: fabricId ? parseInt(fabricId) : undefined,
       sizeTemplateId: sizeTemplateId ? parseInt(sizeTemplateId) : undefined,
       styleItemId: styleItemId ? parseInt(styleItemId) : undefined,
+      price: price ? parseInt(price) : undefined
     },
   });
   return { statusCode: 0, data };

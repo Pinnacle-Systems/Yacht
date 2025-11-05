@@ -19,7 +19,8 @@ const PDF = ({ singleData, allData }) => {
         },
         container: {
             width: "100%",
-            padding: 5,
+            // padding: 5,
+            // paddingHorizontal:5
         },
         totalRow: {
             flexDirection: "row",
@@ -53,7 +54,7 @@ const PDF = ({ singleData, allData }) => {
             borderTopWidth: 1,
             borderTopStyle: "solid",
             borderTopColor: "#D1D5DB",
-
+            paddingHorizontal: 1,
             borderCollapse: "collapse",
         },
         tableHeader: {
@@ -137,13 +138,13 @@ const PDF = ({ singleData, allData }) => {
     };
     return (
         <Document>
-            <PageWrapper heading={"Sales Delivery"} singleData={singleData}>
+            <PageWrapper heading={"Sales Delivery"} singleData={singleData} header={true}>
                 <View style={styles.container}>
-                    <Text style={tw("mx-auto     text-base text-black mt-2")}>Sales Delivery</Text>
+                    <Text style={tw("mx-auto   text-base text-black mt-2")}>Sales Delivery</Text>
 
                     {/* non grid  */}
 
-                    <View style={[tw("flex flex-row justify-between w-full my-1 p-2")]}>
+                    <View style={[tw("flex flex-row justify-between w-full  p-2")]}>
                         {/* left column */}
                         <View style={tw("flex flex-col w-1/2 gap-y-2")}>
                             <Text
@@ -300,34 +301,6 @@ const PDF = ({ singleData, allData }) => {
                                         : ""}
                                 </Text>
                             </View>
-
-                            {/*Customer Address */}
-                            <View style={tw("flex flex-row gap-x-2")}>
-                                <Text
-                                    style={[
-                                        tw("text-xs font-bold"),
-                                        { fontWeight: 900, fontFamily: "Times-Bold" },
-                                    ]}
-                                >
-                                    Contact Person
-                                </Text>
-                                <Text
-                                    style={[
-                                        tw("text-xs font-bold "),
-                                        {
-                                            fontWeight: 900,
-                                            fontFamily: "Times-Bold",
-                                            marginLeft: 7,
-                                        },
-                                    ]}
-                                >
-                                    :
-                                </Text>
-                                <Text style={tw("text-xs ml-2")}>
-                                    {singleData?.Customer?.contactPersonName}
-                                </Text>
-                            </View>
-
                             {/*Customer Phone No */}
                             <View style={tw("flex flex-row gap-x-2")}>
                                 <Text
@@ -354,8 +327,32 @@ const PDF = ({ singleData, allData }) => {
                                     {singleData?.Customer?.contactNumber || "N/A"}
                                 </Text>
                             </View>
-
-
+                            {/*Customer Address */}
+                            <View style={tw("flex flex-row gap-x-2")}>
+                                <Text
+                                    style={[
+                                        tw("text-xs font-bold"),
+                                        { fontWeight: 900, fontFamily: "Times-Bold" },
+                                    ]}
+                                >
+                                    Contact Address
+                                </Text>
+                                <Text
+                                    style={[
+                                        tw("text-xs font-bold "),
+                                        {
+                                            fontWeight: 900,
+                                            fontFamily: "Times-Bold",
+                                            marginLeft: 4,
+                                        },
+                                    ]}
+                                >
+                                    :
+                                </Text>
+                                <Text style={tw("text-xs ml-2")}>
+                                    {singleData?.Customer?.address}
+                                </Text>
+                            </View>
                         </View>
                     </View>
 
@@ -465,9 +462,9 @@ const PDF = ({ singleData, allData }) => {
                         }}>
                             <Text
                                 style={[
-                                    styles.tableCell,
+                                    styles.headerCell,
                                     {
-                                        flex: 12.7,
+                                        flex: 6.7,
                                         // backgroundColor: "white", borderLeftWidth: 1,
                                         // borderLeftStyle: "solid",
                                         // borderColor: "#D1D5DB", borderBottomWidth: 1,
@@ -477,30 +474,16 @@ const PDF = ({ singleData, allData }) => {
                                     },
                                 ]}
                             >
-                                Grand Total
+                                Total
                             </Text>
-                            {/* <Text
-                                style={[
-                                    {
-                                        flex: 1,
-                                        fontWeight: "bold",
-                                        fontSize: 8,
-                                        textAlign: "center",
-                                        backgroundColor: "white",
-                                        paddingTop: 5,
-                                        borderColor: "#D1D5DB", borderBottomWidth: 1,
-                                        borderBottomStyle: "solid",
-                                        // marginTop:-1
-                                    },
-                                ]}
-                            >
-                                Grand Total:
-                            </Text> */}
+                            <Text style={[styles.headerCell,, { flex: 0.6, fontSize: 8, textAlign: "right" }]}>
+                                {singleData?.SalesEntryItems?.reduce((sum,row) => sum + row.qty,0)}
+                            </Text>
                             <Text
                                 style={[
-                                    styles.tableCell,
+                                    styles.headerCell,
                                     {
-                                        flex: 1,
+                                        flex: 6,
                                         fontSize: 8,
                                         textAlign: "right",
                                         // fontWeight: "bold",

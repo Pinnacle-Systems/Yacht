@@ -31,7 +31,7 @@ const Header = ({ heading, singleData, DeliveryNo, DeliveryDate, styles }) => {
             TIRUPUR - 641 607.
           </Text>
         </View>
-        <View style={tw("flex flex-col  text-xl mt-5  item-center w-[25%]")}>
+        <View style={tw("flex flex-col  text-xl mt-10  item-center w-[25%]")}>
           {/* <Text style={tw("text-teal-500")}>{heading}</Text> */}
 
           <Text style={tw("text-xs ml-1 text-right")}>{singleData?.docId || ""}</Text>

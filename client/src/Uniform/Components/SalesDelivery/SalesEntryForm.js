@@ -345,7 +345,7 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
             </div>
           </div>
         </div>
-        <fieldset>
+        <fieldset className="w-full  min-w-[1200px]">
           <BillItems
             salesEntryItems={salesEntryItems}
             setSalesEntryItems={setSalesEntryItems}
