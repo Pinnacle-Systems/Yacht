@@ -50,7 +50,7 @@ const BrowseSingleImage = ({ picture, setPicture, readOnly }) => {
                 Browse
               </label>
             </div>
-            <div className="border border-gray-700 rounded-md h-8 px-2 p-1 text-xs hover:border-red-400">
+            <div className="border border-gray-700 rounded-md h-8 px-2 flex items-center text-xs hover:border-red-400">
               {
                 <DeleteButton
                   onClick={() => {

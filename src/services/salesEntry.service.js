@@ -172,6 +172,63 @@ async function get(req) {
   };
 }
 
+async function getSalesReport(req) {
+  const { finYearId, branchId, storeId, fromDate, toDate, customerId } =
+    req.query;
+  let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+  let data;
+  let totalCount;
+  let totalAmount;
+  const from = fromDate ? new Date(fromDate) : undefined;
+  const to = toDate ? new Date(toDate) : undefined;
+  if (to) to.setHours(23, 59, 59, 999);
+  data = await prisma.salesEntry.findMany({
+    where: {
+      branchId: branchId ? parseInt(branchId) : undefined,
+      storeId: storeId ? parseInt(storeId) : undefined,
+      customerId: customerId ? parseInt(customerId) : undefined,
+      // AND: finYearDate
+      //   ? [
+      //       {
+      //         createdAt: {
+      //           gte: finYearDate.startTime,
+      //         },
+      //       },
+      //       {
+      //         createdAt: {
+      //           lte: finYearDate.endTime,
+      //         },
+      //       },
+      //       {
+      //         docDate: {
+      //           gte: from,
+      //           lte: to,
+      //         },
+      //       },
+      //     ]
+      //   : undefined,
+      AND: finYearDate
+        ? [
+            { createdAt: { gte: finYearDate.startTime } },
+            { createdAt: { lte: finYearDate.endTime } },
+            ...(from && to ? [{ docDate: { gte: from, lte: to } }] : []),
+          ]
+        : from && to
+        ? [{ docDate: { gte: from, lte: to } }]
+        : undefined,
+    },
+    include: {
+      SalesEntryItems: true,
+    },
+  });
+  totalCount = data.length;
+  return {
+    statusCode: 0,
+    data,
+    totalCount,
+  };
+}
+
 async function getOne(id) {
   const childRecord = 0;
   const data = await prisma.salesEntry.findUnique({
@@ -645,4 +702,4 @@ async function remove(id) {
   return { statusCode: 0, data };
 }
 
-export { get, getOne, getSearch, create, update, remove };
+export { get, getOne, getSearch, create, update, remove, getSalesReport };

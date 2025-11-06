@@ -45,6 +45,29 @@ const SalesEntryApi = createApi({
       },
       providesTags: ["SalesEntry"],
     }),
+    getSalesReport: builder.query({
+      query: ({ params, searchParams }) => {
+        if (searchParams) {
+          return {
+            url: SALES_ENTRY_API + "/search/" + searchParams,
+            method: "GET",
+            headers: {
+              "Content-type": "application/json; charset=UTF-8",
+            },
+            params,
+          };
+        }
+        return {
+          url: `${SALES_ENTRY_API}/salesReport`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["SalesEntry"],
+    }),
     addSalesEntry: builder.mutation({
       query: (payload) => ({
         url: SALES_ENTRY_API,
@@ -80,6 +103,7 @@ const SalesEntryApi = createApi({
 export const {
   useGetSalesEntryQuery,
   useGetSalesEntryByIdQuery,
+  useGetSalesReportQuery,
   useAddSalesEntryMutation,
   useUpdateSalesEntryMutation,
   useDeleteSalesEntryMutation,

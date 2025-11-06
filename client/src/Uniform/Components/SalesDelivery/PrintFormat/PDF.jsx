@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import PageWrapper from "../../../../Utils/PageWrapper";
 import tw from "../../../../Utils/tailwind-react-pdf";
 import { findFromList } from "../../../../Utils/helper";
+import Header from "../../../../Utils/Header";
 
 const PDF = ({ singleData, allData }) => {
     const styles = StyleSheet.create({
@@ -60,6 +61,8 @@ const PDF = ({ singleData, allData }) => {
         tableHeader: {
             flexDirection: "row",
             backgroundColor: "#F3F4F6",
+            borderTopWidth: 1,
+            borderTopColor: "#D1D5DB",
             borderBottomWidth: 1,
             borderBottomColor: "#D1D5DB",
             fontWeight: "bold",
@@ -138,9 +141,12 @@ const PDF = ({ singleData, allData }) => {
     };
     return (
         <Document>
-            <PageWrapper heading={"Sales Delivery"} singleData={singleData} header={true}>
+            <PageWrapper heading={"Sales Delivery"} singleData={singleData} header={false}>
+                <View>
+                    <Header styles={styles} />
+                </View>
                 <View style={styles.container}>
-                    <Text style={tw("mx-auto   text-base text-black mt-2")}>Sales Delivery</Text>
+                    <Text style={tw("mx-auto   text-base text-black mt-1")}>Sales Delivery</Text>
 
                     {/* non grid  */}
 
@@ -357,8 +363,8 @@ const PDF = ({ singleData, allData }) => {
                     </View>
 
                     <View style={styles.divider} />
-
-                    <View style={[styles.table, tw("mt-5")]}>
+                    <View style={{ height: 10 }} fixed />
+                    <View style={[styles.table]}>
                         {/* Table Header */}
                         <View fixed style={styles.tableHeader}>
                             {[
@@ -400,7 +406,7 @@ const PDF = ({ singleData, allData }) => {
                             return (
                                 <View
                                     key={index}
-                                    wrap
+                                    wrap={false}
                                     style={{
                                         flexDirection: "row",
                                         width: "100%",
@@ -476,8 +482,8 @@ const PDF = ({ singleData, allData }) => {
                             >
                                 Total
                             </Text>
-                            <Text style={[styles.headerCell,, { flex: 0.6, fontSize: 8, textAlign: "right" }]}>
-                                {singleData?.SalesEntryItems?.reduce((sum,row) => sum + row.qty,0)}
+                            <Text style={[styles.headerCell, , { flex: 0.6, fontSize: 8, textAlign: "right" }]}>
+                                {singleData?.SalesEntryItems?.reduce((sum, row) => sum + row.qty, 0)}
                             </Text>
                             <Text
                                 style={[

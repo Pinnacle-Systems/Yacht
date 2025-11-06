@@ -9,6 +9,7 @@ import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMaste
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 
 const Parameter = ({
   locationId,
@@ -23,7 +24,9 @@ const Parameter = ({
   setFabricId,
   onClose,
   styleItemId,
-  setStyleItemId
+  setStyleItemId,
+  colorId,
+  setColorId,
 }) => {
   const [localStoreId, setLocalStoreId] = useState(storeId);
   const [localLocationId, setLocalLocationId] = useState(locationId);
@@ -57,6 +60,7 @@ const Parameter = ({
   const { data: styleItemList } = useGetStyleItemMasterQuery({
     params: { companyId },
   });
+  const { data: colorList } = useGetColorMasterQuery({ params: { companyId } });
 
   const storeOptions = locationData
     ? locationData.data.filter(
@@ -102,7 +106,9 @@ const Parameter = ({
         <DropdownInput
           name="Style"
           options={
-            styleItemList ? dropDownListObject(styleItemList.data, "name", "id") : []
+            styleItemList
+              ? dropDownListObject(styleItemList.data, "name", "id")
+              : []
           }
           value={styleItemId}
           setValue={(value) => {
@@ -134,6 +140,17 @@ const Parameter = ({
           }}
           required={false}
           clear={true}
+        />
+        <DropdownInput
+          name="Color"
+          options={
+            colorList ? dropDownListObject(colorList.data, "name", "id") : []
+          }
+          value={colorId}
+          setValue={(value) => {
+            setColorId(value);
+          }}
+          required={false}
         />
       </div>
       <div className="flex justify-end gap-4 mb-4 items-center mr-2">

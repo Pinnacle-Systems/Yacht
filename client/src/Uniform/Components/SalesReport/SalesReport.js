@@ -7,30 +7,16 @@ import {
 } from "../../../Utils/helper";
 import { Loader } from "../../../Basic/components";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { useGetStockQuery } from "../../../redux/services/StockService";
 import Modal from "../../../UiComponents/Modal";
 import Parameter from "./Parameter";
-import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
-import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { EMPTY_ICON } from "../../../icons";
-import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
-import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
-import { sum } from "lodash";
-import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { useGetStockQuery } from "../../../redux/services/StockService";
+import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
+import { useGetSalesReportQuery } from "../../../redux/uniformService/SalesEntryService";
 
-const StockReport = forwardRef(
+const SalesReport = forwardRef(
   (
-    {
-      onClick,
-      onView,
-      itemsPerPage = 10,
-      onEdit,
-      onDelete,
-      rowActions = true,
-      parameter,
-      setParameter,
-      onDataLoaded,
-    },
+    { onClick, itemsPerPage = 10, parameter, setParameter, onDataLoaded },
     ref
   ) => {
     const branchId = secureLocalStorage.getItem(
@@ -38,32 +24,17 @@ const StockReport = forwardRef(
     );
 
     const [dataPerPage, setDataPerPage] = useState("10");
-    const [serachDocNo, setSerachDocNo] = useState("");
-    const [searchDocDate, setSearchDocDate] = useState("");
-    const [searchStore, setSearchStore] = useState("");
     const [totalCount, setTotalCount] = useState(0);
     const [currentPageNumber, setCurrentPageNumber] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
     const [storeId, setStoreId] = useState("");
     const [locationId, setLocationId] = useState("");
-    const [styleId, setStyleId] = useState("");
-    const [sizeId, setSizeId] = useState("");
-    const [fabricId, setFabricId] = useState("");
-    const [styleItemId, setStyleItemId] = useState("");
-    const [colorId, setColorId] = useState("");
+    const [fromDate, setFromDate] = useState("");
+    const [toDate, setToDate] = useState("");
+    const [customerId, setCustomerId] = useState("");
     const handleOnclick = (e) => {
       setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
     };
-
-    const searchFields = {
-      serachDocNo,
-      searchDocDate,
-      searchStore,
-    };
-
-    useEffect(() => {
-      setCurrentPageNumber(1);
-    }, [serachDocNo, searchDocDate, searchStore]);
 
     const companyId = secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -73,49 +44,30 @@ const StockReport = forwardRef(
       companyId,
     };
 
-    const { data: styleList } = useGetStyleMasterQuery({ params });
-    const { data: sizeList } = useGetSizeMasterQuery({ params });
-    const { data: fabricList } = useGetFabricMasterQuery({ params });
-    const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
-    const { data: colorList } = useGetColorMasterQuery({ params });
-
     const {
       data: allData,
       isFetching,
       isLoading,
       refetch,
-    } = useGetStockQuery(
+    } = useGetSalesReportQuery(
       {
         params: {
           branchId,
           storeId,
-          ...searchFields,
-          pagination: true,
-          dataPerPage,
-          pageNumber: currentPageNumber,
-          styleId,
-          sizeId,
-          fabricId,
-          styleItemId,
-          colorId,
+          customerId,
+          fromDate,
+          toDate,
         },
       },
       {
         skip: !(branchId && storeId),
       }
     );
-
-    useEffect(() => {
-      if (allData && onDataLoaded) {
-        onDataLoaded(allData);
-      }
-    }, [allData, onDataLoaded]);
+    const { data: customerList } = useGetPartyQuery({
+      params: { companyId },
+    });
 
     const allDataDetail = allData?.data;
-
-    useImperativeHandle(ref, () => ({
-      refetch,
-    }));
 
     useEffect(() => {
       if (allData?.totalCount) {
@@ -124,6 +76,10 @@ const StockReport = forwardRef(
     }, [allData, isLoading, isFetching]);
 
     const isLoadingIndicator = isLoading || isFetching;
+
+    useImperativeHandle(ref, () => ({
+      refetch,
+    }));
 
     const totalPages = Math?.ceil(allDataDetail?.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -222,6 +178,53 @@ const StockReport = forwardRef(
       );
     };
 
+    const calculateNetAmount = (item) => {
+      const qty = parseFloat(item.qty) || 0;
+      const price = parseFloat(item.price) || 0;
+      const taxPercent = parseFloat(item.taxPercent) || 0;
+      const discountValue = parseFloat(item.discountValue) || 0;
+      const discountType = item.discountType || "";
+
+      // Gross amount
+      const grossAmount = qty * price;
+
+      // GST Subtracted
+      const amountAfterGST = grossAmount - (grossAmount * taxPercent) / 100;
+
+      // Apply Discount
+      let discountAmt = 0;
+      if (discountType === "Flat") discountAmt = discountValue;
+      else if (discountType === "Percent")
+        discountAmt = (amountAfterGST * discountValue) / 100;
+
+      // Final net amount
+      const netAmount = amountAfterGST - discountAmt;
+
+      return netAmount;
+    };
+
+    const totalQty = currentItems?.reduce((grandTotal, dataObj) => {
+      const itemQty = dataObj?.SalesEntryItems?.reduce(
+        (total, item) => total + item?.qty,
+        0
+      );
+      return grandTotal + itemQty;
+    }, 0);
+
+    const totalNetAmt = currentItems?.reduce((grandAmount, dataObj) => {
+      const itemAmt = dataObj?.SalesEntryItems?.reduce(
+        (total, item) => total + calculateNetAmount(item),
+        0
+      );
+      return grandAmount + itemAmt;
+    }, 0);
+
+    useEffect(() => {
+      if (allData && onDataLoaded) {
+        onDataLoaded(allData);
+      }
+    }, [allData, onDataLoaded]);
+
     return (
       <>
         <Modal
@@ -236,16 +239,12 @@ const StockReport = forwardRef(
             setLocationId={setLocationId}
             storeId={storeId}
             setStoreId={setStoreId}
-            styleId={styleId}
-            setStyleId={setStyleId}
-            setSizeId={setSizeId}
-            sizeId={sizeId}
-            fabricId={fabricId}
-            setFabricId={setFabricId}
-            styleItemId={styleItemId}
-            setStyleItemId={setStyleItemId}
-            colorId={colorId}
-            setColorId={setColorId}
+            customerId={customerId}
+            setCustomerId={setCustomerId}
+            fromDate={fromDate}
+            toDate={toDate}
+            setFromDate={setFromDate}
+            setToDate={setToDate}
             onClose={() => {
               setCurrentPage(1);
               setParameter(false);
@@ -264,26 +263,17 @@ const StockReport = forwardRef(
                           <div className="">S No</div>
                         </th>
 
-                        <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                          <div>Style No</div>
+                        <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
+                          <div>Delivery Date</div>
                         </th>
-                        <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                          <div>Barcode No</div>
+                        <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-56">
+                          <div>Customer</div>
                         </th>
-                        <th className="w-72  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                          <div>Style</div>
+                        <th className="w-32  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                          <div>Sales Qty</div>
                         </th>
-                        <th className="w-52  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                          <div>Fabric</div>
-                        </th>
-                        <th className="w-52  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                          <div>Color</div>
-                        </th>
-                        <th className="w-28  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                          <div>Size</div>
-                        </th>
-                        <th className="w-28  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                          <div>Qty</div>
+                        <th className="w-36  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                          <div>Sales Amount</div>
                         </th>
                       </tr>
                     </thead>
@@ -314,42 +304,29 @@ const StockReport = forwardRef(
                             <td className="text-center h-8">{index + 1}</td>
 
                             <td className="py-1.5 text-center">
-                              {dataObj.styleNo}{" "}
-                            </td>
-
-                            <td className="py-1.5 text-center">
-                              {dataObj?.barcode}
+                              {dataObj?.docDate
+                                ? getDateFromDateTimeToDisplay(dataObj.docDate)
+                                : ""}
                             </td>
                             <td className="py-1.5 text-center">
                               {findFromList(
-                                dataObj?.styleItemId,
-                                styleItemList?.data,
+                                dataObj?.customerId,
+                                customerList?.data,
                                 "name"
                               )}
                             </td>
                             <td className="py-1.5 text-center">
-                              {findFromList(
-                                dataObj?.fabricId,
-                                fabricList?.data,
-                                "name"
+                              {dataObj?.SalesEntryItems?.reduce(
+                                (total, item) => total + item?.qty,
+                                0
                               )}
                             </td>
                             <td className="py-1.5 text-center">
-                              {findFromList(
-                                dataObj?.colorId,
-                                colorList?.data,
-                                "name"
-                              )}
-                            </td>
-                            <td className="py-1.5 text-center">
-                              {findFromList(
-                                dataObj?.sizeId,
-                                sizeList?.data,
-                                "name"
-                              )}
-                            </td>
-                            <td className="py-1.5 text-center">
-                              {dataObj?.stkQty}
+                              {dataObj?.SalesEntryItems?.reduce(
+                                (total, item) =>
+                                  total + calculateNetAmount(item),
+                                0
+                              ).toFixed(2)}
                             </td>
                           </tr>
                         ))}
@@ -357,11 +334,12 @@ const StockReport = forwardRef(
                     )}
                     <tfoot className="border-2">
                       <tr className="bg-gray-100 font-medium text-[14px]  text-gray-900 border-b   border-gray-200">
-                        <td colSpan={7} className="text-right py-1.5">
+                        <td colSpan={3} className="text-right py-1.5">
                           Total
                         </td>
+                        <td className="py-1.5 text-center">{totalQty}</td>
                         <td className="py-1.5 text-center">
-                          {allData?.totalQty}
+                          {totalNetAmt.toFixed(2)}
                         </td>
                       </tr>
                     </tfoot>
@@ -383,4 +361,4 @@ const StockReport = forwardRef(
   }
 );
 
-export default StockReport;
+export default SalesReport;

@@ -7,11 +7,14 @@ import {
   create,
   update,
   remove,
+  getReport,
 } from "../controllers/salesEntry.controller.js";
 
 router.post("/", create);
 
 router.get("/", get);
+
+router.get("/salesReport", getReport);
 
 router.get("/:id", getOne);
 
@@ -20,5 +23,6 @@ router.get("/search/:searchKey", getSearch);
 router.put("/:id", update);
 
 router.delete("/:id", remove);
+
 
 export default router;

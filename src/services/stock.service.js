@@ -466,6 +466,7 @@ async function get(req) {
     sizeId,
     fabricId,
     styleItemId,
+    colorId
   } = req.query;
 
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -480,6 +481,7 @@ async function get(req) {
       sizeId: sizeId ? parseInt(sizeId) : undefined,
       fabricId: fabricId ? parseInt(fabricId) : undefined,
       styleItemId: styleItemId ? parseInt(styleItemId) : undefined,
+      colorId: colorId ? parseInt(colorId) : undefined,
       AND: finYearDate
         ? [
             {
@@ -505,7 +507,7 @@ async function get(req) {
         storeName: searchStore ? { contains: searchStore } : undefined,
       },
     },
-    by: ["styleId", "sizeId", "styleNo", "barCode", "fabricId", "styleItemId"],
+    by: ["styleId", "sizeId", "styleNo", "barCode", "fabricId", "styleItemId","colorId"],
     _sum: {
       qty: true,
     },
@@ -531,6 +533,7 @@ async function get(req) {
       fabricId: d.fabricId,
       barcode: d.barCode,
       styleItemId: d.styleItemId,
+      colorId: d.colorId
     })),
     totalCount,
     totalQty,

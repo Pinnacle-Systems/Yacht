@@ -56,3 +56,4 @@ export { default as SizeTemplateMaster } from "./SizeTemplateMaster";
 export { default as StockInward } from "./StockInward";
 export { default as StockReport } from "./StockReport";
 export { default as StyleItemMaster } from "./StyleItemMaster";
+export {default as SalesReport } from "./SalesReport"
