@@ -13,6 +13,7 @@ import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleI
 import secureLocalStorage from "react-secure-storage";
 import ExcelJS from "exceljs";
 import { findFromList } from "../../../Utils/helper";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 
 export default function Form() {
   const [parameter, setParameter] = useState(false);
@@ -32,6 +33,7 @@ export default function Form() {
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: fabricList } = useGetFabricMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
+  const { data: colorList } = useGetColorMasterQuery({ params });
   const stockReportRef = useRef();
 
   const DownloadExcel = async (allData) => {
@@ -156,6 +158,7 @@ export default function Form() {
             sizeList={sizeList}
             fabricList={fabricList}
             styleItemList={styleItemList}
+            colorList={colorList}
           />
         </PDFViewer>
       </Modal>

@@ -5,7 +5,7 @@ import tw from "../../../../Utils/tailwind-react-pdf";
 import { findFromList } from "../../../../Utils/helper";
 import Header from "../../../../Utils/Header";
 
-const PDF = ({ allData, sizeList, fabricList, styleItemList }) => {
+const PDF = ({ allData, sizeList, fabricList, styleItemList,colorList }) => {
 
     const styles = StyleSheet.create({
         page: { padding: 5 },
@@ -131,15 +131,16 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList }) => {
 
                 <View style={styles.container}>
                     <Text style={tw("mx-auto     text-base text-black")}>Stock Report</Text>
-                    <View style={{ height: 10 }} fixed/>
-                    <View style={[styles.table, ]} wrap>
+                    <View style={{ height: 10 }} fixed />
+                    <View style={[styles.table,]} wrap>
                         <View fixed style={styles.tableHeader}>
                             {[
-                                { label: "S.No", flex: 0.5 },
-                                { label: "Style No", flex: 0.6 },
-                                { label: "Barcode ", flex: 0.6 },
-                                { label: "Style", flex: 2 },
-                                { label: "Fabric", flex: 1.5 },
+                                { label: "S.No", flex: 0.4 },
+                                { label: "Style No", flex: 0.5 },
+                                { label: "Barcode ", flex: 0.5 },
+                                { label: "Style", flex: 1.5 },
+                                { label: "Fabric", flex: 1 },
+                                { label: "Color", flex: 1 },
                                 { label: "Size", flex: 0.5 },
                                 { label: "Qty", flex: 0.5 },
                             ].map((header, index) => (
@@ -179,26 +180,33 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList }) => {
                                         index % 2 === 0 ? styles.tableRowEven : styles.tableRowOdd, // ✅ alternate color
                                     ]}
                                 >
-                                    <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7, textAlign: "center" }]}>
+                                    <Text style={[styles.tableCell, { flex: 0.4, fontSize: 7, textAlign: "center" }]}>
                                         {index + 1}
                                     </Text>
-                                    <Text style={[styles.tableCell, { flex: 0.6, fontSize: 7 }]}>
+                                    <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7 }]}>
                                         {item?.styleNo || "-"}
                                     </Text>
-                                    <Text style={[styles.tableCell, { flex: 0.6, fontSize: 7 }]}>
+                                    <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7 }]}>
                                         {item?.barcode || "-"}
                                     </Text>
-                                    <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
+                                    <Text style={[styles.tableCell, { flex: 1.5, fontSize: 7 }]}>
                                         {findFromList(
                                             item?.styleItemId,
                                             styleItemList?.data,
                                             "name"
                                         )}
                                     </Text>
-                                    <Text style={[styles.tableCell, { flex: 1.5, fontSize: 7 }]}>
+                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
                                         {findFromList(
                                             item?.fabricId,
                                             fabricList?.data,
+                                            "name"
+                                        )}
+                                    </Text>
+                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
+                                        {findFromList(
+                                            item?.colorId,
+                                            colorList?.data,
                                             "name"
                                         )}
                                     </Text>
@@ -229,7 +237,7 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList }) => {
                             ]}
                         >   <Text
                             style={[styles.tableCell, {
-                                flex: 5.6, fontSize: 8, textAlign: "right",
+                                flex: 5.4, fontSize: 8, textAlign: "right",
                                 fontWeight: "bold",
                                 // paddingRight: 4,
                             }]}></Text>

@@ -151,6 +151,7 @@ const Parameter = ({
             setColorId(value);
           }}
           required={false}
+          clear={true}
         />
       </div>
       <div className="flex justify-end gap-4 mb-4 items-center mr-2">
