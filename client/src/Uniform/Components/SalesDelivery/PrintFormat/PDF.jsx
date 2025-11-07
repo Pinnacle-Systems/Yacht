@@ -330,7 +330,7 @@ const PDF = ({ singleData, allData }) => {
                                     :
                                 </Text>
                                 <Text style={tw("text-xs ml-2")}>
-                                    {singleData?.Customer?.contactNumber || "N/A"}
+                                    {singleData?.Customer?.contactNumber || ""}
                                 </Text>
                             </View>
                             {/*Customer Address */}

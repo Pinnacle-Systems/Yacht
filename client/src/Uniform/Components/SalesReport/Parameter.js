@@ -1,5 +1,5 @@
 import { toast } from "react-toastify";
-import { DropdownInput } from "../../../Inputs";
+import { DropdownInput, DropdownNew } from "../../../Inputs";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useGetPartyCategoryMasterQuery } from "../../../redux/services/PartyCategoryServices";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
@@ -71,26 +71,27 @@ export default function Parameter({
   return (
     <div className="  items-center p-1 text-center bg-blue-200 rounded-b-md  sticky top-0 ">
       <div className="grid grid-cols-5 gap-5 p-2">
-        <DropdownInput
+        <DropdownNew
           name="Location"
-          options={
-            branchList
-              ? dropDownListObject(branchList.data, "branchName", "id")
-              : []
-          }
+          dataList={branchList?.data?.filter((item) => item.active)}
           value={localLocationId}
           setValue={(value) => {
             setLocalLocationId(value);
             setLocalStoreId("");
           }}
           required={true}
+          otherField={"branchName"}
+          placeholder={"Select Location"}
+          width={40}
         />
-        <DropdownInput
+        <DropdownNew
           name="Store"
-          options={dropDownListObject(storeOptions, "storeName", "id")}
+          dataList={storeOptions?.filter((item) => item.active)}
           value={localStoreId}
           setValue={setLocalStoreId}
           required={true}
+          otherField={"storeName"}
+          placeholder={"Select Store"}
         />
         <ReusableInput
           label="From Date"
@@ -106,13 +107,9 @@ export default function Parameter({
           type={"date"}
           required={true}
         />
-        <DropdownInput
+        <DropdownNew
           name="Customer"
-          options={
-            customerList
-              ? dropDownListObject(customerList.data, "name", "id")
-              : []
-          }
+          dataList={customerList?.data?.filter((item) => item.active)}
           value={customerId}
           setValue={(value) => {
             setCustomerId(value);
@@ -124,13 +121,13 @@ export default function Parameter({
       <div className="flex justify-end gap-4 mb-4 items-center mr-2">
         <button
           onClick={handleDone}
-          className="bg-lime-400 hover:bg-lime-600 hover:text-white p-1 px-3 text-sm rounded font-semibold transition"
+          className="bg-lime-600 hover:bg-lime-700 text-white p-1 px-3 text-sm rounded font-semibold transition"
         >
           View Report
         </button>
         <button
           onClick={onClose}
-          className="bg-red-400 hover:bg-red-600 hover:text-white p-1 text-sm rounded font-semibold transition"
+          className="bg-red-600 hover:bg-red-700 text-white p-1 text-sm rounded font-semibold transition"
         >
           Cancel
         </button>

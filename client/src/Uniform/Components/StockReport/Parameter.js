@@ -3,7 +3,7 @@ import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import { getCommonParams } from "../../../Utils/helper";
 import { toast } from "react-toastify";
-import { DropdownInput } from "../../../Inputs";
+import { DropdownInput, DropdownInputNew, DropdownNew } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
@@ -70,58 +70,50 @@ const Parameter = ({
   return (
     <div className="  items-center p-1 text-center bg-blue-200 rounded-b-md  sticky top-0 ">
       <div className="grid grid-cols-6 gap-5 p-2">
-        <DropdownInput
+        <DropdownNew
           name="Location"
-          options={
-            branchList
-              ? dropDownListObject(branchList.data, "branchName", "id")
-              : []
-          }
+          dataList={branchList?.data?.filter((item) => item.active)}
           value={localLocationId}
           setValue={(value) => {
             setLocalLocationId(value);
             setLocalStoreId("");
           }}
           required={true}
+          otherField={"branchName"}
+          placeholder={"Select Location"}
+          width={40}
         />
-        <DropdownInput
+        <DropdownNew
           name="Store"
-          options={dropDownListObject(storeOptions, "storeName", "id")}
+          dataList={storeOptions?.filter((item) => item.active)}
           value={localStoreId}
           setValue={setLocalStoreId}
           required={true}
+          otherField={"storeName"}
+          placeholder={"Select Store"}
         />
-        <DropdownInput
+        <DropdownNew
           name="Style No"
-          options={
-            styleList ? dropDownListObject(styleList.data, "sku", "id") : []
-          }
+          dataList={styleList?.data?.filter((item) => item.active)}
           value={styleId}
           setValue={(value) => {
             setStyleId(value);
           }}
           required={false}
           clear={true}
+          otherField={"sku"}
         />
-        <DropdownInput
-          name="Style"
-          options={
-            styleItemList
-              ? dropDownListObject(styleItemList.data, "name", "id")
-              : []
-          }
+        <DropdownNew
+          name={"Style"}
+          dataList={styleItemList?.data?.filter((item) => item.active)}
           value={styleItemId}
-          setValue={(value) => {
-            setStyleItemId(value);
-          }}
           required={false}
+          setValue={setStyleItemId}
           clear={true}
         />
-        <DropdownInput
+        <DropdownNew
           name="Fabric"
-          options={
-            fabricList ? dropDownListObject(fabricList.data, "name", "id") : []
-          }
+          dataList={fabricList?.data?.filter((item) => item.active)}
           value={fabricId}
           setValue={(value) => {
             setFabricId(value);
@@ -129,11 +121,9 @@ const Parameter = ({
           required={false}
           clear={true}
         />
-        <DropdownInput
+        <DropdownNew
           name="Size"
-          options={
-            sizeList ? dropDownListObject(sizeList.data, "name", "id") : []
-          }
+          dataList={sizeList?.data?.filter((item) => item.active)}
           value={sizeId}
           setValue={(value) => {
             setSizeId(value);
@@ -141,11 +131,9 @@ const Parameter = ({
           required={false}
           clear={true}
         />
-        <DropdownInput
+        <DropdownNew
           name="Color"
-          options={
-            colorList ? dropDownListObject(colorList.data, "name", "id") : []
-          }
+          dataList={colorList?.data?.filter((item) => item.active)}
           value={colorId}
           setValue={(value) => {
             setColorId(value);
@@ -157,13 +145,13 @@ const Parameter = ({
       <div className="flex justify-end gap-4 mb-4 items-center mr-2">
         <button
           onClick={handleDone}
-          className="bg-lime-400 hover:bg-lime-600 hover:text-white p-1 px-3 text-sm rounded font-semibold transition"
+          className="bg-lime-600 hover:bg-lime-700 text-white p-1 px-3 text-sm rounded font-semibold transition"
         >
           View Report
         </button>
         <button
           onClick={onClose}
-          className="bg-red-400 hover:bg-red-600 hover:text-white p-1 text-sm rounded font-semibold transition"
+          className="bg-red-600 hover:bg-red-700 text-white p-1 text-sm rounded font-semibold transition"
         >
           Cancel
         </button>

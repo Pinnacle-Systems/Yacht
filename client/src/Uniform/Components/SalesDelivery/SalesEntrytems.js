@@ -323,7 +323,7 @@ export default function BillItems({
           handleInputChange={handleInputChange}
         />
       </Modal>
-      <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[300px] overflow-auto overflow-x-auto w-full">
+      <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[350px] overflow-auto overflow-x-auto w-full">
         <div className="flex items-center gap-4">
           <ReusableInput
             label="Style / Barcode No"

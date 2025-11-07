@@ -128,6 +128,7 @@ model Branch {
   SalesEntryBranch    SalesEntry[]          @relation(name: "branch")
   SalesEntryLocation  SalesEntry[]          @relation(name: "location")
   StockInward         StockInward[]
+  salesReturns        SalesReturn[]
 }
 
 model UserOnBranch {
@@ -236,6 +237,8 @@ model User {
   SalesEntryUpdatedBy          SalesEntry[]          @relation(name: "updatedBy")
   StockInwardCreatedBy         StockInward[]         @relation(name: "createdBy")
   StockInwardUpdatedBy         StockInward[]         @relation(name: "updatedBy")
+  salesReturnsCreatedBy        SalesReturn[]         @relation(name: "createdBy")
+  salesReturnsUpdatedBy        SalesReturn[]         @relation(name: "updatedBy")
 }
 
 model Employee {
@@ -552,6 +555,7 @@ model Party {
   contactPersonEmail        String?
   contactNumber             String?
   alterContactNumber        String?
+  salesReturns              SalesReturn[]
 }
 
 model PartyBranch {
@@ -669,6 +673,7 @@ model Location {
   StockAdjustment StockAdjustment[]
   SalesEntry      SalesEntry[]
   StockInward     StockInward[]
+  salesReturns    SalesReturn[]
 }
 
 model TermsAndConditions {
@@ -1085,6 +1090,7 @@ model Fabric {
   StockInwardItems     StockInwardItems[]
   StockAdjustmentItems StockAdjustmentItems[]
   SalesEntryItems      SalesEntryItems[]
+  salesReturnItems     SalesReturnItems[]
 }
 
 model Color {
@@ -1103,6 +1109,7 @@ model Color {
   OpeningStockItems          OpeningStockItems[]
   StockAdjustmentItems       StockAdjustmentItems[]
   SalesEntryItems            SalesEntryItems[]
+  salesReturnItems           SalesReturnItems[]
 }
 
 model UnitOfMeasurement {
@@ -1499,6 +1506,7 @@ model Style {
   StockAdjustmentItems StockAdjustmentItems[]
   SalesEntryItems      SalesEntryItems[]
   StockInwardItems     StockInwardItems[]
+  salesReturnItems     SalesReturnItems[]
 }
 
 model Size {
@@ -1514,6 +1522,7 @@ model Size {
   SalesEntryItems      SalesEntryItems[]
   SizeTemplateList     SizeTemplateList[]
   StockInwardItems     StockInwardItems[]
+  salesReturnItems     SalesReturnItems[]
 }
 
 model Measurement {
@@ -1828,4 +1837,46 @@ model StyleItem {
   Stock                Stock[]
   StockAdjustmentItems StockAdjustmentItems[]
   SalesEntryItems      SalesEntryItems[]
+  salesReturnItems     SalesReturnItems[]
+}
+
+model SalesReturn {
+  id               Int                @id @default(autoincrement())
+  docId            String
+  docDate          DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  createdBy        User?              @relation("createdBy", fields: [createdById], references: [id])
+  createdById      Int?
+  updatedBy        User?              @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById      Int?
+  Branch           Branch?            @relation(fields: [branchId], references: [id])
+  branchId         Int?
+  locationId       Int?
+  Store            Location?          @relation(fields: [storeId], references: [id])
+  storeId          Int?
+  Customer         Party?             @relation(fields: [customerId], references: [id])
+  customerId       Int?
+  salesReturnItems SalesReturnItems[]
+}
+
+model SalesReturnItems {
+  id            Int          @id @default(autoincrement())
+  SalesReturn   SalesReturn? @relation(fields: [salesReturnId], references: [id], onDelete: Cascade)
+  salesReturnId Int?
+  barcode       String?
+  Style         Style?       @relation(fields: [styleId], references: [id])
+  styleId       Int?
+  Size          Size?        @relation(fields: [sizeId], references: [id])
+  sizeId        Int?
+  stkQty        Int?
+  returnQty     Int?
+  remarks       String?
+  styleNo       String?
+  Fabric        Fabric?      @relation(fields: [fabricId], references: [id])
+  fabricId      Int?
+  StyleItem     StyleItem?   @relation(fields: [styleItemId], references: [id])
+  styleItemId   Int?
+  Color         Color?       @relation(fields: [colorId], references: [id])
+  colorId       Int?
 }

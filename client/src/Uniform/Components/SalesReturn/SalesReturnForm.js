@@ -1,24 +1,25 @@
 import { useState, useCallback, useEffect } from "react";
-import { DropdownInput, TextInput } from "../../../Inputs";
+import { DropdownInput, DropdownNew, TextInput } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { getCommonParams } from "../../../Utils/helper";
 import { ReusableInput } from "../../../Utils/CommonInput";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
-import AdjustItems from "./AdjustItems";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import moment from "moment";
 import {
-  useAddStockAdjustmentMutation,
-  useGetStockAdjustmentByIdQuery,
-  useUpdateStockAdjustmentMutation,
-} from "../../../redux/uniformService/StockAdjustmentService";
+  useAddSalesReturnMutation,
+  useGetSalesReturnByIdQuery,
+  useUpdateSalesReturnMutation,
+} from "../../../redux/uniformService/SalesReturnService";
+import SalesItems from "./SalesItems";
+import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 
-export default function StockAdjustmentForm({
+export default function SalesReturnForm({
   onClose,
   id,
   setId,
@@ -30,7 +31,8 @@ export default function StockAdjustmentForm({
   const [docDate, setDocDate] = useState("");
   const [locationId, setLocationId] = useState("");
   const [storeId, setStoreId] = useState("");
-  const [stockAdjustmentItems, setStockAdjustmentItems] = useState([]);
+  const [salesReturnItems, setSalesReturnItems] = useState([]);
+  const [customerId, setCustomerId] = useState("");
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
@@ -41,6 +43,8 @@ export default function StockAdjustmentForm({
     searchParams: searchValue,
   });
 
+  const { data: partyList } = useGetPartyQuery({ params: { companyId } });
+
   const storeOptions = locationData
     ? locationData.data.filter(
         (item) => parseInt(item.locationId) === parseInt(locationId)
@@ -48,7 +52,7 @@ export default function StockAdjustmentForm({
     : [];
 
   const validateData = (data) => {
-    if (stockAdjustmentItems?.length > 0 && data.storeId) {
+    if (salesReturnItems?.length > 0 && data.storeId) {
       return true;
     }
     return false;
@@ -58,19 +62,20 @@ export default function StockAdjustmentForm({
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
-  } = useGetStockAdjustmentByIdQuery(id, { skip: !id });
+  } = useGetSalesReturnByIdQuery(id, { skip: !id });
 
   const data = {
     id,
     docDate,
     branchId,
     storeId,
-    stockAdjustmentItems: stockAdjustmentItems?.filter(
+    salesReturnItems: salesReturnItems?.filter(
       (item) => item?.barcode && item?.styleId && item?.sizeId
     ),
     userId,
     finYearId,
     locationId,
+    customerId,
   };
 
   const syncFormWithDb = useCallback(
@@ -86,14 +91,13 @@ export default function StockAdjustmentForm({
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
           : moment.utc(today).format("YYYY-MM-DD")
       );
-      setStockAdjustmentItems(
-        data?.StockAdjustmentItems ? data.StockAdjustmentItems : []
-      );
+      setSalesReturnItems(data?.salesReturnItems ? data.salesReturnItems : []);
       if (data?.docId) {
         setDocId(data?.docId);
       }
       setLocationId(data?.locationId ? data?.locationId : "");
       setStoreId(data?.storeId ? data.storeId : "");
+      setCustomerId(data?.customerId ? data?.customerId : "");
     },
     [id]
   );
@@ -106,8 +110,8 @@ export default function StockAdjustmentForm({
     }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-  const [addData] = useAddStockAdjustmentMutation();
-  const [updateData] = useUpdateStockAdjustmentMutation();
+  const [addData] = useAddSalesReturnMutation();
+  const [updateData] = useUpdateSalesReturnMutation();
 
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
@@ -178,7 +182,7 @@ export default function StockAdjustmentForm({
     <div className="">
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800">Stock Adjustment</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Sales Return</h1>
           <button
             onClick={onClose}
             className="text-indigo-600 hover:text-indigo-700"
@@ -210,19 +214,9 @@ export default function StockAdjustmentForm({
               Location Details
             </h2>
             <div className="grid grid-cols-2 gap-1">
-              <DropdownInput
+              <DropdownNew
                 name="Location"
-                options={
-                  branchList
-                    ? dropDownListObject(
-                        id
-                          ? branchList?.data
-                          : branchList?.data?.filter((item) => item.active),
-                        "branchName",
-                        "id"
-                      )
-                    : []
-                }
+                dataList={branchList?.data?.filter((item) => item.active)}
                 value={locationId}
                 setValue={(value) => {
                   setLocationId(value);
@@ -230,29 +224,45 @@ export default function StockAdjustmentForm({
                 }}
                 required={true}
                 readOnly={readOnly}
+                otherField={"branchName"}
+                placeholder={"Select Location"}
               />
-              <DropdownInput
+              <DropdownNew
                 name="Store"
-                options={dropDownListObject(
-                  id
-                    ? storeOptions
-                    : storeOptions?.filter((item) => item.active),
-                  "storeName",
-                  "id"
-                )}
+                dataList={storeOptions?.filter((item) => item.active)}
                 value={storeId}
                 setValue={setStoreId}
                 required={true}
                 readOnly={readOnly}
+                otherField={"storeName"}
+                placeholder={"Select Location"}
               />
             </div>
           </div>
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1"></div>
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+            <h2 className="font-medium text-slate-700 mb-2">
+              Customer Details
+            </h2>
+            <div className="grid grid-cols-2 gap-1">
+              <DropdownNew
+                name="Customer"
+                dataList={partyList?.data?.filter((item) => item.active)}
+                value={customerId}
+                setValue={(value) => {
+                  setCustomerId(value);
+                }}
+                required={true}
+                readOnly={readOnly}
+                placeholder={"Select Customer"}
+                clear={true}
+              />
+            </div>
+          </div>
         </div>
         <fieldset className="w-full  min-w-[1200px]">
-          <AdjustItems
-            stockAdjustmentItems={stockAdjustmentItems}
-            setStockAdjustmentItems={setStockAdjustmentItems}
+          <SalesItems
+            salesReturnItems={salesReturnItems}
+            setSalesReturnItems={setSalesReturnItems}
             readOnly={readOnly}
             branchId={branchId}
             storeId={storeId}

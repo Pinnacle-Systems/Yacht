@@ -377,8 +377,8 @@ export default function AdjustItems({
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">Adjustment Details</h2>
         </div>
-        <div className={`w-full overflow-y-auto py-1 relative`}>
-          <table className="w-auto border-collapse table-fixed">
+        <div className={`w-full py-1`}>
+          <table className="w-full border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800">
               <tr>
                 <th

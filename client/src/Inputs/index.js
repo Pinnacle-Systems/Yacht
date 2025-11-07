@@ -1,7 +1,8 @@
 import validator from "validator";
 import React, { useEffect, useRef, useState, forwardRef } from "react";
 import { MultiSelect } from "react-multi-select-component";
-import Select from "react-dropdown-select";
+// import Select from "react-dropdown-select";
+import Select from "react-select";
 import { findFromList } from "../Utils/helper";
 import "./index.css";
 import { FormControl, MenuItem, TextField } from "@mui/material";
@@ -1748,7 +1749,7 @@ export const customSelectStyles = {
   menu: (base, state) => ({
     ...base,
     fontFamily: "Poppins",
-    maxHeight: 140,
+    maxHeight: 150,
     // overflowY: "auto",
     fontSize: "12px",
     color: state.isDisabled ? "#6b7280" : "black",
@@ -1758,6 +1759,7 @@ export const customSelectStyles = {
     fontFamily: "Poppins",
     fontSize: "12px",
     color: state.isDisabled ? "#6b7280" : "black",
+    color: state.isSelected ? "white" : "black",
     padding: "6px 8px",
   }),
   dropdownIndicator: (base) => ({
@@ -1774,7 +1776,68 @@ export const customSelectStyles = {
   indicatorSeparator: () => ({ display: "none" }),
   menuList: (base) => ({
     ...base,
-    maxHeight: 140,
+    maxHeight: 150,
     // overflowY: "auto",
   }),
+};
+
+export const DropdownNew = ({
+  name,
+  dataList,
+  value,
+  setValue,
+  disabled = false,
+  required = false,
+  clear = false,
+  placeholder,
+  width = "full",
+  otherField,
+}) => {
+  const options = [
+    ...(clear
+      ? [
+          {
+            value: "",
+            label: `Select ${name || "option"}`,
+            isDisabled: false,
+          },
+        ]
+      : []),
+    ...(dataList?.map((item) => ({
+      value: item?.id,
+      label: otherField ? item?.[otherField] : item?.name,
+    })) || []),
+  ];
+  const selectedOption = options.find((opt) => opt.value === value) || null;
+  return (
+    <div className={`mb-2 w-${width}`}>
+      {name && (
+        <label className="block text-xs font-bold text-slate-700 mb-1">
+          {required ? (
+            <span className="">
+              {name} <span className="text-red-500">*</span>
+            </span>
+          ) : (
+            name
+          )}
+        </label>
+      )}
+      <Select
+        options={options}
+        value={selectedOption}
+        onChange={(selected) => setValue(selected?.value || "")}
+        isDisabled={disabled}
+        isSearchable
+        isClearable={false}
+        menuShouldScrollIntoView={false}
+        maxMenuHeight={170} // <-- Reduce height here
+        onInputChange={(value) => value.toUpperCase()}
+        className="w-full px-1 -ml-1  text-xs rounded-lg
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm"
+        placeholder={placeholder}
+        styles={customSelectStyles}
+      />
+    </div>
+  );
 };

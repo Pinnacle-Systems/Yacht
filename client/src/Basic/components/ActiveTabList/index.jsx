@@ -62,6 +62,7 @@ import {
   SalesBill,
   SalesEntry,
   SalesReport,
+  SalesReturn,
   SizeTemplateMaster,
   StockAdjustment,
   StockInward,
@@ -152,7 +153,8 @@ const ActiveTabList = () => {
     "STYLE ITEM MASTER": <StyleItemMaster />,
     "TAX TEMPLATE": <TaxTemplate />,
     "TAX TERM MASTER": <TaxTermMaster />,
-    "SALES REPORT": <SalesReport />
+    "SALES REPORT": <SalesReport />,
+    "SALES RETURN": <SalesReturn />
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;
@@ -173,8 +175,8 @@ const ActiveTabList = () => {
               <div
                 key={index}
                 className={`px-2   rounded-lg text-[11px] d-flex content-center items-center gap-1 hover:bg-gray-500 hover:text-white transition my-1 ${tab.active
-                    ? "bg-gray-500 text-white border border-gray-500"
-                    : "text-gray-500 border border-gray-500"
+                  ? "bg-gray-500 text-white border border-gray-500"
+                  : "text-gray-500 border border-gray-500"
                   }`}
               >
                 <button
