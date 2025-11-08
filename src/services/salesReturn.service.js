@@ -73,7 +73,7 @@ async function getNextDocId(
       new Date()
     )}/SR/1`;
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SA/${
+      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SR/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
