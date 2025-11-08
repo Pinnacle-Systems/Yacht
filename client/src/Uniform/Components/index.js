@@ -58,3 +58,4 @@ export { default as StockReport } from "./StockReport";
 export { default as StyleItemMaster } from "./StyleItemMaster";
 export { default as SalesReport } from "./SalesReport";
 export { default as SalesReturn } from "./SalesReturn";
+export { default as SalesReturnReport } from "./SalesReturnReport";

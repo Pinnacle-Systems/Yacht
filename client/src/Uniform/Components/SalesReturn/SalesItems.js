@@ -297,14 +297,14 @@ export default function SalesItems({
                   S.No
                 </th>
                 <th
-                  className={`w-28 px-4 py-2 text-center font-medium text-[13px] `}
-                >
-                  Barcode No
-                </th>
-                <th
                   className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style No
+                </th>
+                <th
+                  className={`w-28 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Barcode No
                 </th>
                 <th
                   className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
@@ -360,27 +360,6 @@ export default function SalesItems({
                   <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
                     {index + 1}
                   </td>
-
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "barcode");
-                        }
-                      }}
-                      type="string"
-                      className="text-left rounded py-1 px-1 w-full table-data-input"
-                      onFocus={(e) => e.target.select()}
-                      value={row?.barcode}
-                      disabled={true}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "barcode")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "barcode");
-                      }}
-                    />
-                  </td>
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                     <input
                       onKeyDown={(e) => {
@@ -398,6 +377,26 @@ export default function SalesItems({
                       }
                       onBlur={(e) => {
                         handleInputChange(e.target.value, index, "styleNo");
+                      }}
+                    />
+                  </td>
+                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                    <input
+                      onKeyDown={(e) => {
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "barcode");
+                        }
+                      }}
+                      type="string"
+                      className="text-left rounded py-1 px-1 w-full table-data-input"
+                      onFocus={(e) => e.target.select()}
+                      value={row?.barcode}
+                      disabled={true}
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "barcode")
+                      }
+                      onBlur={(e) => {
+                        handleInputChange(e.target.value, index, "barcode");
                       }}
                     />
                   </td>
@@ -510,7 +509,7 @@ export default function SalesItems({
                   </td>
                   <td className="py-0.5 border border-gray-300 text-[11px]">
                     <select
-                    id={`qty-${index}`}
+                      id={`qty-${index}`}
                       onKeyDown={(e) => {
                         if (e.key === "Delete") {
                           handleInputChange("", index, "colorId");
@@ -562,7 +561,6 @@ export default function SalesItems({
                   </td>
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                     <input
-                      
                       onKeyDown={(e) => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract")
                           e.preventDefault();

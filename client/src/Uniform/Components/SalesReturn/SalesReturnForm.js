@@ -18,7 +18,10 @@ import {
 } from "../../../redux/uniformService/SalesReturnService";
 import SalesItems from "./SalesItems";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
-
+import Modal from "../../../UiComponents/Modal";
+import { PDFViewer } from "@react-pdf/renderer";
+import tw from "../../../Utils/tailwind-react-pdf";
+import PDF from "./PrintFormat/PDF";
 export default function SalesReturnForm({
   onClose,
   id,
@@ -33,6 +36,7 @@ export default function SalesReturnForm({
   const [storeId, setStoreId] = useState("");
   const [salesReturnItems, setSalesReturnItems] = useState([]);
   const [customerId, setCustomerId] = useState("");
+  const [pdfOpen, setPdfOpen] = useState("");
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
@@ -180,6 +184,15 @@ export default function SalesReturnForm({
 
   return (
     <div className="">
+      <Modal
+        isOpen={pdfOpen}
+        onClose={() => setPdfOpen(false)}
+        widthClass={"w-[90%] h-[90%]"}
+      >
+        <PDFViewer style={tw("w-full h-full")}>
+          <PDF singleData={singleData?.data}  />
+        </PDFViewer>
+      </Modal>
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
           <h1 className="text-2xl font-bold text-gray-800">Sales Return</h1>
@@ -307,6 +320,9 @@ export default function SalesReturnForm({
             <button
               className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
               disabled={!id}
+              onClick={() => {
+                setPdfOpen(true);
+              }}
             >
               <FiPrinter className="w-4 h-4 mr-2" />
               Print

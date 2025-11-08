@@ -63,6 +63,7 @@ import {
   SalesEntry,
   SalesReport,
   SalesReturn,
+  SalesReturnReport,
   SizeTemplateMaster,
   StockAdjustment,
   StockInward,
@@ -154,7 +155,8 @@ const ActiveTabList = () => {
     "TAX TEMPLATE": <TaxTemplate />,
     "TAX TERM MASTER": <TaxTermMaster />,
     "SALES REPORT": <SalesReport />,
-    "SALES RETURN": <SalesReturn />
+    "SALES RETURN": <SalesReturn />,
+    "SALES RETURN REPORT": <SalesReturnReport />
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

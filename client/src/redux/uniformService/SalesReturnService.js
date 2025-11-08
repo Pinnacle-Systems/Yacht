@@ -74,6 +74,29 @@ const SalesReturnApi = createApi({
       }),
       invalidatesTags: ["salesReturn"],
     }),
+    getSalesReturnReport: builder.query({
+      query: ({ params, searchParams }) => {
+        if (searchParams) {
+          return {
+            url: SALES_RETURN_API + "/search/" + searchParams,
+            method: "GET",
+            headers: {
+              "Content-type": "application/json; charset=UTF-8",
+            },
+            params,
+          };
+        }
+        return {
+          url: `${SALES_RETURN_API}/salesReturnReport`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["salesReturn"],
+    }),
   }),
 });
 
@@ -83,6 +106,7 @@ export const {
   useAddSalesReturnMutation,
   useUpdateSalesReturnMutation,
   useDeleteSalesReturnMutation,
+  useGetSalesReturnReportQuery
 } = SalesReturnApi;
 
 export default SalesReturnApi;

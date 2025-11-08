@@ -182,15 +182,22 @@ async function getOne(id) {
           barcode: true,
           styleId: true,
           sizeId: true,
+          Size: true,
           stkQty: true,
           returnQty: true,
           remarks: true,
           fabricId: true,
+          Fabric: true,
           styleNo: true,
           styleItemId: true,
+          StyleItem: true,
+          Color: true,
           colorId: true,
         },
       },
+      Branch: true,
+      Store: true,
+      Customer: true,
     },
   });
   if (!data) return NoRecordFound("salesReturn");
@@ -517,4 +524,41 @@ async function remove(id) {
   return { statusCode: 0, data };
 }
 
-export { remove, get, getOne, create, update };
+async function getSalesReturnReport(req) {
+  const { finYearId, branchId, storeId, fromDate, toDate, customerId } =
+    req.query;
+  let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+  let data;
+  let totalCount;
+  let totalAmount;
+  const from = fromDate ? new Date(fromDate) : undefined;
+  const to = toDate ? new Date(toDate) : undefined;
+  if (to) to.setHours(23, 59, 59, 999);
+  data = await prisma.salesReturn.findMany({
+    where: {
+      branchId: branchId ? parseInt(branchId) : undefined,
+      storeId: storeId ? parseInt(storeId) : undefined,
+      customerId: customerId ? parseInt(customerId) : undefined,
+      AND: finYearDate
+        ? [
+            { createdAt: { gte: finYearDate.startTime } },
+            { createdAt: { lte: finYearDate.endTime } },
+            ...(from && to ? [{ docDate: { gte: from, lte: to } }] : []),
+          ]
+        : from && to
+        ? [{ docDate: { gte: from, lte: to } }]
+        : undefined,
+    },
+    include: {
+      salesReturnItems: true,
+    },
+  });
+  totalCount = data.length;
+  return {
+    statusCode: 0,
+    data,
+    totalCount,
+  };
+}
+
+export { remove, get, getOne, create, update, getSalesReturnReport };

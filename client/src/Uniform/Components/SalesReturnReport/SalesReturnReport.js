@@ -1,0 +1,318 @@
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import secureLocalStorage from "react-secure-storage";
+import {
+  findFromList,
+  getDateFromDateTimeToDisplay,
+  reactPaginateIndexToPageNumber,
+} from "../../../Utils/helper";
+import { Loader } from "../../../Basic/components";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import Modal from "../../../UiComponents/Modal";
+import { EMPTY_ICON } from "../../../icons";
+import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
+import { useGetSalesReturnReportQuery } from "../../../redux/uniformService/SalesReturnService";
+import Parameter from "./Parameter";
+
+const SalesReturnReport = forwardRef(
+  (
+    { onClick, itemsPerPage = 10, parameter, setParameter, onDataLoaded },
+    ref
+  ) => {
+    const branchId = secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "currentBranchId"
+    );
+
+    const [dataPerPage, setDataPerPage] = useState("10");
+    const [totalCount, setTotalCount] = useState(0);
+    const [currentPageNumber, setCurrentPageNumber] = useState(1);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [storeId, setStoreId] = useState("");
+    const [locationId, setLocationId] = useState("");
+    const [fromDate, setFromDate] = useState("");
+    const [toDate, setToDate] = useState("");
+    const [customerId, setCustomerId] = useState("");
+    const handleOnclick = (e) => {
+      setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
+    };
+
+    const companyId = secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "userCompanyId"
+    );
+    const params = {
+      branchId,
+      companyId,
+    };
+
+    const {
+      data: allData,
+      isFetching,
+      isLoading,
+      refetch,
+    } = useGetSalesReturnReportQuery(
+      {
+        params: {
+          branchId,
+          storeId,
+          customerId,
+          fromDate,
+          toDate,
+        },
+      },
+      {
+        skip: !(branchId && storeId),
+      }
+    );
+    const { data: customerList } = useGetPartyQuery({
+      params: { companyId },
+    });
+
+    const allDataDetail = allData?.data;
+
+    useEffect(() => {
+      if (allData?.totalCount) {
+        setTotalCount(allData?.totalCount);
+      }
+    }, [allData, isLoading, isFetching]);
+
+    const isLoadingIndicator = isLoading || isFetching;
+
+    useImperativeHandle(ref, () => ({
+      refetch,
+    }));
+
+    const totalPages = Math?.ceil(allDataDetail?.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = (allDataDetail || []).slice(
+      indexOfFirstItem,
+      indexOfLastItem
+    );
+
+    console.log(indexOfLastItem, "indexOfLastItem");
+
+    const handlePageChange = (newPage) => {
+      if (newPage >= 1 && newPage <= totalPages) {
+        setCurrentPage(newPage);
+        setCurrentPageNumber(newPage); // ensures API fetches that page
+      }
+    };
+    const Pagination = () => {
+      return (
+        <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
+          <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+            Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+            {Math.min(currentPage * itemsPerPage, allData?.totalCount || 0)} of{" "}
+            {allData?.totalCount || 0} entries
+          </div>
+          <div className="flex gap-1">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 rounded-md ${
+                currentPage === 1
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <FaChevronLeft className="inline" />
+            </button>
+
+            {Array?.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => handlePageChange(pageNum)}
+                  className={`px-3 py-1 rounded-md ${
+                    currentPage === pageNum
+                      ? "bg-indigo-800 text-white"
+                      : "bg-white text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+
+            {totalPages > 5 && currentPage < totalPages - 2 && (
+              <span className="px-3 py-1">...</span>
+            )}
+
+            {totalPages > 5 && currentPage < totalPages - 2 && (
+              <button
+                onClick={() => handlePageChange(totalPages)}
+                className={`px-3 py-1 rounded-md ${
+                  currentPage === totalPages
+                    ? "bg-indigo-800 text-white"
+                    : "bg-white text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                {totalPages}
+              </button>
+            )}
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-1 rounded-md ${
+                currentPage === totalPages
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <FaChevronRight className="inline" />
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    const totalQty = currentItems?.reduce((grandTotal, dataObj) => {
+      const itemQty = dataObj?.salesReturnItems?.reduce(
+        (total, item) => total + item?.returnQty,
+        0
+      );
+      return grandTotal + itemQty;
+    }, 0);
+
+    useEffect(() => {
+      if (allData && onDataLoaded) {
+        onDataLoaded(allData);
+        console.log(currentItems,"currentItems")
+      }
+    }, [allData, onDataLoaded]);
+
+    return (
+      <>
+        <Modal
+          isOpen={parameter}
+          onClose={() => {
+            setCurrentPage(1);
+            setParameter(false);
+          }}
+        >
+          <Parameter
+            locationId={locationId}
+            setLocationId={setLocationId}
+            storeId={storeId}
+            setStoreId={setStoreId}
+            customerId={customerId}
+            setCustomerId={setCustomerId}
+            fromDate={fromDate}
+            toDate={toDate}
+            setFromDate={setFromDate}
+            setToDate={setToDate}
+            onClose={() => {
+              setCurrentPage(1);
+              setParameter(false);
+            }}
+          />
+        </Modal>
+        <div className="flex flex-col w-full h-[93%] overflow-auto">
+          <>
+            <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
+              <div className="h-[420px]">
+                {currentItems.length > 0 ? (
+                  <table className="">
+                    <thead className="bg-gray-200 text-gray-800 ">
+                      <tr className="">
+                        <th className=" px-1 py-1.5  font-medium text-[13px]  text-gray-900  text-center  w-12">
+                          <div className="">S No</div>
+                        </th>
+
+                        <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
+                          <div>Delivery Date</div>
+                        </th>
+                        <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-56">
+                          <div>Customer</div>
+                        </th>
+                        <th className="w-32  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                          <div>Sales Return Qty</div>
+                        </th>
+                      </tr>
+                    </thead>
+                    {isLoadingIndicator ? (
+                      <tbody>
+                        <tr>
+                          <td>
+                            <Loader />
+                          </td>
+                        </tr>
+                      </tbody>
+                    ) : (
+                      <tbody className="border-2">
+                        {currentItems.map((dataObj, index) => (
+                          <tr
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                onClick(dataObj.id);
+                              }
+                            }}
+                            tabIndex={0}
+                            key={dataObj.id}
+                            className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${
+                              index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                            }`}
+                            onClick={() => onClick(dataObj.id)}
+                          >
+                            <td className="text-center h-8">{index + 1}</td>
+
+                            <td className="py-1.5 text-center">
+                              {dataObj?.docDate
+                                ? getDateFromDateTimeToDisplay(dataObj.docDate)
+                                : ""}
+                            </td>
+                            <td className="py-1.5 text-center">
+                              {findFromList(
+                                dataObj?.customerId,
+                                customerList?.data,
+                                "name"
+                              )}
+                            </td>
+                            <td className="py-1.5 text-center">
+                              {dataObj?.salesReturnItems?.reduce(
+                                (total, item) => total + item?.returnQty,
+                                0
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    )}
+                    <tfoot className="border-2">
+                      <tr className="bg-gray-100 font-medium text-[14px]  text-gray-900 border-b   border-gray-200">
+                        <td colSpan={3} className="text-right py-1.5">
+                          Total
+                        </td>
+                        <td className="py-1.5 text-center">{totalQty}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                ) : (
+                  <div className="flex justify-center items-center text-gray-500  text-3xl py-32">
+                    <p>{EMPTY_ICON} No Data Found...! </p>
+                  </div>
+                )}
+              </div>
+              <div className="">
+                <Pagination />
+              </div>
+            </div>
+          </>
+        </div>
+      </>
+    );
+  }
+);
+
+export default SalesReturnReport;

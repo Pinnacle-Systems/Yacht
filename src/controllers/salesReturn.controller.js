@@ -6,6 +6,7 @@ import {
   getOne as _getOne,
   create as _create,
   update as _update,
+  getSalesReturnReport as _getReport,
 } from "../services/salesReturn.service.js";
 
 async function get(req, res, next) {
@@ -103,4 +104,13 @@ async function remove(req, res, next) {
   }
 }
 
-export { remove, get, getOne, create, update };
+async function getReport(req, res, next) {
+  try {
+    res.json(await _getReport(req));
+    console.log(res.statusCode);
+  } catch (err) {
+    console.error(`Error `, err.message);
+  }
+}
+
+export { remove, get, getOne, create, update,getReport };

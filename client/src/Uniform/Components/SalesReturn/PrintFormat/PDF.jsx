@@ -5,7 +5,7 @@ import tw from "../../../../Utils/tailwind-react-pdf";
 import { findFromList } from "../../../../Utils/helper";
 import Header from "../../../../Utils/Header";
 
-const PDF = ({ singleData, allData }) => {
+const PDF = ({ singleData }) => {
     const styles = StyleSheet.create({
         page: { padding: 5 },
 
@@ -20,8 +20,6 @@ const PDF = ({ singleData, allData }) => {
         },
         container: {
             width: "100%",
-            // padding: 5,
-            // paddingHorizontal:5
         },
         totalRow: {
             flexDirection: "row",
@@ -48,10 +46,6 @@ const PDF = ({ singleData, allData }) => {
         table: {
             display: "table",
             marginTop: 10,
-            // width: "auto",
-            //   borderStyle: "solid",
-            //   borderWidth: 1,
-            //   borderColor: "#D1D5DB",
             // borderTopWidth: 1,
             // borderTopStyle: "solid",
             // borderTopColor: "#D1D5DB",
@@ -98,7 +92,6 @@ const PDF = ({ singleData, allData }) => {
             paddingTop: "5px",
             borderRightWidth: 1,
             borderRightColor: "#D1D5DB",
-            // border:"1 solid black"
         },
         totalRow: {
             flexDirection: "row",
@@ -106,47 +99,21 @@ const PDF = ({ singleData, allData }) => {
             fontWeight: "bold",
         },
         lastColumn: {
-            borderRightWidth: 0, // Remove right border for the last column
+            borderRightWidth: 0,
         },
     });
     useEffect(() => {
         console.log("Single Data Fetched", singleData,)
     }, [singleData])
 
-    let overallGrandTotal = 0;
-
-    const calculateNetAmount = (item) => {
-        const qty = parseFloat(item.qty) || 0;
-        const price = parseFloat(item.price) || 0;
-        const taxPercent = parseFloat(item.taxPercent) || 0;
-        const discountValue = parseFloat(item.discountValue) || 0;
-        const discountType = item.discountType || "";
-
-        // Gross amount
-        const grossAmount = qty * price;
-
-        // GST Subtracted
-        const amountAfterGST = grossAmount - (grossAmount * taxPercent) / 100;
-
-        // Apply Discount
-        let discountAmt = 0;
-        if (discountType === "Flat") discountAmt = discountValue;
-        else if (discountType === "Percent")
-            discountAmt = (amountAfterGST * discountValue) / 100;
-
-        // Final net amount
-        const netAmount = amountAfterGST - discountAmt;
-
-        return netAmount.toFixed(2);
-    };
     return (
         <Document>
-            <PageWrapper heading={"Sales Delivery"} singleData={singleData} header={false}>
+            <PageWrapper heading={"Sales Return"} singleData={singleData} header={false}>
                 <View>
                     <Header styles={styles} />
                 </View>
                 <View style={styles.container}>
-                    <Text style={tw("mx-auto   text-base text-black mt-1")}>Sales Delivery</Text>
+                    <Text style={tw("mx-auto   text-base text-black mt-1")}>Sales Return</Text>
 
                     {/* non grid  */}
 
@@ -168,7 +135,7 @@ const PDF = ({ singleData, allData }) => {
                                         { fontWeight: 900, fontFamily: "Times-Bold" },
                                     ]}
                                 >
-                                    Sales No
+                                    Sales Return No
                                 </Text>
                                 <Text
                                     style={[
@@ -201,7 +168,7 @@ const PDF = ({ singleData, allData }) => {
                                         {
                                             fontWeight: 900,
                                             fontFamily: "Times-Bold",
-                                            marginLeft: 19,
+                                            marginLeft: 49,
                                         },
                                     ]}
                                 >
@@ -228,14 +195,14 @@ const PDF = ({ singleData, allData }) => {
                                         {
                                             fontWeight: 900,
                                             fontFamily: "Times-Bold",
-                                            marginLeft: 3,
+                                            marginLeft: 33   ,
                                         },
                                     ]}
                                 >
                                     :
                                 </Text>
                                 <Text style={tw("text-xs ml-2")}>
-                                    {singleData?.Location?.branchName || ""}
+                                    {singleData?.Branch?.branchName || ""}
                                 </Text>
                             </View>
                             <View style={tw("flex flex-row gap-x-2")}>
@@ -253,7 +220,7 @@ const PDF = ({ singleData, allData }) => {
                                         {
                                             fontWeight: 900,
                                             fontFamily: "Times-Bold",
-                                            marginLeft: 17,
+                                            marginLeft: 46,
                                         },
                                     ]}
                                 >
@@ -374,13 +341,9 @@ const PDF = ({ singleData, allData }) => {
                                 { label: "Style", flex: 2 },
                                 { label: "Fabric", flex: 2 },
                                 { label: "Size", flex: 0.8 },
-                                { label: "Qty", flex: 0.8 },
-                                { label: "Price", flex: 1 },
-                                { label: "Tax", flex: 0.8 },
-                                { label: "Disc Type", flex: 1 },
-                                { label: "Discount", flex: 1 },
-                                { label: "Gross Amount", flex: 1.3 },
-                                { label: "Net Amount", flex: 1.3 },
+                                { label: "Color", flex: 1 },
+                                { label: "Remarks", flex: 1.3 },
+                                { label: "Return Qty", flex: 1.3 },
                             ].map((header, index) => (
                                 <Text
                                     key={index}
@@ -401,8 +364,7 @@ const PDF = ({ singleData, allData }) => {
                         </View>
                         {/*  Grouped Rows */}
 
-                        {(singleData?.SalesEntryItems || []).map((item, index) => {
-                            const gross = item.price * item.qty;
+                        {(singleData?.salesReturnItems || []).map((item, index) => {
                             return (
                                 <View
                                     key={index}
@@ -420,40 +382,28 @@ const PDF = ({ singleData, allData }) => {
                                         {index + 1}
                                     </Text>
                                     <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
-                                        {item?.styleNo || "-"}
+                                        {item?.styleNo || ""}
                                     </Text>
                                     <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
-                                        {item?.barcode || "-"}
+                                        {item?.barcode || ""}
                                     </Text>
                                     <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
-                                        {item?.StyleItem?.name || "-"}
+                                        {item?.StyleItem?.name || ""}
                                     </Text>
                                     <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
-                                        {item?.Fabric?.name || "-"}
+                                        {item?.Fabric?.name || ""}
                                     </Text>
                                     <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7 }]}>
-                                        {item.Size?.name || "-"}
+                                        {item.Size?.name || ""}
                                     </Text>
-                                    <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7, textAlign: "right" }]}>
-                                        {item.qty || 0}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7, textAlign: "right" }]}>
-                                        {item.price?.toFixed(2) || "0.00"}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7, textAlign: "right" }]}>
-                                        {item.taxPercent || 0}%
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
-                                        {item.discountType || "-"}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7, textAlign: "right" }]}>
-                                        {item.discountValue || 0}
+                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7}]}>
+                                        {item.Color?.name || ""}
                                     </Text>
                                     <Text style={[styles.tableCell, { flex: 1.3, fontSize: 7, textAlign: "right" }]}>
-                                        {gross.toFixed(2)}
+                                        {item.remarks || ""}
                                     </Text>
                                     <Text style={[styles.tableCell, { flex: 1.3, fontSize: 7, textAlign: "right" }]}>
-                                        {calculateNetAmount(item)}
+                                        {item.returnQty || 0}
                                     </Text>
                                 </View>
                             );
@@ -470,42 +420,16 @@ const PDF = ({ singleData, allData }) => {
                                 style={[
                                     styles.headerCell,
                                     {
-                                        flex: 6.7,
-                                        // backgroundColor: "white", borderLeftWidth: 1,
-                                        // borderLeftStyle: "solid",
-                                        // borderColor: "#D1D5DB", borderBottomWidth: 1,
-                                        // borderBottomStyle: "solid",
-                                        fontSize: 8,
+                                        flex: 6.8,
+                                        fontSize: 9,
                                         textAlign: "right",
                                     },
                                 ]}
                             >
                                 Total
                             </Text>
-                            <Text style={[styles.headerCell, , { flex: 0.6, fontSize: 8, textAlign: "right" }]}>
-                                {singleData?.SalesEntryItems?.reduce((sum, row) => sum + row.qty, 0)}
-                            </Text>
-                            <Text
-                                style={[
-                                    styles.headerCell,
-                                    {
-                                        flex: 6,
-                                        fontSize: 8,
-                                        textAlign: "right",
-                                        // fontWeight: "bold",
-                                        // backgroundColor: "white",
-                                        // marginTop:-1
-                                        // borderColor: "#D1D5DB", borderBottomWidth: 1,
-                                        // borderBottomStyle: "solid",
-                                    },
-                                ]}
-                            >
-                                {singleData?.SalesEntryItems
-                                    .reduce(
-                                        (sum, row) => sum + parseFloat(calculateNetAmount(row)),
-                                        0
-                                    )
-                                    .toFixed(2)}
+                            <Text style={[styles.headerCell, , { flex: 0.8, fontSize: 8, textAlign: "right" }]}>
+                                {singleData?.salesReturnItems?.reduce((sum, row) => sum + row.returnQty, 0)}
                             </Text>
                         </View>
 
