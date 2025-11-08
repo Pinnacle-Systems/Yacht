@@ -466,7 +466,7 @@ async function get(req) {
     sizeId,
     fabricId,
     styleItemId,
-    colorId
+    colorId,
   } = req.query;
 
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -507,7 +507,15 @@ async function get(req) {
         storeName: searchStore ? { contains: searchStore } : undefined,
       },
     },
-    by: ["styleId", "sizeId", "styleNo", "barCode", "fabricId", "styleItemId","colorId"],
+    by: [
+      "styleId",
+      "sizeId",
+      "styleNo",
+      "barCode",
+      "fabricId",
+      "styleItemId",
+      "colorId",
+    ],
     _sum: {
       qty: true,
     },
@@ -533,7 +541,7 @@ async function get(req) {
       fabricId: d.fabricId,
       barcode: d.barCode,
       styleItemId: d.styleItemId,
-      colorId: d.colorId
+      colorId: d.colorId,
     })),
     totalCount,
     totalQty,
@@ -745,7 +753,6 @@ async function getStyleDetail(req) {
       "barCode",
       "fabricId",
       "styleItemId",
-      "price"
     ],
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
@@ -768,7 +775,6 @@ async function getStyleDetail(req) {
         "barCode",
         "fabricId",
         "styleItemId",
-        "price"
       ],
       where: {
         branchId: branchId ? parseInt(branchId) : undefined,
@@ -781,6 +787,10 @@ async function getStyleDetail(req) {
     });
   }
 
+  const price = await prisma.style.findFirst({
+    where: { sku: styleNo },
+  });
+  console.log(price,"sku")
   // 3️⃣ If still no data, return no record message
   if (!data || data.length === 0)
     return NoRecordFound("Style or Barcode not found");
@@ -797,7 +807,7 @@ async function getStyleDetail(req) {
       stkQty: d._sum.qty,
       fabricId: d.fabricId,
       barcode: d.barCode,
-      price: d.price
+      price: price ? price?.price : 0,
     })),
   };
 }

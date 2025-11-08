@@ -1786,6 +1786,7 @@ export const DropdownNew = ({
   dataList,
   value,
   setValue,
+  readonly = false,
   disabled = false,
   required = false,
   clear = false,
@@ -1826,7 +1827,7 @@ export const DropdownNew = ({
         options={options}
         value={selectedOption}
         onChange={(selected) => setValue(selected?.value || "")}
-        isDisabled={disabled}
+        isDisabled={disabled || readonly}
         isSearchable
         isClearable={false}
         menuShouldScrollIntoView={false}

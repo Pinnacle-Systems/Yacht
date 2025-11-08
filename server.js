@@ -67,6 +67,7 @@ import {
   stock,
   styleItem,
   accessory,
+  salesReturn,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";
@@ -166,6 +167,7 @@ app.use("/sizeTemplate", sizeTemplate);
 app.use("/stockInward", stockInward);
 app.use("/stock", stock);
 app.use("/styleItem", styleItem);
+app.use("/salesReturn", salesReturn);
 app.get("/retreiveFile/:fileName", (req, res) => {
   const { fileName } = req.params;
   res.sendFile(__dirname + "/uploads/" + fileName);

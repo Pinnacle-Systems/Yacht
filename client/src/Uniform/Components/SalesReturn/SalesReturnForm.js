@@ -223,7 +223,7 @@ export default function SalesReturnForm({
                   setStoreId("");
                 }}
                 required={true}
-                readOnly={readOnly}
+                disabled={readOnly}
                 otherField={"branchName"}
                 placeholder={"Select Location"}
               />
@@ -233,7 +233,7 @@ export default function SalesReturnForm({
                 value={storeId}
                 setValue={setStoreId}
                 required={true}
-                readOnly={readOnly}
+                disabled={readOnly}
                 otherField={"storeName"}
                 placeholder={"Select Location"}
               />
@@ -252,7 +252,7 @@ export default function SalesReturnForm({
                   setCustomerId(value);
                 }}
                 required={true}
-                readOnly={readOnly}
+                disabled={readOnly}
                 placeholder={"Select Customer"}
                 clear={true}
               />

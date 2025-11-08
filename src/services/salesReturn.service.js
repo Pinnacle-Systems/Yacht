@@ -138,7 +138,7 @@ async function get(req) {
           storeName: true,
         },
       },
-      SalesReturnItems: true,
+      salesReturnItems: true,
     },
   });
   totalCount = data.length;
@@ -174,9 +174,9 @@ async function getOne(id) {
           locationId: true,
         },
       },
-      SalesReturnItems: {
+      salesReturnItems: {
         select: {
-          Stock: true,
+          stocks: true,
           id: true,
           salesReturnId: true,
           barcode: true,
@@ -291,8 +291,8 @@ async function createSalesReturnItems(
         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
         colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
         qty:
-          stockDetail?.stkQty && !isNaN(parseFloat(stockDetail.stkQty))
-            ? Math.round(parseFloat(stockDetail.stkQty))
+          stockDetail?.returnQty && !isNaN(parseFloat(stockDetail.returnQty))
+            ? Math.round(parseFloat(stockDetail.returnQty))
             : null,
         salesReturnItemsId: createdItem.id,
         barCode: stockDetail?.barcode ? stockDetail?.barcode : "",
@@ -325,7 +325,7 @@ async function update(id, body) {
       id: parseInt(id),
     },
     include: {
-      SalesReturnItems: {
+      salesReturnItems: {
         select: {
           id: true,
         },
@@ -464,7 +464,10 @@ async function updateSalesReturnItems(
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
           colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-          qty,
+          qty:
+            stockDetail?.returnQty && !isNaN(parseFloat(stockDetail.returnQty))
+              ? Math.round(parseFloat(stockDetail.returnQty))
+              : null,
           salesReturnItemsId: createdItem.id,
           barCode: stockDetail?.barcode || "",
           styleNo: stockDetail?.styleNo ?? undefined,
@@ -514,4 +517,4 @@ async function remove(id) {
   return { statusCode: 0, data };
 }
 
-export { getOneBarcode, remove, get, getOne, create, update };
+export { remove, get, getOne, create, update };

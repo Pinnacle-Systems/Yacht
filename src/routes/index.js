@@ -59,3 +59,4 @@ export { default as stockInward } from "./stockInward.route.js";
 export { default as stock } from "./stock.route.js";
 export { default as styleItem } from "./styleItem.route.js";
 export {default as accessory } from "./accessory.route.js"
+export { default as salesReturn } from "./salesReturn.route.js";

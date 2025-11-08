@@ -1634,6 +1634,8 @@ model Stock {
   styleNo              String?
   StyleItem            StyleItem?            @relation(fields: [styleItemId], references: [id])
   styleItemId          Int?
+  SalesReturnItems     SalesReturnItems?     @relation(fields: [salesReturnItemsId], references: [id], onDelete: Cascade)
+  salesReturnItemsId   Int?
 }
 
 model OpeningStock {
@@ -1879,4 +1881,5 @@ model SalesReturnItems {
   styleItemId   Int?
   Color         Color?       @relation(fields: [colorId], references: [id])
   colorId       Int?
+  stocks        Stock[]
 }
