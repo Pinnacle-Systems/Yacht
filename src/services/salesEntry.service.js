@@ -270,6 +270,7 @@ async function getOne(id) {
       },
       Location: true,
       Store: true,
+      Destination: true,
     },
   });
   if (!data) return NoRecordFound("salesEntry");
@@ -311,6 +312,8 @@ async function create(body) {
     contactPerson,
     contactNumber,
     taxTemplateId,
+    destinationId,
+    salesType
   } = await body;
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate
@@ -341,6 +344,8 @@ async function create(body) {
         contactPerson,
         contactNumber,
         taxTemplateId: taxTemplateId ? parseInt(taxTemplateId) : null,
+        destinationId: destinationId ? parseInt(destinationId) : null,
+        salesType,
       },
     });
     await createSalesEntryItems(
@@ -368,6 +373,8 @@ async function update(id, body) {
     contactPerson,
     contactNumber,
     taxTemplateId,
+    destinationId,
+    salesType
   } = await body;
   let data;
   const dataFound = await prisma.salesEntry.findUnique({
@@ -406,6 +413,8 @@ async function update(id, body) {
         taxTemplateId: taxTemplateId ? parseInt(taxTemplateId) : null,
         contactPerson,
         contactNumber,
+        destinationId: destinationId ? parseInt(destinationId) : null,
+        salesType,
       },
     });
     await updateSalesEntryItems(

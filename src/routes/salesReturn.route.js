@@ -10,7 +10,7 @@ import {
 } from "../controllers/salesReturn.controller.js";
 
 router.get("/", get);
-router.get("/salesReturnReport", getReport);
+router.get("/returnReport", getReport);
 router.get("/:id", getOne);
 router.post("/", create);
 router.put("/:id", update);

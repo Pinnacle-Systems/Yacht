@@ -246,8 +246,8 @@ export default function ReadyGoods({
 
   return (
     <>
-      <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[350px] overflow-auto">
-        <div className="flex items-center gap-4">
+      <div className="border border-slate-200  bg-white rounded-md shadow-sm max-h-[450px] px-2 overflow-auto">
+        <div className="flex items-center gap-4  sticky top-0 bg-white z-30 mt-2">
           <ReusableInput
             label="Style No"
             value={styleNo}
@@ -278,9 +278,9 @@ export default function ReadyGoods({
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
         </div>
-        <div className={`w-full overflow-y-auto py-1 relative`}>
-          <table className="w-auto border-collapse table-fixed">
-            <thead className="bg-gray-200 text-gray-800">
+        <div className={`w-full max-h-[300px]  overflow-y-auto  my-1`}>
+          <table className="w-full border-collapse table-fixed">
+            <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
                 <th
                   className={`w-12 px-4 py-2 text-center font-medium text-[13px]`}
@@ -383,7 +383,7 @@ export default function ReadyGoods({
                           // onMouseLeave={() => setPreviewImage(null)}
                         />
                       ) : (
-                        <>No Image</>
+                        <span className="text-xs pl-1">No Image</span>
                       )}
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">

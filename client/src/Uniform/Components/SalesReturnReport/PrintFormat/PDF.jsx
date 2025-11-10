@@ -122,7 +122,7 @@ const PDF = ({ allData, customerList }) => {
 
     const totalQty = allData?.data?.reduce((grandTotal, dataObj) => {
         const itemQty = dataObj?.salesReturnItems?.reduce(
-            (total, item) => total + item?.qty,
+            (total, item) => total + item?.returnQty,
             0
         );
         return grandTotal + itemQty;
@@ -136,16 +136,15 @@ const PDF = ({ allData, customerList }) => {
                 </View>
 
                 <View style={styles.container}>
-                    <Text style={tw("mx-auto     text-base text-black")}>Sales Report</Text>
+                    <Text style={tw("mx-auto     text-base text-black")}>Sales Return Report</Text>
                     <View style={{ height: 10 }} fixed />
                     <View style={[styles.table,]} wrap>
                         <View fixed style={styles.tableHeader}>
                             {[
                                 { label: "S.No", flex: 0.3 },
-                                { label: "Delivery Date", flex: 0.7 },
+                                { label: "Return Date", flex: 0.7 },
                                 { label: "Customer ", flex: 1.5 },
-                                { label: "Sales Qty", flex: 0.5 },
-                                { label: "Sales Amount", flex: 0.5 },
+                                { label: "Return Qty", flex: 0.5 },
                             ].map((header, index) => (
                                 <Text
                                     key={index}

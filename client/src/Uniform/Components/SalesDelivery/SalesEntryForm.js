@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { DropdownInput, TextInput } from "../../../Inputs";
+import { DropdownInput, DropdownNew, TextInput } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { getCommonParams } from "../../../Utils/helper";
 import { ReusableInput } from "../../../Utils/CommonInput";
@@ -24,6 +24,8 @@ import { PDFViewer } from "@react-pdf/renderer";
 import Modal from "../../../UiComponents/Modal";
 import tw from "../../../Utils/tailwind-react-pdf";
 import PDF from "./PrintFormat/PDF";
+import { salesTypes } from "../../../Utils/DropdownData";
+import { useGetCityQuery } from "../../../redux/services/CityMasterService";
 
 export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
   const [pdfOpen, setPdfOpen] = useState(false);
@@ -36,8 +38,8 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
   const [customerId, setCustomerId] = useState("");
   const [contactPerson, setContactPerson] = useState("");
   const [contactNumber, setContactNumber] = useState("");
-  const [taxTemplateId, setTaxTemplateId] = useState("");
-
+  const [salesType, setSalesType] = useState("");
+  const [destinationId, setDestinationId] = useState("");
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
@@ -47,14 +49,13 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
     searchParams: searchValue,
   });
 
-  const { data: taxTypeList } = useGetTaxTemplateQuery({
+  const { data: locationData } = useGetLocationMasterQuery({
     params: { branchId },
     searchParams: searchValue,
   });
 
-  const { data: locationData } = useGetLocationMasterQuery({
-    params: { branchId },
-    searchParams: searchValue,
+  const { data: cityList } = useGetCityQuery({
+    params: { companyId },
   });
 
   const storeOptions = locationData
@@ -64,7 +65,13 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
     : [];
 
   const validateData = (data) => {
-    if (salesEntryItems?.length > 0 && data.storeId && data.customerId) {
+    if (
+      salesEntryItems?.length > 0 &&
+      data.storeId &&
+      data.customerId &&
+      data.destinationId &&
+      data.salesType
+    ) {
       return true;
     }
     return false;
@@ -100,6 +107,8 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
     customerId,
     contactPerson,
     contactNumber,
+    destinationId,
+    salesType,
   };
 
   const syncFormWithDb = useCallback(
@@ -124,6 +133,8 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
       setCustomerId(data?.customerId ? data?.customerId : "");
       setContactNumber(data?.contactNumber ? data?.contactNumber : "");
       setContactPerson(data?.contactPerson ? data?.contactPerson : "");
+      setDestinationId(data?.destinationId ? data?.destinationId : "");
+      setSalesType(data?.salesType ? data?.salesType : "");
     },
     [id]
   );
@@ -259,6 +270,14 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
                 readOnly={true}
                 disabled
               />
+              <DropdownInput
+                name="Sales Type"
+                options={salesTypes}
+                value={salesType}
+                setValue={setSalesType}
+                required={true}
+                readOnly={readOnly}
+              />
             </div>
           </div>
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
@@ -308,25 +327,16 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
               Customer Details
             </h2>
             <div className="grid grid-cols-2 gap-1">
-              <DropdownInput
+              <DropdownNew
                 name="Customer"
-                options={
-                  partyList
-                    ? dropDownListObject(
-                        id
-                          ? partyList?.data
-                          : partyList?.data?.filter((item) => item.active),
-                        "name",
-                        "id"
-                      )
-                    : []
-                }
+                dataList={partyList?.data?.filter((item) => item.active)}
                 value={customerId}
                 setValue={(value) => {
                   setCustomerId(value);
                 }}
                 required={true}
-                readOnly={readOnly}
+                disabled={readOnly}
+                placeholder={"Select Contact Person"}
               />
               <ReusableInput
                 label="Contact Person"
@@ -341,6 +351,17 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
                 type={"text"}
                 readOnly={true}
                 disabled
+              />
+              <DropdownNew
+                name="Destination"
+                dataList={cityList?.data?.filter((item) => item.active)}
+                value={destinationId}
+                setValue={(value) => {
+                  setDestinationId(value);
+                }}
+                required={true}
+                disabled={readOnly}
+                placeholder={"Select Destination"}
               />
             </div>
           </div>

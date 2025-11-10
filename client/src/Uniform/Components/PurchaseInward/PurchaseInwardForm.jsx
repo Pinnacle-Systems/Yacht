@@ -19,7 +19,6 @@ import {
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import { getCommonParams } from "../../../Utils/helper";
-import FabricPoItems from "./FabricPoItems";
 import AccessoryPoItems from "./AccessoryPoItems";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh, HiX } from "react-icons/hi";
@@ -30,6 +29,7 @@ import {
   useDeleteDirectInwardOrReturnMutation,
   useUpdateDirectInwardOrReturnMutation,
 } from "../../../redux/uniformService/DirectInwardOrReturnServices";
+import FabricItems from "./FabricItems";
 
 const PurchaseInwardForm = ({ onClose, id, setId }) => {
   const [docId, setDocId] = useState("");
@@ -39,22 +39,12 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
   const [dcNo, setDcNo] = useState("");
   const [dcDate, setDcDate] = useState("");
   const [supplierId, setSupplierId] = useState("");
-  const [payTermId, setPayTermId] = useState("");
   const [locationId, setLocationId] = useState("");
   const [storeId, setStoreId] = useState("");
-  const [poInwardOrDirectInward, setPoInwardOrDirectInward] =
-    useState("DirectInward");
-  const [inwardItemSelection, setInwardItemSelection] = useState(false);
-  const [directInwardReturnItems, setDirectInwardReturnItems] = useState([]);
   const [term, setTerm] = useState("");
   const [notes, setNotes] = useState("");
   const [searchValue, setSearchValue] = useState("");
-  const [partyId, setPartyId] = useState("");
-  const [suppliers, setSuppliers] = useState([
-    "Supplier One",
-    "Supplier Two",
-    "Supplier Three",
-  ]);
+  const [fabricItems, setFabricItems] = useState([]);
 
   const { branchId, companyId, userId, finYearId } = getCommonParams();
   const branchIdFromApi = useRef(branchId);
@@ -63,10 +53,8 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
     branchId,
     companyId,
   };
-  const { data: payTermList } = useGetPaytermMasterQuery({
-    params: { ...params },
-  });
-  const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
+
+  const { data: partyList } = useGetPartyQuery({ params: { ...params } });
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
   const { data: locationData } = useGetLocationMasterQuery({
     params: { branchId },
@@ -78,8 +66,8 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
 
   const storeOptions = locationData
     ? locationData.data.filter(
-        (item) => parseInt(item.locationId) === parseInt(locationId)
-      )
+      (item) => parseInt(item.locationId) === parseInt(locationId)
+    )
     : [];
 
   const [addData] = useAddDirectInwardOrReturnMutation();
@@ -89,23 +77,15 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
   const data = {
     docId,
     poType: transType,
-    poInwardOrDirectInward,
     supplierId,
     dcDate,
-    payTermId,
     branchId,
     id,
     userId,
     storeId,
-    directInwardReturnItems,
+    fabricItems,
     dcNo,
     finYearId,
-  };
-
-  const handleAddSupplier = (newName) => {
-    if (!suppliers.includes(newName)) {
-      setSuppliers([...suppliers, newName]);
-    }
   };
 
   function isSupplierOutside() {
@@ -116,20 +96,12 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
   }
 
   function getTotalQty() {
-    let qty = directInwardReturnItems?.reduce((acc, curr) => {
-      const qtyValue = parseFloat(curr?.qty) || 0; // safer parsing
-      return acc + qtyValue;
-    }, 0);
+    // let qty = fabricItems?.reduce((acc, curr) => {
+    //   const qtyValue = parseFloat(curr?.qty) || 0; // safer parsing
+    //   return acc + qtyValue;
+    // }, 0);
 
-    return qty || 0; // ensure it returns 0 if undefined or NaN
-  }
-  function getTotalAmt() {
-    let amt = directInwardReturnItems?.reduce((acc, item) => {
-      const price = parseFloat(item?.price) || 0;
-      const qty = parseFloat(item?.qty) || 0;
-      return acc + price * qty;
-    }, 0);
-    return amt || 0;
+    // return qty || 0; // ensure it returns 0 if undefined or NaN
   }
 
   const syncFormWithDb = useCallback(
@@ -140,23 +112,17 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
       } else {
         setReadOnly(false);
       }
-      setTransType(data?.poType ? data.poType : "GreyYarn");
-      setPoInwardOrDirectInward(
-        data?.poInwardOrDirectInward
-          ? data?.poInwardOrDirectInward
-          : "DirectInward"
-      );
+      setTransType(data?.poType ? data.poType : "fabric");
       setDate(
         data?.createdAt
           ? moment.utc(data.createdAt).format("YYYY-MM-DD")
           : moment.utc(today).format("YYYY-MM-DD")
       );
-      setDirectInwardReturnItems(data?.DirectItems ? data.DirectItems : []);
+      setFabricItems(data?.fabricItems ? data.fabricItems : []);
       if (data?.docId) {
         setDocId(data?.docId);
       }
       if (data?.date) setDate(data?.date);
-      setPayTermId(data?.payTermId ? data?.payTermId : "");
       setSupplierId(data?.supplierId ? data?.supplierId : "");
       setDcDate(
         data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : ""
@@ -218,22 +184,9 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
 
   return (
     <>
-      <Modal
-        isOpen={inwardItemSelection}
-        onClose={() => setInwardItemSelection(false)}
-        widthClass={"w-[95%] h-[90%] py-10"}
-      >
-        {/* <PoItemsSelection
-          setInwardItemSelection={setInwardItemSelection}
-          transtype={transType}
-          supplierId={supplierId}
-          inwardItems={directInwardReturnItems}
-          setInwardItems={setDirectInwardReturnItems}
-        /> */}
-      </Modal>
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800">Purchse Inward </h1>
+          <h1 className="text-2xl font-bold text-gray-800">Purchase Inward</h1>
           <button
             onClick={onClose}
             className="text-indigo-600 hover:text-indigo-700"
@@ -246,6 +199,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
       <div className="space-y-3  mt-2">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+            <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
             <div className="grid grid-cols-2 gap-1">
               <ReusableInput label="Doc. Id" readOnly value={docId} />
               <ReusableInput
@@ -258,17 +212,6 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
               />
               <DropdownInput
                 name="Inward Type"
-                beforeChange={() => {
-                  setDirectInwardReturnItems([]);
-                }}
-                options={directOrPo}
-                value={poInwardOrDirectInward}
-                setValue={setPoInwardOrDirectInward}
-                required={true}
-                readOnly={readOnly}
-              />
-              <DropdownInput
-                name="Po Type"
                 options={poTypes}
                 value={transType}
                 setValue={setTransType}
@@ -279,7 +222,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
           </div>
 
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2"></h2>
+            <h2 className="font-medium text-slate-700 mb-2">Supplier Details</h2>
             <div className="grid grid-cols-2 gap-1">
               <TextInput
                 name={"Dc No."}
@@ -296,15 +239,21 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                 readOnly={readOnly}
               />
               <DropdownInput
-                name="Pay Terms"
-                options={dropDownListObject(
-                  payTermList ? payTermList?.data : [],
-                  "name",
-                  "id"
-                )}
-                value={payTermId}
+                name="Supplier"
+                options={
+                  partyList
+                    ? dropDownListObject(
+                      id
+                        ? partyList?.data
+                        : partyList?.data?.filter((item) => item.active),
+                      "name",
+                      "id"
+                    )
+                    : []
+                }
+                value={supplierId}
                 setValue={(value) => {
-                  setPayTermId(value);
+                  setSupplierId(value);
                 }}
                 required={true}
                 readOnly={readOnly}
@@ -315,30 +264,19 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
             <h2 className="font-medium text-slate-700 mb-2"></h2>
             <div className="grid grid-cols-1 gap-1">
-              <div className="grid grid-cols-1">
-                <ReusableSearchableInput
-                  label="Supplier Id"
-                  component="PartyMaster"
-                  placeholder="Search Customer Id..."
-                  optionList={supplierList?.data}
-                  onAddItem={handleAddSupplier}
-                  // onDeleteItem={onDeleteItem}
-                  setSearchTerm={setSupplierId}
-                  searchTerm={supplierId}
-                />
-              </div>
+              <h2 className="font-medium text-slate-700 mb-2">Location Details</h2>
               <div className="grid grid-cols-2 gap-1">
                 <DropdownInput
                   name="Location"
                   options={
                     branchList
                       ? dropDownListObject(
-                          id
-                            ? branchList?.data
-                            : branchList?.data?.filter((item) => item.active),
-                          "branchName",
-                          "id"
-                        )
+                        id
+                          ? branchList?.data
+                          : branchList?.data?.filter((item) => item.active),
+                        "branchName",
+                        "id"
+                      )
                       : []
                   }
                   value={locationId}
@@ -347,7 +285,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                     setStoreId("");
                   }}
                   required={true}
-                  // readOnly={ readOnly}
+                // readOnly={ readOnly}
                 />
                 <DropdownInput
                   name="Store"
@@ -361,74 +299,38 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                   value={storeId}
                   setValue={setStoreId}
                   required={true}
-                  // readOnly={id || readOnly}
+                // readOnly={id || readOnly}
                 />
               </div>
-              {/* {!readOnly && poInwardOrDirectInward == "PurchaseInward" && (
-                <div className="mt-5">
-                  <button
-                    className="p-1.5 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
-                    onClick={() => {
-                      // if (!supplierId) {
-                      //     toast.info("Please Select Suppplier", { position: "top-center" })
-                      //     return
-                      // }
-                      setInwardItemSelection(true);
-                    }}
-                  >
-                    Select Items
-                  </button>
-                </div>
-              )}*/}
             </div>
           </div>
         </div>
         <fieldset>
-          {poInwardOrDirectInward == "DirectInward" &&
-            (transType.toLowerCase().includes("fabric") ? (
-              <FabricPoItems
+          {
+            transType.toLowerCase().includes("fabric") ? (
+              <FabricItems
                 id={id}
                 transType={transType}
                 params={params}
-                poItems={directInwardReturnItems}
-                setPoItems={setDirectInwardReturnItems}
+                fabricItems={fabricItems}
+                setFabricItems={setFabricItems}
                 readOnly={readOnly}
                 isSupplierOutside={isSupplierOutside()}
               />
             ) : (
               //   <AccessoryPoItems
-              //     poItems={directInwardReturnItems}
-              //     setPoItems={setDirectInwardReturnItems}
+              //     poItems={fabricItems}
+              //     setPoItems={setFabricItems}
               //     //  id={id} transType={transType}  params={params}  readOnly={readOnly} isSupplierOutside={isSupplierOutside()}
               //   />
               <></>
-            ))}
-
-          {poInwardOrDirectInward == "PurchaseInward" &&
-            (transType.toLowerCase().includes("fabric") ? (
-              <FabricPoItems
-                id={id}
-                transType={transType}
-                params={params}
-                poItems={directInwardReturnItems}
-                setPoItems={setDirectInwardReturnItems}
-                readOnly={readOnly}
-                isSupplierOutside={isSupplierOutside()}
-              />
-            ) : (
-              //   <AccessoryPoItems
-              //     poItems={directInwardReturnItems}
-              //     setPoItems={setDirectInwardReturnItems}
-              //     //  id={id} transType={transType}  params={params}  readOnly={readOnly} isSupplierOutside={isSupplierOutside()}
-              //   />
-              <></>
-            ))}
+            )}
         </fieldset>
 
         <div className="grid grid-cols-3 gap-3">
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
             <h2 className="font-medium text-slate-700 mb-2 text-base">
-              Terms & Conditions
+              Vehicle No.
             </h2>
             <textarea
               readOnly={readOnly}
@@ -436,8 +338,8 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
               onChange={(e) => {
                 setTerm(e.target.value);
               }}
-              className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-              placeholder="Additional notes..."
+              className="w-full h-14 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+              placeholder="Vehicle Details..."
             />
           </div>
 
@@ -451,7 +353,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
               onChange={(e) => {
                 setNotes(e.target.value);
               }}
-              className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+              className="w-full h-14 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
               placeholder="Additional notes..."
             />
           </div>
@@ -466,13 +368,6 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                 <span className="text-slate-600">Total Qty</span>
                 <span className="font-medium">
                   {parseInt(getTotalQty()).toFixed(2)}
-                </span>
-              </div>
-
-              <div className="flex justify-between py-1 text-sm">
-                <span className="text-slate-600">Total Amt</span>
-                <span className="font-medium">
-                  {parseInt(getTotalAmt()).toFixed(2)}
                 </span>
               </div>
             </div>

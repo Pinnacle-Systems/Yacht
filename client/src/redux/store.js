@@ -24,7 +24,6 @@ import {
   stockApi,
   salesBillApi,
   purchaseReturnApi,
-  salesReturnApi,
   uomMasterApi,
   productSubCategoryMasterApi,
   quotesApi,
@@ -106,6 +105,7 @@ import StockAdjustmentApi from "./uniformService/StockAdjustmentService";
 import SalesEntryApi from "./uniformService/SalesEntryService";
 import StockInwardApi from "./uniformService/StockInwardService";
 import StyleItemMasterApi from "./uniformService/StyleItemMasterService";
+import SalesReturnApi from "./uniformService/SalesReturnService";
 
 const commonReducers = {
   openTabs,
@@ -133,7 +133,7 @@ const commonReducers = {
   stock: stockApi.reducer,
   salesBill: salesBillApi.reducer,
   purchaseReturn: purchaseReturnApi.reducer,
-  salesReturn: salesReturnApi.reducer,
+  salesReturn: SalesReturnApi.reducer,
   uomMaster: uomMasterApi.reducer,
   quotes: quotesApi.reducer,
   leadForm: leadFormApi.reducer,
@@ -237,7 +237,7 @@ const commonMiddleware = [
   stockApi.middleware,
   salesBillApi.middleware,
   purchaseReturnApi.middleware,
-  salesReturnApi.middleware,
+  SalesReturnApi.middleware,
   uomMasterApi.middleware,
   quotesApi.middleware,
   leadFormApi.middleware,

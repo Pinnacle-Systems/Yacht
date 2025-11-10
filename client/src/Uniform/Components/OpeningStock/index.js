@@ -77,7 +77,6 @@ export default function Form() {
   const onNew = () => {
     setId("");
     setReadOnly(false);
-    // setOrderDetails([]);
   };
   return (
     <>

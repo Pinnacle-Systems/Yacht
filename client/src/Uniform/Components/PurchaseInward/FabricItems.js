@@ -1,68 +1,64 @@
-import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import { useEffect, useState } from "react";
-import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
-import { useLazyGetBarcodeDetailQuery } from "../../../redux/uniformService/StockAdjustmentService";
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
-import { ReusableInput } from "../../../Utils/CommonInput";
-import { useLazyGetStyleDetailQuery } from "../../../redux/services/StockService";
-import { findFromList } from "../../../Utils/helper";
-import { IMAGE_UPLOAD_URL } from "../../../Constants";
-import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
-import { toast } from "react-toastify";
+import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
+import secureLocalStorage from "react-secure-storage";
+import { IMAGE_UPLOAD_URL } from "../../../Constants";
+import { findFromList } from "../../../Utils/helper";
 
-export default function SalesItems({
-  salesReturnItems,
-  setSalesReturnItems,
-  params,
-  readOnly,
+const FabricItems = ({
   id,
-  storeId,
-  branchId,
-}) {
+  transType,
+  fabricItems,
+  setFabricItems,
+  readOnly,
+  params,
+}) => {
   const [contextMenu, setContextMenu] = useState(null);
   const [styleNo, setStyleNo] = useState("");
   const [previewImage, setPreviewImage] = useState(null);
   const { data: styleList } = useGetStyleMasterQuery({ params });
-  const { data: sizeList } = useGetSizeMasterQuery({ params });
+  const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: fabricList } = useGetFabricMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
-  const { data: colorList } = useGetColorMasterQuery({ params });
 
-  const [getStyleDetail] = useLazyGetStyleDetailQuery();
-
-  const [
-    triggerGetBarcodeDetail,
-    { data: barcodeData, isFetching, isLoading },
-  ] = useLazyGetBarcodeDetailQuery();
+  const companyId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "userCompanyId"
+  );
 
   const addRow = () => {
     const newRow = {
-      barcode: "",
-      styleId: "",
-      sizeId: "",
-      stkQty: "",
-      returnQty: "",
-      remarks: "",
       styleNo: "",
       fabricId: "",
+      styleId: "",
       styleItemId: "",
       colorId: "",
+      qty: "",
+      fabWidth: "",
+      fabMeter: "",
+      noOfPcs: "",
     };
-    setSalesReturnItems([...salesReturnItems, newRow]);
+    setFabricItems([...fabricItems, newRow]);
+  };
+
+  const handleInputChange = (value, index, field) => {
+    const newBlend = structuredClone(fabricItems);
+    newBlend[index][field] = value;
+    setFabricItems(newBlend);
   };
 
   const deleteRow = (id) => {
-    setSalesReturnItems((currentRows) => {
+    setFabricItems((currentRows) => {
       if (currentRows.length > 1) {
-        return currentRows.filter((row, index) => index !== Number(id));
+        return currentRows.filter((row, index) => index !== parseInt(id));
       }
       return currentRows;
     });
   };
 
   const handleDeleteAllRows = () => {
-    setSalesReturnItems((prevRows) => {
+    setFabricItems((prevRows) => {
       if (prevRows.length <= 1) return prevRows;
       return [prevRows[0]];
     });
@@ -83,228 +79,74 @@ export default function SalesItems({
   };
 
   useEffect(() => {
-    if (salesReturnItems) {
-      setSalesReturnItems((prev) => {
-        const count = prev.length;
+    if (fabricItems) {
+      setFabricItems((prev) => {
+        const filledRows = prev.length;
 
-        if (count < 6) {
+        if (filledRows < 6) {
+          // add empty rows until total becomes 6
           return [
             ...prev,
-            ...Array.from({ length: 6 - count }, () => ({
-              barcode: "",
-              styleId: "",
-              sizeId: "",
-              stkQty: "",
-              returnQty: "",
-              remarks: "",
+            ...Array.from({ length: 6 - filledRows }, () => ({
               styleNo: "",
               fabricId: "",
+              styleId: "",
               styleItemId: "",
               colorId: "",
+              fabWidth: "",
+              fabMeter: "",
+              noOfPcs: "",
             })),
           ];
         }
-
-        return prev; // keep as-is if already >= 6
+        return prev; // if already >= 6, just keep as it is
       });
     } else {
-      setSalesReturnItems(
+      setFabricItems(
         Array.from({ length: 6 }, () => ({
-          barcode: "",
-          styleId: "",
-          sizeId: "",
-          stkQty: "",
-          returnQty: "",
-          remarks: "",
           styleNo: "",
           fabricId: "",
+          styleId: "",
           styleItemId: "",
           colorId: "",
+          fabWidth: "",
+          fabMeter: "",
+          noOfPcs: "",
         }))
       );
     }
-  }, [salesReturnItems, setSalesReturnItems]);
-
-  const handleInputChange = async (value, index, field) => {
-    setSalesReturnItems((prev) => {
-      const newItems = structuredClone(prev);
-      newItems[index][field] = value;
-      return newItems;
-    });
-
-    // Trigger API call only for barcode, styleId, or sizeId
-    if (["barcode", "styleId", "sizeId"].includes(field)) {
-      const row = structuredClone(salesReturnItems[index]);
-      row[field] = value; // use updated value
-      // Only call API if at least barcode or (style+size) is filled
-      if (row.barcode || (row.styleId && row.sizeId)) {
-        try {
-          const response = await triggerGetBarcodeDetail({
-            params: {
-              barcode: row.barcode,
-              styleId: row.styleId,
-              sizeId: row.sizeId,
-            },
-          }).unwrap();
-
-          if (response?.data?.length > 0) {
-            const item = response.data[0];
-            setSalesReturnItems((prev) =>
-              prev.map((r, i) =>
-                i === index
-                  ? {
-                      ...r,
-                      barcode: item.barCode,
-                      styleId: item.styleId,
-                      sizeId: item.sizeId,
-                      stkQty: response.totalQty,
-                      styleNo: item.styleNo,
-                      fabricId: item.fabricId,
-                    }
-                  : r
-              )
-            );
-          } else {
-            setSalesReturnItems((prev) =>
-              prev.map((r, i) =>
-                i === index
-                  ? {
-                      styleId: "",
-                      sizeId: "",
-                      stkQty: "",
-                      returnQty: "",
-                      remarks: "",
-                      styleNo: "",
-                      fabricId: "",
-                      styleItemId: "",
-                      colorId: "",
-                    }
-                  : r
-              )
-            );
-          }
-        } catch (err) {
-          console.error("Error fetching barcode details:", err);
-        }
-      }
-    }
-  };
-
-  const handleAddRow = async () => {
-    if (!validateData()) {
-      toast.info("Please Choose Store...!", {
-        position: "top-center",
-      });
-    } else {
-      try {
-        const { data: styleData } = await getStyleDetail({
-          params: {
-            styleNo: styleNo,
-            storeId,
-            branchId,
-          },
-        });
-        const styleRows = styleData?.data;
-        if (!styleRows) return;
-
-        setSalesReturnItems((prev) => {
-          const updated = [...prev];
-          // Find first empty slot index
-          let startIndex = updated.findIndex(
-            (row) =>
-              !row.styleId &&
-              !row.sizeId &&
-              !row.styleNo &&
-              !row.fabricId &&
-              !row.barcode
-          );
-          if (startIndex === -1) startIndex = updated.length;
-
-          // Fill in sizeRows starting at first empty slot
-          styleRows.forEach((row, i) => {
-            if (startIndex + i < updated.length) {
-              updated[startIndex + i] = row;
-            } else {
-              updated.push(row); // append if no empty slot
-            }
-          });
-
-          // Ensure at least 6 rows
-          while (updated.length < 6) {
-            updated.push({
-              styleNo: "",
-              fabricId: "",
-              styleId: "",
-              sizeId: "",
-              qty: "",
-              remarks: "",
-              stkQty: "",
-              barcode: "",
-              styleItemId: "",
-              colorId: "",
-            });
-          }
-
-          return updated;
-        });
-      } catch (error) {
-        console.error("Error adding row:", error);
-      }
-    }
-  };
+  }, [fabricItems, setFabricItems]);
 
   function imageFormatter(styleId) {
     const fileName = findFromList(styleId, styleList?.data, "img");
-    if (!fileName) return "/no-image.png"; // fallback image if missing
+    if (!fileName) return "/no-image.png";
     return `${IMAGE_UPLOAD_URL}${fileName}`;
   }
-
-  const validateData = () => {
-    if (storeId) {
-      return true;
-    }
-    return false;
-  };
 
   return (
     <>
       <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[350px] overflow-auto">
-        <div className="flex items-center gap-4">
-          <ReusableInput
-            label="Style / Barcode No"
-            value={styleNo}
-            setValue={setStyleNo}
-            type={"text"}
-            required={true}
-            readOnly={readOnly}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleAddRow();
-              }
-            }}
-          />
-        </div>
         <div className="flex justify-between items-center mb-2">
-          <h2 className="font-medium text-slate-700">Return Details</h2>
+          <h2 className="font-medium text-slate-700">List Of Items</h2>
         </div>
-        <div className={`w-full py-1`}>
-          <table className="w-full border-collapse table-fixed">
+        <div className={`w-full overflow-y-auto py-1 relative`}>
+          <table className="w-auto border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800">
               <tr>
                 <th
-                  className={`w-12 px-2 py-2 text-center font-medium text-[13px]`}
+                  className={`w-12 px-4 py-2 text-center font-medium text-[13px]`}
                 >
                   S.No
                 </th>
                 <th
-                  className={`w-20 px-2 py-2 text-center font-medium text-[13px] `}
+                  className={`w-24 px-4 py-2 text-center font-medium text-[13px]`}
                 >
                   Style No
                 </th>
                 <th
-                  className={`w-60 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-64 px-4 py-2 text-center font-medium text-[13px]`}
                 >
-                  Style
+                  Fabric
                 </th>
                 <th
                   className={`w-20 px-4 py-2 text-center  font-medium text-[13px]`}
@@ -312,14 +154,9 @@ export default function SalesItems({
                   Img
                 </th>{" "}
                 <th
-                  className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
+                  className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
                 >
-                  Fabric
-                </th>
-                <th
-                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
-                >
-                  Size
+                  Style
                 </th>
                 <th
                   className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
@@ -327,19 +164,19 @@ export default function SalesItems({
                   Color
                 </th>
                 <th
-                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Stock Qty
+                  Width
                 </th>
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Return Qty
+                  Meter
                 </th>
                 <th
-                  className={`w-48 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Remarks
+                  No of Pcs
                 </th>
                 <th
                   className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
@@ -347,7 +184,7 @@ export default function SalesItems({
               </tr>
             </thead>
             <tbody>
-              {(salesReturnItems ? salesReturnItems : [])?.map((row, index) => (
+              {(fabricItems ? fabricItems : [])?.map((row, index) => (
                 <tr
                   className="border border-blue-gray-200 cursor-pointer "
                   key={index}
@@ -366,63 +203,14 @@ export default function SalesItems({
                       className="text-left rounded py-1 px-1 w-full table-data-input"
                       onFocus={(e) => e.target.select()}
                       value={row?.styleNo}
-                      disabled={true}
                       onChange={(e) =>
                         handleInputChange(e.target.value, index, "styleNo")
                       }
                       onBlur={(e) => {
                         handleInputChange(e.target.value, index, "styleNo");
                       }}
-                    />
-                  </td>
-                  <td className="py-0.5 border border-gray-300 text-[11px] ">
-                    <select
-                      // disabled={readOnly || !!row.barcode}
                       disabled={true}
-                      className="text-left w-full rounded py-1 table-data-input"
-                      value={row.styleItemId}
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "styleItemId");
-                        }
-                      }}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "styleItemId")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "styleItemId");
-                      }}
-                    >
-                      <option></option>
-                      {(id
-                        ? styleItemList?.data
-                        : styleItemList?.data?.filter((item) => item.active)
-                      )?.map((blend) => (
-                        <option value={blend.id} key={blend.id}>
-                          {blend?.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="border border-gray-300 py-1 h-10">
-                    {row?.styleId ? (
-                      <img
-                        style={{
-                          height: "35px",
-                          width: "35px",
-                          objectFit: "cover",
-                          borderRadius: "2px",
-                          margin: "auto",
-                          cursor: "pointer",
-                        }}
-                        src={imageFormatter(row?.styleId)}
-                        onClick={() =>
-                          setPreviewImage(imageFormatter(row?.styleId))
-                        }
-                      />
-                    ) : (
-                      <span className="text-xs pl-1">No Image</span>
-                    )}
+                    />
                   </td>
                   <td className="py-0.5 border border-gray-300 text-[11px] ">
                     <select
@@ -453,28 +241,52 @@ export default function SalesItems({
                       ))}
                     </select>
                   </td>
-                  <td className="py-0.5 border border-gray-300 text-[11px]">
+                  <td className="border border-gray-300 py-1 h-10">
+                    {row?.styleId ? (
+                      <img
+                        style={{
+                          height: "35px",
+                          width: "35px",
+                          objectFit: "cover",
+                          borderRadius: "2px",
+                          margin: "auto",
+                          cursor: "pointer",
+                        }}
+                        src={imageFormatter(row?.styleId)}
+                        onClick={() =>
+                          setPreviewImage(imageFormatter(row?.styleId))
+                        }
+                        // onMouseEnter={() =>
+                        //   setPreviewImage(imageFormatter(row?.styleId))
+                        // }
+                        // onMouseLeave={() => setPreviewImage(null)}
+                      />
+                    ) : (
+                      <span className="text-xs pl-1">No Image</span>
+                    )}
+                  </td>
+                  <td className="py-0.5 border border-gray-300 text-[11px] ">
                     <select
-                      // disabled={readOnly || !!row.barcode}
-                      disabled={true}
-                      className="text-left w-full rounded py-1 table-data-input"
-                      value={row.sizeId}
                       onKeyDown={(e) => {
                         if (e.key === "Delete") {
-                          handleInputChange("", index, "sizeId");
+                          handleInputChange("", index, "styleItemId");
                         }
                       }}
+                      tabIndex={"0"}
+                      disabled={true}
+                      className="text-left w-full rounded py-1 table-data-input"
+                      value={row.styleItemId}
                       onChange={(e) =>
-                        handleInputChange(e.target.value, index, "sizeId")
+                        handleInputChange(e.target.value, index, "styleItemId")
                       }
                       onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "sizeId");
+                        handleInputChange(e.target.value, index, "styleItemId");
                       }}
                     >
                       <option></option>
                       {(id
-                        ? sizeList?.data
-                        : sizeList?.data?.filter((item) => item.active)
+                        ? styleItemList?.data
+                        : styleItemList?.data?.filter((item) => item.active)
                       )?.map((blend) => (
                         <option value={blend.id} key={blend.id}>
                           {blend?.name}
@@ -482,9 +294,10 @@ export default function SalesItems({
                       ))}
                     </select>
                   </td>
+
                   <td className="py-0.5 border border-gray-300 text-[11px]">
                     <select
-                      id={`qty-${index}`}
+                      id={`qty-input-${index}`}
                       onKeyDown={(e) => {
                         if (e.key === "Delete") {
                           handleInputChange("", index, "colorId");
@@ -514,45 +327,23 @@ export default function SalesItems({
                   </td>
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                     <input
-                      type="number"
-                      className="text-right rounded py-1 px-1 w-full table-data-input"
-                      value={row?.stkQty}
-                      disabled={true}
                       onKeyDown={(e) => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract")
                           e.preventDefault();
                         if (e.key === "Delete") {
-                          handleInputChange("", index, "stkQty");
-                        }
-                      }}
-                      onFocus={(e) => e.target.select()}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "stkQty")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "stkQty");
-                      }}
-                    />
-                  </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      onKeyDown={(e) => {
-                        if (e.code === "Minus" || e.code === "NumpadSubtract")
-                          e.preventDefault();
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "returnQty");
+                          handleInputChange("", index, "fabWidth");
                         }
                       }}
                       min={"0"}
                       type="number"
                       className="text-right rounded py-1 px-1 w-full table-data-input"
                       onFocus={(e) => e.target.select()}
-                      value={row?.returnQty}
+                      value={row?.fabWidth}
                       onChange={(e) =>
-                        handleInputChange(e.target.value, index, "returnQty")
+                        handleInputChange(e.target.value, index, "fabWidth")
                       }
                       onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "returnQty");
+                        handleInputChange(e.target.value, index, "fabWidth");
                       }}
                       disabled={readOnly}
                     />
@@ -560,83 +351,76 @@ export default function SalesItems({
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                     <input
                       onKeyDown={(e) => {
+                        if (e.code === "Minus" || e.code === "NumpadSubtract")
+                          e.preventDefault();
                         if (e.key === "Delete") {
-                          handleInputChange("", index, "remarks");
+                          handleInputChange("", index, "fabMeter");
                         }
+                      }}
+                      min={"0"}
+                      type="number"
+                      className="text-right rounded py-1 px-1 w-full table-data-input"
+                      onFocus={(e) => e.target.select()}
+                      value={row?.fabMeter}
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "fabMeter")
+                      }
+                      onBlur={(e) => {
+                        handleInputChange(e.target.value, index, "fabMeter");
+                      }}
+                      disabled={readOnly}
+                    />
+                  </td>
+                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                    <input
+                      onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault(); // prevent form submit or line break
                           e.stopPropagation();
-                          const nextSelect = document.querySelector(
-                            `#qty-${index + 1}`
+                          const nextQtyInput = document.querySelector(
+                            `#qty-input-${index + 1}`
                           );
-                          if (nextSelect) {
-                            nextSelect.focus();
-                            // Optional: visually show focus (since select.open() is not allowed)
-                            setTimeout(
-                              () => (nextSelect.style.outline = ""),
-                              800
-                            );
+                          if (nextQtyInput) {
+                            nextQtyInput.focus();
                           }
                         }
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "noOfPcs");
+                        }
                       }}
-                      disabled={readOnly}
                       type="string"
                       className="text-left rounded py-1 px-1 w-full table-data-input"
                       onFocus={(e) => e.target.select()}
-                      value={row?.remarks}
+                      value={row?.noOfPcs}
                       onChange={(e) =>
-                        handleInputChange(e.target.value, index, "remarks")
+                        handleInputChange(e.target.value, index, "noOfPcs")
                       }
                       onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "remarks");
+                        handleInputChange(e.target.value, index, "noOfPcs");
                       }}
+                      disabled={readOnly}
                     />
                   </td>
                   <td className="w-2 border border-gray-300">
                     <input
                       onContextMenu={(e) => {
                         if (!readOnly) {
-                          handleRightClick(e, index, "notes");
+                          handleRightClick(e, index, "");
                         }
                       }}
-                      disabled={readOnly}
-                      className="w-full "
+                      className="w-full"
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault();
                           addRow();
                         }
                       }}
+                      disabled={readOnly}
                     />
                   </td>
                 </tr>
               ))}
             </tbody>
-            <tfoot>
-              <tr className="bg-gray-50 h-7 font-medium text-gray-800">
-                <td
-                  className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={8}
-                >
-                  Total
-                </td>
-                {/* <td
-                  className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={7}
-                >
-                  Total Qty
-                </td> */}
-                <td className="text-right border border-gray-300 px-1 font-medium text-[12px] py-0.5">
-                  {salesReturnItems.reduce(
-                    (sum, row) => sum + (Number(row.returnQty) || 0),
-                    0
-                  )}
-                </td>
-                {/* <td className="border border-gray-300"></td> */}
-                {/* <td className="border border-gray-300"></td> */}
-                <td className="border border-gray-300" colSpan={2}></td>
-              </tr>
-            </tfoot>
           </table>
           {previewImage && (
             <div
@@ -665,8 +449,8 @@ export default function SalesItems({
           <div
             style={{
               position: "fixed",
-              top: `${contextMenu.mouseY - 0}px`,
-              left: `${contextMenu.mouseX - 80}px`,
+              top: `${contextMenu.mouseY - 20}px`,
+              left: `${contextMenu.mouseX + 20}px`,
               boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
               padding: "8px",
               borderRadius: "4px",
@@ -700,4 +484,6 @@ export default function SalesItems({
       </div>
     </>
   );
-}
+};
+
+export default FabricItems;

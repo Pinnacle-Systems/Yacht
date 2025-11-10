@@ -361,20 +361,20 @@ export default function BillItems({
             <thead className="bg-gray-200 text-gray-800">
               <tr>
                 <th
-                  className={`w-12 px-4 py-2 text-center font-medium text-[13px]`}
+                  className={`w-12 px-2 py-2 text-center font-medium text-[13px]`}
                 >
                   S.No
                 </th>
                 <th
-                  className={`w-24 px-4 py-2 text-center font-medium text-[13px]`}
+                  className={`w-20 px-2 py-2 text-center font-medium text-[13px]`}
                 >
                   Style No
                 </th>
-                <th
+                {/* <th
                   className={`w-28 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Barcode No
-                </th>
+                </th> */}
                 <th
                   className={`w-60 px-4 py-2 text-center font-medium text-[13px] `}
                 >
@@ -401,12 +401,12 @@ export default function BillItems({
                   Color
                 </th>
                 <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Stock Qty
                 </th>
                 <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Sales Qty
                 </th>
@@ -416,12 +416,12 @@ export default function BillItems({
                   Price
                 </th>
                 <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Tax %
                 </th>
                 <th
-                  className={`w-32 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-28 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Disc Type
                 </th>
@@ -481,7 +481,7 @@ export default function BillItems({
                         disabled={true}
                       />
                     </td>
-                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                    {/* <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
@@ -500,7 +500,7 @@ export default function BillItems({
                           handleInputChange(e.target.value, index, "barcode");
                         }}
                       />
-                    </td>
+                    </td> */}
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                       <select
                         disabled={true}
@@ -554,7 +554,7 @@ export default function BillItems({
                           }
                         />
                       ) : (
-                        <></>
+                         <span className="text-xs pl-1">No Image</span>
                       )}
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
@@ -669,7 +669,7 @@ export default function BillItems({
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
                         type="number"
-                        id={`qty-input-${index}`}
+                        id={`salesqty-input-${index}`}
                         className="text-right rounded py-1 px-1 w-full table-data-input"
                         value={row?.qty}
                         disabled={readOnly}
@@ -680,7 +680,7 @@ export default function BillItems({
                             handleInputChange("", index, "qty");
                           }
                         }}
-                        onFocus={(e) => e.target.select()}
+                        onFocus={(e) => e.target.focus()}
                         onChange={(e) =>
                           handleInputChange(e.target.value, index, "qty")
                         }
@@ -837,7 +837,7 @@ export default function BillItems({
                             e.preventDefault(); // prevent form submit or line break
                             e.stopPropagation();
                             const nextQtyInput = document.querySelector(
-                              `#qty-input-${index + 1}`
+                              `#salesqty-input-${index + 1}`
                             );
                             if (nextQtyInput) {
                               nextQtyInput.focus();
@@ -882,7 +882,7 @@ export default function BillItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={9}
+                  colSpan={8}
                 >
                   Total
                 </td>

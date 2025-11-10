@@ -192,6 +192,11 @@ const SalesReturnReport = forwardRef(
       }
     }, [allData, onDataLoaded]);
 
+    useEffect(() => {
+      console.log(currentItems,"currentItems")
+    }, [currentItems])
+    
+
     return (
       <>
         <Modal

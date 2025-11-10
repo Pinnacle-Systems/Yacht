@@ -382,22 +382,17 @@ export default function AdjustItems({
             <thead className="bg-gray-200 text-gray-800">
               <tr>
                 <th
-                  className={`w-12 px-4 py-2 text-center font-medium text-[13px]`}
+                  className={`w-12 px-2 py-2 text-center font-medium text-[13px]`}
                 >
                   S.No
                 </th>
                 <th
-                  className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-2 py-2 text-center font-medium text-[13px] `}
                 >
                   Style No
                 </th>
                 <th
-                  className={`w-28 px-4 py-2 text-center font-medium text-[13px] `}
-                >
-                  Barcode No
-                </th>
-                <th
-                  className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-56 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style
                 </th>
@@ -407,12 +402,12 @@ export default function AdjustItems({
                   Img
                 </th>{" "}
                 <th
-                  className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
+                  className={`w-44 px-4 py-2 text-center font-medium text-[13px]`}
                 >
                   Fabric
                 </th>
                 <th
-                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-16 px-2 py-2 text-center font-medium text-[13px] `}
                 >
                   Size
                 </th>
@@ -422,22 +417,22 @@ export default function AdjustItems({
                   Color
                 </th>
                 <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Stock Qty
                 </th>
                 <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Adj Type
                 </th>
                 <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Adj Qty
                 </th>
                 <th
-                  className={`w-48 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-44 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Remarks
                 </th>
@@ -476,27 +471,6 @@ export default function AdjustItems({
                         }}
                       />
                     </td>
-                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                      <input
-                        onKeyDown={(e) => {
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "barcode");
-                          }
-                        }}
-                        type="string"
-                        className="text-left rounded py-1 px-1 w-full table-data-input"
-                        onFocus={(e) => e.target.select()}
-                        value={row?.barcode}
-                        disabled={true}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "barcode")
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "barcode");
-                        }}
-                      />
-                    </td>
-
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                       <select
                         // disabled={readOnly || !!row.barcode}
@@ -551,7 +525,7 @@ export default function AdjustItems({
                           }
                         />
                       ) : (
-                        <></>
+                         <span className="text-xs pl-1">No Image</span>
                       )}
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">

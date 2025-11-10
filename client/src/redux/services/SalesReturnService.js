@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { SALES_RETURN_API} from "../../Api";
+import { SALES_RETURN_API } from "../../Api";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -11,15 +11,15 @@ const salesReturnApi = createApi({
   tagTypes: ["SalesReturn"],
   endpoints: (builder) => ({
     getSalesReturn: builder.query({
-      query: ({params, searchParams}) => {
-        if(searchParams){
+      query: ({ params, searchParams }) => {
+        if (searchParams) {
           return {
-            url: SALES_RETURN_API +"/search/"+searchParams,
+            url: SALES_RETURN_API + "/search/" + searchParams,
             method: "GET",
             headers: {
               "Content-type": "application/json; charset=UTF-8",
             },
-            params
+            params,
           };
         }
         return {
@@ -28,7 +28,7 @@ const salesReturnApi = createApi({
           headers: {
             "Content-type": "application/json; charset=UTF-8",
           },
-          params
+          params,
         };
       },
       providesTags: ["SalesReturn"],
@@ -74,6 +74,29 @@ const salesReturnApi = createApi({
       }),
       invalidatesTags: ["SalesReturn"],
     }),
+    getSalesReturnReport: builder.query({
+      query: ({ params, searchParams }) => {
+        if (searchParams) {
+          return {
+            url: SALES_RETURN_API + "/search/" + searchParams,
+            method: "GET",
+            headers: {
+              "Content-type": "application/json; charset=UTF-8",
+            },
+            params,
+          };
+        }
+        return {
+          url: `${SALES_RETURN_API}/returnReport`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["SalesReturn"],
+    }),
   }),
 });
 
@@ -83,6 +106,7 @@ export const {
   useAddSalesReturnMutation,
   useUpdateSalesReturnMutation,
   useDeleteSalesReturnMutation,
+  useGetSalesReturnReportQuery,
 } = salesReturnApi;
 
 export default salesReturnApi;
