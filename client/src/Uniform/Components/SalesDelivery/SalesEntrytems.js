@@ -361,12 +361,12 @@ export default function BillItems({
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
                 <th
-                  className={`w-12 px-2 py-2 text-center font-medium text-[13px]`}
+                  className={`w-10 px-1 py-2 text-center font-medium text-[13px]`}
                 >
                   S.No
                 </th>
                 <th
-                  className={`w-20 px-2 py-2 text-center font-medium text-[13px]`}
+                  className={`w-14 px-1 py-2 text-center font-medium text-[13px]`}
                 >
                   Style No
                 </th>
@@ -376,67 +376,67 @@ export default function BillItems({
                   Barcode No
                 </th> */}
                 <th
-                  className={`w-60 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-48  py-2 text-center font-medium text-[13px] `}
                 >
                   Style
                 </th>
                 <th
-                  className={`w-20 px-4 py-2 text-center  font-medium text-[13px]`}
+                  className={`w-16 px-4 py-2 text-center  font-medium text-[13px]`}
                 >
                   Img
                 </th>{" "}
                 <th
-                  className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
+                  className={`w-36 px-4 py-2 text-center font-medium text-[13px]`}
                 >
                   Fabric
                 </th>
                 <th
-                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-14 px-2 py-2 text-center font-medium text-[13px] `}
                 >
                   Size
                 </th>
                 <th
-                  className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Color
                 </th>
                 <th
-                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Stock Qty
                 </th>
                 <th
-                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-14 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Sales Qty
                 </th>
                 <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Price
                 </th>
                 <th
-                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-12 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Tax %
                 </th>
                 <th
-                  className={`w-28 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Disc Type
                 </th>
                 <th
-                  className={`w-28 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Discount
+                  Disc %
                 </th>
                 <th
-                  className={`w-28 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Gross Amt
                 </th>
                 <th
-                  className={`w-28 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Net Amt
                 </th>
@@ -446,7 +446,7 @@ export default function BillItems({
                   Remarks
                 </th>
                 <th
-                  className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                  className={`w-12 px-3 py-2 text-center font-medium text-[13px] `}
                 ></th>
               </tr>
             </thead>

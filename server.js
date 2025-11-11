@@ -41,7 +41,6 @@ import {
   payTerm,
   currency,
   uom,
-  purchaseInwardEntry,
   partyMasterNew,
   sampleEntry,
   designation,
@@ -68,6 +67,7 @@ import {
   styleItem,
   accessory,
   salesReturn,
+  purchaseInwardEntry,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";

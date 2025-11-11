@@ -1,12 +1,11 @@
 import { Prisma } from "@prisma/client";
 import {
-    get as _get,
-      getOne as _getOne,
-
-      create as _create,
-      update as _update,
-      remove as _remove,
-} from '../services/purchaseInwardEntry.js'
+  get as _get,
+  getOne as _getOne,
+  create as _create,
+  update as _update,
+  remove as _remove,
+} from "../services/purchaseInwardEntry.js";
 
 async function get(req, res, next) {
   try {
@@ -26,7 +25,6 @@ async function getOne(req, res, next) {
   }
 }
 async function create(req, res, next) {
- 
   try {
     res.json(await _create(req.body));
     console.log(res.statusCode);
@@ -49,10 +47,9 @@ async function create(req, res, next) {
   }
 }
 async function update(req, res, next) {
-  
   try {
     const { id } = req.params;
-    res.json(await _update(id,req.body));
+    res.json(await _update(id, req.body));
     console.log(res.statusCode);
   } catch (error) {
     console.error(`Error`, error.message);
@@ -73,9 +70,6 @@ async function update(req, res, next) {
   }
 }
 
-
-
-
 async function remove(req, res, next) {
   try {
     res.json(await _remove(req.params.id));
@@ -93,4 +87,4 @@ async function remove(req, res, next) {
   }
 }
 
-export { get, getOne,  create, update, remove };
+export { get, getOne, create, update, remove };

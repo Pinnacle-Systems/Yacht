@@ -6,8 +6,12 @@ import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleI
 import secureLocalStorage from "react-secure-storage";
 import { IMAGE_UPLOAD_URL } from "../../../Constants";
 import { findFromList } from "../../../Utils/helper";
+import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/AccessoryMasterServices";
+import { useGetAccessoryGroupMasterQuery } from "../../../redux/uniformService/AccessoryGroupMasterServices";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 
-const FabricInwardItems = ({
+const AccessoryInwardItems = ({
   id,
   transType,
   fabricInwardItems,
@@ -18,10 +22,11 @@ const FabricInwardItems = ({
   const [contextMenu, setContextMenu] = useState(null);
   const [styleNo, setStyleNo] = useState("");
   const [previewImage, setPreviewImage] = useState(null);
-  const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
-  const { data: fabricList } = useGetFabricMasterQuery({ params });
-  const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
+  const { data: accessoryList } = useGetAccessoryMasterQuery({ params });
+  const { data: accessoryGroupList } = useGetAccessoryGroupMasterQuery({ params });
+  const { data: sizeList } = useGetSizeMasterQuery({ params });
+  const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
 
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -29,15 +34,12 @@ const FabricInwardItems = ({
 
   const addRow = () => {
     const newRow = {
-      styleNo: "",
-      fabricId: "",
-      styleId: "",
-      styleItemId: "",
+      accessoryId: "",
+      accessoryGroupId: "",
       colorId: "",
+      sizeId: "",
+      uomId: "",
       qty: "",
-      fabWidth: "",
-      fabMeter: "",
-      noOfPcs: "",
     };
     setFabricInwardItems([...fabricInwardItems, newRow]);
   };
@@ -88,14 +90,12 @@ const FabricInwardItems = ({
           return [
             ...prev,
             ...Array.from({ length: 6 - filledRows }, () => ({
-              styleNo: "",
-              fabricId: "",
-              styleId: "",
-              styleItemId: "",
+              accessoryId: "",
+              accessoryGroupId: "",
               colorId: "",
-              fabWidth: "",
-              fabMeter: "",
-              noOfPcs: "",
+              sizeId: "",
+              uomId: "",
+              qty: "",
             })),
           ];
         }
@@ -104,24 +104,16 @@ const FabricInwardItems = ({
     } else {
       setFabricInwardItems(
         Array.from({ length: 6 }, () => ({
-          styleNo: "",
-          fabricId: "",
-          styleId: "",
-          styleItemId: "",
+          accessoryId: "",
+          accessoryGroupId: "",
           colorId: "",
-          fabWidth: "",
-          fabMeter: "",
-          noOfPcs: "",
+          sizeId: "",
+          uomId: "",
+          qty: "",
         }))
       );
     }
   }, [fabricInwardItems, setFabricInwardItems]);
-
-  function imageFormatter(styleId) {
-    const fileName = findFromList(styleId, styleList?.data, "img");
-    if (!fileName) return "/no-image.png";
-    return `${IMAGE_UPLOAD_URL}${fileName}`;
-  }
 
   return (
     <>
@@ -139,44 +131,34 @@ const FabricInwardItems = ({
                   S.No
                 </th>
                 <th
-                  className={`w-24 px-4 py-2 text-center font-medium text-[13px]`}
+                  className={`w-64 px-4 py-2 text-center font-medium text-[13px]`}
                 >
-                  Style No
+                  Accessory Name
                 </th>
                 <th
                   className={`w-64 px-4 py-2 text-center font-medium text-[13px]`}
                 >
-                  Fabric
+                  Accessory Group Name
                 </th>
                 <th
-                  className={`w-20 px-4 py-2 text-center  font-medium text-[13px]`}
-                >
-                  Img
-                </th>{" "}
-                <th
-                  className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
-                >
-                  Style
-                </th>
-                <th
-                  className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-40 px-4 py-2 text-center  font-medium text-[13px]`}
                 >
                   Color
+                </th>{" "}
+                <th
+                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Size
                 </th>
                 <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                 >
-                  Width
+                  Uom
                 </th>
                 <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Meter
-                </th>
-                <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
-                >
-                  No of Pcs
+                  Quantity
                 </th>
                 <th
                   className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
@@ -193,49 +175,38 @@ const FabricInwardItems = ({
                     <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
                       {index + 1}
                     </td>
-                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                      <input
-                        id={`style-input-${index}`}
-                        onKeyDown={(e) => {
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "styleNo");
-                          }
-                        }}
-                        type="string"
-                        className="text-left rounded py-1 px-1 w-full table-data-input"
-                        onFocus={(e) => e.target.select()}
-                        value={row?.styleNo}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "styleNo")
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "styleNo");
-                        }}
-                        disabled={readOnly}
-                      />
-                    </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                       <select
+                        id={`accessory-input-${index}`}
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
-                            handleInputChange("", index, "fabricId");
+                            handleInputChange("", index, "accessoryId");
                           }
                         }}
                         tabIndex={"0"}
                         disabled={readOnly}
                         className="text-left w-full rounded py-1 table-data-input"
-                        value={row.fabricId}
+                        value={row.accessoryId}
+                        onFocus={(e) => e.target.focus()}
                         onChange={(e) =>
-                          handleInputChange(e.target.value, index, "fabricId")
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "accessoryId"
+                          )
                         }
                         onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "fabricId");
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "accessoryId"
+                          );
                         }}
                       >
                         <option></option>
                         {(id
-                          ? fabricList?.data
-                          : fabricList?.data?.filter((item) => item.active)
+                          ? accessoryList?.data
+                          : accessoryList?.data?.filter((item) => item.active)
                         )?.map((blend) => (
                           <option value={blend.id} key={blend.id}>
                             {blend?.name}
@@ -243,56 +214,36 @@ const FabricInwardItems = ({
                         ))}
                       </select>
                     </td>
-                    <td className="border border-gray-300 py-1 h-10">
-                      {row?.styleId ? (
-                        <img
-                          style={{
-                            height: "35px",
-                            width: "35px",
-                            objectFit: "cover",
-                            borderRadius: "2px",
-                            margin: "auto",
-                            cursor: "pointer",
-                          }}
-                          src={imageFormatter(row?.styleId)}
-                          onClick={() =>
-                            setPreviewImage(imageFormatter(row?.styleId))
-                          }
-                        />
-                      ) : (
-                        <span className="text-xs pl-1">No Image</span>
-                      )}
-                    </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                       <select
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
-                            handleInputChange("", index, "styleItemId");
+                            handleInputChange("", index, "accessoryGroupId");
                           }
                         }}
                         tabIndex={"0"}
                         disabled={readOnly}
                         className="text-left w-full rounded py-1 table-data-input"
-                        value={row.styleItemId}
+                        value={row.accessoryGroupId}
                         onChange={(e) =>
                           handleInputChange(
                             e.target.value,
                             index,
-                            "styleItemId"
+                            "accessoryGroupId"
                           )
                         }
                         onBlur={(e) => {
                           handleInputChange(
                             e.target.value,
                             index,
-                            "styleItemId"
+                            "accessoryGroupId"
                           );
                         }}
                       >
                         <option></option>
                         {(id
-                          ? styleItemList?.data
-                          : styleItemList?.data?.filter((item) => item.active)
+                          ? accessoryGroupList?.data
+                          : accessoryGroupList?.data?.filter((item) => item.active)
                         )?.map((blend) => (
                           <option value={blend.id} key={blend.id}>
                             {blend?.name}
@@ -303,7 +254,6 @@ const FabricInwardItems = ({
 
                     <td className="py-0.5 border border-gray-300 text-[11px]">
                       <select
-                        id={`qty-input-${index}`}
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
                             handleInputChange("", index, "colorId");
@@ -331,51 +281,63 @@ const FabricInwardItems = ({
                         ))}
                       </select>
                     </td>
-                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                      <input
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <select
                         onKeyDown={(e) => {
-                          if (e.code === "Minus" || e.code === "NumpadSubtract")
-                            e.preventDefault();
                           if (e.key === "Delete") {
-                            handleInputChange("", index, "fabWidth");
+                            handleInputChange("", index, "sizeId");
                           }
                         }}
-                        min={"0"}
-                        type="number"
-                        className="text-right rounded py-1 px-1 w-full table-data-input"
-                        onFocus={(e) => e.target.select()}
-                        value={row?.fabWidth}
+                        tabIndex={"0"}
+                        disabled={readOnly}
+                        className="text-left w-full rounded py-1 table-data-input"
+                        value={row.sizeId}
                         onChange={(e) =>
-                          handleInputChange(e.target.value, index, "fabWidth")
+                          handleInputChange(e.target.value, index, "sizeId")
                         }
                         onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "fabWidth");
+                          handleInputChange(e.target.value, index, "sizeId");
                         }}
-                        disabled={readOnly}
-                      />
+                      >
+                        <option></option>
+                        {(id
+                          ? sizeList?.data
+                          : sizeList?.data?.filter((item) => item.active)
+                        )?.map((blend) => (
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.name}
+                          </option>
+                        ))}
+                      </select>
                     </td>
-                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                      <input
+                    <td className="py-0.5 border border-gray-300 text-[11px] ">
+                      <select
                         onKeyDown={(e) => {
-                          if (e.code === "Minus" || e.code === "NumpadSubtract")
-                            e.preventDefault();
                           if (e.key === "Delete") {
-                            handleInputChange("", index, "fabMeter");
+                            handleInputChange("", index, "uomId");
                           }
                         }}
-                        min={"0"}
-                        type="number"
-                        className="text-right rounded py-1 px-1 w-full table-data-input"
-                        onFocus={(e) => e.target.select()}
-                        value={row?.fabMeter}
+                        tabIndex={"0"}
+                        disabled={readOnly}
+                        className="text-left w-full rounded py-1 table-data-input"
+                        value={row.uomId}
                         onChange={(e) =>
-                          handleInputChange(e.target.value, index, "fabMeter")
+                          handleInputChange(e.target.value, index, "uomId")
                         }
                         onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "fabMeter");
+                          handleInputChange(e.target.value, index, "uomId");
                         }}
-                        disabled={readOnly}
-                      />
+                      >
+                        <option></option>
+                        {(id
+                          ? uomList?.data
+                          : uomList?.data?.filter((item) => item.active)
+                        )?.map((blend) => (
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.name}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
@@ -384,25 +346,25 @@ const FabricInwardItems = ({
                             e.preventDefault(); // prevent form submit or line break
                             e.stopPropagation();
                             const nextQtyInput = document.querySelector(
-                              `#style-input-${index + 1}`
+                              `#accessory-input-${index + 1}`
                             );
                             if (nextQtyInput) {
                               nextQtyInput.focus();
                             }
                           }
                           if (e.key === "Delete") {
-                            handleInputChange("", index, "noOfPcs");
+                            handleInputChange("", index, "qty");
                           }
                         }}
                         type="string"
-                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        className="text-left rounded py-1 px-1 w-full table-data-input"
                         onFocus={(e) => e.target.select()}
-                        value={row?.noOfPcs}
+                        value={row?.qty}
                         onChange={(e) =>
-                          handleInputChange(e.target.value, index, "noOfPcs")
+                          handleInputChange(e.target.value, index, "qty")
                         }
                         onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "noOfPcs");
+                          handleInputChange(e.target.value, index, "qty");
                         }}
                         disabled={readOnly}
                       />
@@ -493,4 +455,4 @@ const FabricInwardItems = ({
   );
 };
 
-export default FabricInwardItems;
+export default AccessoryInwardItems;

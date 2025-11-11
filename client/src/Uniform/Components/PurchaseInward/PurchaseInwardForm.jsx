@@ -1,17 +1,14 @@
-import React from "react";
-import Modal from "../../../UiComponents/Modal";
+
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../../../Utils/CommonInput";
-import { directOrPo, poTypes } from "../../../Utils/DropdownData";
+import { poTypes } from "../../../Utils/DropdownData";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   DateInput,
   DropdownInput,
-  ReusableSearchableInput,
   TextInput,
 } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
-import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterServices";
 import {
   useGetPartyByIdQuery,
   useGetPartyQuery,
@@ -19,33 +16,29 @@ import {
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import { getCommonParams } from "../../../Utils/helper";
-import AccessoryPoItems from "./AccessoryPoItems";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
-import { HiOutlineRefresh, HiX } from "react-icons/hi";
+import { HiOutlineRefresh } from "react-icons/hi";
 import moment from "moment";
 import { toast } from "react-toastify";
-import {
-  useAddDirectInwardOrReturnMutation,
-  useDeleteDirectInwardOrReturnMutation,
-  useUpdateDirectInwardOrReturnMutation,
-} from "../../../redux/uniformService/DirectInwardOrReturnServices";
 import FabricItems from "./FabricItems";
+import AccessoryInwardItems from "./AccessoryItems";
+import { useAddPurchaseInwardEntryMutation, useDeletePurchaseInwardEntryMutation, useGetPurchaseInwardEntryByIdQuery, useUpdatePurchaseInwardEntryMutation } from "../../../redux/uniformService/PurchaseInwardEntry";
+import Swal from "sweetalert2";
 
 const PurchaseInwardForm = ({ onClose, id, setId }) => {
   const [docId, setDocId] = useState("");
-  const [date, setDate] = useState("");
   const [readOnly, setReadOnly] = useState("");
-  const [transType, setTransType] = useState("GreyYarn");
+  const [inwardType, setInwardType] = useState("Fabric");
   const [dcNo, setDcNo] = useState("");
   const [dcDate, setDcDate] = useState("");
   const [supplierId, setSupplierId] = useState("");
   const [locationId, setLocationId] = useState("");
   const [storeId, setStoreId] = useState("");
-  const [term, setTerm] = useState("");
-  const [notes, setNotes] = useState("");
+  const [vehicleNo, setVehicleNo] = useState("");
+  const [remarks, setRemarks] = useState("");
   const [searchValue, setSearchValue] = useState("");
-  const [fabricItems, setFabricItems] = useState([]);
-
+  const [fabricInwardItems, setFabricInwardItems] = useState([]);
+  const [docDate, setDocDate] = useState("")
   const { branchId, companyId, userId, finYearId } = getCommonParams();
   const branchIdFromApi = useRef(branchId);
 
@@ -60,9 +53,6 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
     params: { branchId },
     searchParams: searchValue,
   });
-  const { data: supplierDetails } = useGetPartyByIdQuery(supplierId, {
-    skip: !supplierId,
-  });
 
   const storeOptions = locationData
     ? locationData.data.filter(
@@ -70,38 +60,49 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
     )
     : [];
 
-  const [addData] = useAddDirectInwardOrReturnMutation();
-  const [updateData] = useUpdateDirectInwardOrReturnMutation();
-  const [removeData] = useDeleteDirectInwardOrReturnMutation();
+  const {
+    data: singleData,
+    isFetching: isSingleFetching,
+    isLoading: isSingleLoading,
+  } = useGetPurchaseInwardEntryByIdQuery(id, { skip: !id });
+
+  const [addData] = useAddPurchaseInwardEntryMutation();
+  const [updateData] = useUpdatePurchaseInwardEntryMutation();
+  const [removeData] = useDeletePurchaseInwardEntryMutation();
 
   const data = {
     docId,
-    poType: transType,
+    docDate,
+    inwardType,
     supplierId,
     dcDate,
     branchId,
     id,
     userId,
     storeId,
-    fabricItems,
+    fabricInwardItems: fabricInwardItems?.filter((item) => item.styleNo && item.fabricId || item.accessoryId),
     dcNo,
     finYearId,
+    locationId,
+    vehicleNo,
+    remarks,
   };
 
-  function isSupplierOutside() {
-    if (supplierDetails) {
-      return supplierDetails?.data?.City?.state?.name !== "TAMIL NADU";
-    }
-    return false;
-  }
-
   function getTotalQty() {
-    // let qty = fabricItems?.reduce((acc, curr) => {
-    //   const qtyValue = parseFloat(curr?.qty) || 0; // safer parsing
-    //   return acc + qtyValue;
-    // }, 0);
+    let qty = 0;
+    if (inwardType.toLowerCase().includes("fabric")) {
+      qty = fabricInwardItems?.reduce((acc, curr) => {
+        const qtyValue = parseFloat(curr?.noOfPcs) || 0; // safer parsing
+        return acc + qtyValue;
+      }, 0);
+    } else {
+      qty = fabricInwardItems?.reduce((acc, curr) => {
+        const qtyValue = parseFloat(curr?.qty) || 0;
+        return acc + qtyValue;
+      }, 0);
+    }
 
-    // return qty || 0; // ensure it returns 0 if undefined or NaN
+    return qty || 0; // ensure it returns 0 if undefined or NaN
   }
 
   const syncFormWithDb = useCallback(
@@ -112,17 +113,15 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
       } else {
         setReadOnly(false);
       }
-      setTransType(data?.poType ? data.poType : "fabric");
-      setDate(
-        data?.createdAt
-          ? moment.utc(data.createdAt).format("YYYY-MM-DD")
-          : moment.utc(today).format("YYYY-MM-DD")
-      );
-      setFabricItems(data?.fabricItems ? data.fabricItems : []);
       if (data?.docId) {
         setDocId(data?.docId);
       }
-      if (data?.date) setDate(data?.date);
+      setDocDate(
+        data?.docDate
+          ? moment.utc(data.docDate).format("YYYY-MM-DD")
+          : moment.utc(today).format("YYYY-MM-DD")
+      );
+      setInwardType(data?.inwardType ? data.inwardType : "Fabric");
       setSupplierId(data?.supplierId ? data?.supplierId : "");
       setDcDate(
         data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : ""
@@ -133,11 +132,14 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
       if (data?.branchId) {
         branchIdFromApi.current = data?.branchId;
       }
+      setFabricInwardItems(data?.fabricInwardItems ? data.fabricInwardItems : []);
+      setVehicleNo(data?.vehicleNo ? data.vehicleNo : "");
+      setRemarks(data?.remarks ? data.remarks : "");
     },
     [id]
   );
 
-  const handleSubmitCustom = async (callback, data, text) => {
+  const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData;
       if (text === "Updated") {
@@ -145,33 +147,60 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
       } else {
         returnData = await callback(data).unwrap();
       }
-      if (returnData.statusCode === 1) {
-        toast.error(returnData.message);
+      if (returnData.statusCode === 0) {
+        if (nextProcess == "new") {
+          setId(0);
+          setDocId("New");
+          syncFormWithDb(undefined);
+        } else {
+          onClose();
+        }
+        Swal.fire({
+          title: text + "  " + "Successfully",
+          icon: "success",
+          draggable: true,
+          timer: 1000,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          },
+        });
       } else {
-        toast.success(text + "Successfully");
-        setId("");
-        syncFormWithDb(undefined);
+        toast.error(returnData?.message);
       }
     } catch (error) {
       console.log("handle");
     }
   };
 
+  const validateData = (data) => {
+    if (fabricInwardItems?.length > 0 && data.storeId) {
+      return true;
+    }
+    return false;
+  };
+
   const saveData = (nextProcess) => {
+    if (!validateData(data)) {
+      toast.info("Please fill all required fields...!", {
+        position: "top-center",
+      });
+      return;
+    }
     if (!window.confirm("Are you sure save the details ...?")) {
       return;
     }
     if (nextProcess == "draft" && !id) {
       handleSubmitCustom(
         addData,
-        (data = { ...data, draftSave: true }),
+        { ...data, draftSave: true },
         "Added",
         nextProcess
       );
     } else if (id && nextProcess == "draft") {
       handleSubmitCustom(
         updateData,
-        (data = { ...data, draftSave: true }),
+        { ...data, draftSave: true },
         "Updated",
         nextProcess
       );
@@ -181,6 +210,14 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
       handleSubmitCustom(addData, data, "Added", nextProcess);
     }
   };
+
+  useEffect(() => {
+    if (id) {
+      syncFormWithDb(singleData?.data);
+    } else {
+      syncFormWithDb(undefined);
+    }
+  }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
   return (
     <>
@@ -204,7 +241,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
               <ReusableInput label="Doc. Id" readOnly value={docId} />
               <ReusableInput
                 label="Doc Date"
-                value={date}
+                value={docDate}
                 type={"date"}
                 required={true}
                 readOnly={true}
@@ -213,10 +250,13 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
               <DropdownInput
                 name="Inward Type"
                 options={poTypes}
-                value={transType}
-                setValue={setTransType}
+                value={inwardType}
+                setValue={setInwardType}
                 required={true}
-                readOnly={readOnly}
+                readOnly={id}
+                beforeChange={() => {
+                  setFabricInwardItems([]);
+                }}
               />
             </div>
           </div>
@@ -285,7 +325,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                     setStoreId("");
                   }}
                   required={true}
-                // readOnly={ readOnly}
+                  readOnly={readOnly}
                 />
                 <DropdownInput
                   name="Store"
@@ -299,7 +339,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                   value={storeId}
                   setValue={setStoreId}
                   required={true}
-                // readOnly={id || readOnly}
+                  readOnly={readOnly}
                 />
               </div>
             </div>
@@ -307,23 +347,24 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
         </div>
         <fieldset>
           {
-            transType.toLowerCase().includes("fabric") ? (
+            inwardType.toLowerCase().includes("fabric") ? (
               <FabricItems
                 id={id}
-                transType={transType}
+                inwardType={inwardType}
                 params={params}
-                fabricItems={fabricItems}
-                setFabricItems={setFabricItems}
+                fabricInwardItems={fabricInwardItems}
+                setFabricInwardItems={setFabricInwardItems}
                 readOnly={readOnly}
-                isSupplierOutside={isSupplierOutside()}
               />
             ) : (
-              //   <AccessoryPoItems
-              //     poItems={fabricItems}
-              //     setPoItems={setFabricItems}
-              //     //  id={id} transType={transType}  params={params}  readOnly={readOnly} isSupplierOutside={isSupplierOutside()}
-              //   />
-              <></>
+              <AccessoryInwardItems
+                id={id}
+                inwardType={inwardType}
+                params={params}
+                fabricInwardItems={fabricInwardItems}
+                setFabricInwardItems={setFabricInwardItems}
+                readOnly={readOnly}
+              />
             )}
         </fieldset>
 
@@ -334,27 +375,29 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
             </h2>
             <textarea
               readOnly={readOnly}
-              value={term}
+              value={vehicleNo}
               onChange={(e) => {
-                setTerm(e.target.value);
+                setVehicleNo(e.target.value);
               }}
               className="w-full h-14 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
               placeholder="Vehicle Details..."
+              disabled={readOnly}
             />
           </div>
 
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
             <h2 className="font-medium text-slate-700 mb-2 text-base">
-              Remarks
+              setRemarks
             </h2>
             <textarea
               readOnly={readOnly}
-              value={notes}
+              value={remarks}
               onChange={(e) => {
-                setNotes(e.target.value);
+                setRemarks(e.target.value);
               }}
               className="w-full h-14 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-              placeholder="Additional notes..."
+              placeholder="Additional remarks..."
+              disabled={readOnly}
             />
           </div>
 
@@ -365,7 +408,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
 
             <div className="space-y-1.5">
               <div className="flex justify-between py-1 text-sm">
-                <span className="text-slate-600">Total Qty</span>
+                <span className="text-slate-600">{inwardType === "Fabric" ? "Total Pcs" : "Total Qty"}</span>
                 <span className="font-medium">
                   {parseInt(getTotalQty()).toFixed(2)}
                 </span>

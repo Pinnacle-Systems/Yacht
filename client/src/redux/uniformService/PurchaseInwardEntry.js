@@ -19,7 +19,7 @@ const purchaseInwardEntryApi = createApi({
             headers: {
               "Content-type": "application/json; charset=UTF-8",
             },
-            params
+            params,
           };
         }
         return {
@@ -28,7 +28,7 @@ const purchaseInwardEntryApi = createApi({
           headers: {
             "Content-type": "application/json; charset=UTF-8",
           },
-          params
+          params,
         };
       },
       providesTags: ["purchaseInwardEntry"],
@@ -56,8 +56,8 @@ const purchaseInwardEntryApi = createApi({
       invalidatesTags: ["purchaseInwardEntry"],
     }),
     updatePurchaseInwardEntry: builder.mutation({
-      query: ({id,body}) => {
-        
+      query: (payload) => {
+        const { id, ...body } = payload;
         return {
           url: `${PURCHASE_INWARD_ENTRY_API}/${id}`,
           method: "PUT",
