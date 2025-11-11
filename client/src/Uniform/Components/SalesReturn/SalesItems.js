@@ -268,8 +268,8 @@ export default function SalesItems({
 
   return (
     <>
-      <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[350px] overflow-auto">
-        <div className="flex items-center gap-4">
+      <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[450px] overflow-auto">
+        <div className="flex items-center gap-4 sticky top-0 bg-white z-30 mt-2">
           <ReusableInput
             label="Style / Barcode No"
             value={styleNo}
@@ -287,9 +287,9 @@ export default function SalesItems({
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">Return Details</h2>
         </div>
-        <div className={`w-full py-1`}>
+        <div className={`w-full max-h-[300px] overflow-y-auto  my-1`}>
           <table className="w-full border-collapse table-fixed">
-            <thead className="bg-gray-200 text-gray-800">
+            <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
                 <th
                   className={`w-12 px-2 py-2 text-center font-medium text-[13px]`}
