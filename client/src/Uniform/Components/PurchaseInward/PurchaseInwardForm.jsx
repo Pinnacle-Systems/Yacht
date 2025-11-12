@@ -24,7 +24,10 @@ import FabricItems from "./FabricItems";
 import AccessoryInwardItems from "./AccessoryItems";
 import { useAddPurchaseInwardEntryMutation, useDeletePurchaseInwardEntryMutation, useGetPurchaseInwardEntryByIdQuery, useUpdatePurchaseInwardEntryMutation } from "../../../redux/uniformService/PurchaseInwardEntry";
 import Swal from "sweetalert2";
-
+import Modal from "../../../UiComponents/Modal";
+import { PDFViewer } from "@react-pdf/renderer";
+import PDF from "./PrintFormat/PDF";
+import tw from "../../../Utils/tailwind-react-pdf";
 const PurchaseInwardForm = ({ onClose, id, setId }) => {
   const [docId, setDocId] = useState("");
   const [readOnly, setReadOnly] = useState("");
@@ -41,7 +44,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
   const [docDate, setDocDate] = useState("")
   const { branchId, companyId, userId, finYearId } = getCommonParams();
   const branchIdFromApi = useRef(branchId);
-
+  const [pdfOpen, setPdfOpen] = useState(false);
   const params = {
     branchId,
     companyId,
@@ -221,9 +224,18 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
 
   return (
     <>
+      <Modal
+        isOpen={pdfOpen}
+        onClose={() => setPdfOpen(false)}
+        widthClass={"w-[90%] h-[90%]"}
+      >
+        <PDFViewer style={tw("w-full h-full")}>
+          <PDF singleData={singleData?.data} />
+        </PDFViewer>
+      </Modal>
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800">Purchase Inward</h1>
+          <h1 className="text-xl font-bold text-gray-800">Purchase Inward</h1>
           <button
             onClick={onClose}
             className="text-indigo-600 hover:text-indigo-700"
@@ -238,9 +250,9 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
             <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
             <div className="grid grid-cols-2 gap-1">
-              <ReusableInput label="Doc. Id" readOnly value={docId} />
+              <ReusableInput label="Purchase Inward No" readOnly value={docId} />
               <ReusableInput
-                label="Doc Date"
+                label="Purchase Inward Date"
                 value={docDate}
                 type={"date"}
                 required={true}
@@ -265,7 +277,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
             <h2 className="font-medium text-slate-700 mb-2">Supplier Details</h2>
             <div className="grid grid-cols-2 gap-1">
               <TextInput
-                name={"Dc No."}
+                name={"Dc No"}
                 value={dcNo}
                 setValue={setDcNo}
                 readOnly={readOnly}
@@ -371,7 +383,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
         <div className="grid grid-cols-3 gap-3">
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
             <h2 className="font-medium text-slate-700 mb-2 text-base">
-              Vehicle No.
+              Vehicle No
             </h2>
             <textarea
               readOnly={readOnly}
@@ -379,7 +391,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
               onChange={(e) => {
                 setVehicleNo(e.target.value);
               }}
-              className="w-full h-14 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+              className="w-full overflow-auto h-10 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
               placeholder="Vehicle Details..."
               disabled={readOnly}
             />
@@ -387,7 +399,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
 
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
             <h2 className="font-medium text-slate-700 mb-2 text-base">
-              setRemarks
+              Remarks
             </h2>
             <textarea
               readOnly={readOnly}
@@ -395,7 +407,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
               onChange={(e) => {
                 setRemarks(e.target.value);
               }}
-              className="w-full h-14 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+              className="w-full  overflow-auto h-10 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
               placeholder="Additional remarks..."
               disabled={readOnly}
             />
@@ -408,7 +420,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
 
             <div className="space-y-1.5">
               <div className="flex justify-between py-1 text-sm">
-                <span className="text-slate-600">{inwardType === "Fabric" ? "Total Pcs" : "Total Qty"}</span>
+                <span className="text-slate-600">{inwardType === "Fabric" ? "Total Rolls" : "Total Qty"}</span>
                 <span className="font-medium">
                   {parseInt(getTotalQty()).toFixed(2)}
                 </span>
@@ -458,7 +470,13 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
               <FaWhatsapp className="w-4 h-4 mr-2" />
               WhatsApp
             </button>
-            <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm">
+            <button
+              className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
+              disabled={!id}
+              onClick={() => {
+                setPdfOpen(true);
+              }}
+            >
               <FiPrinter className="w-4 h-4 mr-2" />
               Print
             </button>

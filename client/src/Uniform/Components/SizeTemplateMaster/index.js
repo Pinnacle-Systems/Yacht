@@ -296,7 +296,7 @@ export default function Form() {
   return (
     <div onKeyDown={handleKeyDown} className="p-1">
       <div className="w-full flex bg-white justify-between p-1 items-center">
-        <h5 className="text-2xl font-bold font-segoe text-gray-800">
+        <h5 className="text-xl font-bold font-segoe text-gray-800">
           Size Template Master
         </h5>
         <div className="flex items-center">

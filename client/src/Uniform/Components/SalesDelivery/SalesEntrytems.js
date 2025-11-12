@@ -62,6 +62,7 @@ export default function BillItems({
       amount: "",
       styleItemId: "",
       colorId: "",
+      selected: false,
     };
     setSalesEntryItems([...salesEntryItems, newRow]);
   };
@@ -82,7 +83,12 @@ export default function BillItems({
     });
   };
 
-  const handleRightClick = (event, rowIndex, type) => {
+  const deleteSelectedRows = () => {
+    setSalesEntryItems((rows) => rows.filter((r) => !r.selected));
+    setContextMenu(null);
+  };
+
+  const handleRightClick = (event, rowIndex = 0, type) => {
     event.preventDefault();
     setContextMenu({
       mouseX: event.clientX,
@@ -120,6 +126,7 @@ export default function BillItems({
               amount: "",
               styleItemId: "",
               colorId: "",
+              selected: false,
             })),
           ];
         }
@@ -144,6 +151,7 @@ export default function BillItems({
           amount: "",
           styleItemId: "",
           colorId: "",
+          selected: false,
         }))
       );
     }
@@ -269,6 +277,7 @@ export default function BillItems({
               discountValue: "",
               styleItemId: "",
               colorId: "",
+              selected: false,
             });
           }
 
@@ -335,6 +344,7 @@ export default function BillItems({
             autoFocus={true}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
+                e.stopPropagation();
                 handleAddRow();
               }
             }}
@@ -445,6 +455,31 @@ export default function BillItems({
                 >
                   Remarks
                 </th>
+                <th className="w-20 px-1 py-1 justify-center font-medium text-[13px]">
+                  <tr className="flex items-center justify-center">Select</tr>
+                  <tr className="flex items-center justify-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={
+                        salesEntryItems.length > 0 &&
+                        salesEntryItems.every((row) => row.selected)
+                      }
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setSalesEntryItems((prev) =>
+                          prev.map((row) => ({ ...row, selected: checked }))
+                        );
+                      }}
+                      onContextMenu={(e) => {
+                        if (!readOnly) {
+                          handleRightClick(e, "notes");
+                        }
+                      }}
+                      disabled={readOnly}
+                      tabIndex={-1}
+                    />
+                  </tr>
+                </th>
                 <th
                   className={`w-12 px-3 py-2 text-center font-medium text-[13px] `}
                 ></th>
@@ -554,7 +589,7 @@ export default function BillItems({
                           }
                         />
                       ) : (
-                         <span className="text-xs pl-1">No Image</span>
+                        <span className="text-xs pl-1">No Image</span>
                       )}
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
@@ -857,13 +892,29 @@ export default function BillItems({
                         disabled={readOnly}
                       />
                     </td>
-                    <td className="w-2 border border-gray-300">
+                    <td className="border-blue-gray-200 text-[11px]  border border-gray-300 py-0.5 text-right">
                       <input
+                        type="checkbox"
+                        checked={row.selected || false}
+                        disabled={readOnly}
+                        onChange={(e) =>
+                          handleInputChange(e.target.checked, index, "selected")
+                        }
+                        className="justify-center flex items-center mx-auto w-full"
                         onContextMenu={(e) => {
                           if (!readOnly) {
                             handleRightClick(e, index, "notes");
                           }
                         }}
+                      />
+                    </td>
+                    <td className="w-2 border border-gray-300">
+                      <input
+                        // onContextMenu={(e) => {
+                        //   if (!readOnly) {
+                        //     handleRightClick(e, index, "notes");
+                        //   }
+                        // }}
                         className="w-full "
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
@@ -911,7 +962,7 @@ export default function BillItems({
                     )
                     .toFixed(2)}
                 </td>
-                <td className="border border-gray-300" colSpan={2}></td>
+                <td className="border border-gray-300" colSpan={3}></td>
               </tr>
             </tfoot>
           </table>
@@ -955,13 +1006,14 @@ export default function BillItems({
                 <button
                   className=" text-black text-[12px] text-left rounded px-1"
                   onClick={() => {
-                    deleteRow(contextMenu.rowId);
+                    // deleteRow(contextMenu.rowId);
+                    deleteSelectedRows();
                     handleCloseContextMenu();
                   }}
                 >
                   Delete
                 </button>
-                <button
+                {/* <button
                   className=" text-black text-[12px] text-left rounded px-1"
                   onClick={() => {
                     handleDeleteAllRows();
@@ -969,7 +1021,7 @@ export default function BillItems({
                   }}
                 >
                   Delete All
-                </button>
+                </button> */}
               </div>
             </div>
           )}

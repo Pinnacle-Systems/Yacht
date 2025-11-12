@@ -184,13 +184,13 @@ const OpeningStockFormReport = ({
                     <div className="">S No</div>
                   </th>
 
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Doc No</div>
+                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
+                    <div>Opening Stock No</div>
                   </th>
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Doc Date</div>
+                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
+                    <div>Opening Stock Date</div>
                   </th>
-                  <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                  <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Store</div>
                   </th>
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
@@ -201,7 +201,7 @@ const OpeningStockFormReport = ({
                   <th className=" px-1  font-medium text-[13px] justify-end  text-gray-900  text-center  w-12">
                     <div className="h-3"></div>
                   </th>
-                  <th className=" px-1 font-medium text-[13px] border  text-gray-900  text-center w-32">
+                  <th className=" px-1 font-medium text-[13px] border  text-gray-900  text-center w-40">
                     <input
                       type="text"
                       className="text-black h-5   w-full  px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -212,7 +212,7 @@ const OpeningStockFormReport = ({
                       }}
                     />
                   </th>
-                  <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
+                  <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-40">
                     <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -223,7 +223,7 @@ const OpeningStockFormReport = ({
                       }}
                     />
                   </th>
-                  <th className="w-96  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                  <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
                     <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -257,26 +257,26 @@ const OpeningStockFormReport = ({
                         }}
                         tabIndex={0}
                         key={dataObj.id}
-                        className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${
+                        className={`hover:bg-gray-50 transition-colors border-b  border-gray-200 text-[12px] ${
                           index % 2 === 0 ? "bg-white" : "bg-gray-100"
                         }`}
                         onClick={() => onClick(dataObj.id)}
                       >
                         <td className="text-center ">{index + 1}</td>
 
-                        <td className="py-1.5 text-center">{dataObj.docId} </td>
+                        <td className="py-1.5 text-left px-4">{dataObj.docId} </td>
 
-                        <td className="py-1.5 text-center">
+                        <td className="py-1.5 text-left px-4">
                           {dataObj?.docDate
                             ? getDateFromDateTimeToDisplay(dataObj.docDate)
                             : ""}
                         </td>
-                        <td className="py-1.5 text-center">
+                        <td className="py-1.5 text-left px-4">
                           {" "}
                           {dataObj?.Store?.storeName}
                         </td>
                         {rowActions && (
-                          <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
+                          <td className=" w-[30px] border-gray-200 gap-1 px-2  justify-end">
                             <div className="flex">
                               {onView && (
                                 <button

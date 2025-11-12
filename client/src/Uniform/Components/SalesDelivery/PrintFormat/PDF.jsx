@@ -401,7 +401,12 @@ const PDF = ({ singleData, allData }) => {
                         </View>
                         {/*  Grouped Rows */}
 
-                        {(singleData?.SalesEntryItems || []).map((item, index) => {
+                        {(singleData?.SalesEntryItems || []).slice().sort((a, b) =>
+                            String(a?.styleNo ?? "").localeCompare(String(b?.styleNo ?? ""), undefined, {
+                                numeric: true,
+                                sensitivity: "base",
+                            })
+                        ).map((item, index) => {
                             const gross = item.price * item.qty;
                             return (
                                 <View

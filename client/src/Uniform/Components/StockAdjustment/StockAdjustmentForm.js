@@ -178,7 +178,7 @@ export default function StockAdjustmentForm({
     <div className="">
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800">Stock Adjustment</h1>
+          <h1 className="text-xl font-bold text-gray-800">Stock Adjustment</h1>
           <button
             onClick={onClose}
             className="text-indigo-600 hover:text-indigo-700"
@@ -193,9 +193,9 @@ export default function StockAdjustmentForm({
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
             <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
             <div className="grid grid-cols-2 gap-1">
-              <ReusableInput label="Doc.Id" readOnly value={docId} />
+              <ReusableInput label="Stock Adjustment No" readOnly value={docId} />
               <ReusableInput
-                label="Doc Date"
+                label="Stock Adjustment Date"
                 value={docDate}
                 type={"date"}
                 required={true}
