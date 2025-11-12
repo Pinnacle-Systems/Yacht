@@ -144,6 +144,11 @@ const FabricInwardItems = ({
                   Style No
                 </th>
                 <th
+                  className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Style
+                </th>
+                <th
                   className={`w-64 px-4 py-2 text-center font-medium text-[13px]`}
                 >
                   Fabric
@@ -153,11 +158,6 @@ const FabricInwardItems = ({
                 >
                   Img
                 </th>{" "}
-                <th
-                  className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
-                >
-                  Style
-                </th>
                 <th
                   className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
                 >
@@ -218,6 +218,43 @@ const FabricInwardItems = ({
                       <select
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
+                            handleInputChange("", index, "styleItemId");
+                          }
+                        }}
+                        tabIndex={"0"}
+                        disabled={readOnly}
+                        className="text-left w-full rounded py-1 table-data-input"
+                        value={row.styleItemId}
+                        onChange={(e) =>
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "styleItemId"
+                          )
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "styleItemId"
+                          );
+                        }}
+                      >
+                        <option></option>
+                        {(id
+                          ? styleItemList?.data
+                          : styleItemList?.data?.filter((item) => item.active)
+                        )?.map((blend) => (
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px] ">
+                      <select
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
                             handleInputChange("", index, "fabricId");
                           }
                         }}
@@ -260,45 +297,8 @@ const FabricInwardItems = ({
                           }
                         />
                       ) : (
-                        <span className="text-xs pl-1">No Image</span>
+                        <span className="text-xs pl-1 text-gray-500">No Image</span>
                       )}
-                    </td>
-                    <td className="py-0.5 border border-gray-300 text-[11px] ">
-                      <select
-                        onKeyDown={(e) => {
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "styleItemId");
-                          }
-                        }}
-                        tabIndex={"0"}
-                        disabled={readOnly}
-                        className="text-left w-full rounded py-1 table-data-input"
-                        value={row.styleItemId}
-                        onChange={(e) =>
-                          handleInputChange(
-                            e.target.value,
-                            index,
-                            "styleItemId"
-                          )
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(
-                            e.target.value,
-                            index,
-                            "styleItemId"
-                          );
-                        }}
-                      >
-                        <option></option>
-                        {(id
-                          ? styleItemList?.data
-                          : styleItemList?.data?.filter((item) => item.active)
-                        )?.map((blend) => (
-                          <option value={blend.id} key={blend.id}>
-                            {blend?.name}
-                          </option>
-                        ))}
-                      </select>
                     </td>
 
                     <td className="py-0.5 border border-gray-300 text-[11px]">

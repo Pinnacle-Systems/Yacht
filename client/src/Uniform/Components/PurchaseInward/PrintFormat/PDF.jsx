@@ -1,10 +1,11 @@
 import { Document, StyleSheet, Text, View } from "@react-pdf/renderer";
-import  { useEffect } from "react";
+import { useEffect } from "react";
 import PageWrapper from "../../../../Utils/PageWrapper";
 import tw from "../../../../Utils/tailwind-react-pdf";
 import Header from "../../../../Utils/Header";
+import { findFromList } from "../../../../Utils/helper";
 
-const PDF = ({ singleData }) => {
+const PDF = ({ singleData, branchList }) => {
     const styles = StyleSheet.create({
         page: { padding: 5 },
 
@@ -101,35 +102,9 @@ const PDF = ({ singleData }) => {
         },
     });
     useEffect(() => {
-        console.log("Single Data Fetched", singleData,)
+        console.log("Single Data Fetched", singleData)
     }, [singleData])
 
-    let overallGrandTotal = 0;
-
-    const calculateNetAmount = (item) => {
-        const qty = parseFloat(item.qty) || 0;
-        const price = parseFloat(item.price) || 0;
-        const taxPercent = parseFloat(item.taxPercent) || 0;
-        const discountValue = parseFloat(item.discountValue) || 0;
-        const discountType = item.discountType || "";
-
-        // Gross amount
-        const grossAmount = qty * price;
-
-        // GST Subtracted
-        const amountAfterGST = grossAmount - (grossAmount * taxPercent) / 100;
-
-        // Apply Discount
-        let discountAmt = 0;
-        if (discountType === "Flat") discountAmt = discountValue;
-        else if (discountType === "Percent")
-            discountAmt = (amountAfterGST * discountValue) / 100;
-
-        // Final net amount
-        const netAmount = amountAfterGST - discountAmt;
-
-        return netAmount.toFixed(2);
-    };
     return (
         <Document>
             <PageWrapper heading={"Sales Delivery"} singleData={singleData} header={false}>
@@ -159,7 +134,7 @@ const PDF = ({ singleData }) => {
                                         { fontWeight: 900, fontFamily: "Times-Bold" },
                                     ]}
                                 >
-                                    Sales No
+                                    Inward No
                                 </Text>
                                 <Text
                                     style={[
@@ -167,7 +142,7 @@ const PDF = ({ singleData }) => {
                                         {
                                             fontWeight: 900,
                                             fontFamily: "Times-Bold",
-                                            marginLeft: 4,
+                                            marginLeft: 7,
                                         },
                                     ]}
                                 >
@@ -184,7 +159,7 @@ const PDF = ({ singleData }) => {
                                         { fontWeight: 900, fontFamily: "Times-Bold" },
                                     ]}
                                 >
-                                    Date
+                                    Inward Date
                                 </Text>
                                 <Text
                                     style={[
@@ -192,7 +167,7 @@ const PDF = ({ singleData }) => {
                                         {
                                             fontWeight: 900,
                                             fontFamily: "Times-Bold",
-                                            marginLeft: 19,
+                                            marginLeft: 0,
                                         },
                                     ]}
                                 >
@@ -219,14 +194,15 @@ const PDF = ({ singleData }) => {
                                         {
                                             fontWeight: 900,
                                             fontFamily: "Times-Bold",
-                                            marginLeft: 3,
+                                            marginLeft: 15,
                                         },
                                     ]}
                                 >
                                     :
                                 </Text>
                                 <Text style={tw("text-xs ml-2")}>
-                                    {singleData?.Location?.branchName || ""}
+                                    {singleData?.Branch?.branchName || ""}
+                                    {findFromList(singleData?.locationId, branchList?.data, "name")}
                                 </Text>
                             </View>
                             <View style={tw("flex flex-row gap-x-2")}>
@@ -244,7 +220,7 @@ const PDF = ({ singleData }) => {
                                         {
                                             fontWeight: 900,
                                             fontFamily: "Times-Bold",
-                                            marginLeft: 17,
+                                            marginLeft: 29,
                                         },
                                     ]}
                                 >
@@ -265,7 +241,7 @@ const PDF = ({ singleData }) => {
                                     { fontWeight: 900, fontFamily: "Times-Bold" },
                                 ]}
                             >
-                                Customer Details
+                                Supplier Details
                             </Text>
                             {/* Customer Name */}
                             <View style={tw("flex flex-row gap-x-2")}>
@@ -275,7 +251,7 @@ const PDF = ({ singleData }) => {
                                         { fontWeight: 900, fontFamily: "Times-Bold" },
                                     ]}
                                 >
-                                    Customer Name
+                                    Supplier Name
                                 </Text>
                                 <Text
                                     style={[
@@ -283,7 +259,7 @@ const PDF = ({ singleData }) => {
                                         {
                                             fontWeight: 900,
                                             fontFamily: "Times-Bold",
-                                            marginLeft: 3,
+                                            marginLeft: 1,
                                         },
                                     ]}
                                 >
@@ -291,8 +267,8 @@ const PDF = ({ singleData }) => {
                                 </Text>
                                 <Text style={tw("text-xs ml-1")}>
                                     {" "}
-                                    {singleData?.Customer?.name
-                                        ? singleData.Customer.name
+                                    {singleData?.Supplier?.name
+                                        ? singleData.Supplier.name
                                             .toLowerCase()
                                             .replace(/\b\w/g, (char) => char.toUpperCase())
                                         : ""}
@@ -306,7 +282,7 @@ const PDF = ({ singleData }) => {
                                         { fontWeight: 900, fontFamily: "Times-Bold" },
                                     ]}
                                 >
-                                    Contact Number
+                                    DC No
                                 </Text>
                                 <Text
                                     style={[
@@ -314,14 +290,14 @@ const PDF = ({ singleData }) => {
                                         {
                                             fontWeight: 900,
                                             fontFamily: "Times-Bold",
-                                            marginLeft: 2,
+                                            marginLeft: 32,
                                         },
                                     ]}
                                 >
                                     :
                                 </Text>
                                 <Text style={tw("text-xs ml-2")}>
-                                    {singleData?.Customer?.contactNumber || ""}
+                                    {singleData?.dcNo || ""}
                                 </Text>
                             </View>
                             {/*Customer Address */}
@@ -332,7 +308,7 @@ const PDF = ({ singleData }) => {
                                         { fontWeight: 900, fontFamily: "Times-Bold" },
                                     ]}
                                 >
-                                    Contact Address
+                                    DC Date
                                 </Text>
                                 <Text
                                     style={[
@@ -340,14 +316,41 @@ const PDF = ({ singleData }) => {
                                         {
                                             fontWeight: 900,
                                             fontFamily: "Times-Bold",
-                                            marginLeft: 4,
+                                            marginLeft: 25,
                                         },
                                     ]}
                                 >
                                     :
                                 </Text>
                                 <Text style={tw("text-xs ml-2")}>
-                                    {singleData?.Destination?.name}
+                                    {singleData?.dcDate
+                                        ? new Date(singleData.dcDate).toLocaleDateString()
+                                        : ""}
+                                </Text>
+                            </View>
+                            <View style={tw("flex flex-row gap-x-2")}>
+                                <Text
+                                    style={[
+                                        tw("text-xs font-bold"),
+                                        { fontWeight: 900, fontFamily: "Times-Bold" },
+                                    ]}
+                                >
+                                    Vehicle No
+                                </Text>
+                                <Text
+                                    style={[
+                                        tw("text-xs font-bold "),
+                                        {
+                                            fontWeight: 900,
+                                            fontFamily: "Times-Bold",
+                                            marginLeft: 18,
+                                        },
+                                    ]}
+                                >
+                                    :
+                                </Text>
+                                <Text style={tw("text-xs ml-2")}>
+                                    {singleData?.vehicleNo || ""}
                                 </Text>
                             </View>
                         </View>
@@ -357,42 +360,74 @@ const PDF = ({ singleData }) => {
                     <View style={{ height: 10 }} fixed />
                     <View style={[styles.table]}>
                         {/* Table Header */}
-                        <View fixed style={styles.tableHeader}>
-                            {[
-                                { label: "S.No", flex: 0.5 },
-                                { label: "Style No", flex: 1 },
-                                { label: "Barcode ", flex: 1 },
-                                { label: "Style", flex: 2 },
-                                { label: "Fabric", flex: 2 },
-                                { label: "Size", flex: 0.8 },
-                                { label: "Qty", flex: 0.8 },
-                                { label: "Price", flex: 1 },
-                                { label: "Tax", flex: 0.8 },
-                                { label: "Disc Type", flex: 1 },
-                                { label: "Discount", flex: 1 },
-                                { label: "Gross Amount", flex: 1.3 },
-                                { label: "Net Amount", flex: 1.3 },
-                            ].map((header, index) => (
-                                <Text
-                                    key={index}
-                                    style={[
-                                        styles.headerCell,
-                                        {
-                                            flex: header.flex,
-                                            textAlign: "center",
-                                            fontSize: 8,
-                                            fontWeight: "bold",
-                                        },
-                                        index === header.length - 1 && styles.lastColumn,
-                                    ]}
-                                >
-                                    {header.label}
-                                </Text>
-                            ))}
-                        </View>
+                        {
+                            singleData?.inwardType === "Fabric" && (
+
+                                <View fixed style={styles.tableHeader}>
+                                    {[
+                                        { label: "S.No", flex: 0.5 },
+                                        { label: "Style No", flex: 0.8 },
+                                        { label: "Style", flex: 2.5 },
+                                        { label: "Fabric", flex: 2 },
+                                        { label: "Color", flex: 2 },
+                                        { label: "Width ", flex: 0.8 },
+                                        { label: "Meter", flex: 0.8 },
+                                        { label: "No Of Rolls", flex: 1 },
+                                    ].map((header, index) => (
+                                        <Text
+                                            key={index}
+                                            style={[
+                                                styles.headerCell,
+                                                {
+                                                    flex: header.flex,
+                                                    textAlign: "center",
+                                                    fontSize: 8,
+                                                    fontWeight: "bold",
+                                                },
+                                                index === header.length - 1 && styles.lastColumn,
+                                            ]}
+                                        >
+                                            {header.label}
+                                        </Text>
+                                    ))}
+                                </View>
+                            )
+                        }
+                        {
+                            singleData?.inwardType === "Accessory" && (
+
+                                <View fixed style={styles.tableHeader}>
+                                    {[
+                                        { label: "S.No", flex: 0.5 },
+                                        { label: "Accessory Name", flex: 2.5 },
+                                        { label: "Accessory Group Name", flex: 2.5 },
+                                        { label: "Color", flex: 2 },
+                                        { label: "Size", flex: 1 },
+                                        { label: "Uom ", flex: 1 },
+                                        { label: "Quantity", flex: 1 },
+                                    ].map((header, index) => (
+                                        <Text
+                                            key={index}
+                                            style={[
+                                                styles.headerCell,
+                                                {
+                                                    flex: header.flex,
+                                                    textAlign: "center",
+                                                    fontSize: 8,
+                                                    fontWeight: "bold",
+                                                },
+                                                index === header.length - 1 && styles.lastColumn,
+                                            ]}
+                                        >
+                                            {header.label}
+                                        </Text>
+                                    ))}
+                                </View>
+                            )
+                        }
                         {/*  Grouped Rows */}
 
-                        {(singleData?.SalesEntryItems || []).map((item, index) => {
+                        {(singleData?.fabricInwardItems || []).map((item, index) => {
                             const gross = item.price * item.qty;
                             return (
                                 <View
@@ -410,95 +445,167 @@ const PDF = ({ singleData }) => {
                                     <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7, textAlign: "center" }]}>
                                         {index + 1}
                                     </Text>
-                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
-                                        {item?.styleNo || "-"}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
-                                        {item?.barcode || "-"}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
-                                        {item?.StyleItem?.name || "-"}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
-                                        {item?.Fabric?.name || "-"}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7 }]}>
-                                        {item.Size?.name || "-"}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7, textAlign: "right" }]}>
-                                        {item.qty || 0}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7, textAlign: "right" }]}>
-                                        {item.price?.toFixed(2) || "0.00"}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7, textAlign: "right" }]}>
-                                        {item.taxPercent || 0}%
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
-                                        {item.discountType || "-"}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7, textAlign: "right" }]}>
-                                        {item.discountValue || 0}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1.3, fontSize: 7, textAlign: "right" }]}>
-                                        {gross.toFixed(2)}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1.3, fontSize: 7, textAlign: "right" }]}>
-                                        {calculateNetAmount(item)}
-                                    </Text>
+                                    {
+                                        singleData?.inwardType === "Fabric" && (
+                                            <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7 }]}>
+                                                {item?.styleNo || ""}
+                                            </Text>
+                                        )
+
+                                    }
+                                    {
+                                        singleData?.inwardType === "Fabric" && (
+
+                                            <Text style={[styles.tableCell, { flex: 2.5, fontSize: 7 }]}>
+                                                {item?.StyleItem?.name || ""}
+                                            </Text>
+                                        )}
+                                    {
+                                        singleData?.inwardType === "Fabric" && (
+
+                                            <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
+                                                {item?.Fabric?.name || ""}
+                                            </Text>
+                                        )}
+                                    {
+                                        singleData?.inwardType === "Accessory" && (
+
+                                            <Text style={[styles.tableCell, { flex: 2.5, fontSize: 7 }]}>
+                                                {item?.Accessory?.name || ""}
+                                            </Text>
+                                        )}
+                                    {
+                                        singleData?.inwardType === "Accessory" && (
+
+                                            <Text style={[styles.tableCell, { flex: 2.5, fontSize: 7 }]}>
+                                                {item?.AccessoryGroup?.name || ""}
+                                            </Text>
+                                        )}
+                                    {
+                                        singleData?.inwardType === "Fabric" && (
+
+                                            <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
+                                                {item?.Color?.name || ""}
+                                            </Text>
+                                        )}
+                                    {
+                                        singleData?.inwardType === "Accessory" && (
+
+                                            <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
+                                                {item?.Color?.name || ""}
+                                            </Text>
+                                        )}
+
+                                    {
+                                        singleData?.inwardType === "Accessory" && (
+
+                                            <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
+                                                {item?.Size?.name || ""}
+                                            </Text>
+                                        )}
+                                    {
+                                        singleData?.inwardType === "Accessory" && (
+
+                                            <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
+                                                {item?.Uom?.name || ""}
+                                            </Text>
+                                        )}
+                                    {
+                                        singleData?.inwardType === "Accessory" && (
+
+                                            <Text style={[styles.tableCell, { flex: 1, fontSize: 7, textAlign: "right" }]}>
+                                                {item?.qty || ""}
+                                            </Text>
+                                        )}
+                                    {
+                                        singleData?.inwardType === "Fabric" && (
+
+                                            <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7, textAlign: "right" }]}>
+                                                {item?.fabWidth || ""}
+                                            </Text>
+                                        )}
+                                    {
+                                        singleData?.inwardType === "Fabric" && (
+
+                                            <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7, textAlign: "right" }]}>
+                                                {item?.fabMeter || ""}
+                                            </Text>
+                                        )}
+                                    {
+                                        singleData?.inwardType === "Fabric" && (
+
+                                            <Text style={[styles.tableCell, { flex: 1, fontSize: 7, textAlign: "right" }]}>
+                                                {item?.noOfPcs || 0}
+                                            </Text>
+                                        )}
                                 </View>
                             );
                         })}
-                        <View style={{
-                            flexDirection: "row",
-                            width: "100%",
-                            borderBottomWidth: 1,
-                            borderBottomColor: "#D1D5DB",
-                            borderLeftColor: "#D1D5DB",
-                            borderLeftWidth: 1
-                        }}>
-                            <Text
-                                style={[
-                                    styles.headerCell,
-                                    {
-                                        flex: 6.7,
-                                        // backgroundColor: "white", borderLeftWidth: 1,
-                                        // borderLeftStyle: "solid",
-                                        // borderColor: "#D1D5DB", borderBottomWidth: 1,
-                                        // borderBottomStyle: "solid",
-                                        fontSize: 8,
-                                        textAlign: "right",
-                                    },
-                                ]}
-                            >
-                                Total
-                            </Text>
-                            <Text style={[styles.headerCell, , { flex: 0.6, fontSize: 8, textAlign: "right" }]}>
-                                {singleData?.SalesEntryItems?.reduce((sum, row) => sum + row.qty, 0)}
-                            </Text>
-                            <Text
-                                style={[
-                                    styles.headerCell,
-                                    {
-                                        flex: 6,
-                                        fontSize: 8,
-                                        textAlign: "right",
-                                        // fontWeight: "bold",
-                                        // backgroundColor: "white",
-                                        // marginTop:-1
-                                        // borderColor: "#D1D5DB", borderBottomWidth: 1,
-                                        // borderBottomStyle: "solid",
-                                    },
-                                ]}
-                            >
-                                {singleData?.SalesEntryItems
-                                    .reduce(
-                                        (sum, row) => sum + parseFloat(calculateNetAmount(row)),
-                                        0
-                                    )
-                                    .toFixed(2)}
-                            </Text>
-                        </View>
+                        {
+                            singleData?.inwardType === "Fabric" && (
+
+                                <View style={{
+                                    flexDirection: "row",
+                                    width: "100%",
+                                    borderBottomWidth: 1,
+                                    borderBottomColor: "#D1D5DB",
+                                    borderLeftColor: "#D1D5DB",
+                                    borderLeftWidth: 1
+                                }}>
+                                    <Text
+                                        style={[
+                                            styles.headerCell,
+                                            {
+                                                flex: 10.5,
+                                                // backgroundColor: "white", borderLeftWidth: 1,
+                                                // borderLeftStyle: "solid",
+                                                // borderColor: "#D1D5DB", borderBottomWidth: 1,
+                                                // borderBottomStyle: "solid",
+                                                fontSize: 8,
+                                                textAlign: "right",
+                                            },
+                                        ]}
+                                    >
+                                        Total
+                                    </Text>
+                                    <Text style={[styles.headerCell, { flex: 1, fontSize: 8, textAlign: "right" }]}>
+                                        {singleData?.fabricInwardItems?.reduce((sum, row) => sum + row.noOfPcs, 0)}
+                                    </Text>
+                                </View>
+                            )}
+                        {
+                            singleData?.inwardType === "Accessory" && (
+
+
+                                <View style={{
+                                    flexDirection: "row",
+                                    width: "100%",
+                                    borderBottomWidth: 1,
+                                    borderBottomColor: "#D1D5DB",
+                                    borderLeftColor: "#D1D5DB",
+                                    borderLeftWidth: 1
+                                }}>
+                                    <Text
+                                        style={[
+                                            styles.headerCell,
+                                            {
+                                                flex: 10.5,
+                                                // backgroundColor: "white", borderLeftWidth: 1,
+                                                // borderLeftStyle: "solid",
+                                                // borderColor: "#D1D5DB", borderBottomWidth: 1,
+                                                // borderBottomStyle: "solid",
+                                                fontSize: 8,
+                                                textAlign: "right",
+                                            },
+                                        ]}
+                                    >
+                                        Total
+                                    </Text>
+                                    <Text style={[styles.headerCell, { flex: 1, fontSize: 8, textAlign: "right" }]}>
+                                        {singleData?.fabricInwardItems?.reduce((sum, row) => sum + row.qty, 0)}
+                                    </Text>
+                                </View>
+                            )}
 
 
                     </View>

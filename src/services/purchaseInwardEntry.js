@@ -162,7 +162,7 @@ async function get(req) {
       String(getDateFromDateTime(item.createdAt)).includes(searchDocDate)
     );
   }
-  if(searchDcDate){
+  if (searchDcDate) {
     data = data?.filter((item) =>
       String(getDateFromDateTime(item.dcDate)).includes(searchDcDate)
     );
@@ -190,7 +190,18 @@ async function getOne(id) {
       Store: {
         select: {
           locationId: true,
+          storeName: true,
         },
+      },
+      Branch: {
+        select: {
+          branchName: true,
+        },
+      },
+      Supplier:{
+        select:{
+          name:true,
+        }
       },
       fabricInwardItems: {
         select: {
@@ -213,6 +224,13 @@ async function getOne(id) {
           uomId: true,
           qty: true,
           price: true,
+          Fabric:true,
+          Color:true,
+          StyleItem:true,
+          Accessory:true,
+          AccessoryGroup:true,
+          Uom:true,
+          Size:true
         },
       },
     },

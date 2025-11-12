@@ -168,7 +168,7 @@ const PDF = ({ singleData, allData }) => {
                                         { fontWeight: 900, fontFamily: "Times-Bold" },
                                     ]}
                                 >
-                                    Sales No
+                                    Delivery No
                                 </Text>
                                 <Text
                                     style={[
@@ -201,7 +201,7 @@ const PDF = ({ singleData, allData }) => {
                                         {
                                             fontWeight: 900,
                                             fontFamily: "Times-Bold",
-                                            marginLeft: 19,
+                                            marginLeft: 32,
                                         },
                                     ]}
                                 >
@@ -228,7 +228,7 @@ const PDF = ({ singleData, allData }) => {
                                         {
                                             fontWeight: 900,
                                             fontFamily: "Times-Bold",
-                                            marginLeft: 3,
+                                            marginLeft: 16,
                                         },
                                     ]}
                                 >
@@ -253,7 +253,7 @@ const PDF = ({ singleData, allData }) => {
                                         {
                                             fontWeight: 900,
                                             fontFamily: "Times-Bold",
-                                            marginLeft: 17,
+                                            marginLeft: 30,
                                         },
                                     ]}
                                 >

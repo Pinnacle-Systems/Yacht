@@ -230,7 +230,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
         widthClass={"w-[90%] h-[90%]"}
       >
         <PDFViewer style={tw("w-full h-full")}>
-          <PDF singleData={singleData?.data} />
+          <PDF singleData={singleData?.data} branchList={branchList}/>
         </PDFViewer>
       </Modal>
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
