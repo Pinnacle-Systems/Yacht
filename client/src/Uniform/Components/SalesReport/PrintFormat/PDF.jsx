@@ -171,7 +171,7 @@ const PDF = ({ allData, customerList }) => {
 
                 <View style={styles.container}>
                     <Text style={tw("mx-auto     text-base text-black")}>Sales Report</Text>
-                    <View style={{ height: 10 }} fixed />
+                    <View style={{ height: 1 }} fixed />
                     <View style={[styles.table,]} wrap>
                         <View fixed style={styles.tableHeader}>
                             {[

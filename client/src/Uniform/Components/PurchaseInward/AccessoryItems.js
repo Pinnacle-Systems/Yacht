@@ -24,7 +24,9 @@ const AccessoryInwardItems = ({
   const [previewImage, setPreviewImage] = useState(null);
   const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: accessoryList } = useGetAccessoryMasterQuery({ params });
-  const { data: accessoryGroupList } = useGetAccessoryGroupMasterQuery({ params });
+  const { data: accessoryGroupList } = useGetAccessoryGroupMasterQuery({
+    params,
+  });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
 
@@ -118,10 +120,12 @@ const AccessoryInwardItems = ({
   return (
     <>
       <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[450px] overflow-auto  w-full">
-        <div className="flex justify-between items-center mb-2">
+        <div className="flex justify-between items-center my-2">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
         </div>
-        <div className={`w-full max-h-[300px] overflow-y-auto  my-1`}>
+        <div
+          className={`w-full min-h-[200px] max-h-[250px] overflow-y-auto  my-2`}
+        >
           <table className="w-full border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
@@ -243,7 +247,9 @@ const AccessoryInwardItems = ({
                         <option></option>
                         {(id
                           ? accessoryGroupList?.data
-                          : accessoryGroupList?.data?.filter((item) => item.active)
+                          : accessoryGroupList?.data?.filter(
+                              (item) => item.active
+                            )
                         )?.map((blend) => (
                           <option value={blend.id} key={blend.id}>
                             {blend?.name}
@@ -390,6 +396,23 @@ const AccessoryInwardItems = ({
                 )
               )}
             </tbody>
+            <tfoot>
+              <tr className="bg-gray-50 h-7 font-medium text-gray-800">
+                <td
+                  className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
+                  colSpan={6}
+                >
+                  Total
+                </td>
+                <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
+                  {fabricInwardItems.reduce(
+                    (sum, row) => sum + (Number(row.qty) || 0),
+                    0
+                  )}
+                </td>
+                <td className="border border-gray-300" colSpan={1}></td>
+              </tr>
+            </tfoot>
           </table>
           {previewImage && (
             <div

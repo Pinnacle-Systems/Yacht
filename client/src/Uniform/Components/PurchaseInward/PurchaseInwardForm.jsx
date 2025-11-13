@@ -144,11 +144,25 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
 
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
+      const formData = new FormData();
+      for (let key in data) {
+        if (key === 'fabricInwardItems') {
+          formData.append(key, JSON.stringify(data[key].map(i => ({ ...i, filePath: (i.filePath instanceof File) ? i.filePath.name : "" }))));
+          data[key].forEach(option => {
+            if (option?.filePath instanceof File) {
+              formData.append('images', option.filePath);
+              console.log(formData?.images, "formData")
+            }
+          });
+        } else {
+          formData.append(key, data[key]);
+        }
+      }
       let returnData;
       if (text === "Updated") {
-        returnData = await callback(data).unwrap();
+        returnData = await callback({ id, body: formData }).unwrap();
       } else {
-        returnData = await callback(data).unwrap();
+        returnData = await callback(formData).unwrap();
       }
       if (returnData.statusCode === 0) {
         if (nextProcess == "new") {
@@ -230,7 +244,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
         widthClass={"w-[90%] h-[90%]"}
       >
         <PDFViewer style={tw("w-full h-full")}>
-          <PDF singleData={singleData?.data} branchList={branchList}/>
+          <PDF singleData={singleData?.data} branchList={branchList} />
         </PDFViewer>
       </Modal>
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
@@ -269,6 +283,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                 beforeChange={() => {
                   setFabricInwardItems([]);
                 }}
+                autoFocus={true}
               />
             </div>
           </div>
@@ -391,7 +406,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
               onChange={(e) => {
                 setVehicleNo(e.target.value);
               }}
-              className="w-full overflow-auto h-10 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+              className="w-full overflow-auto h-14 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
               placeholder="Vehicle Details..."
               disabled={readOnly}
             />
@@ -407,7 +422,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
               onChange={(e) => {
                 setRemarks(e.target.value);
               }}
-              className="w-full  overflow-auto h-10 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+              className="w-full  overflow-auto h-14 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
               placeholder="Additional remarks..."
               disabled={readOnly}
             />
@@ -425,6 +440,17 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                   {parseInt(getTotalQty()).toFixed(2)}
                 </span>
               </div>
+              {inwardType === "Fabric" && (
+                <div className="flex justify-between py-1 text-sm">
+                  <span className="text-slate-600">Total Meters</span>
+                  <span className="font-medium">
+                    {fabricInwardItems.reduce(
+                      (sum, row) => sum + (Number(row.fabMeter) || 0),
+                      0
+                    ).toFixed(2)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>

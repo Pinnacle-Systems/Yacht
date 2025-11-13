@@ -351,13 +351,10 @@ export function getPriceColumnFromPriceRange(priceRange) {
 
 
 export function renameFile(originalFile) {
-
-  console.log(originalFile, "originalFileoriginalFileoriginalFile")
   const file = new File([originalFile], Date.now() + originalFile.name, {
     type: originalFile.type,
     lastModified: originalFile.lastModified,
   });
-  console.log(file, "file")
   return file;
 }
 

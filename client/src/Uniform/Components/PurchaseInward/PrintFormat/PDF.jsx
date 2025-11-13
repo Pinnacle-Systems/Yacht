@@ -34,7 +34,7 @@ const PDF = ({ singleData, branchList }) => {
         },
         divider: {
             borderBottomWidth: 1,
-            borderBottomColor: "#016B65",
+            borderBottomColor: "#9ca3af",
             marginVertical: 4,
         },
 
@@ -49,6 +49,8 @@ const PDF = ({ singleData, branchList }) => {
             display: "table",
             marginTop: 10,
             borderCollapse: "collapse",
+            borderLeftWidth: 0,
+            borderRightWidth: 0,
         },
         tableHeader: {
             flexDirection: "row",
@@ -108,7 +110,7 @@ const PDF = ({ singleData, branchList }) => {
     return (
         <Document>
             <PageWrapper heading={"Sales Delivery"} singleData={singleData} header={false}>
-                <View>
+                <View style={tw("")}>
                     <Header styles={styles} />
                 </View>
                 <View style={styles.container}>
@@ -556,7 +558,7 @@ const PDF = ({ singleData, branchList }) => {
                                         style={[
                                             styles.headerCell,
                                             {
-                                                flex: 10.5,
+                                                flex: 9.6,
                                                 // backgroundColor: "white", borderLeftWidth: 1,
                                                 // borderLeftStyle: "solid",
                                                 // borderColor: "#D1D5DB", borderBottomWidth: 1,
@@ -567,6 +569,9 @@ const PDF = ({ singleData, branchList }) => {
                                         ]}
                                     >
                                         Total
+                                    </Text>
+                                    <Text style={[styles.headerCell, { flex: 0.8, fontSize: 8, textAlign: "right" }]}>
+                                        {singleData?.fabricInwardItems?.reduce((sum, row) => sum + row.fabMeter, 0)}
                                     </Text>
                                     <Text style={[styles.headerCell, { flex: 1, fontSize: 8, textAlign: "right" }]}>
                                         {singleData?.fabricInwardItems?.reduce((sum, row) => sum + row.noOfPcs, 0)}
@@ -589,7 +594,7 @@ const PDF = ({ singleData, branchList }) => {
                                         style={[
                                             styles.headerCell,
                                             {
-                                                flex: 10.5,
+                                                flex: 9.5,
                                                 // backgroundColor: "white", borderLeftWidth: 1,
                                                 // borderLeftStyle: "solid",
                                                 // borderColor: "#D1D5DB", borderBottomWidth: 1,

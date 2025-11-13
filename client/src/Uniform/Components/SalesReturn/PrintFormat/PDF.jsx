@@ -32,7 +32,7 @@ const PDF = ({ singleData }) => {
         },
         divider: {
             borderBottomWidth: 1,
-            borderBottomColor: "#016B65",
+            borderBottomColor: "#9ca3af",
             marginVertical: 4,
         },
 
@@ -330,7 +330,7 @@ const PDF = ({ singleData }) => {
                     </View>
 
                     <View style={styles.divider} />
-                    <View style={{ height: 10 }} fixed />
+                    <View style={{ height: 1 }} fixed />
                     <View style={[styles.table]}>
                         {/* Table Header */}
                         <View fixed style={styles.tableHeader}>

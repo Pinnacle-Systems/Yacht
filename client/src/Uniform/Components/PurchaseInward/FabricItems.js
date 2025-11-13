@@ -5,7 +5,9 @@ import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMaste
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 import secureLocalStorage from "react-secure-storage";
 import { IMAGE_UPLOAD_URL } from "../../../Constants";
-import { findFromList } from "../../../Utils/helper";
+import { findFromList, renameFile } from "../../../Utils/helper";
+import { CLOSE_ICON, VIEW } from "../../../icons";
+import { getImageUrlPath } from "../../../helper";
 
 const FabricInwardItems = ({
   id,
@@ -38,6 +40,7 @@ const FabricInwardItems = ({
       fabWidth: "",
       fabMeter: "",
       noOfPcs: "",
+      filePath: "",
     };
     setFabricInwardItems([...fabricInwardItems, newRow]);
   };
@@ -96,6 +99,7 @@ const FabricInwardItems = ({
               fabWidth: "",
               fabMeter: "",
               noOfPcs: "",
+              filePath: "",
             })),
           ];
         }
@@ -112,24 +116,21 @@ const FabricInwardItems = ({
           fabWidth: "",
           fabMeter: "",
           noOfPcs: "",
+          filePath: "",
         }))
       );
     }
   }, [fabricInwardItems, setFabricInwardItems]);
 
-  function imageFormatter(styleId) {
-    const fileName = findFromList(styleId, styleList?.data, "img");
-    if (!fileName) return "/no-image.png";
-    return `${IMAGE_UPLOAD_URL}${fileName}`;
-  }
-
   return (
     <>
       <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[450px] overflow-auto  w-full">
-        <div className="flex justify-between items-center mb-2">
+        <div className="flex justify-between items-center my-2">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
         </div>
-        <div className={`w-full max-h-[300px] overflow-y-auto  my-1`}>
+        <div
+          className={`w-full min-h-[200px] max-h-[250px] overflow-y-auto  my-2`}
+        >
           <table className="w-full border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
@@ -139,22 +140,22 @@ const FabricInwardItems = ({
                   S.No
                 </th>
                 <th
-                  className={`w-24 px-4 py-2 text-center font-medium text-[13px]`}
+                  className={`w-20 px-2 py-2 text-center font-medium text-[13px]`}
                 >
                   Style No
                 </th>
                 <th
-                  className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-48 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style
                 </th>
                 <th
-                  className={`w-64 px-4 py-2 text-center font-medium text-[13px]`}
+                  className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
                 >
                   Fabric
                 </th>
                 <th
-                  className={`w-20 px-4 py-2 text-center  font-medium text-[13px]`}
+                  className={`w-52 px-4 py-2 text-center  font-medium text-[13px]`}
                 >
                   Img
                 </th>{" "}
@@ -280,25 +281,60 @@ const FabricInwardItems = ({
                         ))}
                       </select>
                     </td>
-                    <td className="border border-gray-300 py-1 h-10">
-                      {row?.styleId ? (
-                        <img
-                          style={{
-                            height: "35px",
-                            width: "35px",
-                            objectFit: "cover",
-                            borderRadius: "2px",
-                            margin: "auto",
-                            cursor: "pointer",
-                          }}
-                          src={imageFormatter(row?.styleId)}
-                          onClick={() =>
-                            setPreviewImage(imageFormatter(row?.styleId))
-                          }
-                        />
-                      ) : (
-                        <span className="text-xs pl-1 text-gray-500">No Image</span>
-                      )}
+                    <td className=" py-0.5 px-3 border border-gray-300 overflow-x-auto">
+                      <div className="flex gap-x-4 flex items-center">
+                        {!readOnly && !row.filePath && (
+                          <input
+                            title=" "
+                            type="file"
+                            className="text-left w-full rounded h-full text-xs"
+                            onChange={(e) =>
+                              // console.log(e.target.files[0],"filePath");
+                              e.target.files[0]
+                                ? handleInputChange(
+                                    renameFile(e.target.files[0]),
+                                    index,
+                                    "filePath"
+                                  )
+                                : () => {}
+                            }
+                          />
+                        )}
+                        {row.filePath && (
+                          <>
+                            <span className="text-xs">
+                              {row?.filePath?.name || row?.filePath}
+                            </span>
+                            <button
+                              className="text-xs"
+                              onClick={() => {
+                                if (row.filePath instanceof File) {
+                                  setPreviewImage(
+                                    URL.createObjectURL(row.filePath)
+                                  );
+                                } else {
+                                  setPreviewImage(
+                                    getImageUrlPath(row.filePath)
+                                  );
+                                }
+                              }}
+                            >
+                              {VIEW}
+                            </button>
+                            {!readOnly && (
+                              <button
+                                className="text-xs"
+                                onClick={() => {
+                                  handleInputChange("", index, "filePath");
+                                  console.log("filePath", row.filePath);
+                                }}
+                              >
+                                {CLOSE_ICON}
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </td>
 
                     <td className="py-0.5 border border-gray-300 text-[11px]">
@@ -428,6 +464,29 @@ const FabricInwardItems = ({
                 )
               )}
             </tbody>
+            <tfoot>
+              <tr className="bg-gray-50 h-7 font-medium text-gray-800">
+                <td
+                  className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
+                  colSpan={7}
+                >
+                  Total
+                </td>
+                <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
+                  {fabricInwardItems.reduce(
+                    (sum, row) => sum + (Number(row.fabMeter) || 0),
+                    0
+                  )}
+                </td>
+                <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
+                  {fabricInwardItems.reduce(
+                    (sum, row) => sum + (Number(row.noOfPcs) || 0),
+                    0
+                  )}
+                </td>
+                <td className="border border-gray-300" colSpan={1}></td>
+              </tr>
+            </tfoot>
           </table>
           {previewImage && (
             <div
@@ -445,7 +504,7 @@ const FabricInwardItems = ({
 
                 <img
                   src={previewImage}
-                  alt="Preview"
+                  alt="No Image...."
                   className="max-h-[80vh] max-w-[80vw] rounded-lg shadow-lg"
                 />
               </div>

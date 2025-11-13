@@ -12,6 +12,7 @@ import { IMAGE_UPLOAD_URL } from "../../../Constants";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 import { toast } from "react-toastify";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { VIEW } from "../../../icons";
 
 export default function AdjustItems({
   stockAdjustmentItems,
@@ -403,12 +404,12 @@ export default function AdjustItems({
                   Style No
                 </th>
                 <th
-                  className={`w-56 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-48 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style
                 </th>
                 <th
-                  className={`w-20 px-4 py-2 text-center  font-medium text-[13px]`}
+                  className={`w-12 px-2 py-2 text-center  font-medium text-[13px]`}
                 >
                   Img
                 </th>{" "}
@@ -447,7 +448,7 @@ export default function AdjustItems({
                 >
                   Remarks
                 </th>
-                <th className="w-20 px-1 py-1 justify-center font-medium text-[13px]">
+                <th className="w-16 px-1 py-1 justify-center font-medium text-[13px]">
                   <tr className="flex items-center justify-center">Select</tr>
                   <tr className="flex items-center justify-center gap-2">
                     <input
@@ -544,24 +545,18 @@ export default function AdjustItems({
                         ))}
                       </select>
                     </td>
-                    <td className="border border-gray-300 py-1 h-10">
+                    <td className="border border-gray-300 py-0.5 text-center">
                       {row?.styleId ? (
-                        <img
-                          style={{
-                            height: "35px",
-                            width: "35px",
-                            objectFit: "cover",
-                            borderRadius: "2px",
-                            margin: "auto",
-                            cursor: "pointer",
+                        <button
+                          className="text-xs"
+                          onClick={() => {
+                            setPreviewImage(imageFormatter(row?.styleId));
                           }}
-                          src={imageFormatter(row?.styleId)}
-                          onClick={() =>
-                            setPreviewImage(imageFormatter(row?.styleId))
-                          }
-                        />
+                        >
+                          {VIEW}
+                        </button>
                       ) : (
-                        <span className="text-xs pl-1">No Image</span>
+                        <span className="text-xs pl-1"></span>
                       )}
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
@@ -812,7 +807,7 @@ export default function AdjustItems({
 
                 <img
                   src={previewImage}
-                  alt="Preview"
+                  alt="No Image...."
                   className="max-h-[80vh] max-w-[80vw] rounded-lg shadow-lg"
                 />
               </div>

@@ -12,13 +12,13 @@ const Header = ({ heading, singleData, DeliveryNo, DeliveryDate, styles }) => {
     <>
       <View
         style={tw(
-          "flex flex-row   justify-between w-full h-[80px] mb-2  border-b border-teal-800"
+          "flex flex-row px-2 items-center justify-between w-full h-[80px] mb-2  border-b border-gray-400"
         )}
       >
         <View style={tw("w-[25%]")}>
-          <Image style={tw("h-12  mt-5")} src={logo} />
+          <Image style={tw("h-12")} src={logo} />
         </View>
-        <View style={tw("mt-3 w-[50%]")}>
+        <View style={tw(" w-[50%]")}>
           <Text style={tw(" mx-auto text-lg text-black")}>
             YACHT 
           </Text>
@@ -31,7 +31,7 @@ const Header = ({ heading, singleData, DeliveryNo, DeliveryDate, styles }) => {
             TIRUPUR - 641 607.
           </Text>
         </View>
-        <View style={tw("flex flex-col  text-xl mt-10  item-center w-[25%]")}>
+        <View style={tw("flex flex-col  text-xl   item-center w-[25%]")}>
           {/* <Text style={tw("text-teal-500")}>{heading}</Text> */}
 
           <Text style={tw("text-xs ml-1 text-right")}>{singleData?.docId || ""}</Text>

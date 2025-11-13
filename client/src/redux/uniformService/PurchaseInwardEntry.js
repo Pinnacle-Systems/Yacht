@@ -57,7 +57,7 @@ const purchaseInwardEntryApi = createApi({
     }),
     updatePurchaseInwardEntry: builder.mutation({
       query: (payload) => {
-        const { id, ...body } = payload;
+        const { id, body } = payload;
         return {
           url: `${PURCHASE_INWARD_ENTRY_API}/${id}`,
           method: "PUT",

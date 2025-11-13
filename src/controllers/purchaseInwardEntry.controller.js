@@ -26,7 +26,7 @@ async function getOne(req, res, next) {
 }
 async function create(req, res, next) {
   try {
-    res.json(await _create(req.body));
+    res.json(await _create(req));
     console.log(res.statusCode);
   } catch (error) {
     console.error(`Error`, error.message);
@@ -49,6 +49,7 @@ async function create(req, res, next) {
 async function update(req, res, next) {
   try {
     const { id } = req.params;
+    console.log(id,"id")
     res.json(await _update(id, req.body));
     console.log(res.statusCode);
   } catch (error) {

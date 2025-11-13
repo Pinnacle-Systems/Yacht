@@ -198,10 +198,10 @@ async function getOne(id) {
           branchName: true,
         },
       },
-      Supplier:{
-        select:{
-          name:true,
-        }
+      Supplier: {
+        select: {
+          name: true,
+        },
       },
       fabricInwardItems: {
         select: {
@@ -224,13 +224,14 @@ async function getOne(id) {
           uomId: true,
           qty: true,
           price: true,
-          Fabric:true,
-          Color:true,
-          StyleItem:true,
-          Accessory:true,
-          AccessoryGroup:true,
-          Uom:true,
-          Size:true
+          Fabric: true,
+          Color: true,
+          StyleItem: true,
+          Accessory: true,
+          AccessoryGroup: true,
+          Uom: true,
+          Size: true,
+          filePath: true,
         },
       },
     },
@@ -244,7 +245,7 @@ async function getOne(id) {
   };
 }
 
-async function create(body) {
+async function create(req) {
   const {
     userId,
     branchId,
@@ -260,7 +261,7 @@ async function create(body) {
     fabricInwardItems,
     finYearId,
     draftSave,
-  } = await body;
+  } = await req.body;
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(
@@ -316,97 +317,105 @@ async function createPurchaseInwardItems(
   storeId,
   inwardType
 ) {
-  const promises = fabricInwardItems.map(async (inwardDetails, index) => {
-    const createdItem = await tx.fabricInwardItems.create({
-      data: {
-        purchaseInwardId: parseInt(fabricInward.id),
-        styleNo: inwardDetails?.styleNo ?? undefined,
-        fabricId: inwardDetails?.fabricId
-          ? parseInt(inwardDetails.fabricId)
-          : null,
-        styleItemId: inwardDetails?.styleItemId
-          ? parseInt(inwardDetails.styleItemId)
-          : null,
-        styleId: inwardDetails?.styleId
-          ? parseInt(inwardDetails.styleId)
-          : null,
-        colorId: inwardDetails?.colorId
-          ? parseInt(inwardDetails.colorId)
-          : null,
-        fabWidth: inwardDetails?.fabWidth
-          ? parseFloat(inwardDetails.fabWidth)
-          : null,
-        fabMeter: inwardDetails?.fabMeter
-          ? parseFloat(inwardDetails.fabMeter)
-          : null,
-        noOfPcs: inwardDetails?.noOfPcs
-          ? parseInt(inwardDetails.noOfPcs)
-          : null,
-        accessoryId: inwardDetails?.accessoryId
-          ? parseInt(inwardDetails.accessoryId)
-          : null,
-        accessoryGroupId: inwardDetails?.accessoryGroupId
-          ? parseInt(inwardDetails.accessoryGroupId)
-          : null,
-        sizeId: inwardDetails?.sizeId ? parseInt(inwardDetails.sizeId) : null,
-        qty: inwardDetails?.qty ? parseFloat(inwardDetails.qty) : 0,
-        uomId: inwardDetails?.uomId ? parseInt(inwardDetails.uomId) : null,
-        price: inwardDetails?.price ? parseInt(inwardDetails.price) : null,
-      },
-    });
+  const promises = JSON.parse(fabricInwardItems).map(
+    async (inwardDetails, index) => {
+      const createdItem = await tx.fabricInwardItems.create({
+        data: {
+          purchaseInwardId: parseInt(fabricInward.id),
+          styleNo: inwardDetails?.styleNo ?? undefined,
+          fabricId: inwardDetails?.fabricId
+            ? parseInt(inwardDetails.fabricId)
+            : null,
+          styleItemId: inwardDetails?.styleItemId
+            ? parseInt(inwardDetails.styleItemId)
+            : null,
+          styleId: inwardDetails?.styleId
+            ? parseInt(inwardDetails.styleId)
+            : null,
+          colorId: inwardDetails?.colorId
+            ? parseInt(inwardDetails.colorId)
+            : null,
+          fabWidth: inwardDetails?.fabWidth
+            ? parseFloat(inwardDetails.fabWidth)
+            : null,
+          fabMeter: inwardDetails?.fabMeter
+            ? parseFloat(inwardDetails.fabMeter)
+            : null,
+          noOfPcs: inwardDetails?.noOfPcs
+            ? parseInt(inwardDetails.noOfPcs)
+            : null,
+          accessoryId: inwardDetails?.accessoryId
+            ? parseInt(inwardDetails.accessoryId)
+            : null,
+          accessoryGroupId: inwardDetails?.accessoryGroupId
+            ? parseInt(inwardDetails.accessoryGroupId)
+            : null,
+          sizeId: inwardDetails?.sizeId ? parseInt(inwardDetails.sizeId) : null,
+          qty: inwardDetails?.qty ? parseFloat(inwardDetails.qty) : 0,
+          uomId: inwardDetails?.uomId ? parseInt(inwardDetails.uomId) : null,
+          price: inwardDetails?.price ? parseInt(inwardDetails.price) : null,
+          filePath: inwardDetails?.filePath
+            ? inwardDetails?.filePath
+            : undefined,
+        },
+      });
 
-    // Create corresponding Stock row
-    await tx.materialStock.create({
-      data: {
-        inOrOut: inwardType + "Inward" || "MaterialInward",
-        createdById: parseInt(userId),
-        branchId: parseInt(branchId),
-        storeId: parseInt(storeId),
-        fabricInwardItemsId: createdItem.id,
-        styleNo: inwardDetails?.styleNo ?? undefined,
-        fabricId: inwardDetails?.fabricId
-          ? parseInt(inwardDetails.fabricId)
-          : null,
-        styleItemId: inwardDetails?.styleItemId
-          ? parseInt(inwardDetails.styleItemId)
-          : null,
-        styleId: inwardDetails?.styleId
-          ? parseInt(inwardDetails.styleId)
-          : null,
-        colorId: inwardDetails?.colorId
-          ? parseInt(inwardDetails.colorId)
-          : null,
-        fabWidth: inwardDetails?.fabWidth
-          ? parseFloat(inwardDetails.fabWidth)
-          : null,
-        fabMeter: inwardDetails?.fabMeter
-          ? parseFloat(inwardDetails.fabMeter)
-          : null,
-        noOfPcs: inwardDetails?.noOfPcs
-          ? parseInt(inwardDetails.noOfPcs)
-          : null,
-        accessoryId: inwardDetails?.accessoryId
-          ? parseInt(inwardDetails.accessoryId)
-          : null,
-        accessoryGroupId: inwardDetails?.accessoryGroupId
-          ? parseInt(inwardDetails.accessoryGroupId)
-          : null,
-        sizeId: inwardDetails?.sizeId ? parseInt(inwardDetails.sizeId) : null,
-        qty: inwardDetails?.qty ? parseFloat(inwardDetails.qty) : 0,
-        uomId: inwardDetails?.uomId ? parseInt(inwardDetails.uomId) : null,
-        price: inwardDetails?.price ? parseInt(inwardDetails.price) : null,
-      },
-    });
+      // Create corresponding Stock row
+      await tx.materialStock.create({
+        data: {
+          inOrOut: inwardType + "Inward" || "MaterialInward",
+          createdById: parseInt(userId),
+          branchId: parseInt(branchId),
+          storeId: parseInt(storeId),
+          fabricInwardItemsId: createdItem.id,
+          styleNo: inwardDetails?.styleNo ?? undefined,
+          fabricId: inwardDetails?.fabricId
+            ? parseInt(inwardDetails.fabricId)
+            : null,
+          styleItemId: inwardDetails?.styleItemId
+            ? parseInt(inwardDetails.styleItemId)
+            : null,
+          styleId: inwardDetails?.styleId
+            ? parseInt(inwardDetails.styleId)
+            : null,
+          colorId: inwardDetails?.colorId
+            ? parseInt(inwardDetails.colorId)
+            : null,
+          fabWidth: inwardDetails?.fabWidth
+            ? parseFloat(inwardDetails.fabWidth)
+            : null,
+          fabMeter: inwardDetails?.fabMeter
+            ? parseFloat(inwardDetails.fabMeter)
+            : null,
+          noOfPcs: inwardDetails?.noOfPcs
+            ? parseInt(inwardDetails.noOfPcs)
+            : null,
+          accessoryId: inwardDetails?.accessoryId
+            ? parseInt(inwardDetails.accessoryId)
+            : null,
+          accessoryGroupId: inwardDetails?.accessoryGroupId
+            ? parseInt(inwardDetails.accessoryGroupId)
+            : null,
+          sizeId: inwardDetails?.sizeId ? parseInt(inwardDetails.sizeId) : null,
+          qty: inwardDetails?.qty ? parseFloat(inwardDetails.qty) : 0,
+          uomId: inwardDetails?.uomId ? parseInt(inwardDetails.uomId) : null,
+          price: inwardDetails?.price ? parseInt(inwardDetails.price) : null,
+          filePath: inwardDetails?.filePath
+            ? inwardDetails?.filePath
+            : undefined,
+        },
+      });
 
-    return createdItem;
-  });
+      return createdItem;
+    }
+  );
 
   return Promise.all(promises);
 }
 
 function findRemovedItems(dataFound, fabricInwardItems) {
   let removedItems = dataFound.fabricInwardItems.filter((oldItem) => {
-    let result = fabricInwardItems.find(
+    let result = JSON.parse(fabricInwardItems).find(
       (newItem) => parseInt(newItem.id) === parseInt(oldItem.id)
     );
     if (result) return false;
@@ -505,11 +514,12 @@ async function updateFabricInwardItems(
   storeId,
   inwardType
 ) {
-  const promises = fabricInwardItems.map(async (inwardDetails) => {
+  const promises = JSON.parse(fabricInwardItems).map(async (inwardDetails) => {
     if (inwardDetails.id) {
       // Update existing FabricInwardItem
       const updatedItem = await tx.fabricInwardItems.update({
         where: { id: parseInt(inwardDetails.id) },
+
         data: {
           purchaseInwardId: parseInt(fabricInward.id),
           styleNo: inwardDetails?.styleNo ?? undefined,
@@ -544,6 +554,9 @@ async function updateFabricInwardItems(
           qty: inwardDetails?.qty ? parseFloat(inwardDetails.qty) : 0,
           uomId: inwardDetails?.uomId ? parseInt(inwardDetails.uomId) : null,
           price: inwardDetails?.price ? parseInt(inwardDetails.price) : null,
+          filePath: inwardDetails?.filePath
+            ? inwardDetails?.filePath
+            : undefined,
         },
       });
 
@@ -594,6 +607,9 @@ async function updateFabricInwardItems(
             uomId: inwardDetails?.uomId ? parseInt(inwardDetails.uomId) : null,
             price: inwardDetails?.price ? parseInt(inwardDetails.price) : null,
             inOrOut: inwardType + "Inward" || "MaterialInward",
+            filePath: inwardDetails?.filePath
+              ? inwardDetails?.filePath
+              : undefined,
           },
         });
       } else {
@@ -638,6 +654,9 @@ async function updateFabricInwardItems(
             qty: inwardDetails?.qty ? parseFloat(inwardDetails.qty) : 0,
             uomId: inwardDetails?.uomId ? parseInt(inwardDetails.uomId) : null,
             price: inwardDetails?.price ? parseInt(inwardDetails.price) : null,
+            filePath: inwardDetails?.filePath
+              ? inwardDetails?.filePath
+              : undefined,
           },
         });
       }
@@ -680,6 +699,9 @@ async function updateFabricInwardItems(
           qty: inwardDetails?.qty ? parseFloat(inwardDetails.qty) : 0,
           uomId: inwardDetails?.uomId ? parseInt(inwardDetails.uomId) : null,
           price: inwardDetails?.price ? parseInt(inwardDetails.price) : null,
+          filePath: inwardDetails?.filePath
+            ? inwardDetails?.filePath
+            : undefined,
         },
       });
 
@@ -723,6 +745,9 @@ async function updateFabricInwardItems(
           qty: inwardDetails?.qty ? parseFloat(inwardDetails.qty) : 0,
           uomId: inwardDetails?.uomId ? parseInt(inwardDetails.uomId) : null,
           price: inwardDetails?.price ? parseInt(inwardDetails.price) : null,
+          filePath: inwardDetails?.filePath
+            ? inwardDetails?.filePath
+            : undefined,
         },
       });
 

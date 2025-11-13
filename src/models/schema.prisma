@@ -1969,6 +1969,7 @@ model FabricInwardItems {
   uomId            Int?
   price            Float?
   materialStocks   MaterialStock[]
+  filePath         String?
 }
 
 model MaterialStock {
@@ -2013,4 +2014,5 @@ model MaterialStock {
   fabWidth            Float?
   fabMeter            Float?
   noOfPcs             Int?
+  filePath            String?
 }

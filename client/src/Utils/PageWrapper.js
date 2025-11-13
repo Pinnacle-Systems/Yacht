@@ -1,9 +1,8 @@
-import { Page, Text, View, Image, Font } from "@react-pdf/renderer";
+import { Page, Text, View } from "@react-pdf/renderer";
 import React from "react";
-import WaterMarkSymbol from "./WaterMarkSymbol";
-import tw from "./tailwind-react-pdf";
 import Header from "./Header";
 import FactoryAddress from "./FactoryAddress";
+import tw from "./tailwind-react-pdf";
 
 const PageWrapper = ({
   heading,
@@ -17,25 +16,25 @@ const PageWrapper = ({
 }) => {
   return (
     <Page
-      size={"A4"}
+      size="A4"
       wrap
       style={[
-        tw("p-2   text-sm flex flex-col h-full relative"),
-        {
-          fontFamily: "Helvetica",
-        },
+        // reserve space at page bottom for footer (≈45px)
+        tw("p-2 text-sm flex flex-col h-full relative"),
+        { fontFamily: "Helvetica" },
       ]}
     >
+      {/* Border container — this will not include the footer area because Page has pb */}
       <View
         style={{
           flex: 1,
-          borderWidth: 1, // ✅ required (use numeric, not string)
-          borderColor: "black", // ✅ color of the border
-          margin: 4, // space from page edge
-          padding: 4, // inner padding inside the border
+          borderWidth: 1,
+          borderColor: "gray",
+          margin: 4,
+
+          // no need to add bottom padding here because Page pb reserves it
         }}
       >
-        {/* <WaterMarkSymbol /> */}
         {header && (
           <View fixed>
             <Header
@@ -47,19 +46,31 @@ const PageWrapper = ({
             />
           </View>
         )}
+
+        {/* main content — make it grow so it stops before page paddingBottom */}
         <View>{children}</View>
-        <View fixed style={tw("pr-2 pb-2 mt-[50px] absolute bottom-3  ")}>
-          {header && (
-            <View style={tw("mx-auto")}>{value ? "" : <FactoryAddress />}</View>
-          )}
-          <View style={tw("text-right w-full pb-1 pt-1")}>
-            <Text
-              render={({ pageNumber, totalPages }) =>
-                `Page No :${pageNumber} / ${totalPages}`
-              }
-              fixed
-            />
-          </View>
+      </View>
+
+      {/* Footer: fixed to page bottom (won't overlap content because Page pb reserved space) */}
+      <View
+        fixed
+        style={{
+          left: 0,
+          right: 0,
+          bottom: 1, // small offset from page bottom
+          paddingHorizontal: 5,
+        }}
+      >
+        {header && (
+          <View style={tw("mx-auto")}>{value ? "" : <FactoryAddress />}</View>
+        )}
+        <View style={tw("text-right text-xs w-full pb-1 pt-1")}>
+          <Text
+            render={({ pageNumber, totalPages }) =>
+              `Page No : ${pageNumber} / ${totalPages}`
+            }
+            fixed
+          />
         </View>
       </View>
     </Page>

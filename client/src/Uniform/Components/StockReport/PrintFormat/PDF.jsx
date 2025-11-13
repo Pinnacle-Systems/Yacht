@@ -21,7 +21,7 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList,colorList }) => {
 
         container: {
             width: "100%",
-            padding: 5,
+            // padding: 5,
         },
         totalRow: {
             flexDirection: "row",
@@ -131,7 +131,7 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList,colorList }) => {
 
                 <View style={styles.container}>
                     <Text style={tw("mx-auto     text-base text-black")}>Stock Report</Text>
-                    <View style={{ height: 10 }} fixed />
+                    <View style={{ height: 1 }} fixed />
                     <View style={[styles.table,]} wrap>
                         <View fixed style={styles.tableHeader}>
                             {[

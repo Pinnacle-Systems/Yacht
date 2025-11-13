@@ -12,6 +12,7 @@ import { IMAGE_UPLOAD_URL } from "../../../Constants";
 import secureLocalStorage from "react-secure-storage";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { VIEW } from "../../../icons";
 
 export default function ReadyGoods({
   openingStockItems,
@@ -303,15 +304,15 @@ export default function ReadyGoods({
                   Style No
                 </th>{" "}
                 <th
-                  className={`w-20 px-4 py-2 text-center  font-medium text-[13px]`}
-                >
-                  Img
-                </th>{" "}
-                <th
                   className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style
                 </th>
+                <th
+                  className={`w-12 px-4 py-2 text-center  font-medium text-[13px]`}
+                >
+                  Img
+                </th>{" "}
                 <th
                   className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
                 >
@@ -397,30 +398,6 @@ export default function ReadyGoods({
                         disabled={true}
                       />
                     </td>
-                    <td className="border border-gray-300 py-1 h-10">
-                      {row?.styleId ? (
-                        <img
-                          style={{
-                            height: "35px",
-                            width: "35px",
-                            objectFit: "cover",
-                            borderRadius: "2px",
-                            margin: "auto",
-                            cursor: "pointer",
-                          }}
-                          src={imageFormatter(row?.styleId)}
-                          onClick={() =>
-                            setPreviewImage(imageFormatter(row?.styleId))
-                          }
-                          // onMouseEnter={() =>
-                          //   setPreviewImage(imageFormatter(row?.styleId))
-                          // }
-                          // onMouseLeave={() => setPreviewImage(null)}
-                        />
-                      ) : (
-                        <span className="text-xs pl-1">No Image</span>
-                      )}
-                    </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                       <select
                         onKeyDown={(e) => {
@@ -457,6 +434,34 @@ export default function ReadyGoods({
                           </option>
                         ))}
                       </select>
+                    </td>
+                    <td className="border border-gray-300 py-0.5 text-center">
+                      {row?.styleId ? (
+                        // <img
+                        //   style={{
+                        //     height: "35px",
+                        //     width: "35px",
+                        //     objectFit: "cover",
+                        //     borderRadius: "2px",
+                        //     margin: "auto",
+                        //     cursor: "pointer",
+                        //   }}
+                        //   src={imageFormatter(row?.styleId)}
+                        //   onClick={() =>
+                        //     setPreviewImage(imageFormatter(row?.styleId))
+                        //   }
+                        // />
+                        <button
+                          className="text-xs"
+                          onClick={() => {
+                            setPreviewImage(imageFormatter(row?.styleId));
+                          }}
+                        >
+                          {VIEW}
+                        </button>
+                      ) : (
+                        <span className="text-xs pl-1"></span>
+                      )}
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                       <select
@@ -671,7 +676,7 @@ export default function ReadyGoods({
 
                 <img
                   src={previewImage}
-                  alt="Preview"
+                  alt="No Image...."
                   className="max-h-[80vh] max-w-[80vw] rounded-lg shadow-lg"
                 />
               </div>
