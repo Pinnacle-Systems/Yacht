@@ -42,6 +42,7 @@ const AccessoryInwardItems = ({
       sizeId: "",
       uomId: "",
       qty: "",
+      selected: false,
     };
     setFabricInwardItems([...fabricInwardItems, newRow]);
   };
@@ -98,6 +99,7 @@ const AccessoryInwardItems = ({
               sizeId: "",
               uomId: "",
               qty: "",
+              selected: false,
             })),
           ];
         }
@@ -112,10 +114,16 @@ const AccessoryInwardItems = ({
           sizeId: "",
           uomId: "",
           qty: "",
+          selected: false,
         }))
       );
     }
   }, [fabricInwardItems, setFabricInwardItems]);
+
+  const deleteSelectedRows = () => {
+    setFabricInwardItems((rows) => rows.filter((r) => !r.selected));
+    setContextMenu(null);
+  };
 
   return (
     <>
@@ -163,6 +171,31 @@ const AccessoryInwardItems = ({
                   className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Quantity
+                </th>
+                <th className="w-20 px-1 py-1 justify-center font-medium text-[13px]">
+                  <tr className="flex items-center justify-center">Select</tr>
+                  <tr className="flex items-center justify-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={
+                        fabricInwardItems.length > 0 &&
+                        fabricInwardItems.every((row) => row.selected)
+                      }
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setFabricInwardItems((prev) =>
+                          prev.map((row) => ({ ...row, selected: checked }))
+                        );
+                      }}
+                      onContextMenu={(e) => {
+                        if (!readOnly) {
+                          handleRightClick(e, "notes");
+                        }
+                      }}
+                      tabIndex={-1}
+                      disabled={readOnly}
+                    />
+                  </tr>
                 </th>
                 <th
                   className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
@@ -375,13 +408,29 @@ const AccessoryInwardItems = ({
                         disabled={readOnly}
                       />
                     </td>
-                    <td className="w-2 border border-gray-300">
+                    <td className="border-blue-gray-200 text-[11px]  border border-gray-300 py-0.5 text-right">
                       <input
+                        type="checkbox"
+                        checked={row.selected || false}
+                        disabled={readOnly}
+                        onChange={(e) =>
+                          handleInputChange(e.target.checked, index, "selected")
+                        }
+                        className="justify-center flex items-center mx-auto w-full"
                         onContextMenu={(e) => {
                           if (!readOnly) {
-                            handleRightClick(e, index, "");
+                            handleRightClick(e, index, "notes");
                           }
                         }}
+                      />
+                    </td>
+                    <td className="w-2 border border-gray-300">
+                      <input
+                        // onContextMenu={(e) => {
+                        //   if (!readOnly) {
+                        //     handleRightClick(e, index, "");
+                        //   }
+                        // }}
                         className="w-full"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
@@ -410,7 +459,7 @@ const AccessoryInwardItems = ({
                     0
                   )}
                 </td>
-                <td className="border border-gray-300" colSpan={1}></td>
+                <td className="border border-gray-300" colSpan={2}></td>
               </tr>
             </tfoot>
           </table>
@@ -455,13 +504,14 @@ const AccessoryInwardItems = ({
               <button
                 className=" text-black text-[12px] text-left rounded px-1"
                 onClick={() => {
-                  deleteRow(contextMenu.rowId);
+                  // deleteRow(contextMenu.rowId);
+                  deleteSelectedRows();
                   handleCloseContextMenu();
                 }}
               >
                 Delete
               </button>
-              <button
+              {/* <button
                 className=" text-black text-[12px] text-left rounded px-1"
                 onClick={() => {
                   handleDeleteAllRows();
@@ -469,7 +519,7 @@ const AccessoryInwardItems = ({
                 }}
               >
                 Delete All
-              </button>
+              </button> */}
             </div>
           </div>
         )}

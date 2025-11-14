@@ -7,6 +7,7 @@ import {
 import { Loader } from "../../../Basic/components";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useGetOpeningStockQuery } from "../../../redux/uniformService/OpeningStockService";
+import { DropdownNew } from "../../../Inputs";
 
 const OpeningStockFormReport = ({
   onClick,
@@ -22,12 +23,12 @@ const OpeningStockFormReport = ({
 
   const [dataPerPage, setDataPerPage] = useState("10");
   const [serachDocNo, setSerachDocNo] = useState("");
+  const [searchStyleNo, setSearchStyleNo] = useState("");
   const [searchDocDate, setSearchDocDate] = useState("");
   const [searchStore, setSearchStore] = useState("");
   const [totalCount, setTotalCount] = useState(0);
   const [currentPageNumber, setCurrentPageNumber] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
-
 
   const handleOnclick = (e) => {
     setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
@@ -37,11 +38,12 @@ const OpeningStockFormReport = ({
     serachDocNo,
     searchDocDate,
     searchStore,
+    searchStyleNo
   };
 
   useEffect(() => {
     setCurrentPageNumber(1);
-  }, [serachDocNo, searchDocDate, searchStore]);
+  }, [serachDocNo, searchDocDate, searchStore,searchStyleNo]);
 
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -176,11 +178,25 @@ const OpeningStockFormReport = ({
     <div className="flex flex-col w-full h-[93%] overflow-auto">
       <>
         <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
-          <div className="h-[420px]">
-            <table className="">
+          <div className="w-40 mx-8">
+            <div className="font-medium text-[13px]  text-gray-900">
+              Style No
+            </div>
+            <input
+              type="text"
+              className="text-black h-5  font-medium text-[13px] w-full  px-1 focus:outline-none border  border-gray-400 rounded-md"
+              placeholder="Search"
+              value={searchStyleNo}
+              onChange={(e) => {
+                setSearchStyleNo(e.target.value);
+              }}
+            />
+          </div>
+          <div className="h-[360px]">
+            <table className="mt-2">
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">
-                  <th className=" px-1 py-1.5  font-medium text-[13px]  text-gray-900  text-center  w-12">
+                  <th className="px-1 py-1.5  font-medium text-[13px]  text-gray-900  text-center  w-12">
                     <div className="">S No</div>
                   </th>
 
@@ -264,7 +280,9 @@ const OpeningStockFormReport = ({
                       >
                         <td className="text-center ">{index + 1}</td>
 
-                        <td className="py-1.5 text-left px-4">{dataObj.docId} </td>
+                        <td className="py-1.5 text-left px-4">
+                          {dataObj.docId}{" "}
+                        </td>
 
                         <td className="py-1.5 text-left px-4">
                           {dataObj?.docDate

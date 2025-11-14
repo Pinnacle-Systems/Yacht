@@ -1,24 +1,17 @@
-import Swal from "sweetalert2";
-import {
-  useDeleteOpeningStockMutation,
-  useLazyGetOpeningStockByIdQuery,
-} from "../../../redux/uniformService/OpeningStockService";
-import OpeningStockForm from "./OpeningStockForm";
-import OpeningStockFormReport from "./OpeningStockFormReport";
-import { FaPlus } from "react-icons/fa";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import StyleMasterApi from "../../../redux/uniformService/StyleMasterService.js";
+import Swal from "sweetalert2";
+import { FaPlus } from "react-icons/fa";
+const MODEL = "Purchase Return";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
   const [id, setId] = useState("");
   const [readOnly, setReadOnly] = useState(false);
+
   const dispatch = useDispatch();
 
-  const [removeData] = useDeleteOpeningStockMutation();
-  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
-    useLazyGetOpeningStockByIdQuery();
+  const [removeData] = useDeletePurchaseInwardEntryMutation();
   const handleView = (orderId) => {
     setId(orderId);
     setShowForm(true);
@@ -33,55 +26,50 @@ export default function Form() {
 
   const handleDelete = async (id) => {
     setId(id);
-    const { data } = await trigger(id);
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-      if (data?.data?.childRecordSales > 0 || data?.data?.childRecordStock > 0) {
-        Swal.fire({
-          icon: "error",
-          title: "Child record Exists",
-          text: "Data cannot be deleted!",
-        });
-      } else {
-        try {
-          let deldata = await removeData(id).unwrap();
-          if (deldata?.statusCode == 1) {
-            Swal.fire({
-              icon: "error",
-              title: "Child record Exists",
-              text: deldata.data?.message || "Data cannot be deleted!",
-            });
-            return;
-          }
-          setId("");
-          Swal.fire({
-            title: "Deleted Successfully",
-            icon: "success",
-            timer: 1000,
-          });
-          setShowForm(false);
-          dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
-        } catch (error) {
+
+      try {
+        let deldata = await removeData(id).unwrap();
+        if (deldata?.statusCode == 1) {
           Swal.fire({
             icon: "error",
-            title: "Submission error",
-            text: error.data?.message || "Something went wrong!",
+            title: "Child record Exists",
+            text: deldata.data?.message || "Data cannot be deleted!",
           });
-          setShowForm(false);
+          return;
         }
+        setId("");
+        Swal.fire({
+          title: "Deleted Successfully",
+          icon: "success",
+          timer: 1000,
+        });
+        setShowForm(false);
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Submission error",
+          text: error.data?.message || "Something went wrong!",
+        });
+        setShowForm(false);
       }
+
     }
   };
+
   const onNew = () => {
     setId("");
     setReadOnly(false);
   };
+
   return (
-    <>
-      {showForm ? (
-        <OpeningStockForm
+    <> {
+      showForm ? (
+
+        <PurchaseReturnForm
           readOnly={readOnly}
           setReadOnly={setReadOnly}
           id={id}
@@ -94,11 +82,11 @@ export default function Form() {
         />
       ) : (
         <div className="p-1 bg-[#F1F1F0] h-[85%]">
-          <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-1 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
+          <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
             <div>
               <h1 className="text-xl font-bold text-gray-800">
                 {" "}
-                Opening Stock Report
+                Purchase Return Report
               </h1>
             </div>
             <button
@@ -113,7 +101,7 @@ export default function Form() {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm overflow-hidden  ">
-            <OpeningStockFormReport
+            <PurchaseReturnReport
               onView={handleView}
               onEdit={handleEdit}
               onDelete={handleDelete}
@@ -121,7 +109,8 @@ export default function Form() {
             />
           </div>
         </div>
-      )}
+      )
+    }
     </>
   );
 }

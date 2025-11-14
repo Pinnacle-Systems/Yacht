@@ -790,6 +790,47 @@ export default function AdjustItems({
                 )
               )}
             </tbody>
+            <tfoot>
+              {/* Row 1 */}
+              <tr className="bg-gray-50 h-7 font-medium text-gray-800">
+                <td
+                  className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
+                  colSpan={9}
+                  rowSpan={2}
+                >
+                  {/* <>
+                    <div>Total  Added</div>
+                    <div>Total  Minus</div>
+                  </> */}
+                  Total
+                </td>
+
+                {/* This cell spans 2 rows */}
+                <td
+                  className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5"
+                  rowSpan={2}
+                >
+                  {(() => {
+                    const totalAdd = stockAdjustmentItems
+                      .filter((item) => item?.adjType === "PLUS")
+                      .reduce((sum, row) => sum + (Number(row.adjQty) || 0), 0);
+
+                    const totalMinus = stockAdjustmentItems
+                      .filter((item) => item?.adjType === "MINUS")
+                      .reduce((sum, row) => sum + (Number(row.adjQty) || 0), 0);
+
+                    return (
+                      <>
+                        <div className="text-green-500">(+) {totalAdd}</div>
+                        <div className="text-red-500">(-) {totalMinus}</div>
+                      </>
+                    );
+                  })()}
+                </td>
+
+                <td className="border border-gray-300" colSpan={3}></td>
+              </tr>
+            </tfoot>
           </table>
           {previewImage && (
             <div

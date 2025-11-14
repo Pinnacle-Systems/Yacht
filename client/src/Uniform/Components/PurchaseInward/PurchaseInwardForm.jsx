@@ -434,14 +434,14 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
             </h2>
 
             <div className="space-y-1.5">
-              <div className="flex justify-between py-1 text-sm">
+              <div className="flex justify-between  text-sm">
                 <span className="text-slate-600">{inwardType === "Fabric" ? "Total Rolls" : "Total Qty"}</span>
                 <span className="font-medium">
                   {parseInt(getTotalQty()).toFixed(2)}
                 </span>
               </div>
               {inwardType === "Fabric" && (
-                <div className="flex justify-between py-1 text-sm">
+                <div className="flex justify-between  text-sm">
                   <span className="text-slate-600">Total Meters</span>
                   <span className="font-medium">
                     {fabricInwardItems.reduce(

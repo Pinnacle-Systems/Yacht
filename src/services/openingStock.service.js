@@ -104,6 +104,7 @@ async function get(req) {
     serachDocNo,
     searchDocDate,
     searchStore,
+    searchStyleNo,
     finYearId,
   } = req.query;
 
@@ -161,12 +162,20 @@ async function get(req) {
       String(getDateFromDateTime(item.createdAt)).includes(searchDocDate)
     );
   }
+  if (searchStyleNo) {
+    data = data?.filter((item) =>
+      item?.OpeningStockItems?.some((product) =>
+        product?.styleNo.includes(searchStyleNo)
+      )
+    );
+  }
   if (pagination) {
     data = data.slice(
       (pageNumber - 1) * parseInt(dataPerPage),
       pageNumber * dataPerPage
     );
   }
+
   return {
     statusCode: 0,
     data,
