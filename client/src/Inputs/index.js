@@ -209,6 +209,8 @@ export const TextInput = forwardRef(
       tabIndex = null,
       onBlur = null,
       width = "full",
+      autoFocus,
+      onKeyDown
     },
     ref
   ) => {
@@ -242,6 +244,8 @@ export const TextInput = forwardRef(
               : "bg-white hover:border-gray-400"
           }
           ${className}`}
+          autoFocus={autoFocus}
+          onKeyDown={onKeyDown}
         />
       </div>
     );

@@ -48,6 +48,7 @@ import {
   payFrequencyApi,
   payComponentApi,
   companyPayCodeApi,
+  materialStockApi,
 } from "./services";
 import projectPaymentFormApi from "./services/ProjectPaymentService";
 import {
@@ -131,6 +132,7 @@ const commonReducers = {
   purchaseBill: purchaseBillApi.reducer,
   styleSheet: styleSheetApi.reducer,
   stock: stockApi.reducer,
+  materialStock: materialStockApi.reducer,
   salesBill: salesBillApi.reducer,
   purchaseReturn: purchaseReturnApi.reducer,
   salesReturn: SalesReturnApi.reducer,
@@ -235,6 +237,7 @@ const commonMiddleware = [
   purchaseBillApi.middleware,
   styleSheetApi.middleware,
   stockApi.middleware,
+  materialStockApi.middleware,
   salesBillApi.middleware,
   purchaseReturnApi.middleware,
   SalesReturnApi.middleware,

@@ -90,7 +90,7 @@ async function get(req) {
     searchDocDate,
     searchStore,
     searchInwardType,
-    searchDcDate,
+    searchInvNo,
     finYearId,
     searchSupplier,
   } = req.query;
@@ -132,7 +132,7 @@ async function get(req) {
       inwardType: Boolean(searchInwardType)
         ? { contains: searchInwardType }
         : undefined,
-
+      invNo: Boolean(searchInvNo) ? { contains: searchInvNo } : undefined,
       Store: {
         storeName: searchStore ? { contains: searchStore } : undefined,
       },
@@ -160,11 +160,6 @@ async function get(req) {
   if (searchDocDate) {
     data = data?.filter((item) =>
       String(getDateFromDateTime(item.createdAt)).includes(searchDocDate)
-    );
-  }
-  if (searchDcDate) {
-    data = data?.filter((item) =>
-      String(getDateFromDateTime(item.dcDate)).includes(searchDcDate)
     );
   }
   if (pagination) {
@@ -261,6 +256,7 @@ async function create(req) {
     fabricInwardItems,
     finYearId,
     draftSave,
+    invNo,
   } = await req.body;
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate
@@ -293,6 +289,7 @@ async function create(req) {
         dcDate: dcDate ? new Date(dcDate) : null,
         remarks,
         vehicleNo,
+        invNo,
       },
     });
     await createPurchaseInwardItems(
@@ -302,7 +299,8 @@ async function create(req) {
       userId,
       branchId,
       storeId,
-      inwardType
+      inwardType,
+      invNo
     );
   });
   return { statusCode: 0, data };
@@ -315,7 +313,8 @@ async function createPurchaseInwardItems(
   userId,
   branchId,
   storeId,
-  inwardType
+  inwardType,
+  invNo
 ) {
   const promises = JSON.parse(fabricInwardItems).map(
     async (inwardDetails, index) => {
@@ -357,6 +356,7 @@ async function createPurchaseInwardItems(
           filePath: inwardDetails?.filePath
             ? inwardDetails?.filePath
             : undefined,
+          invNo: invNo ? invNo : undefined,
         },
       });
 
@@ -403,6 +403,8 @@ async function createPurchaseInwardItems(
           filePath: inwardDetails?.filePath
             ? inwardDetails?.filePath
             : undefined,
+          invNo: invNo ? invNo : undefined,
+          itemType: inwardType ? inwardType : undefined,
         },
       });
 
@@ -448,6 +450,7 @@ async function update(id, body) {
     remarks,
     vehicleNo,
     fabricInwardItems,
+    invNo,
   } = await body;
   let data;
   const dataFound = await prisma.purchaseInward.findUnique({
@@ -490,6 +493,7 @@ async function update(id, body) {
         dcDate: dcDate ? new Date(dcDate) : null,
         remarks,
         vehicleNo,
+        invNo,
       },
     });
     await updateFabricInwardItems(
@@ -499,7 +503,8 @@ async function update(id, body) {
       userId,
       branchId,
       storeId,
-      inwardType
+      inwardType,
+      invNo
     );
   });
   return { statusCode: 0, data };
@@ -512,7 +517,8 @@ async function updateFabricInwardItems(
   userId,
   branchId,
   storeId,
-  inwardType
+  inwardType,
+  invNo
 ) {
   const promises = JSON.parse(fabricInwardItems).map(async (inwardDetails) => {
     if (inwardDetails.id) {
@@ -557,6 +563,7 @@ async function updateFabricInwardItems(
           filePath: inwardDetails?.filePath
             ? inwardDetails?.filePath
             : undefined,
+          invNo: invNo ? invNo : undefined,
         },
       });
 
@@ -610,10 +617,12 @@ async function updateFabricInwardItems(
             filePath: inwardDetails?.filePath
               ? inwardDetails?.filePath
               : undefined,
+            invNo: invNo ? invNo : undefined,
+            itemType: inwardType ? inwardType : undefined,
           },
         });
       } else {
-        await tx.stock.create({
+        await tx.materialStock.create({
           data: {
             inOrOut: inwardType + "Inward" || "MaterialInward",
             createdById: parseInt(userId),
@@ -657,6 +666,8 @@ async function updateFabricInwardItems(
             filePath: inwardDetails?.filePath
               ? inwardDetails?.filePath
               : undefined,
+            invNo: invNo ? invNo : undefined,
+            itemType: inwardType ? inwardType : undefined,
           },
         });
       }
@@ -702,6 +713,7 @@ async function updateFabricInwardItems(
           filePath: inwardDetails?.filePath
             ? inwardDetails?.filePath
             : undefined,
+          invNo: invNo ? invNo : undefined,
         },
       });
 
@@ -748,6 +760,8 @@ async function updateFabricInwardItems(
           filePath: inwardDetails?.filePath
             ? inwardDetails?.filePath
             : undefined,
+          invNo: invNo ? invNo : undefined,
+          itemType: inwardType ? inwardType : undefined,
         },
       });
 
@@ -769,4 +783,56 @@ async function remove(id) {
   return { statusCode: 0, data };
 }
 
-export { get, getOne, create, update, remove };
+async function getPurchaseDetail(req) {
+  const { invNo, storeId, branchId } = req.query;
+
+  // 1️⃣ First try fetching by styleNo
+  let data = await prisma.purchaseInward.findFirst({
+    where: {
+      invNo: invNo,
+    },
+    include: {
+      fabricInwardItems: {
+        select: {
+          materialStocks: true,
+          id: true,
+          purchaseInwardId: true,
+          styleNo: true,
+          fabricId: true,
+          styleItemId: true,
+          styleId: true,
+          colorId: true,
+          fabWidth: true,
+          fabMeter: true,
+          sizeId: true,
+          noOfPcs: true,
+          accessoryId: true,
+          accessoryGroupId: true,
+          accessoryItemId: true,
+          sizeId: true,
+          uomId: true,
+          qty: true,
+          price: true,
+          Fabric: true,
+          Color: true,
+          StyleItem: true,
+          Accessory: true,
+          AccessoryGroup: true,
+          Uom: true,
+          Size: true,
+          filePath: true,
+        },
+      },
+    },
+  });
+
+  if (!data) return NoRecordFound("Purchase Inward");
+  return {
+    statusCode: 0,
+    data: {
+      ...data,
+    },
+  };
+}
+
+export { get, getOne, create, update, remove, getPurchaseDetail };

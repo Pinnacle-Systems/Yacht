@@ -51,6 +51,7 @@ import {
   AccessoryMaster,
   ItemMaster,
   LabDip,
+  MaterialStockReport,
   MaxcontrolPanel,
   MaxHomePage,
   NewPurchaseInward,
@@ -59,6 +60,7 @@ import {
   Order,
   PurchaseInward,
   PurchaseOrder,
+  PurchaseReturn,
   SalesBill,
   SalesEntry,
   SalesReport,
@@ -150,13 +152,15 @@ const ActiveTabList = () => {
     "SALES DELIVERY": <SalesEntry />,
     "SIZE TEMPLATE MASTER": <SizeTemplateMaster />,
     "STOCK INWARD": <StockInward />,
-    "STOCK REPORT": <StockReport />,
+    "STOCK REPORT": <MaterialStockReport />,
+    "FINISHED GOODS STOCK": <StockReport />,
     "STYLE ITEM MASTER": <StyleItemMaster />,
     "TAX TEMPLATE": <TaxTemplate />,
     "TAX TERM MASTER": <TaxTermMaster />,
     "SALES REPORT": <SalesReport />,
     "SALES RETURN": <SalesReturn />,
-    "SALES RETURN REPORT": <SalesReturnReport />
+    "SALES RETURN REPORT": <SalesReturnReport />,
+    "PURCHASE RETURN": <PurchaseReturn />
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

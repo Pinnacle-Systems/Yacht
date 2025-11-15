@@ -229,7 +229,7 @@ const FabricInwardItems = ({
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
-                        id={`style-input-${index}`}
+                        id={`styleNo-input-${index}`}
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
                             handleInputChange("", index, "styleNo");
@@ -453,7 +453,7 @@ const FabricInwardItems = ({
                             e.preventDefault(); // prevent form submit or line break
                             e.stopPropagation();
                             const nextQtyInput = document.querySelector(
-                              `#style-input-${index + 1}`
+                              `#styleNo-input-${index + 1}`
                             );
                             if (nextQtyInput) {
                               nextQtyInput.focus();

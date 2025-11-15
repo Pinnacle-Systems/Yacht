@@ -6,9 +6,9 @@ import {
 } from "../../../Utils/helper";
 import { Loader } from "../../../Basic/components";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { useGetPurchaseInwardEntryQuery } from "../../../redux/uniformService/PurchaseInwardEntry";
+import { useGetPurchaseReturnQuery } from "../../../redux/services/PurchaseReturnService";
 
-const PurchaseInwardFormReport = ({
+const PurchaseReturnReport = ({
   onClick,
   onView,
   itemsPerPage = 10,
@@ -24,13 +24,12 @@ const PurchaseInwardFormReport = ({
   const [serachDocNo, setSerachDocNo] = useState("");
   const [searchDocDate, setSearchDocDate] = useState("");
   const [searchStore, setSearchStore] = useState("");
-  const [searchInwardType, setSearchInwardType] = useState("");
-  const [searchInvNo, setSearchInvNo] = useState("");
+  const [searchReturnType, setSearchReturnType] = useState("");
   const [searchSupplier, setSearchSupplier] = useState("");
   const [totalCount, setTotalCount] = useState(0);
   const [currentPageNumber, setCurrentPageNumber] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
-
+  const [searchInvNo, setSearchInvNo] = useState("");
   const handleOnclick = (e) => {
     setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
   };
@@ -39,9 +38,9 @@ const PurchaseInwardFormReport = ({
     serachDocNo,
     searchDocDate,
     searchStore,
-    searchInwardType,
-    searchInvNo,
+    searchReturnType,
     searchSupplier,
+    searchInvNo,
   };
 
   useEffect(() => {
@@ -50,7 +49,7 @@ const PurchaseInwardFormReport = ({
     serachDocNo,
     searchDocDate,
     searchStore,
-    searchInwardType,
+    searchReturnType,
     searchSupplier,
     searchInvNo,
   ]);
@@ -67,7 +66,7 @@ const PurchaseInwardFormReport = ({
     data: allData,
     isFetching,
     isLoading,
-  } = useGetPurchaseInwardEntryQuery({
+  } = useGetPurchaseReturnQuery({
     params: {
       branchId,
       ...searchFields,
@@ -197,13 +196,13 @@ const PurchaseInwardFormReport = ({
                   </th>
 
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <div>Inward No</div>
+                    <div>Return No</div>
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <div>Inward Date</div>
+                    <div>Return Date</div>
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <div>Inward Type</div>
+                    <div>Return Type</div>
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
                     <div>Inv No</div>
@@ -249,9 +248,9 @@ const PurchaseInwardFormReport = ({
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
                       placeholder="Search"
-                      value={searchInwardType}
+                      value={searchReturnType}
                       onChange={(e) => {
-                        setSearchInwardType(e.target.value);
+                        setSearchReturnType(e.target.value);
                       }}
                     />
                   </th>
@@ -328,7 +327,7 @@ const PurchaseInwardFormReport = ({
                             : ""}
                         </td>
                         <td className="py-1.5 text-left px-4">
-                          {dataObj?.inwardType}{" "}
+                          {dataObj?.returnType}{" "}
                         </td>
                         <td className="py-1.5 text-left px-4">
                           {dataObj?.invNo}
@@ -417,4 +416,4 @@ const PurchaseInwardFormReport = ({
   );
 };
 
-export default PurchaseInwardFormReport;
+export default PurchaseReturnReport;

@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import Swal from "sweetalert2";
 import { FaPlus } from "react-icons/fa";
+import PurchaseReturnForm from "./PurchaseReturnForm";
+import { useDeletePurchaseReturnMutation } from "../../../redux/services/PurchaseReturnService";
+import PurchaseReturnReport from "./PurchaseReturnReport";
 const MODEL = "Purchase Return";
 
 export default function Form() {
@@ -11,7 +14,7 @@ export default function Form() {
 
   const dispatch = useDispatch();
 
-  const [removeData] = useDeletePurchaseInwardEntryMutation();
+  const [removeData] = useDeletePurchaseReturnMutation();
   const handleView = (orderId) => {
     setId(orderId);
     setShowForm(true);
@@ -56,7 +59,6 @@ export default function Form() {
         });
         setShowForm(false);
       }
-
     }
   };
 
@@ -66,9 +68,9 @@ export default function Form() {
   };
 
   return (
-    <> {
-      showForm ? (
-
+    <>
+      {" "}
+      {showForm ? (
         <PurchaseReturnForm
           readOnly={readOnly}
           setReadOnly={setReadOnly}
@@ -109,8 +111,7 @@ export default function Form() {
             />
           </div>
         </div>
-      )
-    }
+      )}
     </>
   );
 }

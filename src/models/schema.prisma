@@ -88,49 +88,51 @@ model Subscription {
 }
 
 model Branch {
-  id                  Int                   @id @default(autoincrement())
-  branchName          String
-  branchCode          String?
-  contactName         String?
-  contactMobile       BigInt
-  contactEmail        String?
-  company             Company               @relation(fields: [companyId], references: [id])
-  companyId           Int
-  active              Boolean               @default(true)
-  EmployeeCategory    EmployeeCategory[]
-  UserOnBranch        UserOnBranch[]
-  Employee            Employee[]
-  idPrefix            String?
-  idSequence          String?
-  tempPrefix          String?
-  tempSequence        String?
-  prefixCategory      PrefixCategory?
-  address             String?
-  gstNo               String?
-  panNo               String?
-  order               order[]
-  po                  Po[]
-  OrderImport         OrderImport[]
-  purchaseInwardEntry purchaseInwardEntry[]
-  SampleEntry         SampleEntry[]
-  poAttachments       poAttachments[]
-  Shift               Shift[]
-  ShiftCommonTemplate ShiftCommonTemplate[]
-  ShiftTemplate       ShiftTemplate[]
-  PayFrequency        PayFrequency[]
-  EmployeSubCategory  EmployeSubCategory[]
-  PayComponents       PayComponents[]
-  CompanyPaycode      CompanyPaycode[]
-  Location            Location[]
-  Stock               Stock[]
-  OpeningStock        OpeningStock[]
-  StockAdjustment     StockAdjustment[]
-  SalesEntryBranch    SalesEntry[]          @relation(name: "branch")
-  SalesEntryLocation  SalesEntry[]          @relation(name: "location")
-  StockInward         StockInward[]
-  salesReturns        SalesReturn[]
-  purchaseInwards     PurchaseInward[]
-  materialStocks      MaterialStock[]
+  id                      Int                   @id @default(autoincrement())
+  branchName              String
+  branchCode              String?
+  contactName             String?
+  contactMobile           BigInt
+  contactEmail            String?
+  company                 Company               @relation(fields: [companyId], references: [id])
+  companyId               Int
+  active                  Boolean               @default(true)
+  EmployeeCategory        EmployeeCategory[]
+  UserOnBranch            UserOnBranch[]
+  Employee                Employee[]
+  idPrefix                String?
+  idSequence              String?
+  tempPrefix              String?
+  tempSequence            String?
+  prefixCategory          PrefixCategory?
+  address                 String?
+  gstNo                   String?
+  panNo                   String?
+  order                   order[]
+  po                      Po[]
+  OrderImport             OrderImport[]
+  purchaseInwardEntry     purchaseInwardEntry[]
+  SampleEntry             SampleEntry[]
+  poAttachments           poAttachments[]
+  Shift                   Shift[]
+  ShiftCommonTemplate     ShiftCommonTemplate[]
+  ShiftTemplate           ShiftTemplate[]
+  PayFrequency            PayFrequency[]
+  EmployeSubCategory      EmployeSubCategory[]
+  PayComponents           PayComponents[]
+  CompanyPaycode          CompanyPaycode[]
+  Location                Location[]
+  Stock                   Stock[]
+  OpeningStock            OpeningStock[]
+  StockAdjustment         StockAdjustment[]
+  SalesEntryBranch        SalesEntry[]          @relation(name: "branch")
+  SalesEntryLocation      SalesEntry[]          @relation(name: "location")
+  StockInward             StockInward[]
+  salesReturns            SalesReturn[]
+  purchaseInwards         PurchaseInward[]
+  materialStocks          MaterialStock[]
+  purchaseReturnsBranch   PurchaseReturn[]      @relation(name: "branch")
+  purchaseReturnsLocation PurchaseReturn[]      @relation(name: "location")
 }
 
 model UserOnBranch {
@@ -245,6 +247,8 @@ model User {
   purchaseInwardsUpdatedBy     PurchaseInward[]      @relation(name: "updatedBy")
   materialStocksCreatedBy      MaterialStock[]       @relation(name: "createdBy")
   materialStocksUpdatedBy      MaterialStock[]       @relation(name: "updatedBy")
+  purchaseReturnsCreatedBy     PurchaseReturn[]      @relation(name: "createdBy")
+  purchaseReturnsUpdatedBy     PurchaseReturn[]      @relation(name: "updatedBy")
 }
 
 model Employee {
@@ -564,6 +568,7 @@ model Party {
   alterContactNumber        String?
   salesReturns              SalesReturn[]
   purchaseInwards           PurchaseInward[]
+  purchaseReturns           PurchaseReturn[]
 }
 
 model PartyBranch {
@@ -684,6 +689,7 @@ model Location {
   salesReturns    SalesReturn[]
   purchaseInwards PurchaseInward[]
   materialStocks  MaterialStock[]
+  purchaseReturns PurchaseReturn[]
 }
 
 model TermsAndConditions {
@@ -1103,6 +1109,7 @@ model Fabric {
   salesReturnItems     SalesReturnItems[]
   fabricInwardItems    FabricInwardItems[]
   materialStocks       MaterialStock[]
+  purchaseReturnItems  PurchaseReturnItems[]
 }
 
 model Color {
@@ -1124,6 +1131,7 @@ model Color {
   salesReturnItems           SalesReturnItems[]
   fabricInwardItems          FabricInwardItems[]
   materialStocks             MaterialStock[]
+  purchaseReturnItems        PurchaseReturnItems[]
 }
 
 model UnitOfMeasurement {
@@ -1139,6 +1147,7 @@ model UnitOfMeasurement {
   Stock                      Stock[]
   materialStocks             MaterialStock[]
   fabricInwardItems          FabricInwardItems[]
+  purchaseReturnItems        PurchaseReturnItems[]
 }
 
 model purchaseInwardEntry {
@@ -1525,6 +1534,7 @@ model Style {
   salesReturnItems     SalesReturnItems[]
   fabricInwardItems    FabricInwardItems[]
   materialStocks       MaterialStock[]
+  purchaseReturnItems  PurchaseReturnItems[]
 }
 
 model Size {
@@ -1543,6 +1553,7 @@ model Size {
   salesReturnItems     SalesReturnItems[]
   materialStocks       MaterialStock[]
   fabricInwardItems    FabricInwardItems[]
+  purchaseReturnItems  PurchaseReturnItems[]
 }
 
 model Measurement {
@@ -1554,16 +1565,17 @@ model Measurement {
 }
 
 model AccessoryGroup {
-  id                Int                 @id @default(autoincrement())
-  name              String
-  Company           Company?            @relation(fields: [companyId], references: [id])
-  companyId         Int?
-  active            Boolean?            @default(true)
-  AccessoryItem     AccessoryItem[]
-  Stock             Stock[]
-  Accessory         Accessory[]
-  materialStocks    MaterialStock[]
-  fabricInwardItems FabricInwardItems[]
+  id                  Int                   @id @default(autoincrement())
+  name                String
+  Company             Company?              @relation(fields: [companyId], references: [id])
+  companyId           Int?
+  active              Boolean?              @default(true)
+  AccessoryItem       AccessoryItem[]
+  Stock               Stock[]
+  Accessory           Accessory[]
+  materialStocks      MaterialStock[]
+  fabricInwardItems   FabricInwardItems[]
+  purchaseReturnItems PurchaseReturnItems[]
 }
 
 model Yarn {
@@ -1581,34 +1593,36 @@ model Yarn {
 }
 
 model Accessory {
-  id                Int                 @id @default(autoincrement())
-  aliasName         String?
-  accessoryItem     AccessoryItem?      @relation(fields: [accessoryItemId], references: [id])
-  accessoryItemId   Int?
-  hsn               String?
-  Company           Company?            @relation(fields: [companyId], references: [id])
-  companyId         Int?
-  active            Boolean?            @default(true)
-  name              String?
-  AccessoryGroup    AccessoryGroup?     @relation(fields: [accessoryGroupId], references: [id])
-  accessoryGroupId  Int?
-  Stock             Stock[]
-  materialStocks    MaterialStock[]
-  fabricInwardItems FabricInwardItems[]
+  id                  Int                   @id @default(autoincrement())
+  aliasName           String?
+  accessoryItem       AccessoryItem?        @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId     Int?
+  hsn                 String?
+  Company             Company?              @relation(fields: [companyId], references: [id])
+  companyId           Int?
+  active              Boolean?              @default(true)
+  name                String?
+  AccessoryGroup      AccessoryGroup?       @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId    Int?
+  Stock               Stock[]
+  materialStocks      MaterialStock[]
+  fabricInwardItems   FabricInwardItems[]
+  purchaseReturnItems PurchaseReturnItems[]
 }
 
 model AccessoryItem {
-  id                Int                 @id @default(autoincrement())
-  name              String
-  AccessoryGroup    AccessoryGroup?     @relation(fields: [accessoryGroupId], references: [id])
-  active            Boolean?            @default(true)
-  accessoryGroupId  Int?
-  Company           Company?            @relation(fields: [companyId], references: [id])
-  companyId         Int?
-  Accessory         Accessory[]
-  Stock             Stock[]
-  materialStocks    MaterialStock[]
-  fabricInwardItems FabricInwardItems[]
+  id                  Int                   @id @default(autoincrement())
+  name                String
+  AccessoryGroup      AccessoryGroup?       @relation(fields: [accessoryGroupId], references: [id])
+  active              Boolean?              @default(true)
+  accessoryGroupId    Int?
+  Company             Company?              @relation(fields: [companyId], references: [id])
+  companyId           Int?
+  Accessory           Accessory[]
+  Stock               Stock[]
+  materialStocks      MaterialStock[]
+  fabricInwardItems   FabricInwardItems[]
+  purchaseReturnItems PurchaseReturnItems[]
 }
 
 model Stock {
@@ -1871,6 +1885,7 @@ model StyleItem {
   salesReturnItems     SalesReturnItems[]
   fabricInwardItems    FabricInwardItems[]
   materialStocks       MaterialStock[]
+  purchaseReturnItems  PurchaseReturnItems[]
 }
 
 model SalesReturn {
@@ -1937,6 +1952,7 @@ model PurchaseInward {
   dcDate            DateTime?
   remarks           String?
   vehicleNo         String?
+  invNo             String?
   fabricInwardItems FabricInwardItems[]
 }
 
@@ -1970,49 +1986,113 @@ model FabricInwardItems {
   price            Float?
   materialStocks   MaterialStock[]
   filePath         String?
+  invNo            String?
 }
 
 model MaterialStock {
-  id                  Int                @id @default(autoincrement())
-  inOrOut             String?
-  Fabric              Fabric?            @relation(fields: [fabricId], references: [id])
-  fabricId            Int?
-  Yarn                Yarn?              @relation(fields: [yarnId], references: [id])
-  yarnId              Int?
-  Accessory           Accessory?         @relation(fields: [accessoryId], references: [id])
-  accessoryId         Int?
-  accessoryGroup      AccessoryGroup?    @relation(fields: [accessoryGroupId], references: [id])
-  accessoryGroupId    Int?
-  accessoryItem       AccessoryItem?     @relation(fields: [accessoryItemId], references: [id])
-  accessoryItemId     Int?
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime?          @updatedAt
-  createdBy           User?              @relation("createdBy", fields: [createdById], references: [id])
+  id                    Int                  @id @default(autoincrement())
+  inOrOut               String?
+  Fabric                Fabric?              @relation(fields: [fabricId], references: [id])
+  fabricId              Int?
+  Yarn                  Yarn?                @relation(fields: [yarnId], references: [id])
+  yarnId                Int?
+  Accessory             Accessory?           @relation(fields: [accessoryId], references: [id])
+  accessoryId           Int?
+  accessoryGroup        AccessoryGroup?      @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId      Int?
+  accessoryItem         AccessoryItem?       @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId       Int?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime?            @updatedAt
+  createdBy             User?                @relation("createdBy", fields: [createdById], references: [id])
+  createdById           Int?
+  updatedBy             User?                @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById           Int?
+  Branch                Branch?              @relation(fields: [branchId], references: [id])
+  branchId              Int?
+  Store                 Location?            @relation(fields: [storeId], references: [id])
+  storeId               Int?
+  Color                 Color?               @relation(fields: [colorId], references: [id])
+  colorId               Int?
+  Uom                   UnitOfMeasurement?   @relation(fields: [uomId], references: [id])
+  uomId                 Int?
+  Style                 Style?               @relation(fields: [styleId], references: [id])
+  styleId               Int?
+  Size                  Size?                @relation(fields: [sizeId], references: [id])
+  sizeId                Int?
+  qty                   Float?
+  price                 Float?
+  active                Boolean?
+  FabricInwardItems     FabricInwardItems?   @relation(fields: [fabricInwardItemsId], references: [id], onDelete: Cascade)
+  fabricInwardItemsId   Int?
+  styleNo               String?
+  StyleItem             StyleItem?           @relation(fields: [styleItemId], references: [id])
+  styleItemId           Int?
+  fabWidth              Float?
+  fabMeter              Float?
+  noOfPcs               Int?
+  filePath              String?
+  purchaseReturnItems   PurchaseReturnItems? @relation(fields: [purchaseReturnItemsId], references: [id], onDelete: Cascade)
+  purchaseReturnItemsId Int?
+  remarks               String?
+  invNo                 String?
+  itemType              String?
+}
+
+model PurchaseReturn {
+  id                  Int                   @id @default(autoincrement())
+  docId               String
+  docDate             DateTime?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  createdBy           User?                 @relation("createdBy", fields: [createdById], references: [id])
   createdById         Int?
-  updatedBy           User?              @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedBy           User?                 @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById         Int?
-  Branch              Branch?            @relation(fields: [branchId], references: [id])
+  Branch              Branch?               @relation("branch", fields: [branchId], references: [id])
   branchId            Int?
-  Store               Location?          @relation(fields: [storeId], references: [id])
+  Location            Branch?               @relation("location", fields: [locationId], references: [id])
+  locationId          Int?
+  Store               Location?             @relation(fields: [storeId], references: [id])
   storeId             Int?
-  Color               Color?             @relation(fields: [colorId], references: [id])
-  colorId             Int?
-  Uom                 UnitOfMeasurement? @relation(fields: [uomId], references: [id])
-  uomId               Int?
-  Style               Style?             @relation(fields: [styleId], references: [id])
-  styleId             Int?
-  Size                Size?              @relation(fields: [sizeId], references: [id])
-  sizeId              Int?
-  qty                 Float?
-  price               Float?
-  active              Boolean?
-  FabricInwardItems   FabricInwardItems? @relation(fields: [fabricInwardItemsId], references: [id], onDelete: Cascade)
-  fabricInwardItemsId Int?
-  styleNo             String?
-  StyleItem           StyleItem?         @relation(fields: [styleItemId], references: [id])
-  styleItemId         Int?
-  fabWidth            Float?
-  fabMeter            Float?
-  noOfPcs             Int?
-  filePath            String?
+  Supplier            Party?                @relation(fields: [supplierId], references: [id])
+  supplierId          Int?
+  returnType          String?
+  invNo               String?
+  purchaseReturnItems PurchaseReturnItems[]
+}
+
+model PurchaseReturnItems {
+  id               Int                @id @default(autoincrement())
+  PurchaseReturn   PurchaseReturn?    @relation(fields: [purchaseReturnId], references: [id], onDelete: Cascade)
+  purchaseReturnId Int?
+  styleNo          String?
+  Fabric           Fabric?            @relation(fields: [fabricId], references: [id])
+  fabricId         Int?
+  StyleItem        StyleItem?         @relation(fields: [styleItemId], references: [id])
+  styleItemId      Int?
+  Style            Style?             @relation(fields: [styleId], references: [id])
+  styleId          Int?
+  Color            Color?             @relation(fields: [colorId], references: [id])
+  colorId          Int?
+  fabWidth         Float?
+  fabMeter         Float?
+  noOfPcs          Int?
+  Accessory        Accessory?         @relation(fields: [accessoryId], references: [id])
+  accessoryId      Int?
+  AccessoryGroup   AccessoryGroup?    @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId Int?
+  AccessoryItem    AccessoryItem?     @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId  Int?
+  Size             Size?              @relation(fields: [sizeId], references: [id])
+  sizeId           Int?
+  qty              Float?
+  Uom              UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId            Int?
+  price            Float?
+  materialStocks   MaterialStock[]
+  remarks          String?
+  invNo            String?
+  returnFabMeter   Float?
+  returnQty        Float?
 }

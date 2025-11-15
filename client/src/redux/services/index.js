@@ -50,3 +50,4 @@ export { default as employeeSubCategoryApi } from "./EmployeeSubCategoryservice"
 export { default as payFrequencyApi } from "./PayFrequencyService";
 export { default as payComponentApi } from "./PayComponentsService";
 export { default as companyPayCodeApi } from "./CompanyPayCodeService";
+export { default as materialStockApi } from "./MaterialStockService";

@@ -14,8 +14,8 @@ import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformServic
 const ReturnItems = ({
   id,
   returnType,
-  returnItems,
-  setReturnItems,
+  purchaseReturnItems,
+  setPurchaseReturnItems,
   readOnly,
   params,
 }) => {
@@ -29,7 +29,8 @@ const ReturnItems = ({
   });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
-
+  const { data: fabricList } = useGetFabricMasterQuery({ params });
+  const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
   );
@@ -51,18 +52,20 @@ const ReturnItems = ({
       uomId: "",
       qty: "",
       selected: false,
+      returnFabMeter: "",
+      returnQty: "",
     };
-    setReturnItems([...returnItems, newRow]);
+    setPurchaseReturnItems([...purchaseReturnItems, newRow]);
   };
 
   const handleInputChange = (value, index, field) => {
-    const newBlend = structuredClone(returnItems);
+    const newBlend = structuredClone(purchaseReturnItems);
     newBlend[index][field] = value;
-    setReturnItems(newBlend);
+    setPurchaseReturnItems(newBlend);
   };
 
   const deleteRow = (id) => {
-    setReturnItems((currentRows) => {
+    setPurchaseReturnItems((currentRows) => {
       if (currentRows.length > 1) {
         return currentRows.filter((row, index) => index !== parseInt(id));
       }
@@ -71,7 +74,7 @@ const ReturnItems = ({
   };
 
   const handleDeleteAllRows = () => {
-    setReturnItems((prevRows) => {
+    setPurchaseReturnItems((prevRows) => {
       if (prevRows.length <= 1) return prevRows;
       return [prevRows[0]];
     });
@@ -92,8 +95,8 @@ const ReturnItems = ({
   };
 
   useEffect(() => {
-    if (returnItems) {
-      setReturnItems((prev) => {
+    if (purchaseReturnItems) {
+      setPurchaseReturnItems((prev) => {
         const filledRows = prev.length;
 
         if (filledRows < 6) {
@@ -116,13 +119,15 @@ const ReturnItems = ({
               uomId: "",
               qty: "",
               selected: false,
+              returnFabMeter: "",
+              returnQty: "",
             })),
           ];
         }
         return prev; // if already >= 6, just keep as it is
       });
     } else {
-      setReturnItems(
+      setPurchaseReturnItems(
         Array.from({ length: 6 }, () => ({
           styleNo: "",
           fabricId: "",
@@ -139,13 +144,15 @@ const ReturnItems = ({
           uomId: "",
           qty: "",
           selected: false,
+          returnFabMeter: "",
+          returnQty: "",
         }))
       );
     }
-  }, [returnItems, setReturnItems]);
+  }, [purchaseReturnItems, setPurchaseReturnItems]);
 
   const deleteSelectedRows = () => {
-    setReturnItems((rows) => rows.filter((r) => !r.selected));
+    setPurchaseReturnItems((rows) => rows.filter((r) => !r.selected));
     setContextMenu(null);
   };
 
@@ -161,74 +168,124 @@ const ReturnItems = ({
           <table className="w-full border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
-                <th
-                  className={`w-12 px-4 py-2 text-center font-medium text-[13px]`}
-                >
-                  S.No
-                </th>
+                {(returnType === "Fabric" || returnType === "Accessory") && (
+                  <th
+                    className={`w-12 px-4 py-2 text-center font-medium text-[13px]`}
+                  >
+                    S.No
+                  </th>
+                )}
                 {returnType === "Fabric" && (
                   <th
-                    className={`w-20 px-2 py-2 text-center font-medium text-[13px]`}
+                    className={`w-16 px-2 py-2 text-center font-medium text-[13px]`}
                   >
                     Style No
                   </th>
                 )}
                 {returnType === "Fabric" && (
                   <th
-                    className={`w-48 px-4 py-2 text-center font-medium text-[13px] `}
+                    className={`w-44 px-4 py-2 text-center font-medium text-[13px] `}
                   >
                     Style
                   </th>
                 )}
                 {returnType === "Fabric" && (
                   <th
-                    className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
+                    className={`w-44 px-4 py-2 text-center font-medium text-[13px]`}
                   >
                     Fabric
                   </th>
                 )}
-                <th
-                  className={`w-64 px-4 py-2 text-center font-medium text-[13px]`}
-                >
-                  Accessory Name
-                </th>
-                <th
-                  className={`w-64 px-4 py-2 text-center font-medium text-[13px]`}
-                >
-                  Accessory Group Name
-                </th>
-                <th
-                  className={`w-40 px-4 py-2 text-center  font-medium text-[13px]`}
-                >
-                  Color
-                </th>{" "}
-                <th
-                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
-                >
-                  Size
-                </th>
-                <th
-                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
-                >
-                  Uom
-                </th>
-                <th
-                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
-                >
-                  Quantity
-                </th>
-                <th className="w-20 px-1 py-1 justify-center font-medium text-[13px]">
+                {returnType === "Accessory" && (
+                  <th
+                    className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
+                  >
+                    Accessory Name
+                  </th>
+                )}
+                {returnType === "Accessory" && (
+                  <th
+                    className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
+                  >
+                    Accessory Group Name
+                  </th>
+                )}
+                {(returnType === "Fabric" || returnType === "Accessory") && (
+                  <th
+                    className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
+                  >
+                    Color
+                  </th>
+                )}
+                {returnType === "Fabric" && (
+                  <th
+                    className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
+                  >
+                    Width
+                  </th>
+                )}
+                {returnType === "Fabric" && (
+                  <th
+                    className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
+                  >
+                    Meter
+                  </th>
+                )}
+                {returnType === "Fabric" && (
+                  <th
+                    className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  >
+                    No of Rolls
+                  </th>
+                )}
+                {returnType === "Fabric" && (
+                  <th
+                    className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
+                  >
+                    Return Meter
+                  </th>
+                )}
+
+                {returnType === "Accessory" && (
+                  <th
+                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                  >
+                    Size
+                  </th>
+                )}
+                {returnType === "Accessory" && (
+                  <th
+                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                  >
+                    Uom
+                  </th>
+                )}
+                {returnType === "Accessory" && (
+                  <th
+                    className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
+                  >
+                    Quantity
+                  </th>
+                )}
+                {returnType === "Accessory" && (
+                  <th
+                    className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
+                  >
+                    Return Qty
+                  </th>
+                )}
+                <th className="w-16 px-1 py-1 justify-center font-medium text-[13px]">
                   <tr className="flex items-center justify-center">Select</tr>
                   <tr className="flex items-center justify-center gap-2">
                     <input
                       type="checkbox"
                       checked={
-                        returnItems.length > 0 &&
-                        returnItems.every((row) => row.selected)
+                        purchaseReturnItems.length > 0 &&
+                        purchaseReturnItems.every((row) => row.selected)
                       }
                       onChange={(e) => {
                         const checked = e.target.checked;
-                        setReturnItems((prev) =>
+                        setPurchaseReturnItems((prev) =>
                           prev.map((row) => ({ ...row, selected: checked }))
                         );
                       }}
@@ -248,248 +305,544 @@ const ReturnItems = ({
               </tr>
             </thead>
             <tbody>
-              {(returnItems ? returnItems : [])?.map((row, index) => (
-                <tr
-                  className="border border-blue-gray-200 cursor-pointer "
-                  key={index}
-                >
-                  <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
-                    {index + 1}
-                  </td>
-                  <td className="py-0.5 border border-gray-300 text-[11px] ">
-                    <select
-                      id={`accessory-input-${index}`}
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "accessoryId");
-                        }
-                      }}
-                      tabIndex={"0"}
-                      disabled={readOnly}
-                      className="text-left w-full rounded py-1 table-data-input"
-                      value={row.accessoryId}
-                      onFocus={(e) => e.target.focus()}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "accessoryId")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "accessoryId");
-                      }}
-                    >
-                      <option></option>
-                      {(id
-                        ? accessoryList?.data
-                        : accessoryList?.data?.filter((item) => item.active)
-                      )?.map((blend) => (
-                        <option value={blend.id} key={blend.id}>
-                          {blend?.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="py-0.5 border border-gray-300 text-[11px] ">
-                    <select
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "accessoryGroupId");
-                        }
-                      }}
-                      tabIndex={"0"}
-                      disabled={readOnly}
-                      className="text-left w-full rounded py-1 table-data-input"
-                      value={row.accessoryGroupId}
-                      onChange={(e) =>
-                        handleInputChange(
-                          e.target.value,
-                          index,
-                          "accessoryGroupId"
-                        )
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(
-                          e.target.value,
-                          index,
-                          "accessoryGroupId"
-                        );
-                      }}
-                    >
-                      <option></option>
-                      {(id
-                        ? accessoryGroupList?.data
-                        : accessoryGroupList?.data?.filter(
-                            (item) => item.active
-                          )
-                      )?.map((blend) => (
-                        <option value={blend.id} key={blend.id}>
-                          {blend?.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-
-                  <td className="py-0.5 border border-gray-300 text-[11px]">
-                    <select
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "colorId");
-                        }
-                      }}
-                      tabIndex={"0"}
-                      disabled={readOnly}
-                      className="text-left w-full rounded py-1 table-data-input"
-                      value={row.colorId}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "colorId")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "colorId");
-                      }}
-                    >
-                      <option></option>
-                      {(id
-                        ? colorList?.data
-                        : colorList?.data?.filter((item) => item.active)
-                      )?.map((blend) => (
-                        <option value={blend.id} key={blend.id}>
-                          {blend?.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="py-0.5 border border-gray-300 text-[11px]">
-                    <select
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "sizeId");
-                        }
-                      }}
-                      tabIndex={"0"}
-                      disabled={readOnly}
-                      className="text-left w-full rounded py-1 table-data-input"
-                      value={row.sizeId}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "sizeId")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "sizeId");
-                      }}
-                    >
-                      <option></option>
-                      {(id
-                        ? sizeList?.data
-                        : sizeList?.data?.filter((item) => item.active)
-                      )?.map((blend) => (
-                        <option value={blend.id} key={blend.id}>
-                          {blend?.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="py-0.5 border border-gray-300 text-[11px] ">
-                    <select
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "uomId");
-                        }
-                      }}
-                      tabIndex={"0"}
-                      disabled={readOnly}
-                      className="text-left w-full rounded py-1 table-data-input"
-                      value={row.uomId}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "uomId")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "uomId");
-                      }}
-                    >
-                      <option></option>
-                      {(id
-                        ? uomList?.data
-                        : uomList?.data?.filter((item) => item.active)
-                      )?.map((blend) => (
-                        <option value={blend.id} key={blend.id}>
-                          {blend?.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault(); // prevent form submit or line break
-                          e.stopPropagation();
-                          const nextQtyInput = document.querySelector(
-                            `#accessory-input-${index + 1}`
-                          );
-                          if (nextQtyInput) {
-                            nextQtyInput.focus();
+              {(purchaseReturnItems ? purchaseReturnItems : [])?.map(
+                (row, index) => (
+                  <tr
+                    className="border border-blue-gray-200 cursor-pointer "
+                    key={index}
+                  >
+                    {(returnType === "Fabric" ||
+                      returnType === "Accessory") && (
+                      <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
+                        {index + 1}
+                      </td>
+                    )}
+                    {returnType === "Fabric" && (
+                      <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                        <input
+                          id={`styleNo-input-${index}`}
+                          onKeyDown={(e) => {
+                            if (e.key === "Delete") {
+                              handleInputChange("", index, "styleNo");
+                            }
+                          }}
+                          type="string"
+                          className="text-left rounded py-1 px-1 w-full table-data-input"
+                          onFocus={(e) => e.target.select()}
+                          value={row?.styleNo}
+                          onChange={(e) =>
+                            handleInputChange(e.target.value, index, "styleNo")
                           }
-                        }
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "qty");
-                        }
-                      }}
-                      type="string"
-                      className="text-left rounded py-1 px-1 w-full table-data-input"
-                      onFocus={(e) => e.target.select()}
-                      value={row?.qty}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "qty")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "qty");
-                      }}
-                      disabled={readOnly}
-                    />
-                  </td>
-                  <td className="border-blue-gray-200 text-[11px]  border border-gray-300 py-0.5 text-right">
-                    <input
-                      type="checkbox"
-                      checked={row.selected || false}
-                      disabled={readOnly}
-                      onChange={(e) =>
-                        handleInputChange(e.target.checked, index, "selected")
-                      }
-                      className="justify-center flex items-center mx-auto w-full"
-                      onContextMenu={(e) => {
-                        if (!readOnly) {
-                          handleRightClick(e, index, "notes");
-                        }
-                      }}
-                    />
-                  </td>
-                  <td className="w-2 border border-gray-300">
-                    <input
-                      // onContextMenu={(e) => {
-                      //   if (!readOnly) {
-                      //     handleRightClick(e, index, "");
-                      //   }
-                      // }}
-                      className="w-full"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          addRow();
-                        }
-                      }}
-                      disabled={readOnly}
-                    />
-                  </td>
-                </tr>
-              ))}
+                          onBlur={(e) => {
+                            handleInputChange(e.target.value, index, "styleNo");
+                          }}
+                          disabled={id}
+                        />
+                      </td>
+                    )}
+                    {returnType === "Fabric" && (
+                      <td className="py-0.5 border border-gray-300 text-[11px] ">
+                        <select
+                          onKeyDown={(e) => {
+                            if (e.key === "Delete") {
+                              handleInputChange("", index, "styleItemId");
+                            }
+                          }}
+                          tabIndex={"0"}
+                          disabled={id}
+                          className="text-left w-full rounded py-1 table-data-input"
+                          value={row.styleItemId}
+                          onChange={(e) =>
+                            handleInputChange(
+                              e.target.value,
+                              index,
+                              "styleItemId"
+                            )
+                          }
+                          onBlur={(e) => {
+                            handleInputChange(
+                              e.target.value,
+                              index,
+                              "styleItemId"
+                            );
+                          }}
+                        >
+                          <option></option>
+                          {(id
+                            ? styleItemList?.data
+                            : styleItemList?.data?.filter((item) => item.active)
+                          )?.map((blend) => (
+                            <option value={blend.id} key={blend.id}>
+                              {blend?.name}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    )}
+                    {returnType === "Fabric" && (
+                      <td className="py-0.5 border border-gray-300 text-[11px] ">
+                        <select
+                          onKeyDown={(e) => {
+                            if (e.key === "Delete") {
+                              handleInputChange("", index, "fabricId");
+                            }
+                          }}
+                          tabIndex={"0"}
+                          disabled={id}
+                          className="text-left w-full rounded py-1 table-data-input"
+                          value={row.fabricId}
+                          onChange={(e) =>
+                            handleInputChange(e.target.value, index, "fabricId")
+                          }
+                          onBlur={(e) => {
+                            handleInputChange(
+                              e.target.value,
+                              index,
+                              "fabricId"
+                            );
+                          }}
+                        >
+                          <option></option>
+                          {(id
+                            ? fabricList?.data
+                            : fabricList?.data?.filter((item) => item.active)
+                          )?.map((blend) => (
+                            <option value={blend.id} key={blend.id}>
+                              {blend?.name}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    )}
+                    {returnType === "Accessory" && (
+                      <td className="py-0.5 border border-gray-300 text-[11px] ">
+                        <select
+                          id={`accessory-input-${index}`}
+                          onKeyDown={(e) => {
+                            if (e.key === "Delete") {
+                              handleInputChange("", index, "accessoryId");
+                            }
+                          }}
+                          tabIndex={"0"}
+                          disabled={id}
+                          className="text-left w-full rounded py-1 table-data-input"
+                          value={row.accessoryId}
+                          onFocus={(e) => e.target.focus()}
+                          onChange={(e) =>
+                            handleInputChange(
+                              e.target.value,
+                              index,
+                              "accessoryId"
+                            )
+                          }
+                          onBlur={(e) => {
+                            handleInputChange(
+                              e.target.value,
+                              index,
+                              "accessoryId"
+                            );
+                          }}
+                        >
+                          <option></option>
+                          {(id
+                            ? accessoryList?.data
+                            : accessoryList?.data?.filter((item) => item.active)
+                          )?.map((blend) => (
+                            <option value={blend.id} key={blend.id}>
+                              {blend?.name}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    )}
+                    {returnType === "Accessory" && (
+                      <td className="py-0.5 border border-gray-300 text-[11px] ">
+                        <select
+                          onKeyDown={(e) => {
+                            if (e.key === "Delete") {
+                              handleInputChange("", index, "accessoryGroupId");
+                            }
+                          }}
+                          tabIndex={"0"}
+                          disabled={id}
+                          className="text-left w-full rounded py-1 table-data-input"
+                          value={row.accessoryGroupId}
+                          onChange={(e) =>
+                            handleInputChange(
+                              e.target.value,
+                              index,
+                              "accessoryGroupId"
+                            )
+                          }
+                          onBlur={(e) => {
+                            handleInputChange(
+                              e.target.value,
+                              index,
+                              "accessoryGroupId"
+                            );
+                          }}
+                        >
+                          <option></option>
+                          {(id
+                            ? accessoryGroupList?.data
+                            : accessoryGroupList?.data?.filter(
+                                (item) => item.active
+                              )
+                          )?.map((blend) => (
+                            <option value={blend.id} key={blend.id}>
+                              {blend?.name}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    )}
+                    {(returnType === "Fabric" ||
+                      returnType === "Accessory") && (
+                      <td className="py-0.5 border border-gray-300 text-[11px]">
+                        <select
+                          id={`qty-input-${index}`}
+                          onKeyDown={(e) => {
+                            if (e.key === "Delete") {
+                              handleInputChange("", index, "colorId");
+                            }
+                          }}
+                          tabIndex={"0"}
+                          disabled={id}
+                          className="text-left w-full rounded py-1 table-data-input"
+                          value={row.colorId}
+                          onChange={(e) =>
+                            handleInputChange(e.target.value, index, "colorId")
+                          }
+                          onBlur={(e) => {
+                            handleInputChange(e.target.value, index, "colorId");
+                          }}
+                        >
+                          <option></option>
+                          {(id
+                            ? colorList?.data
+                            : colorList?.data?.filter((item) => item.active)
+                          )?.map((blend) => (
+                            <option value={blend.id} key={blend.id}>
+                              {blend?.name}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    )}
+                    {returnType === "Fabric" && (
+                      <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                        <input
+                          onKeyDown={(e) => {
+                            if (
+                              e.code === "Minus" ||
+                              e.code === "NumpadSubtract"
+                            )
+                              e.preventDefault();
+                            if (e.key === "Delete") {
+                              handleInputChange("", index, "fabWidth");
+                            }
+                          }}
+                          min={"0"}
+                          type="number"
+                          className="text-right rounded py-1 px-1 w-full table-data-input"
+                          onFocus={(e) => e.target.select()}
+                          value={row?.fabWidth}
+                          onChange={(e) =>
+                            handleInputChange(e.target.value, index, "fabWidth")
+                          }
+                          onBlur={(e) => {
+                            handleInputChange(
+                              e.target.value,
+                              index,
+                              "fabWidth"
+                            );
+                          }}
+                          disabled={id}
+                        />
+                      </td>
+                    )}
+                    {returnType === "Fabric" && (
+                      <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                        <input
+                          onKeyDown={(e) => {
+                            if (
+                              e.code === "Minus" ||
+                              e.code === "NumpadSubtract"
+                            )
+                              e.preventDefault();
+                            if (e.key === "Delete") {
+                              handleInputChange("", index, "fabMeter");
+                            }
+                          }}
+                          min={"0"}
+                          type="number"
+                          className="text-right rounded py-1 px-1 w-full table-data-input"
+                          onFocus={(e) => e.target.select()}
+                          value={row?.fabMeter}
+                          onChange={(e) =>
+                            handleInputChange(e.target.value, index, "fabMeter")
+                          }
+                          onBlur={(e) => {
+                            handleInputChange(
+                              e.target.value,
+                              index,
+                              "fabMeter"
+                            );
+                          }}
+                          disabled={id}
+                        />
+                      </td>
+                    )}
+                    {returnType === "Fabric" && (
+                      <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                        <input
+                          onKeyDown={(e) => {
+                            if (e.key === "Delete") {
+                              handleInputChange("", index, "noOfPcs");
+                            }
+                          }}
+                          type="string"
+                          className="text-right rounded py-1 px-1 w-full table-data-input"
+                          onFocus={(e) => e.target.select()}
+                          value={row?.noOfPcs}
+                          onChange={(e) =>
+                            handleInputChange(e.target.value, index, "noOfPcs")
+                          }
+                          onBlur={(e) => {
+                            handleInputChange(e.target.value, index, "noOfPcs");
+                          }}
+                          disabled={id}
+                        />
+                      </td>
+                    )}
+                    {returnType === "Fabric" && (
+                      <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                        <input
+                          onKeyDown={(e) => {
+                            if (
+                              e.code === "Minus" ||
+                              e.code === "NumpadSubtract"
+                            )
+                              e.preventDefault();
+                            if (e.key === "Delete") {
+                              handleInputChange("", index, "returnFabMeter");
+                            }
+                            if (e.key === "Enter") {
+                              e.preventDefault(); // prevent form submit or line break
+                              e.stopPropagation();
+                              const nextQtyInput = document.querySelector(
+                                `#styleNo-input-${index + 1}`
+                              );
+                              if (nextQtyInput) {
+                                nextQtyInput.focus();
+                              }
+                            }
+                          }}
+                          min={"0"}
+                          type="number"
+                          className="text-right rounded py-1 px-1 w-full table-data-input"
+                          onFocus={(e) => e.target.select()}
+                          value={row?.returnFabMeter}
+                          onChange={(e) =>
+                            handleInputChange(
+                              e.target.value,
+                              index,
+                              "returnFabMeter"
+                            )
+                          }
+                          onBlur={(e) => {
+                            handleInputChange(
+                              e.target.value,
+                              index,
+                              "returnFabMeter"
+                            );
+                          }}
+                          disabled={readOnly}
+                        />
+                      </td>
+                    )}
+                    {returnType === "Accessory" && (
+                      <td className="py-0.5 border border-gray-300 text-[11px]">
+                        <select
+                          onKeyDown={(e) => {
+                            if (e.key === "Delete") {
+                              handleInputChange("", index, "sizeId");
+                            }
+                          }}
+                          tabIndex={"0"}
+                          disabled={id}
+                          className="text-left w-full rounded py-1 table-data-input"
+                          value={row.sizeId}
+                          onChange={(e) =>
+                            handleInputChange(e.target.value, index, "sizeId")
+                          }
+                          onBlur={(e) => {
+                            handleInputChange(e.target.value, index, "sizeId");
+                          }}
+                        >
+                          <option></option>
+                          {(id
+                            ? sizeList?.data
+                            : sizeList?.data?.filter((item) => item.active)
+                          )?.map((blend) => (
+                            <option value={blend.id} key={blend.id}>
+                              {blend?.name}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    )}
+                    {returnType === "Accessory" && (
+                      <td className="py-0.5 border border-gray-300 text-[11px] ">
+                        <select
+                          onKeyDown={(e) => {
+                            if (e.key === "Delete") {
+                              handleInputChange("", index, "uomId");
+                            }
+                          }}
+                          tabIndex={"0"}
+                          disabled={id}
+                          className="text-left w-full rounded py-1 table-data-input"
+                          value={row.uomId}
+                          onChange={(e) =>
+                            handleInputChange(e.target.value, index, "uomId")
+                          }
+                          onBlur={(e) => {
+                            handleInputChange(e.target.value, index, "uomId");
+                          }}
+                        >
+                          <option></option>
+                          {(id
+                            ? uomList?.data
+                            : uomList?.data?.filter((item) => item.active)
+                          )?.map((blend) => (
+                            <option value={blend.id} key={blend.id}>
+                              {blend?.name}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    )}
+                    {returnType === "Accessory" && (
+                      <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                        <input
+                          onKeyDown={(e) => {
+                            if (e.key === "Delete") {
+                              handleInputChange("", index, "qty");
+                            }
+                          }}
+                          type="string"
+                          className="text-left rounded py-1 px-1 w-full table-data-input"
+                          onFocus={(e) => e.target.select()}
+                          value={row?.qty}
+                          onChange={(e) =>
+                            handleInputChange(e.target.value, index, "qty")
+                          }
+                          onBlur={(e) => {
+                            handleInputChange(e.target.value, index, "qty");
+                          }}
+                         disabled={id}
+                        />
+                      </td>
+                    )}
+                    {returnType === "Accessory" && (
+                      <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                        <input
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault(); // prevent form submit or line break
+                              e.stopPropagation();
+                              const nextQtyInput = document.querySelector(
+                                `#accessory-input-${index + 1}`
+                              );
+                              if (nextQtyInput) {
+                                nextQtyInput.focus();
+                              }
+                            }
+                            if (e.key === "Delete") {
+                              handleInputChange("", index, "returnQty");
+                            }
+                          }}
+                          type="string"
+                          className="text-left rounded py-1 px-1 w-full table-data-input"
+                          onFocus={(e) => e.target.select()}
+                          value={row?.returnQty}
+                          onChange={(e) =>
+                            handleInputChange(
+                              e.target.value,
+                              index,
+                              "returnQty"
+                            )
+                          }
+                          onBlur={(e) => {
+                            handleInputChange(
+                              e.target.value,
+                              index,
+                              "returnQty"
+                            );
+                          }}
+                          disabled={readOnly}
+                        />
+                      </td>
+                    )}
+                    {(returnType === "Fabric" ||
+                      returnType === "Accessory") && (
+                      <td className="border-blue-gray-200 text-[11px]  border border-gray-300 py-0.5 text-right">
+                        <input
+                          type="checkbox"
+                          checked={row.selected || false}
+                          disabled={readOnly}
+                          onChange={(e) =>
+                            handleInputChange(
+                              e.target.checked,
+                              index,
+                              "selected"
+                            )
+                          }
+                          className="justify-center flex items-center mx-auto w-full"
+                          onContextMenu={(e) => {
+                            if (!readOnly) {
+                              handleRightClick(e, index, "notes");
+                            }
+                          }}
+                        />
+                      </td>
+                    )}
+
+                    {(returnType === "Fabric" ||
+                      returnType === "Accessory") && (
+                      <td className="w-2 border border-gray-300">
+                        <input
+                          // onContextMenu={(e) => {
+                          //   if (!readOnly) {
+                          //     handleRightClick(e, index, "");
+                          //   }
+                          // }}
+                          className="w-full"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              addRow();
+                            }
+                          }}
+                          disabled={readOnly}
+                        />
+                      </td>
+                    )}
+                  </tr>
+                )
+              )}
             </tbody>
             <tfoot>
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={6}
+                  colSpan={returnType === "Fabric" ? 8 : 7}
                 >
                   Total
                 </td>
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
-                  {returnItems.reduce(
+                  {purchaseReturnItems.reduce(
                     (sum, row) => sum + (Number(row.qty) || 0),
                     0
                   )}

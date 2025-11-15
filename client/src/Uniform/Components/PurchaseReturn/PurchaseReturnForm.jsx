@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
     DateInput,
     DropdownInput,
+    ReusableSearchableInput,
     TextInput,
 } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
@@ -19,13 +20,13 @@ import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import moment from "moment";
 import { toast } from "react-toastify";
-import FabricItems from "./FabricItems";
 import Swal from "sweetalert2";
 import Modal from "../../../UiComponents/Modal";
 import { PDFViewer } from "@react-pdf/renderer";
-import PDF from "./PrintFormat/PDF";
 import tw from "../../../Utils/tailwind-react-pdf";
 import { useAddPurchaseReturnMutation, useDeletePurchaseReturnMutation, useGetPurchaseReturnByIdQuery, useUpdatePurchaseReturnMutation } from "../../../redux/services/PurchaseReturnService";
+import { useLazyGetPurchaseDetailQuery } from "../../../redux/uniformService/PurchaseInwardEntry";
+import ReturnItems from "./ReturnItems";
 
 const PurchaseReturnForm = ({ onClose, id, setId }) => {
     const [docId, setDocId] = useState("");
@@ -35,7 +36,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
     const [locationId, setLocationId] = useState("");
     const [storeId, setStoreId] = useState("");
     const [searchValue, setSearchValue] = useState("");
-    const [returnItems, setReturnItems] = useState([]);
+    const [purchaseReturnItems, setPurchaseReturnItems] = useState([]);
     const [docDate, setDocDate] = useState("")
     const { branchId, companyId, userId, finYearId } = getCommonParams();
     const branchIdFromApi = useRef(branchId);
@@ -44,7 +45,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
         branchId,
         companyId,
     };
-
+    const [invNo, setInvNo] = useState("")
     const { data: partyList } = useGetPartyQuery({ params: { ...params } });
     const { data: branchList } = useGetBranchQuery({ params: { companyId } });
     const { data: locationData } = useGetLocationMasterQuery({
@@ -67,7 +68,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
     const [addData] = useAddPurchaseReturnMutation();
     const [updateData] = useUpdatePurchaseReturnMutation();
     const [removeData] = useDeletePurchaseReturnMutation();
-
+    const [getPurchaseDetail] = useLazyGetPurchaseDetailQuery();
     const data = {
         docId,
         docDate,
@@ -77,9 +78,10 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
         id,
         userId,
         storeId,
-        returnItems: returnItems?.filter((item) => item.styleNo && item.fabricId || item.accessoryId),
+        purchaseReturnItems: purchaseReturnItems?.filter((item) => item.styleNo && item.fabricId || item.accessoryId),
         finYearId,
         locationId,
+        invNo
     };
 
     const syncFormWithDb = useCallback(
@@ -105,7 +107,8 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
             if (data?.branchId) {
                 branchIdFromApi.current = data?.branchId;
             }
-            setReturnItems(data?.returnItems ? data.returnItems : []);
+            setPurchaseReturnItems(data?.purchaseReturnItems ? data.purchaseReturnItems : []);
+            setInvNo(data?.invNo ? data?.invNo : "")
         },
         [id]
     );
@@ -145,7 +148,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
     };
 
     const validateData = (data) => {
-        if (returnItems?.length > 0 && data.storeId) {
+        if (purchaseReturnItems?.length > 0 && data.storeId && data.locationId) {
             return true;
         }
         return false;
@@ -190,6 +193,75 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
         }
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
+    const handleAddRow = async () => {
+        if (!validateData(data)) {
+            toast.info("Please fill all required fields...!", {
+                position: "top-center",
+            });
+        } else {
+            try {
+                const { data: purchaseData } = await getPurchaseDetail({
+                    params: {
+                        invNo: invNo,
+                        storeId,
+                        branchId,
+                    },
+                });
+                const purchaseItems = purchaseData?.data?.fabricInwardItems;
+                if (!purchaseItems) return;
+
+                setPurchaseReturnItems((prev) => {
+                    const updated = [...prev];
+                    // Find first empty slot index
+                    let startIndex = updated.findIndex(
+                        (row) =>
+                            !row.styleNo &&
+                            !row.styleItemId &&
+                            !row.fabricId &&
+                            !row.accessoryId &&
+                            !row.accessoryGroupId
+                    );
+                    if (startIndex === -1) startIndex = updated.length;
+
+                    // Fill in sizeRows starting at first empty slot
+                    purchaseItems.forEach((row, i) => {
+                        if (startIndex + i < updated.length) {
+                            updated[startIndex + i] = row;
+                        } else {
+                            updated.push(row); // append if no empty slot
+                        }
+                    });
+
+                    // Ensure at least 6 rows
+                    while (updated.length < 6) {
+                        updated.push({
+                            styleNo: "",
+                            fabricId: "",
+                            styleId: "",
+                            styleItemId: "",
+                            colorId: "",
+                            qty: "",
+                            fabWidth: "",
+                            fabMeter: "",
+                            noOfPcs: "",
+                            accessoryId: "",
+                            accessoryGroupId: "",
+                            sizeId: "",
+                            uomId: "",
+                            qty: "",
+                            selected: false,
+                        });
+                    }
+
+                    return updated;
+                });
+            } catch (error) {
+                console.error("Error adding row:", error);
+            }
+        }
+    };
+
+
     return (
         <>
             {/* <Modal
@@ -227,50 +299,9 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
                                 readOnly={true}
                                 disabled
                             />
-
                         </div>
                     </div>
-
                     <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                        <h2 className="font-medium text-slate-700 mb-2">Return Details</h2>
-                        <div className="grid grid-cols-2 gap-1">
-                            <DropdownInput
-                                name="Supplier"
-                                options={
-                                    partyList
-                                        ? dropDownListObject(
-                                            id
-                                                ? partyList?.data
-                                                : partyList?.data?.filter((item) => item.active),
-                                            "name",
-                                            "id"
-                                        )
-                                        : []
-                                }
-                                value={supplierId}
-                                setValue={(value) => {
-                                    setSupplierId(value);
-                                }}
-                                required={true}
-                                readOnly={readOnly}
-                            />
-                            <DropdownInput
-                                name="Return Type"
-                                options={poTypes}
-                                value={returnType}
-                                setValue={setReturnType}
-                                required={true}
-                                readOnly={id}
-                                beforeChange={() => {
-                                    setReturnItems([]);
-                                }}
-                                autoFocus={true}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                        <h2 className="font-medium text-slate-700 mb-2"></h2>
                         <div className="grid grid-cols-1 gap-1">
                             <h2 className="font-medium text-slate-700 mb-2">Location Details</h2>
                             <div className="grid grid-cols-2 gap-1">
@@ -293,7 +324,8 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
                                         setStoreId("");
                                     }}
                                     required={true}
-                                    readOnly={readOnly}
+                                    readOnly={id}
+                                    autoFocus={true}
                                 />
                                 <DropdownInput
                                     name="Store"
@@ -307,11 +339,76 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
                                     value={storeId}
                                     setValue={setStoreId}
                                     required={true}
-                                    readOnly={readOnly}
+                                    readOnly={id}
                                 />
                             </div>
                         </div>
                     </div>
+                    <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                        <h2 className="font-medium text-slate-700 mb-2">Return Details</h2>
+                        <div className="grid grid-cols-2 gap-1">
+                            <DropdownInput
+                                name="Return Type"
+                                options={poTypes}
+                                value={returnType}
+                                setValue={setReturnType}
+                                required={true}
+                                readOnly={id}
+                                beforeChange={() => {
+                                    setPurchaseReturnItems([]);
+                                }}
+                            />
+                            <DropdownInput
+                                name="Supplier"
+                                options={
+                                    partyList
+                                        ? dropDownListObject(
+                                            id
+                                                ? partyList?.data
+                                                : partyList?.data?.filter((item) => item.active),
+                                            "name",
+                                            "id"
+                                        )
+                                        : []
+                                }
+                                value={supplierId}
+                                setValue={(value) => {
+                                    setSupplierId(value);
+                                }}
+                                required={true}
+                                readOnly={id}
+                            />
+                            {/* <TextInput
+                                name={"Invoice No"}
+                                value={invNo}
+                                setValue={setInvNo}
+                                readOnly={readOnly}
+                                required
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.stopPropagation();
+                                        handleAddRow();
+                                    }
+                                }}
+                            /> */}
+                            <ReusableInput
+                                label="Invoice No"
+                                value={invNo}
+                                setValue={setInvNo}
+                                type={"text"}
+                                required={true}
+                                readOnly={readOnly}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.stopPropagation();
+                                        handleAddRow();
+                                    }
+                                }}
+                            />
+                        </div>
+                    </div>
+
+
                 </div>
                 <fieldset>
 
@@ -319,8 +416,8 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
                         id={id}
                         returnType={returnType}
                         params={params}
-                        returnItems={returnItems}
-                        setReturnItems={setReturnItems}
+                        purchaseReturnItems={purchaseReturnItems}
+                        setPurchaseReturnItems={setPurchaseReturnItems}
                         readOnly={readOnly}
                     />
                 </fieldset>

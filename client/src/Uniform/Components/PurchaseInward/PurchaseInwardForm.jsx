@@ -40,6 +40,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
   const [vehicleNo, setVehicleNo] = useState("");
   const [remarks, setRemarks] = useState("");
   const [searchValue, setSearchValue] = useState("");
+  const [invNo, setInvNo] = useState("")
   const [fabricInwardItems, setFabricInwardItems] = useState([]);
   const [docDate, setDocDate] = useState("")
   const { branchId, companyId, userId, finYearId } = getCommonParams();
@@ -89,6 +90,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
     locationId,
     vehicleNo,
     remarks,
+    invNo
   };
 
   function getTotalQty() {
@@ -138,6 +140,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
       setFabricInwardItems(data?.fabricInwardItems ? data.fabricInwardItems : []);
       setVehicleNo(data?.vehicleNo ? data.vehicleNo : "");
       setRemarks(data?.remarks ? data.remarks : "");
+      setInvNo(data?.invNo ? data?.invNo : "")
     },
     [id]
   );
@@ -285,6 +288,13 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                 }}
                 autoFocus={true}
               />
+              <TextInput
+                name={"Invoice No"}
+                value={invNo}
+                setValue={setInvNo}
+                readOnly={readOnly}
+                required
+              />
             </div>
           </div>
 
@@ -329,7 +339,6 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
           </div>
 
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2"></h2>
             <div className="grid grid-cols-1 gap-1">
               <h2 className="font-medium text-slate-700 mb-2">Location Details</h2>
               <div className="grid grid-cols-2 gap-1">
