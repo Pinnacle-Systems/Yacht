@@ -62,3 +62,4 @@ export { default as SalesReturnReport } from "./SalesReturnReport";
 export { default as PurchaseReturn } from "./PurchaseReturn";
 export { default as MaterialStockReport } from "./MaterialStockReport";
 export { default as PortionMaster } from "./PortionMaster";
+export { default as CuttingOrder } from "./CuttingOrder";
