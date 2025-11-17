@@ -357,7 +357,7 @@ const StockReport = forwardRef(
                     )}
                     <tfoot className="border-2">
                       <tr className="bg-gray-100 font-medium text-[14px]  text-gray-900 border-b   border-gray-200">
-                        <td colSpan={7} className="text-right py-1.5">
+                        <td colSpan={6} className="text-right py-1.5">
                           Total
                         </td>
                         <td className="py-1.5 text-center">
