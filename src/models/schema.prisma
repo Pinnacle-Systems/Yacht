@@ -75,6 +75,7 @@ model Company {
   AccessoryItem       AccessoryItem[]
   SizeTemplate        SizeTemplate[]
   StyleItem           StyleItem[]
+  portions            Portion[]
 }
 
 model Subscription {
@@ -2095,4 +2096,13 @@ model PurchaseReturnItems {
   invNo            String?
   returnFabMeter   Float?
   returnQty        Float?
+}
+
+model Portion {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  active    Boolean? @default(true)
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+  aliasName String?
 }

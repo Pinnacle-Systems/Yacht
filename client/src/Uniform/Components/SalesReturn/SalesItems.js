@@ -282,7 +282,7 @@ export default function SalesItems({
       <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[450px] overflow-auto">
         <div className="flex items-center gap-4 sticky top-0 bg-white z-30 mt-2">
           <ReusableInput
-            label="Style / Barcode No"
+            label="Style No"
             value={styleNo}
             setValue={setStyleNo}
             type={"text"}

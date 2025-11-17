@@ -82,6 +82,7 @@ import {
   GeneralPurchaseApi,
   purchaseInwardEntryApi,
   MeasurementMasterApi,
+  PortionMasterApi,
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -146,6 +147,7 @@ const commonReducers = {
   sample: SampleApi.reducer,
   sizeMaster: SizeMasterApi.reducer,
   colorMaster: ColorMasterApi.reducer,
+  portionMaster: PortionMasterApi.reducer,
   fabricMaster: FabricMasterApi.reducer,
   certificateMaster: CertificateMasterApi.reducer,
   payFrequency: payFrequencyApi.reducer,
@@ -251,6 +253,7 @@ const commonMiddleware = [
   SampleApi.middleware,
   SizeMasterApi.middleware,
   ColorMasterApi.middleware,
+  PortionMasterApi.middleware,
   StyleMasterApi.middleware,
   FabricMasterApi.middleware,
   CertificateMasterApi.middleware,

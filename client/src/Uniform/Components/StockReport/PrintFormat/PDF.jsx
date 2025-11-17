@@ -137,7 +137,7 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList,colorList }) => {
                             {[
                                 { label: "S.No", flex: 0.4 },
                                 { label: "Style No", flex: 0.5 },
-                                { label: "Barcode ", flex: 0.5 },
+                                // { label: "Barcode ", flex: 0.5 },
                                 { label: "Style", flex: 1.5 },
                                 { label: "Fabric", flex: 1 },
                                 { label: "Color", flex: 1 },
@@ -186,9 +186,9 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList,colorList }) => {
                                     <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7 }]}>
                                         {item?.styleNo || "-"}
                                     </Text>
-                                    <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7 }]}>
+                                    {/* <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7 }]}>
                                         {item?.barcode || "-"}
-                                    </Text>
+                                    </Text> */}
                                     <Text style={[styles.tableCell, { flex: 1.5, fontSize: 7 }]}>
                                         {findFromList(
                                             item?.styleItemId,
@@ -237,7 +237,7 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList,colorList }) => {
                             ]}
                         >   <Text
                             style={[styles.tableCell, {
-                                flex: 5.4, fontSize: 8, textAlign: "right",
+                                flex: 4.8, fontSize: 8, textAlign: "right",
                                 fontWeight: "bold",
                                 // paddingRight: 4,
                             }]}></Text>

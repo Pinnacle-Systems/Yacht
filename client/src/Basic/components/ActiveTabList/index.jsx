@@ -58,6 +58,7 @@ import {
   OpeningStock,
   OpeningStockForm,
   Order,
+  PortionMaster,
   PurchaseInward,
   PurchaseOrder,
   PurchaseReturn,
@@ -160,7 +161,8 @@ const ActiveTabList = () => {
     "SALES REPORT": <SalesReport />,
     "SALES RETURN": <SalesReturn />,
     "SALES RETURN REPORT": <SalesReturnReport />,
-    "PURCHASE RETURN": <PurchaseReturn />
+    "PURCHASE RETURN": <PurchaseReturn />,
+    "PORTION MASTER": <PortionMaster />
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

@@ -16,6 +16,8 @@ import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMas
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetMaterialStockQuery } from "../../../redux/services/MaterialStockService";
+import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/AccessoryMasterServices";
+import { useGetAccessoryGroupMasterQuery } from "../../../redux/uniformService/AccessoryGroupMasterServices";
 
 const MaterialStockReport = forwardRef(
   (
@@ -78,6 +80,10 @@ const MaterialStockReport = forwardRef(
     const { data: fabricList } = useGetFabricMasterQuery({ params });
     const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
     const { data: colorList } = useGetColorMasterQuery({ params });
+    const { data: accessoryList } = useGetAccessoryMasterQuery({ params });
+    const { data: accessoryGroupList } = useGetAccessoryGroupMasterQuery({
+      params,
+    });
 
     const {
       data: allData,
@@ -289,6 +295,31 @@ const MaterialStockReport = forwardRef(
                         </tr>
                       </thead>
                     )}
+                    {itemType === "Accessory" && (
+                      <thead className="bg-gray-200 text-gray-800 ">
+                        <tr className="">
+                          <th className=" px-1 py-1.5  font-medium text-[13px]  text-gray-900  text-center  w-12">
+                            <div className="">S No</div>
+                          </th>
+
+                          <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
+                            <div>Accessory Name</div>
+                          </th>
+                          <th className="w-72  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                            <div>Accessory Group Name</div>
+                          </th>
+                          <th className="w-52  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                            <div>Color</div>
+                          </th>
+                          <th className="w-28  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                            <div>Size</div>
+                          </th>
+                          <th className="w-28  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                            <div>Quantity</div>
+                          </th>
+                        </tr>
+                      </thead>
+                    )}
                     {isLoadingIndicator ? (
                       <tbody>
                         <tr>
@@ -299,9 +330,9 @@ const MaterialStockReport = forwardRef(
                       </tbody>
                     ) : (
                       <tbody className="border-2">
-                        {currentItems.map(
-                          (dataObj, index) =>
-                            itemType === "Fabric" && (
+                        {currentItems.map((dataObj, index) => {
+                          if (itemType === "Fabric") {
+                            return (
                               <tr
                                 onKeyDown={(e) => {
                                   if (e.key === "Enter") {
@@ -310,7 +341,7 @@ const MaterialStockReport = forwardRef(
                                 }}
                                 tabIndex={0}
                                 key={dataObj.id}
-                                className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${
+                                className={`hover:bg-gray-50 transition-colors border-b border-gray-200 text-[12px] ${
                                   index % 2 === 0 ? "bg-white" : "bg-gray-100"
                                 }`}
                                 onClick={() => onClick(dataObj.id)}
@@ -318,8 +349,9 @@ const MaterialStockReport = forwardRef(
                                 <td className="text-center h-8">{index + 1}</td>
 
                                 <td className="py-1.5 text-center">
-                                  {dataObj.styleNo}{" "}
+                                  {dataObj.styleNo}
                                 </td>
+
                                 <td className="py-1.5 text-center">
                                   {findFromList(
                                     dataObj?.styleItemId,
@@ -327,6 +359,7 @@ const MaterialStockReport = forwardRef(
                                     "name"
                                   )}
                                 </td>
+
                                 <td className="py-1.5 text-center">
                                   {findFromList(
                                     dataObj?.fabricId,
@@ -334,6 +367,7 @@ const MaterialStockReport = forwardRef(
                                     "name"
                                   )}
                                 </td>
+
                                 <td className="py-1.5 text-center">
                                   {findFromList(
                                     dataObj?.colorId,
@@ -341,31 +375,98 @@ const MaterialStockReport = forwardRef(
                                     "name"
                                   )}
                                 </td>
-                                {/* <td className="py-1.5 text-center">
+
+                                <td className="py-1.5 text-center">
+                                  {dataObj?.fabMeter}
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          if (itemType === "Accessory") {
+                            return (
+                              <tr
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    onClick(dataObj.id);
+                                  }
+                                }}
+                                tabIndex={0}
+                                key={dataObj.id}
+                                className={`hover:bg-gray-50 transition-colors border-b border-gray-200 text-[12px] ${
+                                  index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                                }`}
+                                onClick={() => onClick(dataObj.id)}
+                              >
+                                <td className="text-center h-8">{index + 1}</td>
+
+                                <td className="py-1.5 text-center">
+                                  {findFromList(
+                                    dataObj?.accessoryId,
+                                    accessoryList?.data,
+                                    "name"
+                                  )}
+                                </td>
+
+                                <td className="py-1.5 text-center">
+                                  {findFromList(
+                                    dataObj?.accessoryGroupId,
+                                    accessoryGroupList?.data,
+                                    "name"
+                                  )}
+                                </td>
+
+                                <td className="py-1.5 text-center">
+                                  {findFromList(
+                                    dataObj?.colorId,
+                                    colorList?.data,
+                                    "name"
+                                  )}
+                                </td>
+
+                                <td className="py-1.5 text-center">
                                   {findFromList(
                                     dataObj?.sizeId,
                                     sizeList?.data,
                                     "name"
                                   )}
-                                </td> */}
+                                </td>
+
                                 <td className="py-1.5 text-center">
-                                  {dataObj?.fabMeter}
+                                  {dataObj?.stkQty}
                                 </td>
                               </tr>
-                            )
-                        )}
+                            );
+                          }
+
+                          return null; // safe fallback
+                        })}
                       </tbody>
                     )}
-                    <tfoot className="border-2">
-                      <tr className="bg-gray-100 font-medium text-[14px]  text-gray-900 border-b   border-gray-200">
-                        <td colSpan={5} className="text-right py-1.5">
-                          Total
-                        </td>
-                        <td className="py-1.5 text-center">
-                          {allData?.totalQty}
-                        </td>
-                      </tr>
-                    </tfoot>
+                    {itemType === "Fabric" && (
+                      <tfoot className="border-2">
+                        <tr className="bg-gray-100 font-medium text-[14px]  text-gray-900 border-b   border-gray-200">
+                          <td colSpan={5} className="text-right py-1.5">
+                            Total
+                          </td>
+                          <td className="py-1.5 text-center">
+                            {allData?.totalMeter}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    )}
+                    {itemType === "Accessory" && (
+                      <tfoot className="border-2">
+                        <tr className="bg-gray-100 font-medium text-[14px]  text-gray-900 border-b   border-gray-200">
+                          <td colSpan={5} className="text-right py-1.5">
+                            Total
+                          </td>
+                          <td className="py-1.5 text-center">
+                            {allData?.totalQty}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    )}
                   </table>
                 ) : (
                   <div className="flex justify-center items-center text-gray-500  text-3xl py-32">

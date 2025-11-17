@@ -25,6 +25,7 @@ async function get(req) {
   let data;
   let totalCount;
   let totalQty;
+  let totalMeter;
   data = await prisma.materialStock.groupBy({
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
@@ -56,9 +57,10 @@ async function get(req) {
       },
       itemType: itemType ? { contains: itemType } : undefined,
     },
-    by: ["styleId", "sizeId", "styleNo", "fabricId", "styleItemId", "colorId"],
+    by: ["styleId", "sizeId", "styleNo", "fabricId", "styleItemId", "colorId","accessoryGroupId","accessoryId"],
     _sum: {
       qty: true,
+      fabMeter: true,
     },
     orderBy: {
       styleNo: "asc",
@@ -66,6 +68,7 @@ async function get(req) {
   });
   totalCount = data.length;
   totalQty = data?.reduce((sum, item) => sum + (item._sum?.qty || 0), 0);
+  totalMeter = data?.reduce((sum, item) => sum + (item._sum?.fabMeter || 0), 0);
 
   return {
     statusCode: 0,
@@ -77,10 +80,13 @@ async function get(req) {
       fabricId: d.fabricId,
       styleItemId: d.styleItemId,
       colorId: d.colorId,
-      fabMeter: d.fabMeter,
+      fabMeter: d._sum.fabMeter,
+      accessoryId: d.accessoryId,
+      accessoryGroupId: d.accessoryGroupId,
     })),
     totalCount,
     totalQty,
+    totalMeter,
   };
 }
 

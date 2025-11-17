@@ -267,9 +267,9 @@ const StockReport = forwardRef(
                         <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                           <div>Style No</div>
                         </th>
-                        <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
+                        {/* <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                           <div>Barcode No</div>
-                        </th>
+                        </th> */}
                         <th className="w-72  px-3   font-medium text-[13px] text-gray-900  text-center ">
                           <div>Style</div>
                         </th>
@@ -317,9 +317,9 @@ const StockReport = forwardRef(
                               {dataObj.styleNo}{" "}
                             </td>
 
-                            <td className="py-1.5 text-center">
+                            {/* <td className="py-1.5 text-center">
                               {dataObj?.barcode}
-                            </td>
+                            </td> */}
                             <td className="py-1.5 text-center">
                               {findFromList(
                                 dataObj?.styleItemId,
