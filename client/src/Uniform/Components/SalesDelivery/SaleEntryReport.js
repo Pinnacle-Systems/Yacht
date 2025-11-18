@@ -82,13 +82,14 @@ const SalesEntryReport = ({
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
+      setCurrentPageNumber(newPage); // ensures API fetches that page
     }
   };
   const Pagination = () => {
     return (
       <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
         <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-           Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+          Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
           {Math.min(currentPage * itemsPerPage, allData?.totalCount || 0)} of{" "}
           {allData?.totalCount || 0} entries
         </div>
@@ -257,7 +258,9 @@ const SalesEntryReport = ({
                       >
                         <td className="text-center ">{index + 1}</td>
 
-                        <td className="py-1.5 text-left px-4">{dataObj.docId} </td>
+                        <td className="py-1.5 text-left px-4">
+                          {dataObj.docId}{" "}
+                        </td>
 
                         <td className="py-1.5 text-left px-4">
                           {dataObj?.docDate

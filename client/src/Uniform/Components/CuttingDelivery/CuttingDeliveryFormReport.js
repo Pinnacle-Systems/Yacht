@@ -1,181 +1,357 @@
-import React from 'react'
 import { useEffect, useState } from "react";
+import secureLocalStorage from "react-secure-storage";
+import {
+  getDateFromDateTimeToDisplay,
+  reactPaginateIndexToPageNumber,
+} from "../../../Utils/helper";
 import { Loader } from "../../../Basic/components";
-import { getCommonParams, getDateFromDateTimeToDisplay } from "../../../Utils/helper";
-import { showEntries } from '../../../Utils/DropdownData';
-import { pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from '../../../Utils/helper';
-import ReactPaginate from 'react-paginate';
-import { useGetCuttingDeliveryQuery } from '../../../redux/uniformService/CuttingDeliveryServices';
-
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { useGetCuttingOrderQuery } from "../../../redux/uniformService/CuttingOrderService";
 
 const CuttingDeliveryFormReport = ({
-  heading = "Cutting Delivery",
   onClick,
+  onView,
+  itemsPerPage = 10,
+  onEdit,
+  onDelete,
+  rowActions = true,
 }) => {
-  const { branchId, finYearId } = getCommonParams()
+  const branchId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "currentBranchId"
+  );
 
-  const [searchDocId, setSearchDocId] = useState("");
-  const [searchDelDate, setSearchDelDate] = useState("");
-  const [searchDueDate, setDueDate] = useState("");
-  const [searchCuttingOrderDocId, setSearchCuttingOrderDocId] = useState("");
-  const [supplier, setSupplier] = useState("");
   const [dataPerPage, setDataPerPage] = useState("10");
+  const [serachDocNo, setSerachDocNo] = useState("");
+  const [searchStyleNo, setSearchStyleNo] = useState("");
+  const [searchDocDate, setSearchDocDate] = useState("");
+  const [searchStore, setSearchStore] = useState("");
   const [totalCount, setTotalCount] = useState(0);
   const [currentPageNumber, setCurrentPageNumber] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleOnclick = (e) => {
     setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
-  }
-  const searchFields = { searchDocId, searchDelDate, searchSupplierAliasName: supplier, searchCuttingOrderDocId, searchDueDate }
+  };
 
+  const searchFields = {
+    serachDocNo,
+    searchDocDate,
+    searchStore,
+    searchStyleNo,
+  };
 
-  const { data: allData, isLoading, isFetching } = useGetCuttingDeliveryQuery({ params: { branchId, ...searchFields, finYearId, pagination: true, dataPerPage, pageNumber: currentPageNumber } });
+  useEffect(() => {
+    setCurrentPageNumber(1);
+  }, [serachDocNo, searchDocDate, searchStore, searchStyleNo]);
+
+  const companyId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "userCompanyId"
+  );
+  const params = {
+    branchId,
+    companyId,
+  };
+
+  const {
+    data: allData,
+    isFetching,
+    isLoading,
+  } = useGetCuttingOrderQuery({
+    params: {
+      branchId,
+      ...searchFields,
+      pagination: true,
+      dataPerPage,
+      pageNumber: currentPageNumber,
+    },
+  });
 
   useEffect(() => {
     if (allData?.totalCount) {
-      setTotalCount(allData?.totalCount)
+      setTotalCount(allData?.totalCount);
     }
-  }, [allData, isLoading, isFetching])
+  }, [allData, isLoading, isFetching]);
 
-  const isLoadingIndicator = isLoading || isFetching
+  const isLoadingIndicator = isLoading || isFetching;
 
+  const totalPages = Math?.ceil(allData?.totalCount / itemsPerPage);
+  const indexOfLastItem = currentPage * parseInt(10);
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
 
-  return (
-    <div className="flex flex-col w-full h-[95%] overflow-auto">
-      <div className="md:flex md:items-center md:justify-between page-heading p-1">
-        <div className="heading text-center md:mx-10">{heading}</div>
-        <div className=" sub-heading justify-center md:justify-start items-center">
-          <label className="text-white text-sm rounded-md m-1  border-none">Show Entries</label>
-          <select value={dataPerPage}
-            onChange={(e) => setDataPerPage(e.target.value)} className='h-6 w-40 border border-gray-500 rounded mr-9'>
-            {showEntries.map((option) => <option value={option.value} >{option.show}</option>)}
-          </select>
+  console.log(indexOfLastItem, "indexOfLastItem");
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      setCurrentPageNumber(newPage); // ensures API fetches that page
+    }
+  };
+  const Pagination = () => {
+    return (
+      <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
+        {/* <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+          Showing {indexOfFirstItem + 1} to{" "}
+          {Math.min(indexOfLastItem, allData?.data?.length)} of{" "}
+          {allData?.length} entries
+        </div> */}
+        <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+          Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+          {Math.min(currentPage * itemsPerPage, allData?.totalCount || 0)} of{" "}
+          {allData?.totalCount || 0} entries
+        </div>
+        <div className="flex gap-1">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`px-3 py-1 rounded-md ${
+              currentPage === 1
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-white text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            <FaChevronLeft className="inline" />
+          </button>
+
+          {Array?.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let pageNum;
+            if (totalPages <= 5) {
+              pageNum = i + 1;
+            } else if (currentPage <= 3) {
+              pageNum = i + 1;
+            } else if (currentPage >= totalPages - 2) {
+              pageNum = totalPages - 4 + i;
+            } else {
+              pageNum = currentPage - 2 + i;
+            }
+
+            return (
+              <button
+                key={pageNum}
+                onClick={() => handlePageChange(pageNum)}
+                className={`px-3 py-1 rounded-md ${
+                  currentPage === pageNum
+                    ? "bg-indigo-800 text-white"
+                    : "bg-white text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+
+          {totalPages > 5 && currentPage < totalPages - 2 && (
+            <span className="px-3 py-1">...</span>
+          )}
+
+          {totalPages > 5 && currentPage < totalPages - 2 && (
+            <button
+              onClick={() => handlePageChange(totalPages)}
+              className={`px-3 py-1 rounded-md ${
+                currentPage === totalPages
+                  ? "bg-indigo-800 text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              {totalPages}
+            </button>
+          )}
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`px-3 py-1 rounded-md ${
+              currentPage === totalPages
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-white text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            <FaChevronRight className="inline" />
+          </button>
         </div>
       </div>
+    );
+  };
+
+  return (
+    <div className="flex flex-col w-full h-[93%] overflow-auto">
       <>
-        <div
-          className="h-[500px] overflow-auto"
-        >
-          <table className="table-fixed text-center w-full">
-            <thead className="border-2 table-header">
-              <tr className='h-2'>
-                <th
-                  className="border-2  top-0 stick-bg w-10"
-                >
-                  S. no.
-                </th>
-                <th
-                  className="border-2  top-0 stick-bg flex flex-col"
-                >
-                  <label>Del. No</label><input
-                    type="text"
-                    className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
-                    placeholder="Search"
-                    value={searchDocId}
-                    onChange={(e) => {
-                      setSearchDocId(e.target.value);
-                    }}
-                  />
-                </th>
-                <th
-                  className="border-2  top-0 stick-bg"
-                >
-                  <label>Del. Date</label><input
-                    type="text"
-                    className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
-                    placeholder="Search"
-                    value={searchDelDate}
-                    onChange={(e) => {
-                      setSearchDelDate(e.target.value);
-                    }}
-                  />
-                </th>
-                <th
+        <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
+          <div className="h-[360px]">
+            <table className="mt-2">
+              <thead className="bg-gray-200 text-gray-800 ">
+                <tr className="">
+                  <th className="px-1 py-1.5  font-medium text-[13px]  text-gray-900  text-center  w-12">
+                    <div className="">S No</div>
+                  </th>
 
-                  className="border-2  top-0 stick-bg flex flex-col"
-                >
-                  <label>Supplier</label><input
-                    type="text"
-                    className="text-black  h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
-                    placeholder="Search"
-                    value={supplier}
-                    onChange={(e) => {
-                      setSupplier(e.target.value);
-                    }}
-                  />
-                </th>
-                <th
-                  className="border-2  top-0 stick-bg"
-                >
-                  <label>Cutting Order</label><input
-                    type="text"
-                    className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
-                    placeholder="Search"
-                    value={searchCuttingOrderDocId}
-                    onChange={(e) => {
-                      setSearchCuttingOrderDocId(e.target.value);
-                    }}
-                  />
-                </th>
-                <th className="border-2  top-0 stick-bg">
-                  <label>Due Date</label><input
-                    type="text"
-                    className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
-                    placeholder="Search"
-                    value={searchDueDate}
-                    onChange={(e) => {
-                      setDueDate(e.target.value);
-                    }}
-                  />
-                </th>
-
-              </tr>
-            </thead>
-            {isLoadingIndicator ?
-              <tbody>
-                <tr>
-                  <td>
-                    <Loader />
-                  </td>
+                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
+                    <div>Opening Stock No</div>
+                  </th>
+                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
+                    <div>Opening Stock Date</div>
+                  </th>
+                  <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                    <div>Store</div>
+                  </th>
+                  <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
+                    <div>Actions</div>
+                  </th>
                 </tr>
-              </tbody>
-              :
-              <tbody className="border-2">
-                {allData?.data?.map((dataObj, index) => (
-                  <tr
-                    key={dataObj.id}
-                    className="border-2 table-row cursor-pointer"
-                    onClick={() => onClick(dataObj.id)}>
-                    <td className='py-1'> {(index + 1) + (dataPerPage * (currentPageNumber - 1))}</td>
-                    <td className='py-1'> {dataObj.docId}</td>
-                    <td className='py-1'>{getDateFromDateTimeToDisplay(dataObj.createdAt)} </td>
-                    <td className='py-1'>{dataObj?.Supplier?.name}</td>
-                    <td className='py-1'>{dataObj?.CuttingOrder?.docId}</td>
-                    <td className='py-1'>{getDateFromDateTimeToDisplay(dataObj.dueDate)}</td>
+                <tr className="">
+                  <th className=" px-1  font-medium text-[13px] justify-end  text-gray-900  text-center  w-12">
+                    <div className="h-3"></div>
+                  </th>
+                  <th className=" px-1 font-medium text-[13px] border  text-gray-900  text-center w-40">
+                    <input
+                      type="text"
+                      className="text-black h-5   w-full  px-1 focus:outline-none border  border-gray-400 rounded-md"
+                      placeholder="Search"
+                      value={serachDocNo}
+                      onChange={(e) => {
+                        setSerachDocNo(e.target.value);
+                      }}
+                    />
+                  </th>
+                  <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-40">
+                    <input
+                      type="text"
+                      className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                      placeholder="Search"
+                      value={searchDocDate}
+                      onChange={(e) => {
+                        setSearchDocDate(e.target.value);
+                      }}
+                    />
+                  </th>
+                  <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                    <input
+                      type="text"
+                      className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                      placeholder="Search"
+                      value={searchStore}
+                      onChange={(e) => {
+                        setSearchStore(e.target.value);
+                      }}
+                    />
+                  </th>
+                  <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center "></th>
+                </tr>
+              </thead>
+              {isLoadingIndicator ? (
+                <tbody>
+                  <tr>
+                    <td>
+                      <Loader />
+                    </td>
                   </tr>
-                ))}
-              </tbody>
-            }
-          </table>
+                </tbody>
+              ) : (
+                <tbody className="border-2">
+                  {(allData?.data ? allData?.data : []).map(
+                    (dataObj, index) => (
+                      <tr
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            onClick(dataObj.id);
+                          }
+                        }}
+                        tabIndex={0}
+                        key={dataObj.id}
+                        className={`hover:bg-gray-50 transition-colors border-b  border-gray-200 text-[12px] ${
+                          index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                        }`}
+                        onClick={() => onClick(dataObj.id)}
+                      >
+                        <td className="text-center ">{index + 1}</td>
+
+                        <td className="py-1.5 text-left px-4">
+                          {dataObj.docId}{" "}
+                        </td>
+
+                        <td className="py-1.5 text-left px-4">
+                          {dataObj?.docDate
+                            ? getDateFromDateTimeToDisplay(dataObj.docDate)
+                            : ""}
+                        </td>
+                        <td className="py-1.5 text-left px-4">
+                          {" "}
+                          {dataObj?.Store?.storeName}
+                        </td>
+                        {rowActions && (
+                          <td className=" w-[30px] border-gray-200 gap-1 px-2  justify-end">
+                            <div className="flex">
+                              {onView && (
+                                <button
+                                  className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
+                                  onClick={() => onView(dataObj.id)}
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-4 w-4"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                  >
+                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                </button>
+                              )}
+                              {onEdit && (
+                                <button
+                                  className="text-green-600 gap-1 px-1   bg-green-50 rounded"
+                                  onClick={() => onEdit(dataObj.id)}
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-4 w-4"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                  >
+                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                  </svg>
+                                </button>
+                              )}
+                              {onDelete && (
+                                <button
+                                  className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
+                                  onClick={() => onDelete(dataObj.id)}
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-4 w-4"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    )
+                  )}
+                </tbody>
+              )}
+            </table>
+          </div>
+          <div className="">
+            <Pagination />
+          </div>
         </div>
       </>
-      <ReactPaginate
-        previousLabel={"<"}
-        nextLabel={">"}
-        breakLabel={"..."}
-        breakClassName={"break-me"}
-        forcePage={pageNumberToReactPaginateIndex(currentPageNumber)}
-        pageCount={Math.ceil(totalCount / dataPerPage)}
-        marginPagesDisplayed={1}
-        onPageChange={handleOnclick}
-        containerClassName={"flex justify-center m-2 gap-5 items-center"}
-        pageClassName={"border custom-circle text-center"}
-        disabledClassName={"p-1 bg-gray-200"}
-        previousLinkClassName={"border p-1 text-center"}
-        nextLinkClassName={"border p-1"}
-        activeClassName={"bg-blue-900 text-white px-2"} />
     </div>
-  )
-}
+  );
+};
 
-export default CuttingDeliveryFormReport
+export default CuttingDeliveryFormReport;

@@ -49,6 +49,7 @@ import {
   AccessoryGroupMaster,
   AccessoryItemMaster,
   AccessoryMaster,
+  CuttingDelivery,
   CuttingOrder,
   ItemMaster,
   LabDip,
@@ -164,7 +165,8 @@ const ActiveTabList = () => {
     "SALES RETURN REPORT": <SalesReturnReport />,
     "PURCHASE RETURN": <PurchaseReturn />,
     "PORTION MASTER": <PortionMaster />,
-    "CUTTING ORDER": <CuttingOrder />
+    "CUTTING ORDER": <CuttingOrder />,
+    "CUTTING DELIVERY": <CuttingDelivery />
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

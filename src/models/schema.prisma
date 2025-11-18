@@ -1544,6 +1544,7 @@ model Style {
   materialStocks       MaterialStock[]
   purchaseReturnItems  PurchaseReturnItems[]
   cuttingOrderItems    CuttingOrderItems[]
+  cuttingOrders        CuttingOrder[]
 }
 
 model Size {
@@ -2140,6 +2141,8 @@ model CuttingOrder {
   Store             Location?           @relation(fields: [storeId], references: [id])
   storeId           Int?
   styleNo           String?
+  Style             Style?              @relation(fields: [styleId], references: [id])
+  styleId           Int?
   cuttingOrderItems CuttingOrderItems[]
 }
 
