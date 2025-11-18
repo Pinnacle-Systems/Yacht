@@ -99,7 +99,7 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
     branchId,
     storeId,
     salesEntryItems: salesEntryItems?.filter(
-      (item) => item?.barcode && item?.styleId && item?.sizeId
+      (item) => item?.styleId && item?.sizeId
     ),
     userId,
     finYearId,

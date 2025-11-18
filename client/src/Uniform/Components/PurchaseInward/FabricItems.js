@@ -228,7 +228,7 @@ const FabricInwardItems = ({
                       {index + 1}
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                      <input
+                      {/* <input
                         id={`styleNo-input-${index}`}
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
@@ -246,7 +246,43 @@ const FabricInwardItems = ({
                           handleInputChange(e.target.value, index, "styleNo");
                         }}
                         disabled={readOnly}
-                      />
+                      /> */}
+                      <select
+                        id={`styleId-input-${index}`}
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "styleId");
+                          }
+                        }}
+                        tabIndex={"0"}
+                        disabled={readOnly}
+                        className="text-left w-full rounded py-1 table-data-input"
+                        value={row.styleId}
+                        onChange={(e) =>
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "styleId"
+                          )
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "styleId"
+                          );
+                        }}
+                      >
+                        <option></option>
+                        {(id
+                          ? styleList?.data
+                          : styleList?.data?.filter((item) => item.active)
+                        )?.map((blend) => (
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.sku}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                       <select
@@ -453,7 +489,7 @@ const FabricInwardItems = ({
                             e.preventDefault(); // prevent form submit or line break
                             e.stopPropagation();
                             const nextQtyInput = document.querySelector(
-                              `#styleNo-input-${index + 1}`
+                              `#styleId-input-${index + 1}`
                             );
                             if (nextQtyInput) {
                               nextQtyInput.focus();

@@ -70,7 +70,7 @@ export default function StockAdjustmentForm({
     branchId,
     storeId,
     stockAdjustmentItems: stockAdjustmentItems?.filter(
-      (item) => item?.barcode && item?.styleId && item?.sizeId
+      (item) => item?.styleId && item?.sizeId
     ),
     userId,
     finYearId,

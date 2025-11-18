@@ -74,7 +74,7 @@ export default function SalesReturnForm({
     branchId,
     storeId,
     salesReturnItems: salesReturnItems?.filter(
-      (item) => item?.barcode && item?.styleId && item?.sizeId
+      (item) => item?.styleId && item?.sizeId
     ),
     userId,
     finYearId,
