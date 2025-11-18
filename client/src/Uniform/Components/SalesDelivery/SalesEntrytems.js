@@ -227,6 +227,18 @@ export default function BillItems({
         position: "top-center",
       });
     } else {
+      const isFirstTime = salesEntryItems.every((row) => !row.qty && !row.price);
+
+      if (!isFirstTime) {
+        const hasEmpty = salesEntryItems.some((row) => !row.qty || !row.price);
+
+        if (hasEmpty) {
+          toast.info("Please fill all required fields...!", {
+            position: "top-center",
+          });
+          return;
+        }
+      }
       try {
         const { data: styleData } = await getStyleDetail({
           params: {

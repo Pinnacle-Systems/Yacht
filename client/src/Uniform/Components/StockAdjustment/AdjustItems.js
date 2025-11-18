@@ -283,6 +283,22 @@ export default function AdjustItems({
         position: "top-center",
       });
     } else {
+      const isFirstTime = stockAdjustmentItems.every(
+        (row) => !row.adjType && !row.adjQty && !row.styleNo
+      );
+
+      if (!isFirstTime) {
+        const hasEmpty = stockAdjustmentItems.some(
+          (row) => !row.adjType || !row.adjQty
+        );
+
+        if (hasEmpty) {
+          toast.info("Please fill all required fields...!", {
+            position: "top-center",
+          });
+          return;
+        }
+      }
       try {
         const { data: styleData } = await getStyleDetail({
           params: {

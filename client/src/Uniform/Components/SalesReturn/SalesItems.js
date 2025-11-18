@@ -206,6 +206,20 @@ export default function SalesItems({
         position: "top-center",
       });
     } else {
+      const isFirstTime = salesReturnItems.every(
+        (row) => !row.sizeId && !row.styleNo && !row.fabricId
+      );
+
+      if (!isFirstTime) {
+        const hasEmpty = salesReturnItems.some((row) => !row.returnQty);
+
+        if (hasEmpty) {
+          toast.info("Please fill all required fields...!", {
+            position: "top-center",
+          });
+          return;
+        }
+      }
       try {
         const { data: styleData } = await getStyleDetail({
           params: {

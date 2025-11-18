@@ -13,6 +13,7 @@ import secureLocalStorage from "react-secure-storage";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { VIEW } from "../../../icons";
+import { toast } from "react-toastify";
 
 export default function ReadyGoods({
   openingStockItems,
@@ -176,6 +177,18 @@ export default function ReadyGoods({
   //   }
   // };
   const handleAddRow = async () => {
+    const isFirstTime = openingStockItems.every((row) => !row.qty);
+
+    if (!isFirstTime) {
+      const hasEmpty = openingStockItems.some((row) => !row.qty);
+
+      if (hasEmpty) {
+        toast.info("Please fill all required fields...!", {
+          position: "top-center",
+        });
+        return;
+      }
+    }
     try {
       const { data: styleData } = await getStyleCodeDetail({
         params: {
