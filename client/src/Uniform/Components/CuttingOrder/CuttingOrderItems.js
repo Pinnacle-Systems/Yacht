@@ -13,6 +13,7 @@ import secureLocalStorage from "react-secure-storage";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { VIEW } from "../../../icons";
+import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService";
 
 export default function CuttingOrderItems({
   cuttingOrderItems,
@@ -23,11 +24,11 @@ export default function CuttingOrderItems({
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [getStyleCodeDetail] = useLazyGetStyleCodeDetailQuery();
-  const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: fabricList } = useGetFabricMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
+  const { data: portionList } = useGetPortionMasterQuery({ params });
 
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -55,6 +56,7 @@ export default function CuttingOrderItems({
     const newBlend = structuredClone(cuttingOrderItems);
     newBlend[index][field] = value;
     setCuttingOrderItems(newBlend);
+    console.log("index", index);
   };
 
   const deleteRow = (id) => {
@@ -106,11 +108,10 @@ export default function CuttingOrderItems({
               styleItemId: "",
               fabricId: "",
               colorId: "",
-              styleId: "",
-              sizeId: "",
               fabWidth: "",
               fabMeter: "",
               portionId: "",
+              sizeId: "",
               orderQty: "",
               remarks: "",
               selected: false,
@@ -127,11 +128,10 @@ export default function CuttingOrderItems({
           styleItemId: "",
           fabricId: "",
           colorId: "",
-          styleId: "",
-          sizeId: "",
           fabWidth: "",
           fabMeter: "",
           portionId: "",
+          sizeId: "",
           orderQty: "",
           remarks: "",
           selected: false,
@@ -198,8 +198,7 @@ export default function CuttingOrderItems({
 
   return (
     <>
-      <div className="border border-slate-200  bg-white rounded-md shadow-sm max-h-[450px] px-2 overflow-auto">
-        
+      <div className="border border-slate-200  bg-white rounded-md shadow-sm max-h-[450px] px-2 overflow-auto overflow-x-auto w-full">
         <div className="flex justify-between items-center mb-2 m-2">
           <h2 className="font-medium text-slate-700">Cutting Order Items</h2>
         </div>
@@ -232,11 +231,7 @@ export default function CuttingOrderItems({
                 >
                   Color
                 </th>
-                <th
-                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
-                >
-                  Size
-                </th>
+
                 <th
                   className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                 >
@@ -251,6 +246,11 @@ export default function CuttingOrderItems({
                   className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Portion
+                </th>
+                <th
+                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Size
                 </th>
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
@@ -370,14 +370,13 @@ export default function CuttingOrderItems({
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px]">
                       <select
-                        id={`orderQty-input-${index}`}
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
                             handleInputChange("", index, "colorId");
                           }
                         }}
                         tabIndex={"0"}
-                        disabled={readOnly}
+                        disabled={true}
                         className="text-left w-full rounded py-1 table-data-input"
                         value={row.colorId}
                         onChange={(e) =>
@@ -398,36 +397,6 @@ export default function CuttingOrderItems({
                         ))}
                       </select>
                     </td>
-                    <td className="py-0.5 border border-gray-300 text-[11px]">
-                      <select
-                        onKeyDown={(e) => {
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "sizeId");
-                          }
-                        }}
-                        tabIndex={"0"}
-                        disabled={true}
-                        className="text-left w-full rounded py-1 table-data-input"
-                        value={row.sizeId}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "sizeId")
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "sizeId");
-                        }}
-                      >
-                        <option></option>
-                        {(id
-                          ? sizeList?.data
-                          : sizeList?.data?.filter((item) => item.active)
-                        )?.map((blend) => (
-                          <option value={blend.id} key={blend.id}>
-                            {blend?.name}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
                         onKeyDown={(e) => {
@@ -448,7 +417,7 @@ export default function CuttingOrderItems({
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "fabWidth");
                         }}
-                        disabled={readOnly}
+                        disabled={true}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
@@ -471,7 +440,7 @@ export default function CuttingOrderItems({
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "fabMeter");
                         }}
-                        disabled={readOnly}
+                        disabled={true}
                       />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px]">
@@ -494,6 +463,36 @@ export default function CuttingOrderItems({
                       >
                         <option></option>
                         {(id
+                          ? portionList?.data
+                          : portionList?.data?.filter((item) => item.active)
+                        )?.map((blend) => (
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <select
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "sizeId");
+                          }
+                        }}
+                        tabIndex={"0"}
+                        disabled={readOnly}
+                        className="text-left w-full rounded py-1 table-data-input"
+                        value={row.sizeId}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "sizeId")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "sizeId");
+                        }}
+                      >
+                        <option></option>
+                        {(id
                           ? sizeList?.data
                           : sizeList?.data?.filter((item) => item.active)
                         )?.map((blend) => (
@@ -503,7 +502,6 @@ export default function CuttingOrderItems({
                         ))}
                       </select>
                     </td>
-
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
                         onKeyDown={(e) => {
@@ -533,13 +531,7 @@ export default function CuttingOrderItems({
                           if (e.key === "Enter") {
                             e.preventDefault();
                             e.stopPropagation();
-                            const nextorderQtyInput = document.querySelector(
-                              `#orderQty-input-${index + 1}`
-                            );
-                            if (nextorderQtyInput) {
-                              nextorderQtyInput.focus();
-                            }
-                          } 
+                          }
                           if (e.key === "Delete") {
                             handleInputChange("", index, "remarks");
                           }
@@ -596,7 +588,7 @@ export default function CuttingOrderItems({
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
                   colSpan={8}
                 >
-                  Total orderQty
+                  Total
                 </td>
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
                   {cuttingOrderItems.reduce(
@@ -608,34 +600,34 @@ export default function CuttingOrderItems({
               </tr>
             </tfoot>
           </table>
-        </div>
-        {contextMenu && (
-          <div
-            style={{
-              position: "absolute",
-              top: `${contextMenu.mouseY}px`,
-              left: `${contextMenu.mouseX}px`,
-              boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
-              padding: "8px",
-              borderRadius: "4px",
-              zIndex: 1000,
-            }}
-            className="bg-gray-100"
-            onMouseLeave={handleCloseContextMenu}
-          >
-            <div className="flex flex-col gap-1">
-              <button
-                className=" text-black text-[12px] text-left rounded px-1"
-                onClick={() => {
-                  deleteSelectedRows();
-                  handleCloseContextMenu();
-                }}
-              >
-                Delete
-              </button>
+          {contextMenu && (
+            <div
+              style={{
+                position: "absolute",
+                top: `${contextMenu.mouseY}px`,
+                left: `${contextMenu.mouseX}px`,
+                boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                padding: "8px",
+                borderRadius: "4px",
+                zIndex: 1000,
+              }}
+              className="bg-gray-100"
+              onMouseLeave={handleCloseContextMenu}
+            >
+              <div className="flex flex-col gap-1">
+                <button
+                  className=" text-black text-[12px] text-left rounded px-1"
+                  onClick={() => {
+                    deleteSelectedRows();
+                    handleCloseContextMenu();
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </>
   );

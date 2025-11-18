@@ -33,9 +33,22 @@ const materialStockApi = createApi({
       },
       providesTags: ["MaterialStock"],
     }),
+    getFabricDetail: builder.query({
+      query: ({ params }) => {
+        return {
+          url: `${MATERIAL_STOCK_API}/styleDetail`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["MaterialStock"],
+    }),
   }),
 });
 
-export const { useGetMaterialStockQuery } = materialStockApi;
+export const { useGetMaterialStockQuery,useLazyGetFabricDetailQuery } = materialStockApi;
 
 export default materialStockApi;

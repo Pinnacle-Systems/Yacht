@@ -835,4 +835,62 @@ async function getPurchaseDetail(req) {
   };
 }
 
-export { get, getOne, create, update, remove, getPurchaseDetail };
+async function getPurchaseDetailStock(req) {
+  const { invNo, storeId, branchId } = req.query;
+
+  let data = await prisma.materialStock.groupBy({
+    by: [
+      "styleNo",
+      "styleItemId",
+      "fabricId",
+      "colorId",
+      "fabWidth",
+      "noOfPcs",
+      "accessoryId",
+      "accessoryGroupId",
+      "sizeId",
+      "uomId",
+    ],
+    where: {
+      branchId: branchId ? parseInt(branchId) : undefined,
+      storeId: storeId ? parseInt(storeId) : undefined,
+      invNo: invNo,
+    },
+    _sum: {
+      qty: true,
+      fabMeter: true,
+    },
+  });
+
+  if (!data || data.length === 0) return NoRecordFound("Invoice not found");
+
+  // 4️⃣ Return formatted result
+  return {
+    statusCode: 0,
+    data: data.map((d) => ({
+      styleNo: d.styleNo,
+      styleItemId: d.styleItemId,
+      fabricId: d.fabricId,
+      colorId: d.colorId,
+      sizeId: d.sizeId,
+      fabWidth: d.fabWidth,
+      fabMeter: d._sum.fabMeter,
+      noOfPcs: d.noOfPcs,
+      accessoryId: d.accessoryId,
+      accessoryGroupId: d.accessoryGroupId,
+      sizeId: d.sizeId,
+      uomId: d.uomId,
+      qty: d._sum.qty,
+    })),
+  };
+}
+
+export {
+  get,
+  getOne,
+  create,
+  update,
+  remove,
+  getPurchaseDetail,
+  getPurchaseDetailStock,
+};

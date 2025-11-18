@@ -5,7 +5,7 @@ import {
   create as _create,
   update as _update,
   remove as _remove,
-  getPurchaseDetail as _getPurchaseDetail,
+  getPurchaseDetailStock as _getPurchaseDetail,
 } from "../services/purchaseInwardEntry.js";
 
 async function get(req, res, next) {

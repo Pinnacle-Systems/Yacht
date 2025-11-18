@@ -9,18 +9,18 @@ import { useGetLocationMasterQuery } from "../../../redux/uniformService/Locatio
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import Swal from "sweetalert2";
 import { HiOutlineRefresh, HiX } from "react-icons/hi";
-import {
-  useAddOpeningStockMutation,
-  useGetOpeningStockByIdQuery,
-  useGetOpeningStockQuery,
-  useLazyGetOpeningStockQuery,
-  useUpdateOpeningStockMutation,
-} from "../../../redux/uniformService/OpeningStockService.js";
 import moment from "moment";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import StyleMasterApi from "../../../redux/uniformService/StyleMasterService.js";
 import CuttingOrderItems from "./CuttingOrderItems.js";
+import { useLazyGetFabricDetailQuery } from "../../../redux/services/MaterialStockService.js";
+import {
+  useAddCuttingOrderMutation,
+  useGetCuttingOrderByIdQuery,
+  useGetCuttingOrderQuery,
+  useUpdateCuttingOrderMutation,
+} from "../../../redux/uniformService/CuttingOrderService.js";
 export default function CuttingOrderForm({
   onClose,
   id,
@@ -52,16 +52,13 @@ export default function CuttingOrderForm({
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
-  } = useGetOpeningStockByIdQuery(id, { skip: !id });
-
-  const [trigger, { data: allDataLazy, isFetchingLazy }] =
-    useLazyGetOpeningStockQuery();
+  } = useGetCuttingOrderByIdQuery(id, { skip: !id });
 
   const {
     data: allData,
     isFetching,
     isLoading,
-  } = useGetOpeningStockQuery({
+  } = useGetCuttingOrderQuery({
     params: {
       branchId,
     },
@@ -88,6 +85,7 @@ export default function CuttingOrderForm({
       }
       setLocationId(data?.locationId ? data?.locationId : "");
       setStoreId(data?.storeId ? data.storeId : "");
+      setStyleNo(data?.styleNo ? data?.styleNo : "");
     },
     [id]
   );
@@ -100,8 +98,9 @@ export default function CuttingOrderForm({
     }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-  const [addData] = useAddOpeningStockMutation();
-  const [updateData] = useUpdateOpeningStockMutation();
+  const [addData] = useAddCuttingOrderMutation();
+  const [updateData] = useUpdateCuttingOrderMutation();
+  const [getFabricDetail] = useLazyGetFabricDetailQuery();
 
   const storeOptions = locationData
     ? locationData.data.filter(
@@ -145,7 +144,7 @@ export default function CuttingOrderForm({
   };
 
   const validateData = (data) => {
-    if (cuttingOrderItems?.length > 0 && data.storeId) {
+    if (cuttingOrderItems?.length > 0 && data.storeId && data.styleNo) {
       return true;
     }
     return false;
@@ -191,11 +190,82 @@ export default function CuttingOrderForm({
     branchId,
     storeId,
     cuttingOrderItems: cuttingOrderItems?.filter?.(
-      (item) => item?.styleId && item?.sizeId
+      (item) => item?.styleNo && item?.fabricId
     ),
     userId,
     finYearId,
     locationId,
+    styleNo,
+  };
+
+  const handleAddRow = async () => {
+    if (!validateData(data)) {
+      toast.info("Please fill all required fields...!", {
+        position: "top-center",
+      });
+    } else {
+      try {
+        const { data: fabricData } = await getFabricDetail({
+          params: {
+            styleNo: styleNo,
+            storeId,
+            branchId,
+          },
+        });
+        const fabricItems = fabricData?.data;
+        if (!fabricItems) return;
+
+        setCuttingOrderItems((prev) => {
+          const updated = [...prev];
+          // Find first empty slot index
+          let startIndex = updated.findIndex(
+            (row) =>
+              !row.styleNo &&
+              !row.styleItemId &&
+              !row.fabricId &&
+              !row.colorId &&
+              !row.fabWidth &&
+              !row.fabMeter &&
+              !row.portionId &&
+              !row.sizeId &&
+              !row.orderQty &&
+              !row.remarks
+          );
+          if (startIndex === -1) startIndex = updated.length;
+
+          // Fill in sizeRows starting at first empty slot
+          fabricItems.forEach((row, i) => {
+            const cloned = structuredClone(row);
+            if (startIndex + i < updated.length) {
+              updated[startIndex + i] = cloned;
+            } else {
+              updated.push(cloned); // append if no empty slot
+            }
+          });
+
+          // Ensure at least 6 rows
+          while (updated.length < 6) {
+            updated.push({
+              styleNo: "",
+              styleItemId: "",
+              fabricId: "",
+              colorId: "",
+              fabWidth: "",
+              fabMeter: "",
+              portionId: "",
+              sizeId: "",
+              orderQty: "",
+              remarks: "",
+              selected: false,
+            });
+          }
+
+          return updated;
+        });
+      } catch (error) {
+        console.error("Error adding row:", error);
+      }
+    }
   };
 
   return (
@@ -287,14 +357,14 @@ export default function CuttingOrderForm({
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.stopPropagation();
-                    // handleAddRow();
+                    handleAddRow();
                   }
                 }}
               />
             </div>
           </div>
         </div>
-        <fieldset>
+        <fieldset className="w-full  min-w-[1200px]">
           <CuttingOrderItems
             cuttingOrderItems={cuttingOrderItems}
             setCuttingOrderItems={setCuttingOrderItems}

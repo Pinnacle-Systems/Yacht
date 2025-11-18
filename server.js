@@ -71,6 +71,7 @@ import {
   purchaseReturn,
   materialStock,
   portionMaster,
+  cuttingOrder,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";
@@ -173,7 +174,8 @@ app.use("/styleItem", styleItem);
 app.use("/salesReturn", salesReturn);
 app.use("/purchaseReturn", purchaseReturn);
 app.use("/materialStock", materialStock);
-app.use("/portion",portionMaster)
+app.use("/portion",portionMaster);
+app.use("/cuttingOrder",cuttingOrder)
 app.get("/retreiveFile/:fileName", (req, res) => {
   const { fileName } = req.params;
   res.sendFile(__dirname + "/uploads/" + fileName);

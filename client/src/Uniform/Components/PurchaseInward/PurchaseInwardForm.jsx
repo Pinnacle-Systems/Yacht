@@ -194,7 +194,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
   };
 
   const validateData = (data) => {
-    if (fabricInwardItems?.length > 0 && data.storeId) {
+    if (fabricInwardItems?.length > 0 && data.storeId && data.supplierId && data.invNo) {
       return true;
     }
     return false;

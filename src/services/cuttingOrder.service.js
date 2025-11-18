@@ -237,6 +237,7 @@ async function create(body) {
     draftSave,
     locationId,
   } = await body;
+  console.log(branchId, "branchId");
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(
@@ -253,6 +254,7 @@ async function create(body) {
   );
   let data;
   console.log(newDocId);
+
   await prisma.$transaction(async (tx) => {
     data = await tx.cuttingOrder.create({
       data: {
@@ -287,7 +289,7 @@ async function createCuttingOrderItems(
 ) {
   const promises = cuttingOrderItems.map(async (orderDetail, index) => {
     const orderQty = orderDetail?.orderQty
-      ? Math.round(parseFloat(orderDetail.qty))
+      ? Math.round(parseFloat(orderDetail.orderQty))
       : null;
     const createdItem = await tx.cuttingOrderItems.create({
       data: {
@@ -339,7 +341,7 @@ async function createCuttingOrderItems(
         portionId: orderDetail?.portionId
           ? parseInt(orderDetail.portionId)
           : null,
-        orderQty,
+        qty: orderQty,
         remarks: orderDetail?.remarks ?? undefined,
       },
     });
@@ -348,6 +350,16 @@ async function createCuttingOrderItems(
   });
 
   return Promise.all(promises);
+}
+
+async function deleteItemsFromStock(tx, removeItemsStockIds) {
+  return await tx.materialStock.deleteMany({
+    where: {
+      id: {
+        in: removeItemsStockIds,
+      },
+    },
+  });
 }
 
 async function update(id, body) {
@@ -417,8 +429,8 @@ async function updateCuttingOrderItems(
   storeId
 ) {
   const promises = cuttingOrderItems.map(async (orderDetail) => {
-    const qty = orderDetail?.orderQty
-      ? Math.round(parseFloat(orderDetail.qty))
+    const orderQty = orderDetail?.orderQty
+      ? Math.round(parseFloat(orderDetail.orderQty))
       : null;
     if (orderDetail.id) {
       // Update existing cuttingOrderItem
@@ -483,7 +495,7 @@ async function updateCuttingOrderItems(
             portionId: orderDetail?.portionId
               ? parseInt(orderDetail.portionId)
               : null,
-            orderQty,
+            qty: orderQty,
             remarks: orderDetail?.remarks ?? undefined,
           },
         });
@@ -518,7 +530,7 @@ async function updateCuttingOrderItems(
             portionId: orderDetail?.portionId
               ? parseInt(orderDetail.portionId)
               : null,
-            orderQty,
+            qty: orderQty,
             remarks: orderDetail?.remarks ?? undefined,
           },
         });
@@ -568,7 +580,7 @@ async function updateCuttingOrderItems(
           sizeId: orderDetail?.sizeId ? parseInt(orderDetail.sizeId) : null,
           colorId: orderDetail?.colorId ? parseInt(orderDetail.colorId) : null,
           price: orderDetail?.price ? parseInt(orderDetail.price) : null,
-          qty,
+          qty: orderQty,
           cuttingOrderItemsId: createdItem.id,
           barCode: barcode,
           styleNo: orderDetail?.styleNo ?? undefined,

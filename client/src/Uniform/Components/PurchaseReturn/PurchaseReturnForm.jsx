@@ -41,11 +41,11 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
     const { branchId, companyId, userId, finYearId } = getCommonParams();
     const branchIdFromApi = useRef(branchId);
     const [pdfOpen, setPdfOpen] = useState(false);
+    const [invNo, setInvNo] = useState("")
     const params = {
         branchId,
         companyId,
     };
-    const [invNo, setInvNo] = useState("")
     const { data: partyList } = useGetPartyQuery({ params: { ...params } });
     const { data: branchList } = useGetBranchQuery({ params: { companyId } });
     const { data: locationData } = useGetLocationMasterQuery({
@@ -148,7 +148,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
     };
 
     const validateData = (data) => {
-        if (purchaseReturnItems?.length > 0 && data.storeId && data.locationId) {
+        if (purchaseReturnItems?.length > 0 && data.storeId && data.locationId && data.supplierId && data.invNo) {
             return true;
         }
         return false;
@@ -207,7 +207,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
                         branchId,
                     },
                 });
-                const purchaseItems = purchaseData?.data?.fabricInwardItems;
+                const purchaseItems = purchaseData?.data;
                 if (!purchaseItems) return;
 
                 setPurchaseReturnItems((prev) => {
