@@ -211,8 +211,15 @@ export default function SalesItems({
       );
 
       if (!isFirstTime) {
-        const hasEmpty = salesReturnItems.some((row) => !row.returnQty);
+        // const hasEmpty = salesReturnItems.some((row) => !row.returnQty);
+         const hasEmpty = salesReturnItems.some((row) => {
+          const hasStyle =
+            row.styleNo !== "" &&
+            row.styleNo !== null &&
+            row.styleNo !== undefined;
 
+          return hasStyle && !row.returnQty;
+        });
         if (hasEmpty) {
           toast.info("Please fill all required fields...!", {
             position: "top-center",

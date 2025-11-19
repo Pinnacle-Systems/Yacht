@@ -850,6 +850,7 @@ async function getPurchaseDetailStock(req) {
       "accessoryGroupId",
       "sizeId",
       "uomId",
+      "styleId"
     ],
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
@@ -881,6 +882,7 @@ async function getPurchaseDetailStock(req) {
       sizeId: d.sizeId,
       uomId: d.uomId,
       qty: d._sum.qty,
+      styleId: d.styleId
     })),
   };
 }

@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../../../Utils/CommonInput";
-import { DropdownInput } from "../../../Inputs";
+import { DropdownInput, DropdownNew } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { getCommonParams, params } from "../../../Utils/helper";
@@ -13,6 +13,7 @@ import moment from "moment";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import StyleMasterApi from "../../../redux/uniformService/StyleMasterService.js";
+import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import CuttingOrderItems from "./CuttingOrderItems.js";
 import { useLazyGetFabricDetailQuery } from "../../../redux/services/MaterialStockService.js";
 import {
@@ -21,6 +22,7 @@ import {
   useGetCuttingOrderQuery,
   useUpdateCuttingOrderMutation,
 } from "../../../redux/uniformService/CuttingOrderService.js";
+import { event } from "jquery";
 export default function CuttingOrderForm({
   onClose,
   id,
@@ -35,13 +37,15 @@ export default function CuttingOrderForm({
   const [searchValue, setSearchValue] = useState("");
   const [storeId, setStoreId] = useState("");
   const [cuttingOrderItems, setCuttingOrderItems] = useState([]);
-  const [styleNo, setStyleNo] = useState("");
+  const [styleId, setStyleId] = useState("");
+  const firstUpdate = useRef(true);
 
   const dispatch = useDispatch();
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
+  const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
 
   const { data: locationData } = useGetLocationMasterQuery({
     params: { branchId },
@@ -85,7 +89,7 @@ export default function CuttingOrderForm({
       }
       setLocationId(data?.locationId ? data?.locationId : "");
       setStoreId(data?.storeId ? data.storeId : "");
-      setStyleNo(data?.styleNo ? data?.styleNo : "");
+      setStyleId(data?.styleId ? data?.styleId : "");
     },
     [id]
   );
@@ -144,7 +148,7 @@ export default function CuttingOrderForm({
   };
 
   const validateData = (data) => {
-    if (cuttingOrderItems?.length > 0 && data.storeId && data.styleNo) {
+    if (cuttingOrderItems?.length > 0) {
       return true;
     }
     return false;
@@ -188,15 +192,26 @@ export default function CuttingOrderForm({
     id,
     docDate,
     branchId,
-    storeId,
+    // storeId,
     cuttingOrderItems: cuttingOrderItems?.filter?.(
-      (item) => item?.styleNo && item?.fabricId
+      (item) => item?.styleId && item?.fabricId
     ),
     userId,
     finYearId,
-    locationId,
-    styleNo,
+    // locationId,
+    styleId,
   };
+
+  useEffect(() => {
+    if (firstUpdate.current) {
+      firstUpdate.current = false;
+      return; // skip on first render
+    }
+    // Call the function whenever styleId changes
+    if (!readOnly) {
+      handleAddRow();
+    }
+  }, [styleId]);
 
   const handleAddRow = async () => {
     if (!validateData(data)) {
@@ -207,7 +222,7 @@ export default function CuttingOrderForm({
       try {
         const { data: fabricData } = await getFabricDetail({
           params: {
-            styleNo: styleNo,
+            styleId: styleId,
             storeId,
             branchId,
           },
@@ -220,7 +235,7 @@ export default function CuttingOrderForm({
           // Find first empty slot index
           let startIndex = updated.findIndex(
             (row) =>
-              !row.styleNo &&
+              !row.styleId &&
               !row.styleItemId &&
               !row.fabricId &&
               !row.colorId &&
@@ -246,7 +261,7 @@ export default function CuttingOrderForm({
           // Ensure at least 6 rows
           while (updated.length < 6) {
             updated.push({
-              styleNo: "",
+              styleId: "",
               styleItemId: "",
               fabricId: "",
               colorId: "",
@@ -273,7 +288,7 @@ export default function CuttingOrderForm({
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
           <h1 className="text-xl font-bold text-gray-800">
-            Cutting Order Details
+            Cutting Plan Details
           </h1>
           <button
             onClick={onClose}
@@ -289,9 +304,9 @@ export default function CuttingOrderForm({
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
             <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
             <div className="grid grid-cols-2 gap-1">
-              <ReusableInput label="Cutting Order No" readOnly value={docId} />
+              <ReusableInput label="Cutting Plan No" readOnly value={docId} />
               <ReusableInput
-                label="Cutting Order Date"
+                label="Cutting Plan Date"
                 value={docDate}
                 type={"date"}
                 required={true}
@@ -300,9 +315,45 @@ export default function CuttingOrderForm({
               />
             </div>
           </div>
-
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">
+            <h2 className="font-medium text-slate-700 mb-2">Style Details</h2>
+
+            <div className="grid grid-cols-2 gap-1">
+              {/* <ReusableInput
+                label="Style No"
+                value={styleId}
+                setValue={setStyleId}
+                type={"text"}
+                required={true}
+                readOnly={readOnly}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.stopPropagation();
+                    handleAddRow();
+                  }
+                }}
+              /> */}
+              <DropdownNew
+                name="Style No"
+                dataList={
+                  id
+                    ? styleList?.data
+                    : styleList?.data?.filter((item) => item.active)
+                }
+                value={styleId}
+                setValue={setStyleId}
+                required={true}
+                readOnly={readOnly}
+                placeholder={"Select Style"}
+                otherField={"sku"}
+                autoFocus={true}
+                disabled={readOnly}
+                clear={true}
+              />
+            </div>
+          </div>
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+            {/* <h2 className="font-medium text-slate-700 mb-2">
               Location Details
             </h2>
             <div className="grid grid-cols-2 gap-1">
@@ -341,27 +392,7 @@ export default function CuttingOrderForm({
                 required={true}
                 readOnly={readOnly}
               />
-            </div>
-          </div>
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">Style Details</h2>
-
-            <div className="grid grid-cols-2 gap-1">
-              <ReusableInput
-                label="Style No"
-                value={styleNo}
-                setValue={setStyleNo}
-                type={"text"}
-                required={true}
-                readOnly={readOnly}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.stopPropagation();
-                    handleAddRow();
-                  }
-                }}
-              />
-            </div>
+            </div> */}
           </div>
         </div>
         <fieldset className="w-full  min-w-[1200px]">

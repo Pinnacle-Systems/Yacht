@@ -165,7 +165,7 @@ const ActiveTabList = () => {
     "SALES RETURN REPORT": <SalesReturnReport />,
     "PURCHASE RETURN": <PurchaseReturn />,
     "PORTION MASTER": <PortionMaster />,
-    "CUTTING ORDER": <CuttingOrder />,
+    "CUTTING PLAN": <CuttingOrder />,
     "CUTTING DELIVERY": <CuttingDelivery />
   };
   const innerWidth = window.innerWidth;

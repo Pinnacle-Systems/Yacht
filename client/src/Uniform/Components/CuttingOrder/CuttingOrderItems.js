@@ -115,6 +115,7 @@ export default function CuttingOrderItems({
               orderQty: "",
               remarks: "",
               selected: false,
+              styleId: "",
             })),
           ];
         }
@@ -135,6 +136,7 @@ export default function CuttingOrderItems({
           orderQty: "",
           remarks: "",
           selected: false,
+          styleId: "",
         }))
       );
     }
@@ -200,7 +202,7 @@ export default function CuttingOrderItems({
     <>
       <div className="border border-slate-200  bg-white rounded-md shadow-sm max-h-[450px] px-2 overflow-auto overflow-x-auto w-full">
         <div className="flex justify-between items-center mb-2 m-2">
-          <h2 className="font-medium text-slate-700">Cutting Order Items</h2>
+          <h2 className="font-medium text-slate-700">Cutting Plan Items</h2>
         </div>
         <div className={`w-full max-h-[300px]  overflow-y-auto  my-1`}>
           <table className="w-full border-collapse table-fixed">
@@ -282,7 +284,8 @@ export default function CuttingOrderItems({
                           handleRightClick(e, "notes");
                         }
                       }}
-                      tabIndex={-1}
+                      tabIndex={"-1"}
+                      onFocus={(e) => e.target.blur()}
                       disabled={readOnly}
                     />
                   </tr>
@@ -445,12 +448,13 @@ export default function CuttingOrderItems({
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px]">
                       <select
+                        id={`portionId-input-${index}`}
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
                             handleInputChange("", index, "portionId");
                           }
                         }}
-                        tabIndex={"0"}
+                        tabIndex={"-1"}
                         disabled={readOnly}
                         className="text-left w-full rounded py-1 table-data-input"
                         value={row.portionId}
@@ -460,6 +464,7 @@ export default function CuttingOrderItems({
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "portionId");
                         }}
+                        onFocus={(e) => e.target.focus()}
                       >
                         <option></option>
                         {(id
@@ -531,6 +536,12 @@ export default function CuttingOrderItems({
                           if (e.key === "Enter") {
                             e.preventDefault();
                             e.stopPropagation();
+                            const nextQtyInput = document.querySelector(
+                              `#portionId-input-${index + 1}`
+                            );
+                            if (nextQtyInput) {
+                              nextQtyInput.focus();
+                            }
                           }
                           if (e.key === "Delete") {
                             handleInputChange("", index, "remarks");
@@ -563,6 +574,8 @@ export default function CuttingOrderItems({
                             handleRightClick(e, index, "notes");
                           }
                         }}
+                        tabIndex={-1}
+                        onFocus={(e) => e.target.blur()}
                       />
                     </td>
 

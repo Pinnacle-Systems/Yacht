@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../../../Utils/CommonInput";
-import { DropdownInput } from "../../../Inputs";
+import { DropdownInput, DropdownNew } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { getCommonParams, params } from "../../../Utils/helper";
@@ -12,12 +12,14 @@ import { HiOutlineRefresh } from "react-icons/hi";
 import moment from "moment";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
-import StyleMasterApi from "../../../redux/uniformService/StyleMasterService.js";
-import { useLazyGetFabricDetailQuery } from "../../../redux/services/MaterialStockService.js";
+import StyleMasterApi, {
+  useGetStyleMasterQuery,
+} from "../../../redux/uniformService/StyleMasterService.js";
 import {
   useAddCuttingOrderMutation,
   useGetCuttingOrderByIdQuery,
   useGetCuttingOrderQuery,
+  useLazyGetOrderDetailsQuery,
   useUpdateCuttingOrderMutation,
 } from "../../../redux/uniformService/CuttingOrderService.js";
 import CuttingDeliveryItem from "./CuttingDeliveryItem.jsx";
@@ -35,14 +37,15 @@ export default function CuttingDeliveryForm({
   const [searchValue, setSearchValue] = useState("");
   const [storeId, setStoreId] = useState("");
   const [cuttingDeliveryItems, setCuttingDeliveryItems] = useState([]);
-  const [styleNo, setStyleNo] = useState("");
+  const [styleId, setStyleId] = useState("");
   const [orderNo, setOrderNo] = useState("");
+  const firstUpdate = useRef(true);
 
   const dispatch = useDispatch();
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
-  const { data: branchList } = useGetBranchQuery({ params: { companyId } });
+  const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
 
   const { data: locationData } = useGetLocationMasterQuery({
     params: { branchId },
@@ -86,7 +89,7 @@ export default function CuttingDeliveryForm({
       }
       setLocationId(data?.locationId ? data?.locationId : "");
       setStoreId(data?.storeId ? data.storeId : "");
-      setStyleNo(data?.styleNo ? data?.styleNo : "");
+      setStyleId(data?.styleId ? data?.styleId : "");
     },
     [id]
   );
@@ -101,7 +104,7 @@ export default function CuttingDeliveryForm({
 
   const [addData] = useAddCuttingOrderMutation();
   const [updateData] = useUpdateCuttingOrderMutation();
-  const [getFabricDetail] = useLazyGetFabricDetailQuery();
+  const [getOrderDetail] = useLazyGetOrderDetailsQuery();
 
   const storeOptions = locationData
     ? locationData.data.filter(
@@ -145,7 +148,7 @@ export default function CuttingDeliveryForm({
   };
 
   const validateData = (data) => {
-    if (cuttingDeliveryItems?.length > 0 && data.storeId && data.styleNo) {
+    if (cuttingDeliveryItems?.length > 0 && data.styleId) {
       return true;
     }
     return false;
@@ -189,83 +192,86 @@ export default function CuttingDeliveryForm({
     id,
     docDate,
     branchId,
-    storeId,
     cuttingDeliveryItems: cuttingDeliveryItems?.filter?.(
-      (item) => item?.styleNo && item?.fabricId
+      (item) => item?.styleId && item?.fabricId
     ),
     userId,
     finYearId,
-    locationId,
-    styleNo,
+    styleId,
   };
 
+  useEffect(() => {
+    if (firstUpdate.current) {
+      firstUpdate.current = false;
+      return; // skip on first render
+    }
+    // Call the function whenever styleId changes
+    if (!readOnly) {
+      handleAddRow();
+    }
+  }, [styleId]);
+
   const handleAddRow = async () => {
-    if (!validateData(data)) {
-      toast.info("Please fill all required fields...!", {
-        position: "top-center",
-      });
-    } else {
-      try {
-        const { data: fabricData } = await getFabricDetail({
-          params: {
-            styleNo: styleNo,
-            storeId,
-            branchId,
-          },
-        });
-        const fabricItems = fabricData?.data;
-        if (!fabricItems) return;
+    try {
+      const { data: orderData } = await getOrderDetail({
+        params: {
+          styleId: styleId,
+          branchId,
+        },
+        
+      },);
+      const fabricItems = orderData?.data?.cuttingOrderItems;
+      if (!fabricItems) return;
+      setOrderNo(orderData?.data?.docId)
+      setCuttingDeliveryItems((prev) => {
+        const updated = [...prev];
+        // Find first empty slot index
+        let startIndex = updated.findIndex(
+          (row) =>
+            !row.styleId &&
+            !row.styleItemId &&
+            !row.fabricId &&
+            !row.colorId &&
+            !row.fabWidth &&
+            !row.fabMeter &&
+            !row.portionId &&
+            !row.sizeId &&
+            !row.orderQty &&
+            !row.remarks
+        );
+        if (startIndex === -1) startIndex = updated.length;
 
-        setCuttingDeliveryItems((prev) => {
-          const updated = [...prev];
-          // Find first empty slot index
-          let startIndex = updated.findIndex(
-            (row) =>
-              !row.styleNo &&
-              !row.styleItemId &&
-              !row.fabricId &&
-              !row.colorId &&
-              !row.fabWidth &&
-              !row.fabMeter &&
-              !row.portionId &&
-              !row.sizeId &&
-              !row.orderQty &&
-              !row.remarks
-          );
-          if (startIndex === -1) startIndex = updated.length;
-
-          // Fill in sizeRows starting at first empty slot
-          fabricItems.forEach((row, i) => {
-            const cloned = structuredClone(row);
-            if (startIndex + i < updated.length) {
-              updated[startIndex + i] = cloned;
-            } else {
-              updated.push(cloned); // append if no empty slot
-            }
-          });
-
-          // Ensure at least 6 rows
-          while (updated.length < 6) {
-            updated.push({
-              styleNo: "",
-              styleItemId: "",
-              fabricId: "",
-              colorId: "",
-              fabWidth: "",
-              fabMeter: "",
-              portionId: "",
-              sizeId: "",
-              orderQty: "",
-              remarks: "",
-              selected: false,
-            });
+        // Fill in sizeRows starting at first empty slot
+        fabricItems.forEach((row, i) => {
+          const cloned = structuredClone(row);
+          if (startIndex + i < updated.length) {
+            updated[startIndex + i] = cloned;
+          } else {
+            updated.push(cloned); // append if no empty slot
           }
-
-          return updated;
         });
-      } catch (error) {
-        console.error("Error adding row:", error);
-      }
+
+        // Ensure at least 6 rows
+        while (updated.length < 6) {
+          updated.push({
+            styleId: "",
+            styleItemId: "",
+            fabricId: "",
+            colorId: "",
+            fabWidth: "",
+            fabMeter: "",
+            portionId: "",
+            sizeId: "",
+            orderQty: "",
+            remarks: "",
+            selected: false,
+          });
+        }
+
+        return updated;
+      });
+    } catch (error) {
+      console.error("Error adding row:", error);
     }
   };
 
@@ -308,6 +314,53 @@ export default function CuttingDeliveryForm({
 
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
             <h2 className="font-medium text-slate-700 mb-2">
+              Cutting Plan Details
+            </h2>
+
+            <div className="grid grid-cols-2 gap-1">
+              {/* <ReusableInput
+                label="Style No"
+                value={styleId}
+                setValue={setStyleId}
+                type={"text"}
+                required={true}
+                readOnly={readOnly}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.stopPropagation();
+                    handleAddRow();
+                  }
+                }}
+              /> */}
+              <DropdownNew
+                name="Style No"
+                dataList={
+                  id
+                    ? styleList?.data
+                    : styleList?.data?.filter((item) => item.active)
+                }
+                value={styleId}
+                setValue={setStyleId}
+                required={true}
+                readOnly={readOnly}
+                placeholder={"Select Style"}
+                otherField={"sku"}
+                autoFocus={true}
+                disabled={readOnly}
+              />
+              <ReusableInput
+                label="Cutting Plan No"
+                value={orderNo}
+                setValue={setOrderNo}
+                type={"text"}
+                required={true}
+                readOnly={true}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-1"></div>
+          </div>
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+            {/* <h2 className="font-medium text-slate-700 mb-2">
               Location Details
             </h2>
             <div className="grid grid-cols-2 gap-1">
@@ -346,64 +399,7 @@ export default function CuttingDeliveryForm({
                 required={true}
                 readOnly={readOnly}
               />
-            </div>
-          </div>
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">Style Details</h2>
-
-            <div className="grid grid-cols-2 gap-1">
-              <ReusableInput
-                label="Style No"
-                value={styleNo}
-                setValue={setStyleNo}
-                type={"text"}
-                required={true}
-                readOnly={readOnly}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.stopPropagation();
-                    handleAddRow();
-                  }
-                }}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-1">
-              <ReusableInput
-                label="Cutting Order"
-                value={orderNo}
-                setValue={setOrderNo}
-                type={"text"}
-                required={true}
-                readOnly={true}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.stopPropagation();
-                    handleAddRow();
-                  }
-                }}
-              />
-              {/* {!readOnly && (
-                <button
-                  className="p-0.5 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white -ml-6"
-                  onClick={() => {
-                    if (!styleId || !supplierId) {
-                      toast.info("Please Select StyleId and SupplierId ", {
-                        position: "top-center",
-                      });
-                      return;
-                    }
-                    setCuttingOrderFillGrid(true);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      setCuttingOrderFillGrid(true);
-                    }
-                  }}
-                >
-                  Select
-                </button>
-              )} */}
-            </div>
+            </div> */}
           </div>
         </div>
         <fieldset className="w-full  min-w-[1200px]">

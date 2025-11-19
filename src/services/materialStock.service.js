@@ -100,18 +100,22 @@ async function get(req) {
 }
 
 async function getStyleDetail(req) {
-  const { styleNo, storeId, branchId } = req.query;
-
+  const { styleId, storeId, branchId } = req.query;
+  if (!styleId || styleId === "0" || styleId === "") {
+    return {
+      statusCode: 400,
+      message: "styleId is required",
+    };
+  }
   // 1️⃣ First try fetching by styleNo
   let data = await prisma.materialStock.groupBy({
-    by: ["styleItemId", "fabricId", "colorId", "fabWidth","styleNo"],
+    by: ["styleItemId", "fabricId", "colorId", "fabWidth", "styleId"],
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
       storeId: storeId ? parseInt(storeId) : undefined,
-      styleNo: styleNo,
+      styleId: styleId ? parseInt(styleId) : undefined,
     },
     _sum: {
-      qty: true,
       fabMeter: true,
     },
   });
@@ -122,13 +126,13 @@ async function getStyleDetail(req) {
   return {
     statusCode: 0,
     data: data.map((d) => ({
-      styleNo: d.styleNo,
       styleItemId: d.styleItemId,
       fabricId: d.fabricId,
       colorId: d.colorId,
       sizeId: d.sizeId,
       fabWidth: d.fabWidth,
       fabMeter: d._sum.fabMeter,
+      styleId: d.styleId,
     })),
   };
 }

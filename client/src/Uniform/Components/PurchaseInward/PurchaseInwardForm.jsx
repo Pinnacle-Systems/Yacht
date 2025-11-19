@@ -84,7 +84,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
     id,
     userId,
     storeId,
-    fabricInwardItems: fabricInwardItems?.filter((item) => item.styleNo && item.fabricId || item.accessoryId),
+    fabricInwardItems: fabricInwardItems?.filter((item) => item.styleId && item.fabricId || item.accessoryId),
     dcNo,
     finYearId,
     locationId,
@@ -132,7 +132,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
         data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : ""
       );
       setDcNo(data?.dcNo ? data.dcNo : "");
-      setLocationId(data?.Store ? data.Store.locationId : "");
+      setLocationId(data?.Store ? data.Store.locationId : branchId);
       setStoreId(data?.storeId ? data.storeId : "");
       if (data?.branchId) {
         branchIdFromApi.current = data?.branchId;

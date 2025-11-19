@@ -32,6 +32,19 @@ const CuttingOrderApi = createApi({
       },
       providesTags: ["CuttingOrder"],
     }),
+    getOrderDetails: builder.query({
+      query: ({ params }) => {
+        return {
+          url: `${CUTTING_ORDER_API}/getStyleDetail`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["CuttingOrder"],
+    }),
     getCuttingOrderById: builder.query({
       query: (id) => {
         return {
@@ -79,6 +92,7 @@ const CuttingOrderApi = createApi({
 export const {
   useLazyGetCuttingOrderQuery,
   useGetCuttingOrderQuery,
+  useLazyGetOrderDetailsQuery,
   useGetCuttingOrderByIdQuery,
   useAddCuttingOrderMutation,
   useUpdateCuttingOrderMutation,

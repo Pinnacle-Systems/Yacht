@@ -6,11 +6,14 @@ import {
   create,
   update,
   remove,
+  getStyleDetail
 } from "../controllers/cuttingOrder.controller.js";
 
 router.post("/", create);
 
 router.get("/", get);
+
+router.get("/getStyleDetail",getStyleDetail)
 
 router.get("/:id", getOne);
 

@@ -227,10 +227,19 @@ export default function BillItems({
         position: "top-center",
       });
     } else {
-      const isFirstTime = salesEntryItems.every((row) => !row.qty && !row.price);
+      const isFirstTime = salesEntryItems.every(
+        (row) => !row.qty && !row.price
+      );
 
       if (!isFirstTime) {
-        const hasEmpty = salesEntryItems.some((row) => !row.qty || !row.price);
+        const hasEmpty = salesEntryItems.some((row) => {
+          const hasStyle =
+            row.styleNo !== "" &&
+            row.styleNo !== null &&
+            row.styleNo !== undefined;
+
+          return hasStyle && (!row.qty || !row.price);
+        });
 
         if (hasEmpty) {
           toast.info("Please fill all required fields...!", {

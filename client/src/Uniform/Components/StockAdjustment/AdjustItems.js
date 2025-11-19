@@ -288,10 +288,17 @@ export default function AdjustItems({
       );
 
       if (!isFirstTime) {
-        const hasEmpty = stockAdjustmentItems.some(
-          (row) => !row.adjType || !row.adjQty
-        );
+        // const hasEmpty = stockAdjustmentItems.some(
+        //   (row) => !row.adjType || !row.adjQty
+        // );
+        const hasEmpty = stockAdjustmentItems.some((row) => {
+          const hasStyle =
+            row.styleNo !== "" &&
+            row.styleNo !== null &&
+            row.styleNo !== undefined;
 
+          return hasStyle && (!row.adjType || !row.adjQty);
+        });
         if (hasEmpty) {
           toast.info("Please fill all required fields...!", {
             position: "top-center",

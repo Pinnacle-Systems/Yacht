@@ -86,7 +86,7 @@ export default function Form() {
             <div>
               <h1 className="text-xl font-bold text-gray-800">
                 {" "}
-                Cutting Order Report
+                Cutting Plan Report
               </h1>
             </div>
             <button

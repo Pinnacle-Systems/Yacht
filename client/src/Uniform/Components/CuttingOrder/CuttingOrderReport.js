@@ -186,13 +186,16 @@ const CuttingOrderReport = ({
                   </th>
 
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <div>Opening Stock No</div>
+                    <div>Cutting Plan No</div>
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <div>Opening Stock Date</div>
+                    <div>Cutting Plan Date</div>
                   </th>
-                  <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                  {/* <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Store</div>
+                  </th> */}
+                  <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                    <div>Style No</div>
                   </th>
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
@@ -224,7 +227,7 @@ const CuttingOrderReport = ({
                       }}
                     />
                   </th>
-                  <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                  {/* <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
                     <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -232,6 +235,17 @@ const CuttingOrderReport = ({
                       value={searchStore}
                       onChange={(e) => {
                         setSearchStore(e.target.value);
+                      }}
+                    />
+                  </th> */}
+                  <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                    <input
+                      type="text"
+                      className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                      placeholder="Search"
+                      value={searchStyleNo}
+                      onChange={(e) => {
+                        setSearchStyleNo(e.target.value);
                       }}
                     />
                   </th>
@@ -274,9 +288,13 @@ const CuttingOrderReport = ({
                             ? getDateFromDateTimeToDisplay(dataObj.docDate)
                             : ""}
                         </td>
-                        <td className="py-1.5 text-left px-4">
+                        {/* <td className="py-1.5 text-left px-4">
                           {" "}
                           {dataObj?.Store?.storeName}
+                        </td> */}
+                        <td className="py-1.5 text-left px-4">
+                          {" "}
+                          {dataObj?.Style?.sku}
                         </td>
                         {rowActions && (
                           <td className=" w-[30px] border-gray-200 gap-1 px-2  justify-end">

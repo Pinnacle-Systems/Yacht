@@ -45,6 +45,7 @@ export default function CuttingDeliveryItem({
             fabMeter: "",
             portionId: "",
             orderQty: "",
+            issueQty: "",
             remarks: "",
             selected: false,
         };
@@ -114,6 +115,7 @@ export default function CuttingDeliveryItem({
                             orderQty: "",
                             remarks: "",
                             selected: false,
+                            issueQty: "",
                         })),
                     ];
                 }
@@ -134,6 +136,7 @@ export default function CuttingDeliveryItem({
                     orderQty: "",
                     remarks: "",
                     selected: false,
+                    issueQty: "",
                 }))
             );
         }
@@ -155,12 +158,12 @@ export default function CuttingDeliveryItem({
                                     S.No
                                 </th>
                                 <th
-                                    className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-48 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Style
                                 </th>
                                 <th
-                                    className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
+                                    className={`w-44 px-4 py-2 text-center font-medium text-[13px]`}
                                 >
                                     Fabric
                                 </th>
@@ -176,29 +179,39 @@ export default function CuttingDeliveryItem({
                                 </th>
 
                                 <th
-                                    className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Width
                                 </th>
                                 <th
-                                    className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Meter
                                 </th>
                                 <th
-                                    className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Portion
                                 </th>
                                 <th
-                                    className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Size
                                 </th>
                                 <th
-                                    className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Order Qty
+                                </th>
+                                <th
+                                    className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Issue Qty
+                                </th>
+                                <th
+                                    className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Consumtion
                                 </th>
                                 <th
                                     className={`w-48 px-1 py-2 text-center font-medium text-[13px] `}
@@ -226,6 +239,7 @@ export default function CuttingDeliveryItem({
                                                 }
                                             }}
                                             tabIndex={-1}
+                                            onFocus={(e) => e.target.blur()}
                                             disabled={readOnly}
                                         />
                                     </tr>
@@ -394,7 +408,7 @@ export default function CuttingDeliveryItem({
                                                     }
                                                 }}
                                                 tabIndex={"0"}
-                                                disabled={readOnly}
+                                                disabled={true}
                                                 className="text-left w-full rounded py-1 table-data-input"
                                                 value={row.portionId}
                                                 onChange={(e) =>
@@ -424,7 +438,7 @@ export default function CuttingDeliveryItem({
                                                     }
                                                 }}
                                                 tabIndex={"0"}
-                                                disabled={readOnly}
+                                                disabled={true}
                                                 className="text-left w-full rounded py-1 table-data-input"
                                                 value={row.sizeId}
                                                 onChange={(e) =>
@@ -465,8 +479,37 @@ export default function CuttingDeliveryItem({
                                                 onBlur={(e) => {
                                                     handleInputChange(e.target.value, index, "orderQty");
                                                 }}
+                                                disabled={true}
+                                            />
+                                        </td>
+                                        <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                                            <input
+                                                id={`issueQty-input-${index}`}
+                                                onKeyDown={(e) => {
+                                                    if (e.code === "Minus" || e.code === "NumpadSubtract")
+                                                        e.preventDefault();
+                                                    if (e.key === "Delete") {
+                                                        handleInputChange("", index, "issueQty");
+                                                    }
+                                                }}
+                                                min={"0"}
+                                                type="number"
+                                                className="text-right rounded py-1 px-1 w-full table-data-input"
+                                                onFocus={(e) => e.target.select()}
+                                                value={row?.issueQty}
+                                                onChange={(e) =>
+                                                    handleInputChange(e.target.value, index, "issueQty")
+                                                }
+                                                onBlur={(e) => {
+                                                    handleInputChange(e.target.value, index, "issueQty");
+                                                }}
                                                 disabled={readOnly}
                                             />
+                                        </td>
+                                        <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                                            {row.fabWidth && row.issueQty
+                                                ? (row.fabMeter / row.issueQty).toFixed(2)
+                                                : ""}
                                         </td>
                                         <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                                             <input
@@ -474,6 +517,12 @@ export default function CuttingDeliveryItem({
                                                     if (e.key === "Enter") {
                                                         e.preventDefault();
                                                         e.stopPropagation();
+                                                        const nextQtyInput = document.querySelector(
+                                                            `#issueQty-input-${index + 1}`
+                                                        );
+                                                        if (nextQtyInput) {
+                                                            nextQtyInput.focus();
+                                                        }
                                                     }
                                                     if (e.key === "Delete") {
                                                         handleInputChange("", index, "remarks");
@@ -539,7 +588,13 @@ export default function CuttingDeliveryItem({
                                         0
                                     )}
                                 </td>
-                                <td className="border border-gray-300" colSpan={3}></td>
+                                <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
+                                    {cuttingDeliveryItems.reduce(
+                                        (sum, row) => sum + (Number(row.issueQty) || 0),
+                                        0
+                                    )}
+                                </td>
+                                <td className="border border-gray-300" colSpan={4}></td>
                             </tr>
                         </tfoot>
                     </table>

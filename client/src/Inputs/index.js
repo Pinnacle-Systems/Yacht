@@ -22,6 +22,7 @@ import { useModal } from "../Basic/pages/home/context/ModalContext";
 import DynamicRenderer from "../Uniform/Components/common/DynamicComponent";
 import secureLocalStorage from "react-secure-storage";
 import useOutsideClick from "../CustomHooks/handleOutsideClick";
+import zIndex from "@mui/material/styles/zIndex";
 
 export const handleOnChange = (event, setValue) => {
   const inputValue = event.target.value;
@@ -210,7 +211,7 @@ export const TextInput = forwardRef(
       onBlur = null,
       width = "full",
       autoFocus,
-      onKeyDown
+      onKeyDown,
     },
     ref
   ) => {
@@ -559,8 +560,10 @@ export const DropdownInput = ({
           ${className}`}
         value={value}
         onChange={(e) => {
-          beforeChange();
           handleOnChange(e);
+          setTimeout(() => {
+            beforeChange();
+          }, 0);
         }}
         disabled={isDisabled}
       >
@@ -1757,6 +1760,7 @@ export const customSelectStyles = {
     // overflowY: "auto",
     fontSize: "12px",
     color: state.isDisabled ? "#6b7280" : "black",
+    zIndex: 9999,
   }),
   option: (base, state) => ({
     ...base,
@@ -1783,6 +1787,10 @@ export const customSelectStyles = {
     maxHeight: 150,
     // overflowY: "auto",
   }),
+  menu: (base) => ({
+    ...base,
+    zIndex: 9999,
+  }),
 };
 
 export const DropdownNew = ({
@@ -1797,6 +1805,8 @@ export const DropdownNew = ({
   placeholder,
   width = "full",
   otherField,
+  onKeyDown,
+  autoFocus
 }) => {
   const options = [
     ...(clear
@@ -1842,6 +1852,8 @@ export const DropdownNew = ({
           transition-all duration-150 shadow-sm"
         placeholder={placeholder}
         styles={customSelectStyles}
+        onKeyDown={onKeyDown}
+        autoFocus={autoFocus}
       />
     </div>
   );

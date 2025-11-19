@@ -37,10 +37,10 @@ async function getNextDocId(
     const branchObj = await getTableRecordWithId(branchId, "branch");
     let newDocId = `${branchObj.branchCode}${getYearShortCode(
       new Date()
-    )}/CO/1`;
+    )}/CP/1`;
 
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/CO/${
+      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/CP/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
@@ -71,9 +71,9 @@ async function getNextDocId(
     const branchObj = await getTableRecordWithId(branchId, "branch");
     let newDocId = `${branchObj.branchCode}${getYearShortCode(
       new Date()
-    )}/CO/1`;
+    )}/CP/1`;
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/CO/${
+      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/CP/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
@@ -103,6 +103,7 @@ async function get(req) {
     searchDocDate,
     searchStore,
     finYearId,
+    searchStyleNo,
   } = req.query;
 
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -142,6 +143,9 @@ async function get(req) {
       Store: {
         storeName: searchStore ? { contains: searchStore } : undefined,
       },
+      Style: {
+        sku: searchStyleNo ? { contains: searchStyleNo } : undefined,
+      },
     },
     include: {
       Store: {
@@ -151,6 +155,12 @@ async function get(req) {
         },
       },
       cuttingOrderItems: true,
+      Style: {
+        select: {
+          id: true,
+          sku: true,
+        },
+      },
     },
   });
   totalCount = data.length;
@@ -180,17 +190,16 @@ async function getOne(id) {
       id: parseInt(id),
     },
     include: {
-      Store: {
-        select: {
-          locationId: true,
-        },
-      },
+      // Store: {
+      //   select: {
+      //     locationId: true,
+      //   },
+      // },
       cuttingOrderItems: {
         select: {
           materialStocks: true,
           id: true,
           cuttingOrderId: true,
-          styleNo: true,
           styleItemId: true,
           fabricId: true,
           colorId: true,
@@ -229,13 +238,13 @@ async function create(body) {
   const {
     userId,
     branchId,
-    storeId,
+    // storeId,
     finYearId,
     cuttingOrderItems,
-    styleNo,
+    styleId,
     docDate,
     draftSave,
-    locationId,
+    // locationId,
   } = await body;
   console.log(branchId, "branchId");
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -260,11 +269,11 @@ async function create(body) {
       data: {
         docId: newDocId,
         branchId: parseInt(branchId),
-        storeId: parseInt(storeId),
+        // storeId: parseInt(storeId),
         createdById: parseInt(userId),
-        styleNo,
+        styleId: parseInt(styleId),
         docDate: docDate ? new Date(docDate) : null,
-        locationId: parseInt(locationId),
+        // locationId: parseInt(locationId),
       },
     });
     await createCuttingOrderItems(
@@ -272,8 +281,8 @@ async function create(body) {
       cuttingOrderItems,
       data,
       userId,
-      branchId,
-      storeId
+      branchId
+      // storeId
     );
   });
   return { statusCode: 0, data };
@@ -284,8 +293,8 @@ async function createCuttingOrderItems(
   cuttingOrderItems,
   cuttingOrder,
   userId,
-  branchId,
-  storeId
+  branchId
+  // storeId
 ) {
   const promises = cuttingOrderItems.map(async (orderDetail, index) => {
     const orderQty = orderDetail?.orderQty
@@ -294,7 +303,6 @@ async function createCuttingOrderItems(
     const createdItem = await tx.cuttingOrderItems.create({
       data: {
         cuttingOrderId: parseInt(cuttingOrder.id),
-        styleNo: orderDetail?.styleNo ?? undefined,
         fabricId: orderDetail?.fabricId ? parseInt(orderDetail.fabricId) : null,
         styleId: orderDetail?.styleId ? parseInt(orderDetail.styleId) : null,
         styleItemId: orderDetail?.styleItemId
@@ -323,8 +331,7 @@ async function createCuttingOrderItems(
         cuttingOrderItemsId: createdItem.id,
         createdById: parseInt(userId),
         branchId: parseInt(branchId),
-        storeId: parseInt(storeId),
-        styleNo: orderDetail?.styleNo ?? undefined,
+        // storeId: parseInt(storeId),
         fabricId: orderDetail?.fabricId ? parseInt(orderDetail.fabricId) : null,
         styleId: orderDetail?.styleId ? parseInt(orderDetail.styleId) : null,
         styleItemId: orderDetail?.styleItemId
@@ -336,12 +343,11 @@ async function createCuttingOrderItems(
           ? parseFloat(orderDetail.fabWidth)
           : null,
         fabMeter: orderDetail?.fabMeter
-          ? parseFloat(orderDetail.fabMeter)
+          ? -Math.abs(parseFloat(orderDetail.fabMeter))
           : null,
         portionId: orderDetail?.portionId
           ? parseInt(orderDetail.portionId)
           : null,
-        qty: orderQty,
         remarks: orderDetail?.remarks ?? undefined,
       },
     });
@@ -367,10 +373,10 @@ async function update(id, body) {
     branchId,
     cuttingOrderItems,
     userId,
-    storeId,
+    // storeId,
     docDate,
-    locationId,
-    styleNo,
+    // locationId,
+    styleId,
   } = await body;
   let data;
   const dataFound = await prisma.cuttingOrder.findUnique({
@@ -400,12 +406,12 @@ async function update(id, body) {
         id: parseInt(id),
       },
       data: {
-        storeId: parseInt(storeId),
+        // storeId: parseInt(storeId),
         updatedById: parseInt(userId),
         branchId: parseInt(branchId),
-        styleNo,
+        styleId: parseInt(styleId),
         docDate: docDate ? new Date(docDate) : null,
-        locationId: parseInt(locationId),
+        // locationId: parseInt(locationId),
       },
     });
     await updateCuttingOrderItems(
@@ -413,8 +419,8 @@ async function update(id, body) {
       cuttingOrderItems,
       data,
       userId,
-      branchId,
-      storeId
+      branchId
+      // storeId
     );
   });
   return { statusCode: 0, data };
@@ -438,7 +444,6 @@ async function updateCuttingOrderItems(
         where: { id: parseInt(orderDetail.id) },
         data: {
           cuttingOrderId: parseInt(cuttingOrder.id),
-          styleNo: orderDetail?.styleNo ?? undefined,
           fabricId: orderDetail?.fabricId
             ? parseInt(orderDetail.fabricId)
             : null,
@@ -472,7 +477,6 @@ async function updateCuttingOrderItems(
           where: { id: existingStock.id },
           data: {
             updatedById: parseInt(userId),
-            styleNo: orderDetail?.styleNo ?? undefined,
             fabricId: orderDetail?.fabricId
               ? parseInt(orderDetail.fabricId)
               : null,
@@ -490,12 +494,11 @@ async function updateCuttingOrderItems(
               ? parseFloat(orderDetail.fabWidth)
               : null,
             fabMeter: orderDetail?.fabMeter
-              ? parseFloat(orderDetail.fabMeter)
+              ? -Math.abs(parseFloat(orderDetail.fabMeter))
               : null,
             portionId: orderDetail?.portionId
               ? parseInt(orderDetail.portionId)
               : null,
-            qty: orderQty,
             remarks: orderDetail?.remarks ?? undefined,
           },
         });
@@ -506,8 +509,7 @@ async function updateCuttingOrderItems(
             cuttingOrderItemsId: updatedItem.id,
             createdById: parseInt(userId),
             branchId: parseInt(branchId),
-            storeId: parseInt(storeId),
-            styleNo: orderDetail?.styleNo ?? undefined,
+            // storeId: parseInt(storeId),
             fabricId: orderDetail?.fabricId
               ? parseInt(orderDetail.fabricId)
               : null,
@@ -525,12 +527,11 @@ async function updateCuttingOrderItems(
               ? parseFloat(orderDetail.fabWidth)
               : null,
             fabMeter: orderDetail?.fabMeter
-              ? parseFloat(orderDetail.fabMeter)
+              ? -Math.abs(parseFloat(orderDetail.fabMeter))
               : null,
             portionId: orderDetail?.portionId
               ? parseInt(orderDetail.portionId)
               : null,
-            qty: orderQty,
             remarks: orderDetail?.remarks ?? undefined,
           },
         });
@@ -542,7 +543,6 @@ async function updateCuttingOrderItems(
       const createdItem = await tx.cuttingOrderItems.create({
         data: {
           cuttingOrderId: parseInt(cuttingOrder.id),
-          styleNo: orderDetail?.styleNo ?? undefined,
           fabricId: orderDetail?.fabricId
             ? parseInt(orderDetail.fabricId)
             : null,
@@ -570,23 +570,29 @@ async function updateCuttingOrderItems(
       await tx.materialStock.create({
         data: {
           inOrOut: "cuttingOrder",
+          cuttingOrderItemsId: createdItem.id,
           createdById: parseInt(userId),
           branchId: parseInt(branchId),
-          storeId: parseInt(storeId),
+          // storeId: parseInt(storeId),
           fabricId: orderDetail?.fabricId
             ? parseInt(orderDetail.fabricId)
             : null,
           styleId: orderDetail?.styleId ? parseInt(orderDetail.styleId) : null,
-          sizeId: orderDetail?.sizeId ? parseInt(orderDetail.sizeId) : null,
-          colorId: orderDetail?.colorId ? parseInt(orderDetail.colorId) : null,
-          price: orderDetail?.price ? parseInt(orderDetail.price) : null,
-          qty: orderQty,
-          cuttingOrderItemsId: createdItem.id,
-          barCode: barcode,
-          styleNo: orderDetail?.styleNo ?? undefined,
           styleItemId: orderDetail?.styleItemId
             ? parseInt(orderDetail.styleItemId)
             : null,
+          sizeId: orderDetail?.sizeId ? parseInt(orderDetail.sizeId) : null,
+          colorId: orderDetail?.colorId ? parseInt(orderDetail.colorId) : null,
+          fabWidth: orderDetail?.fabWidth
+            ? parseFloat(orderDetail.fabWidth)
+            : null,
+          fabMeter: orderDetail?.fabMeter
+            ? -Math.abs(parseFloat(orderDetail.fabMeter))
+            : null,
+          portionId: orderDetail?.portionId
+            ? parseInt(orderDetail.portionId)
+            : null,
+          remarks: orderDetail?.remarks ?? undefined,
         },
       });
 
@@ -609,4 +615,40 @@ async function remove(id) {
   return { statusCode: 0, data };
 }
 
-export { get, getOne, create, update, remove };
+async function getStyleDetail(req) {
+  const { styleId, branchId } = req.query;
+  let data = await prisma.cuttingOrder.findFirst({
+    where: {
+      styleId: parseInt(styleId),
+      branchId: parseInt(branchId),
+    },
+    include: {
+      cuttingOrderItems: {
+        select: {
+          materialStocks: true,
+          id: true,
+          cuttingOrderId: true,
+          styleItemId: true,
+          fabricId: true,
+          colorId: true,
+          sizeId: true,
+          fabWidth: true,
+          fabMeter: true,
+          portionId: true,
+          styleId: true,
+          orderQty: true,
+          remarks: true,
+        },
+      },
+    },
+  });
+  if (!data) return NoRecordFound("CuttingOrder");
+  return {
+    statusCode: 0,
+    data: {
+      ...data,
+    },
+  };
+}
+
+export { get, getOne, create, update, remove,getStyleDetail };

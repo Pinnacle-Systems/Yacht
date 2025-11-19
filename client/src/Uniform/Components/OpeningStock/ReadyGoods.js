@@ -180,8 +180,15 @@ export default function ReadyGoods({
     const isFirstTime = openingStockItems.every((row) => !row.qty);
 
     if (!isFirstTime) {
-      const hasEmpty = openingStockItems.some((row) => !row.qty);
+      // const hasEmpty = openingStockItems.some((row) => !row.qty);
+      const hasEmpty = openingStockItems.some((row) => {
+        const hasStyle =
+          row.styleNo !== "" &&
+          row.styleNo !== null &&
+          row.styleNo !== undefined;
 
+        return hasStyle && !row.qty;
+      });
       if (hasEmpty) {
         toast.info("Please fill all required fields...!", {
           position: "top-center",

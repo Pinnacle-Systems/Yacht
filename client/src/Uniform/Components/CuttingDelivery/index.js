@@ -101,12 +101,12 @@ export default function Form() {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm overflow-hidden  ">
-            <CuttingDeliveryFormReport
+            {/* <CuttingDeliveryFormReport
               onView={handleView}
               onEdit={handleEdit}
               onDelete={handleDelete}
               itemsPerPage={10}
-            />
+            /> */}
           </div>
         </div>
       )}

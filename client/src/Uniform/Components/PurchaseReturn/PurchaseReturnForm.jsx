@@ -78,7 +78,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
         id,
         userId,
         storeId,
-        purchaseReturnItems: purchaseReturnItems?.filter((item) => item.styleNo && item.fabricId || item.accessoryId),
+        purchaseReturnItems: purchaseReturnItems?.filter((item) => item.styleId && item.fabricId || item.accessoryId),
         finYearId,
         locationId,
         invNo
@@ -102,7 +102,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
             );
             setReturnType(data?.returnType ? data.returnType : "Fabric");
             setSupplierId(data?.supplierId ? data?.supplierId : "");
-            setLocationId(data?.Store ? data.Store.locationId : "");
+            setLocationId(data?.Store ? data.Store.locationId : branchId);
             setStoreId(data?.storeId ? data.storeId : "");
             if (data?.branchId) {
                 branchIdFromApi.current = data?.branchId;
@@ -219,7 +219,8 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
                             !row.styleItemId &&
                             !row.fabricId &&
                             !row.accessoryId &&
-                            !row.accessoryGroupId
+                            !row.accessoryGroupId &&
+                            !row.styleId
                     );
                     if (startIndex === -1) startIndex = updated.length;
 
@@ -325,7 +326,6 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
                                     }}
                                     required={true}
                                     readOnly={id}
-                                    autoFocus={true}
                                 />
                                 <DropdownInput
                                     name="Store"
@@ -340,6 +340,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
                                     setValue={setStoreId}
                                     required={true}
                                     readOnly={id}
+                                    autoFocus={true}
                                 />
                             </div>
                         </div>
