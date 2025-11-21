@@ -1,57 +1,48 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import secureLocalStorage from "react-secure-storage";
-// import {
-//   useGetUnitOfMeasurementMasterQuery,
-//   useGetUnitOfMeasurementMasterByIdQuery,
-//   useAddUnitOfMeasurementMasterMutation,
-//   useUpdateUnitOfMeasurementMasterMutation,
-//   useDeleteUnitOfMeasurementMasterMutation,
-// } from "../../../redux/uniformService/UnitOfMeasurementServices";
-import FormReport from "../FormReportTemplate";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { toast } from "react-toastify";
-import { TextInput, CheckBox, ToggleButton } from "../../../Inputs";
-import ReportTemplate from "../ReportTemplate";
-import FormHeader from "../FormHeader";
-import Mastertable from "../MasterTable/Mastertable";
-import Modal from "../../../UiComponents/Modal";
-import MastersForm from "../MastersForm/MastersForm";
-import { Check, Plus } from "lucide-react";
+import secureLocalStorage from "react-secure-storage";
+import toast from "react-hot-toast";
+import { ReusableTable, TextInput, ToggleButton } from "../../../Inputs";
+import { Check, Power } from "lucide-react";
 import { statusDropdown } from "../../../Utils/DropdownData";
+import Modal from "../../../UiComponents/Modal";
 import Swal from "sweetalert2";
 import { useAddUnitOfMeasurementMasterMutation, useDeleteUnitOfMeasurementMasterMutation, useGetUnitOfMeasurementMasterByIdQuery, useGetUnitOfMeasurementMasterQuery, useUpdateUnitOfMeasurementMasterMutation } from "../../../redux/uniformService/UnitOfMeasurementServices";
-const MODEL = "Uom Master";
 
+const MODEL = "UOM Master";
 export default function Form() {
   const [form, setForm] = useState(false);
 
   const [readOnly, setReadOnly] = useState(false);
   const [id, setId] = useState("");
   const [name, setName] = useState("");
-  const [accessory, setAccessory] = useState(false)
-  const [active, setActive] = useState(true);
-
+  const [accessory, setAccessory] = useState(false);
+  const [active, setActive] = useState(false);
 
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
-
 
   const params = {
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
     ),
   };
+
   console.log(params, "params");
 
-  const { data: allData, isLoading, isFetching } = useGetUnitOfMeasurementMasterQuery({ params, searchParams: searchValue });
-  console.log(allData, "allData")
+  const {
+    data: allData,
+    isLoading,
+    isFetching,
+  } = useGetUnitOfMeasurementMasterQuery({ params, searchParams: searchValue });
+
+  console.log(allData, "datatat");
+
   const {
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
-  } = useGetUnitOfMeasurementMasterByIdQuery
-      (id, { skip: !id });
-
+  } = useGetUnitOfMeasurementMasterByIdQuery(id, { skip: !id });
 
   const [addData] = useAddUnitOfMeasurementMasterMutation();
   const [updateData] = useUpdateUnitOfMeasurementMasterMutation();
@@ -59,9 +50,14 @@ export default function Form() {
 
   const syncFormWithDb = useCallback(
     (data) => {
-      // if (id) setReadOnly(true);
-      setName(data?.name ? data.name : "");
-      setActive(id ? (data?.active ? data.active : false) : true);
+      if (!id) {
+        setReadOnly(false);
+        setName("");
+        setActive(id ? data?.active : true);
+      } else {
+        setName(data?.name || "");
+        setActive(id ? data?.active ?? false : true);
+      }
     },
     [id]
   );
@@ -71,18 +67,20 @@ export default function Form() {
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
   const data = {
+    id,
     name,
-    // accessory,
     active,
-    companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
-  }
+    companyId: secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "userCompanyId"
+    ),
+  };
 
   const validateData = (data) => {
     if (data.name) {
       return true;
     }
     return false;
-  }
+  };
 
   const handleSubmitCustom = async (callback, data, text) => {
     try {
@@ -92,37 +90,52 @@ export default function Form() {
       } else {
         returnData = await callback(data).unwrap();
       }
-
-      if (returnData.statusCode === 1) {
-        console.log(returnData.message);
-
-        return
-      }
-      console.log(returnData, "return");
-
-      setId("")
-      syncFormWithDb(undefined)
-      // toast.success(text + "Successfully");
+      setId(returnData.data.id);
       Swal.fire({
         title: text + "  " + "Successfully",
         icon: "success",
         draggable: true,
         timer: 1000,
         showConfirmButton: false,
-
         didOpen: () => {
           Swal.showLoading();
-        }
+        },
       });
+      setForm(false);
     } catch (error) {
       console.log("handle");
     }
   };
 
   const saveData = () => {
+    let foundItem;
+    if (id) {
+      foundItem = allData?.data
+        ?.filter((i) => i.id !== id)
+        ?.some(
+          (item) =>
+            item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+        );
+    } else {
+      foundItem = allData?.data?.some(
+        (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+      );
+    }
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The Uom Name already exists.",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return false;
+    }
     if (!validateData(data)) {
-      toast.info("Please fill all required fields...!", {
-        position: "top-center",
+      Swal.fire({
+        title: "Please fill all required fields...!",
+        icon: "success",
+        timer: 1000,
       });
       return;
     }
@@ -136,32 +149,38 @@ export default function Form() {
     }
   };
 
-  const deleteData = async () => {
+  const handleDelete = async () => {
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
       try {
-        await removeData(id)
+        let deldata = await removeData(id).unwrap();
+        if (deldata?.statusCode == 1) {
+          Swal.fire({
+            icon: "error",
+            title: "Child record Exists",
+            text: deldata.data?.message || "Data cannot be deleted!",
+          });
+          return;
+        }
         setId("");
-        // toast.success("Deleted Successfully");
         Swal.fire({
-          title: "Deleted" + "  " + "Successfully",
+          title: "Deleted Successfully",
           icon: "success",
-          draggable: true,
           timer: 1000,
-          showConfirmButton: false,
-
-          didOpen: () => {
-            Swal.showLoading();
-          }
         });
+        setForm(false);
       } catch (error) {
-        toast.error("something went wrong");
+        Swal.fire({
+          icon: "error",
+          title: "Submission error",
+          text: error.data?.message || "Something went wrong!",
+        });
+        setForm(false);
       }
     }
   };
-
   const handleKeyDown = (event) => {
     let charCode = String.fromCharCode(event.which).toLowerCase();
     if ((event.ctrlKey || event.metaKey) && charCode === "s") {
@@ -174,223 +193,171 @@ export default function Form() {
     setId("");
     setForm(true);
     setSearchValue("");
-    syncFormWithDb(undefined)
+    syncFormWithDb(undefined);
     setReadOnly(false);
   };
 
-  function onDataClick(id) {
+  const ACTIVE = (
+    <div className="bg-gradient-to-r from-green-200 to-green-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-green-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+      <Power size={10} />
+    </div>
+  );
+  const INACTIVE = (
+    <div className="bg-gradient-to-r from-red-200 to-red-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-red-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+      <Power size={10} />
+    </div>
+  );
+
+  const columns = [
+    {
+      header: "S.No",
+      accessor: (item, index) => parseInt(index) + parseInt(1),
+      className: "font-medium text-gray-900 text-center w-[10px] py-1",
+      search: "",
+    },
+    {
+      header: "UOM Name",
+      accessor: (item) => item.name,
+      className: "font-medium text-gray-900  w-[200px]  py-1  px-2",
+      search: "UOM Name",
+    },
+    {
+      header: "Status",
+      accessor: (item) => (item.active ? ACTIVE : INACTIVE),
+      className: "font-medium text-gray-900 text-center w-[10px] py-1",
+      search: "",
+    },
+  ];
+
+  const handleView = (id) => {
     setId(id);
     setForm(true);
-  }
+    setReadOnly(true);
+  };
 
-  const tableHeaders = [
-    "Name", "Status"
-  ]
-  const tableDataNames = ["dataObj.name", 'dataObj.active ? ACTIVE : INACTIVE']
+  const handleEdit = (id) => {
+    setId(id);
+    setForm(true);
+    setReadOnly(false);
+  };
 
-  // if (!form)
-  //     return (
-  //         <ReportTemplate
-  //             heading={MODEL}
-  //             tableHeaders={tableHeaders}
-  //             tableDataNames={tableDataNames}
-  //             loading={
-  //                 isLoading || isFetching
-  //             }
-  //             setForm={setForm}
-  //             data={allData?.data}
-  //             onClick={onDataClick}
-  //             onNew={onNew}
-  //             searchValue={searchValue}
-  //             setSearchValue={setSearchValue}
-  //         />
-  //     );
-
-  // return (
-  //     <div
-  //         onKeyDown={handleKeyDown}
-  //         className="md:items-start md:justify-items-center grid h-full bg-theme"
-  //     >
-  //         <div className="flex flex-col frame w-full h-full">
-  //             <FormHeader
-  //                 onNew={onNew}
-  //                 onClose={() => {
-  //                     setForm(false);
-  //                     setSearchValue("");
-  //                 }}
-  //                 model={MODEL}
-  //                 saveData={saveData}
-  //                 setReadOnly={setReadOnly}
-  //                 deleteData={deleteData}
-
-  //             />
-  //             <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-x-2 overflow-clip">
-  //                 <div className="col-span-3 grid md:grid-cols-2 border overflow-auto">
-  //                     <div className='col-span-3 grid md:grid-cols-2 border overflow-auto'>
-  //                         <div className='mr-1 md:ml-2'>
-  //                             <fieldset className='frame my-1'>
-  //                                 <legend className='sub-heading'>Uom Info</legend>
-  //                                 <div className='grid grid-cols-1 my-2'>
-  //                                     <TextInput name="Uom Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-  //                                     {/* <CheckBox name="Accessory" readOnly={readOnly} value={accessory} setValue={setAccessory} disabled={(childRecord.current > 0)} /> */}
-  //                                     <CheckBox name="Active" readOnly={readOnly} value={active} setValue={setActive} />
-  //                                 </div>
-  //                             </fieldset>
-  //                         </div>
-  //                     </div>
-  //                 </div>
-  //                 <div className="frame hidden md:block overflow-x-hidden">
-  //                     <FormReport
-  //                         searchValue={searchValue}
-  //                         setSearchValue={setSearchValue}
-  //                         setId={setId}
-  //                         tableHeaders={tableHeaders}
-  //                         tableDataNames={tableDataNames}
-  //                         data={allData?.data}
-  //                         loading={
-  //                             isLoading || isFetching
-  //                         }
-  //                     />
-  //                 </div>
-  //             </div>
-  //         </div>
-  //     </div>
-  // );
   return (
-
-    <>
-
-
-      <div onKeyDown={handleKeyDown}>
-        <div className='w-full flex justify-between mb-2 items-center px-0.5'>
-          <h5 className='my-1'>Unit Of Mesaurement Master</h5>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => {
-                setForm(true);
-                onNew();
-              }}
-              className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-            >
-              <Plus size={16} />
-              Add New Uom
-            </button>
-
-          </div>
-        </div>
-        <div className='w-full flex items-start'>
-          <Mastertable
-            header={'Department list'}
-            searchValue={searchValue}
-            setSearchValue={setSearchValue}
-            onDataClick={onDataClick}
-            tableHeaders={tableHeaders}
-            tableDataNames={tableDataNames}
-            data={allData?.data}
-            loading={
-              isLoading || isFetching
-            }
-            setReadOnly={setReadOnly}
-            deleteData={deleteData}
-          />
-        </div>
-
-        {form && (
-          <Modal
-            isOpen={form}
-            form={form}
-            widthClass={"w-[30%] max-w-6xl h-[50vh]"}
-            onClose={() => {
-              setForm(false);
-              // setErrors({});
+    <div onKeyDown={handleKeyDown} className="p-1">
+      <div className="w-full flex bg-white p-1 justify-between  items-center">
+        <h5 className="text-xl font-bold font-segoe text-gray-800 ">
+          UOM Master
+        </h5>
+        <div className="flex items-center">
+          <button
+            onClick={() => {
+              setForm(true);
+              onNew();
             }}
+            className="bg-white border font-segoe border-green-600 text-green-600 hover:bg-green-700 hover:text-white text-sm px-2  rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >
-            <div className="h-full flex flex-col bg-[f1f1f0]">
-              <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-                    {id ? (!readOnly ? "Edit Department Master" : "Department Master") : "Add New Department"}
-                  </h2>
-
+            + Add New UOM
+          </button>
+        </div>
+      </div>
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
+        <ReusableTable
+          columns={columns}
+          data={allData?.data || []}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          itemsPerPage={10}
+        />
+      </div>
+      {form && (
+        <Modal
+          isOpen={form}
+          form={form}
+          widthClass={"w-[500px] max-w-6xl h-[350px]"}
+          onClose={() => {
+            setForm(false);
+          }}
+        >
+          <div className="h-full flex flex-col bg-gray-100">
+            <div className="border-b py-2 px-4 mt-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                  {id
+                    ? !readOnly
+                      ? "Edit UOM"
+                      : "UOM Master"
+                    : "Add New UOM"}
+                </h2>
+              </div>
+              <div className="flex gap-2">
+                <div>
+                  {readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReadOnly(false);
+                      }}
+                      className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                    >
+                      Edit
+                    </button>
+                  )}
                 </div>
                 <div className="flex gap-2">
-                  <div>
-                    {readOnly && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setForm(false);
-                          setSearchValue("");
-                          setId(false);
-                        }}
-                        className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
-                      >
-                        Cancel
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    {!readOnly && (
-                      <button
-                        type="button"
-                        onClick={saveData}
-                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                            border border-green-600 flex items-center gap-1 text-xs"
-                      >
-                        <Check size={14} />
-                        {id ? "Update" : "Save"}
-                      </button>
-                    )}
-                  </div>
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={saveData}
+                      className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                  border border-green-600 flex items-center gap-1 text-xs"
+                    >
+                      <Check size={14} />
+                      {id ? "Update" : "Save"}
+                    </button>
+                  )}
                 </div>
               </div>
-
-              <div className="flex-1 overflow-auto p-3">
-                <div className="grid grid-cols-1  gap-3  h-full">
-                  <div className="lg:col-span- space-y-3">
-                    <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-
-                      <fieldset className=''>
-                        <div className='space-y-2 w-[50%]'>
-                          <div>
-                            <TextInput name="Uom Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                          </div>
-                          <div>
-                            <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} disabled={childRecord.current > 0} />
-                          </div>
-
-                        </div>
-
-                      </fieldset>
-
-                    </div>
-
-
-                  </div>
-
-
-
-
-
-
-
-
-
-
-                </div>
-              </div>
-
-
             </div>
 
+            <div className="flex-1 overflow-auto p-3">
+              <div className="grid grid-cols-1  gap-3  h-full">
+                <div className="lg:col-span- space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                    <fieldset className=" rounded mt-2">
+                      <div className="">
+                        <div className="flex flex-wrap justify-between">
+                          <div className="mb-3 w-[48%]">
+                            <TextInput
+                              name="UOM"
+                              type="text"
+                              value={name}
+                              setValue={setName}
+                              required={true}
+                              readOnly={readOnly}
+                              disabled={childRecord.current > 0}
+                            />
+                          </div>
+                        </div>
 
-
-          </Modal>
-        )}
-
-
-      </div>
-    </>
-  )
-
+                        <div className="mb-5">
+                          <ToggleButton
+                            name="Status"
+                            options={statusDropdown}
+                            value={active}
+                            setActive={setActive}
+                            required={true}
+                            readOnly={readOnly}
+                          />
+                        </div>
+                      </div>
+                    </fieldset>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
 }

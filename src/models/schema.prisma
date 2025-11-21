@@ -334,6 +334,7 @@ model Employee {
   EmployeeBankDetails      EmployeeBankDetails[]
   EmployeeEducationdetails EmployeeEducationDetails[]
   EmployeeFamilyDetails    EmployeeFamilyDetails[]
+  cuttingDeliveryItems     CuttingDeliveryItems[]
 }
 
 model EmployeeBankDetails {
@@ -432,14 +433,16 @@ model City {
 }
 
 model Department {
-  id          Int           @id @default(autoincrement())
-  name        String
-  code        String
-  active      Boolean       @default(true)
-  doctor      Employee[]    @relation()
-  Company     Company       @relation(fields: [companyId], references: [id])
-  companyId   Int
-  Designation Designation[]
+  id                Int               @id @default(autoincrement())
+  name              String
+  code              String
+  active            Boolean           @default(true)
+  doctor            Employee[]        @relation()
+  Company           Company           @relation(fields: [companyId], references: [id])
+  companyId         Int
+  Designation       Designation[]
+  cuttingDeliveries CuttingDelivery[]
+  productionStocks  ProductionStock[]
 }
 
 enum PageType {
@@ -580,6 +583,7 @@ model Party {
   salesReturns              SalesReturn[]
   purchaseInwards           PurchaseInward[]
   purchaseReturns           PurchaseReturn[]
+  cuttingDeliveries         CuttingDelivery[]
 }
 
 model PartyBranch {
@@ -1169,6 +1173,8 @@ model UnitOfMeasurement {
   fabricInwardItems          FabricInwardItems[]
   purchaseReturnItems        PurchaseReturnItems[]
   productionStocks           ProductionStock[]
+  cuttingOrderItems          CuttingOrderItems[]
+  cuttingDeliveryItems       CuttingDeliveryItems[]
 }
 
 model purchaseInwardEntry {
@@ -1583,6 +1589,7 @@ model Size {
   cuttingOrderItems    CuttingOrderItems[]
   cuttingDeliveryItems CuttingDeliveryItems[]
   productionStocks     ProductionStock[]
+  sizeDetails          sizeDetails[]
 }
 
 model Measurement {
@@ -2173,27 +2180,39 @@ model CuttingOrder {
 }
 
 model CuttingOrderItems {
-  id             Int             @id @default(autoincrement())
-  CuttingOrder   CuttingOrder?   @relation(fields: [cuttingOrderId], references: [id], onDelete: Cascade)
+  id             Int                @id @default(autoincrement())
+  CuttingOrder   CuttingOrder?      @relation(fields: [cuttingOrderId], references: [id], onDelete: Cascade)
   cuttingOrderId Int?
   styleNo        String?
-  Fabric         Fabric?         @relation(fields: [fabricId], references: [id])
+  Fabric         Fabric?            @relation(fields: [fabricId], references: [id])
   fabricId       Int?
-  StyleItem      StyleItem?      @relation(fields: [styleItemId], references: [id])
+  StyleItem      StyleItem?         @relation(fields: [styleItemId], references: [id])
   styleItemId    Int?
-  Style          Style?          @relation(fields: [styleId], references: [id])
+  Style          Style?             @relation(fields: [styleId], references: [id])
   styleId        Int?
-  Color          Color?          @relation(fields: [colorId], references: [id])
+  Color          Color?             @relation(fields: [colorId], references: [id])
   colorId        Int?
-  Size           Size?           @relation(fields: [sizeId], references: [id])
+  Size           Size?              @relation(fields: [sizeId], references: [id])
   sizeId         Int?
   fabWidth       Float?
   fabMeter       Float?
-  Portion        Portion?        @relation(fields: [portionId], references: [id])
+  Portion        Portion?           @relation(fields: [portionId], references: [id])
   portionId      Int?
   orderQty       Float?
   remarks        String?
+  Uom            UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId          Int?
   materialStocks MaterialStock[]
+  sizeDetails    sizeDetails[]
+}
+
+model sizeDetails {
+  id                  Int                @id @default(autoincrement())
+  Size                Size?              @relation(fields: [sizeId], references: [id])
+  sizeId              Int?
+  qty                 Float?
+  CuttingOrderItems   CuttingOrderItems? @relation(fields: [cuttingOrderItemsId], references: [id],onDelete: Cascade)
+  cuttingOrderItemsId Int?
 }
 
 model CuttingDelivery {
@@ -2214,32 +2233,41 @@ model CuttingDelivery {
   styleId              Int?
   cuttingNo            String?
   cuttingDeliveryItems CuttingDeliveryItems[]
+  productionType       String?
+  Department           Department?            @relation(fields: [departmentId], references: [id])
+  departmentId         Int?
+  Supplier             Party?                 @relation(fields: [supplierId], references: [id])
+  supplierId           Int?
 }
 
 model CuttingDeliveryItems {
-  id                Int               @id @default(autoincrement())
-  CuttingDelivery   CuttingDelivery?  @relation(fields: [cuttingDeliveryId], references: [id], onDelete: Cascade)
+  id                Int                @id @default(autoincrement())
+  CuttingDelivery   CuttingDelivery?   @relation(fields: [cuttingDeliveryId], references: [id], onDelete: Cascade)
   cuttingDeliveryId Int?
   styleNo           String?
-  Fabric            Fabric?           @relation(fields: [fabricId], references: [id])
+  Fabric            Fabric?            @relation(fields: [fabricId], references: [id])
   fabricId          Int?
-  StyleItem         StyleItem?        @relation(fields: [styleItemId], references: [id])
+  StyleItem         StyleItem?         @relation(fields: [styleItemId], references: [id])
   styleItemId       Int?
-  Style             Style?            @relation(fields: [styleId], references: [id])
+  Style             Style?             @relation(fields: [styleId], references: [id])
   styleId           Int?
-  Color             Color?            @relation(fields: [colorId], references: [id])
+  Color             Color?             @relation(fields: [colorId], references: [id])
   colorId           Int?
-  Size              Size?             @relation(fields: [sizeId], references: [id])
+  Size              Size?              @relation(fields: [sizeId], references: [id])
   sizeId            Int?
   fabWidth          Float?
   fabMeter          Float?
-  Portion           Portion?          @relation(fields: [portionId], references: [id])
+  Portion           Portion?           @relation(fields: [portionId], references: [id])
   portionId         Int?
   orderQty          Float?
   issueQty          Float?
   remarks           String?
   productionStocks  ProductionStock[]
   materialStocks    MaterialStock[]
+  Uom               UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId             Int?
+  Employee          Employee?          @relation(fields: [employeeId], references: [id])
+  employeeId        Int?
 }
 
 model ProductionStock {
@@ -2283,4 +2311,6 @@ model ProductionStock {
   orderQty               Float?
   CuttingDeliveryItems   CuttingDeliveryItems? @relation(fields: [cuttingDeliveryItemsId], references: [id], onDelete: Cascade)
   cuttingDeliveryItemsId Int?
+  Department             Department?           @relation(fields: [departmentId], references: [id])
+  departmentId           Int?
 }

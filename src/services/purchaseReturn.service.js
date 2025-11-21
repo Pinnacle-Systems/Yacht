@@ -456,7 +456,7 @@ async function update(id, body) {
   let removedItems = findRemovedItems(dataFound, purchaseReturnItems);
   let removeItemsIds = removedItems.map((item) => parseInt(item.id));
   await prisma.$transaction(async (tx) => {
-    await deleteItemsFromStock(tx, removeItemsIds);
+    // await deleteItemsFromStock(tx, removeItemsIds);
     if (removeItemsIds.length > 0) {
       await tx.purchaseReturnItems.deleteMany({
         where: { id: { in: removeItemsIds } },

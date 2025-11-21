@@ -15,14 +15,19 @@ import { useDispatch } from "react-redux";
 import StyleMasterApi, {
   useGetStyleMasterQuery,
 } from "../../../redux/uniformService/StyleMasterService.js";
-import {
-  useAddCuttingOrderMutation,
-  useGetCuttingOrderByIdQuery,
-  useGetCuttingOrderQuery,
-  useLazyGetOrderDetailsQuery,
-  useUpdateCuttingOrderMutation,
-} from "../../../redux/uniformService/CuttingOrderService.js";
 import CuttingDeliveryItem from "./CuttingDeliveryItem.jsx";
+import {
+  useAddCuttingDeliveryMutation,
+  useGetCuttingDeliveryByIdQuery,
+  useGetCuttingDeliveryQuery,
+  useUpdateCuttingDeliveryMutation,
+} from "../../../redux/uniformService/CuttingDeliveryServices.js";
+import { useLazyGetOrderDetailsQuery } from "../../../redux/uniformService/CuttingOrderService.js";
+import { inHouseOutsideTypes } from "../../../Utils/DropdownData.js";
+import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices.js";
+import { useGetDepartmentQuery } from "../../../redux/services/DepartmentMasterService.js";
+import { useGetPartyCategoryMasterQuery } from "../../../redux/services/PartyCategoryServices.js";
+import { useGetPartyQuery } from "../../../redux/services/PartyMasterService.js";
 export default function CuttingDeliveryForm({
   onClose,
   id,
@@ -38,7 +43,10 @@ export default function CuttingDeliveryForm({
   const [storeId, setStoreId] = useState("");
   const [cuttingDeliveryItems, setCuttingDeliveryItems] = useState([]);
   const [styleId, setStyleId] = useState("");
-  const [orderNo, setOrderNo] = useState("");
+  const [cuttingNo, setCuttingNo] = useState("");
+  const [productionType, setProductionType] = useState("");
+  const [departmentId, setDepartmentId] = useState("");
+  const [supplierId, setSupplierId] = useState("");
   const firstUpdate = useRef(true);
 
   const dispatch = useDispatch();
@@ -46,6 +54,12 @@ export default function CuttingDeliveryForm({
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
   const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
+  const { data: departmentList } = useGetDepartmentQuery({
+    params: { companyId },
+  });
+  const { data: supplierList } = useGetPartyQuery({
+    params: { companyId },
+  });
 
   const { data: locationData } = useGetLocationMasterQuery({
     params: { branchId },
@@ -56,13 +70,13 @@ export default function CuttingDeliveryForm({
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
-  } = useGetCuttingOrderByIdQuery(id, { skip: !id });
+  } = useGetCuttingDeliveryByIdQuery(id, { skip: !id });
 
   const {
     data: allData,
     isFetching,
     isLoading,
-  } = useGetCuttingOrderQuery({
+  } = useGetCuttingDeliveryQuery({
     params: {
       branchId,
     },
@@ -90,6 +104,12 @@ export default function CuttingDeliveryForm({
       setLocationId(data?.locationId ? data?.locationId : "");
       setStoreId(data?.storeId ? data.storeId : "");
       setStyleId(data?.styleId ? data?.styleId : "");
+      setCuttingNo(data?.cuttingNo ? data?.cuttingNo : "");
+      setProductionType(
+        data?.productionType ? data?.productionType : "INHOUSE"
+      );
+      setSupplierId(data?.supplierId ? data?.supplierId : "");
+      setDepartmentId(data?.departmentId ? data?.departmentId : "");
     },
     [id]
   );
@@ -102,8 +122,8 @@ export default function CuttingDeliveryForm({
     }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-  const [addData] = useAddCuttingOrderMutation();
-  const [updateData] = useUpdateCuttingOrderMutation();
+  const [addData] = useAddCuttingDeliveryMutation();
+  const [updateData] = useUpdateCuttingDeliveryMutation();
   const [getOrderDetail] = useLazyGetOrderDetailsQuery();
 
   const storeOptions = locationData
@@ -198,6 +218,10 @@ export default function CuttingDeliveryForm({
     userId,
     finYearId,
     styleId,
+    cuttingNo,
+    productionType,
+    supplierId,
+    departmentId,
   };
 
   useEffect(() => {
@@ -218,11 +242,10 @@ export default function CuttingDeliveryForm({
           styleId: styleId,
           branchId,
         },
-        
-      },);
+      });
       const fabricItems = orderData?.data?.cuttingOrderItems;
       if (!fabricItems) return;
-      setOrderNo(orderData?.data?.docId)
+      setCuttingNo(orderData?.data?.docId);
       setCuttingDeliveryItems((prev) => {
         const updated = [...prev];
         // Find first empty slot index
@@ -280,7 +303,7 @@ export default function CuttingDeliveryForm({
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
           <h1 className="text-xl font-bold text-gray-800">
-            Cutting Delivery Details
+            Cutting Production Details
           </h1>
           <button
             onClick={onClose}
@@ -297,12 +320,12 @@ export default function CuttingDeliveryForm({
             <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
             <div className="grid grid-cols-2 gap-1">
               <ReusableInput
-                label="Cutting Delivery No"
+                label="Cutting Production No"
                 readOnly
                 value={docId}
               />
               <ReusableInput
-                label="Cutting Delivery Date"
+                label="Cutting Production Date"
                 value={docDate}
                 type={"date"}
                 required={true}
@@ -318,20 +341,6 @@ export default function CuttingDeliveryForm({
             </h2>
 
             <div className="grid grid-cols-2 gap-1">
-              {/* <ReusableInput
-                label="Style No"
-                value={styleId}
-                setValue={setStyleId}
-                type={"text"}
-                required={true}
-                readOnly={readOnly}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.stopPropagation();
-                    handleAddRow();
-                  }
-                }}
-              /> */}
               <DropdownNew
                 name="Style No"
                 dataList={
@@ -347,11 +356,12 @@ export default function CuttingDeliveryForm({
                 otherField={"sku"}
                 autoFocus={true}
                 disabled={readOnly}
+                clear={true}
               />
               <ReusableInput
                 label="Cutting Plan No"
-                value={orderNo}
-                setValue={setOrderNo}
+                value={cuttingNo}
+                setValue={setCuttingNo}
                 type={"text"}
                 required={true}
                 readOnly={true}
@@ -360,46 +370,50 @@ export default function CuttingDeliveryForm({
             <div className="grid grid-cols-2 gap-1"></div>
           </div>
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            {/* <h2 className="font-medium text-slate-700 mb-2">
-              Location Details
+            <h2 className="font-medium text-slate-700 mb-2">
+              Production Details
             </h2>
             <div className="grid grid-cols-2 gap-1">
               <DropdownInput
-                name="Location"
-                options={
-                  branchList
-                    ? dropDownListObject(
-                        id
-                          ? branchList?.data
-                          : branchList?.data?.filter((item) => item.active),
-                        "branchName",
-                        "id"
-                      )
-                    : []
-                }
-                value={locationId}
-                setValue={(value) => {
-                  setLocationId(value);
-                  setStoreId("");
-                }}
+                name="Production Type"
+                options={inHouseOutsideTypes}
+                value={productionType}
+                setValue={setProductionType}
                 required={true}
-                readOnly={readOnly}
+                readOnly={id}
               />
-              <DropdownInput
-                name="Store"
-                options={dropDownListObject(
-                  id
-                    ? storeOptions
-                    : storeOptions?.filter((item) => item.active),
-                  "storeName",
-                  "id"
-                )}
-                value={storeId}
-                setValue={setStoreId}
-                required={true}
-                readOnly={readOnly}
-              />
-            </div> */}
+              {data?.productionType === "INHOUSE" && (
+                <DropdownNew
+                  name="Department"
+                  dataList={
+                    id
+                      ? departmentList?.data
+                      : departmentList?.data?.filter((item) => item.active)
+                  }
+                  value={departmentId}
+                  setValue={setDepartmentId}
+                  readOnly={readOnly}
+                  placeholder={"Select Department"}
+                  disabled={readOnly}
+                />
+              )}
+              {data?.productionType === "OUTSIDE" && (
+                <DropdownNew
+                  name="Supplier"
+                  dataList={
+                    id
+                      ? supplierList?.data
+                      : supplierList?.data?.filter((item) => item.active)
+                  }
+                  value={supplierId}
+                  setValue={setSupplierId}
+                  readOnly={readOnly}
+                  placeholder={"Select Supplier"}
+                  disabled={readOnly}
+                  clear={true}
+                />
+              )}
+            </div>
           </div>
         </div>
         <fieldset className="w-full  min-w-[1200px]">

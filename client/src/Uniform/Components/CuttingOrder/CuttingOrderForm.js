@@ -23,6 +23,8 @@ import {
   useUpdateCuttingOrderMutation,
 } from "../../../redux/uniformService/CuttingOrderService.js";
 import { event } from "jquery";
+import { useLazyGetSizeTemplateByIdQuery } from "../../../redux/uniformService/SizeTemplateMasterServices.js";
+import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices.js";
 export default function CuttingOrderForm({
   onClose,
   id,
@@ -39,13 +41,16 @@ export default function CuttingOrderForm({
   const [cuttingOrderItems, setCuttingOrderItems] = useState([]);
   const [styleId, setStyleId] = useState("");
   const firstUpdate = useRef(true);
-
+  const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
   const dispatch = useDispatch();
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
   const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
+  const { data: uomList } = useGetUnitOfMeasurementMasterQuery({
+    params: { companyId },
+  });
 
   const { data: locationData } = useGetLocationMasterQuery({
     params: { branchId },
@@ -71,11 +76,6 @@ export default function CuttingOrderForm({
   const syncFormWithDb = useCallback(
     (data) => {
       const today = new Date();
-      if (id) {
-        setReadOnly(true);
-      } else {
-        setReadOnly(false);
-      }
       setDocDate(
         data?.docDate
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
@@ -208,10 +208,12 @@ export default function CuttingOrderForm({
       return; // skip on first render
     }
     // Call the function whenever styleId changes
-    if (!readOnly) {
-      handleAddRow();
-    }
-  }, [styleId]);
+    if (id) return;
+
+    // 🚫 block when readOnly mode
+    if (readOnly) return;
+    handleAddRow();
+  }, [styleId,id,readOnly]);
 
   const handleAddRow = async () => {
     if (!validateData(data)) {
@@ -259,7 +261,7 @@ export default function CuttingOrderForm({
           });
 
           // Ensure at least 6 rows
-          while (updated.length < 6) {
+          while (updated.length < 5) {
             updated.push({
               styleId: "",
               styleItemId: "",
@@ -272,9 +274,10 @@ export default function CuttingOrderForm({
               orderQty: "",
               remarks: "",
               selected: false,
+              uomId: "",
+              sizeDetails: [],
             });
           }
-
           return updated;
         });
       } catch (error) {
@@ -347,7 +350,7 @@ export default function CuttingOrderForm({
                 placeholder={"Select Style"}
                 otherField={"sku"}
                 autoFocus={true}
-                disabled={readOnly}
+                disabled={id}
                 clear={true}
               />
             </div>
@@ -397,9 +400,14 @@ export default function CuttingOrderForm({
         </div>
         <fieldset className="w-full  min-w-[1200px]">
           <CuttingOrderItems
+            styleId={styleId}
+            styleList={styleList}
             cuttingOrderItems={cuttingOrderItems}
             setCuttingOrderItems={setCuttingOrderItems}
             readOnly={readOnly}
+            styleTemplateDetail={styleTemplateDetail}
+            uomList={uomList}
+            id={id}
           />
         </fieldset>
         <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">

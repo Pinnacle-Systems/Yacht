@@ -6,7 +6,7 @@ import {
 } from "../../../Utils/helper";
 import { Loader } from "../../../Basic/components";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { useGetCuttingOrderQuery } from "../../../redux/uniformService/CuttingOrderService";
+import { useGetCuttingDeliveryQuery } from "../../../redux/uniformService/CuttingDeliveryServices";
 
 const CuttingDeliveryFormReport = ({
   onClick,
@@ -56,7 +56,7 @@ const CuttingDeliveryFormReport = ({
     data: allData,
     isFetching,
     isLoading,
-  } = useGetCuttingOrderQuery({
+  } = useGetCuttingDeliveryQuery({
     params: {
       branchId,
       ...searchFields,
@@ -186,13 +186,13 @@ const CuttingDeliveryFormReport = ({
                   </th>
 
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <div>Opening Stock No</div>
+                    <div>Cutting Production No</div>
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <div>Opening Stock Date</div>
+                    <div>Cutting Production Date</div>
                   </th>
                   <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                    <div>Store</div>
+                    <div>Style No</div>
                   </th>
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
@@ -229,9 +229,9 @@ const CuttingDeliveryFormReport = ({
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
                       placeholder="Search"
-                      value={searchStore}
+                      value={searchStyleNo}
                       onChange={(e) => {
-                        setSearchStore(e.target.value);
+                        setSearchStyleNo(e.target.value);
                       }}
                     />
                   </th>
@@ -276,7 +276,7 @@ const CuttingDeliveryFormReport = ({
                         </td>
                         <td className="py-1.5 text-left px-4">
                           {" "}
-                          {dataObj?.Store?.storeName}
+                          {dataObj?.Style?.sku}
                         </td>
                         {rowActions && (
                           <td className=" w-[30px] border-gray-200 gap-1 px-2  justify-end">

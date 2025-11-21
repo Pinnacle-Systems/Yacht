@@ -64,3 +64,4 @@ export { default as purchaseReturn } from "./purchaseReturn.route.js";
 export { default as materialStock } from "./materialStock.route.js";
 export { default as portionMaster } from "./portion.route.js";
 export { default as cuttingOrder } from "./cuttingOrder.route.js";
+export {default as cuttingDelivery }  from "./cuttingDelivery.route.js"

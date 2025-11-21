@@ -1,11 +1,7 @@
-import {
-  useGetStyleMasterQuery,
-  useLazyGetStyleCodeDetailQuery,
-} from "../../../redux/uniformService/StyleMasterService";
-import { useEffect, useState } from "react";
+import { useLazyGetStyleCodeDetailQuery } from "../../../redux/uniformService/StyleMasterService";
+import { useEffect, useRef, useState } from "react";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { ReusableInput } from "../../../Utils/CommonInput";
-import { useLazyGetSizeTemplateByIdQuery } from "../../../redux/uniformService/SizeTemplateMasterServices";
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
 import { findFromList } from "../../../Utils/helper";
 import { IMAGE_UPLOAD_URL } from "../../../Constants";
@@ -21,15 +17,20 @@ export default function CuttingOrderItems({
   params,
   readOnly,
   id,
+  styleId,
+  styleList,
+  styleTemplateDetail,
+  uomList,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
+  const [sizeColumns, setSizeColumns] = useState([]);
   const [getStyleCodeDetail] = useLazyGetStyleCodeDetailQuery();
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: fabricList } = useGetFabricMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const { data: portionList } = useGetPortionMasterQuery({ params });
-
+  const sizeInitializedRef = useRef(false);
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
   );
@@ -48,6 +49,8 @@ export default function CuttingOrderItems({
       orderQty: "",
       remarks: "",
       selected: false,
+      uomId: "",
+      sizeDetails: [],
     };
     setCuttingOrderItems([...cuttingOrderItems, newRow]);
   };
@@ -99,11 +102,11 @@ export default function CuttingOrderItems({
       setCuttingOrderItems((prev) => {
         const filledRows = prev.length;
 
-        if (filledRows < 6) {
+        if (filledRows < 5) {
           // add empty rows until total becomes 6
           return [
             ...prev,
-            ...Array.from({ length: 6 - filledRows }, () => ({
+            ...Array.from({ length: 5 - filledRows }, () => ({
               styleNo: "",
               styleItemId: "",
               fabricId: "",
@@ -116,6 +119,8 @@ export default function CuttingOrderItems({
               remarks: "",
               selected: false,
               styleId: "",
+              uomId: "",
+              sizeDetails: [],
             })),
           ];
         }
@@ -124,7 +129,7 @@ export default function CuttingOrderItems({
     } else {
       // if null/undefined, initialize with 6 empty rows
       setCuttingOrderItems(
-        Array.from({ length: 6 }, () => ({
+        Array.from({ length: 5 }, () => ({
           styleNo: "",
           styleItemId: "",
           fabricId: "",
@@ -137,6 +142,8 @@ export default function CuttingOrderItems({
           remarks: "",
           selected: false,
           styleId: "",
+          uomId: "",
+          sizeDetails: [],
         }))
       );
     }
@@ -197,6 +204,54 @@ export default function CuttingOrderItems({
   //     console.error("Error adding row:", error);
   //   }
   // };
+  const getSizeTemplate = async () => {
+    const style = styleList?.data.find((item) => item.id === styleId);
+    const sizeTemplateId = style?.sizeTemplateId;
+
+    if (!sizeTemplateId) return;
+
+    const { data: sizeData } = await styleTemplateDetail(sizeTemplateId);
+
+    if (!sizeData?.data?.SizeTemplateList?.length) return;
+
+    const columns = sizeData.data.SizeTemplateList.map((s) => ({
+      sizeId: s.sizeId,
+      sizeName: s.Size?.name,
+    }));
+
+    if (id) {
+      // 🔥 Delay only when editing
+      setTimeout(() => {
+        setSizeColumns(columns);
+      }, 500); // adjust delay if needed
+    } else {
+      // Create mode → immediate
+      setSizeColumns(columns);
+    }
+  };
+
+  useEffect(() => {
+    if (!styleId) return;
+    getSizeTemplate();
+  }, [styleId]);
+
+  useEffect(() => {
+    if (sizeColumns.length === 0 || cuttingOrderItems.length === 0) return;
+    if (sizeInitializedRef.current) return;
+    setCuttingOrderItems((prev) =>
+      prev.map((row) => ({
+        ...row,
+        sizeDetails:
+          row.sizeDetails?.length > 0
+            ? row.sizeDetails // backend already provided ✓
+            : sizeColumns.map((col) => ({
+                sizeId: col.sizeId,
+                qty: "",
+              })),
+      }))
+    );
+    sizeInitializedRef.current = true;
+  }, [sizeColumns, cuttingOrderItems]);
 
   return (
     <>
@@ -214,12 +269,12 @@ export default function CuttingOrderItems({
                   S.No
                 </th>
                 <th
-                  className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-48 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style
                 </th>
                 <th
-                  className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
+                  className={`w-40 px-4 py-2 text-center font-medium text-[13px]`}
                 >
                   Fabric
                 </th>
@@ -233,14 +288,13 @@ export default function CuttingOrderItems({
                 >
                   Color
                 </th>
-
                 <th
-                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Width
                 </th>
                 <th
-                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Meter
                 </th>
@@ -250,14 +304,23 @@ export default function CuttingOrderItems({
                   Portion
                 </th>
                 <th
-                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                 >
-                  Size
+                  Uom
                 </th>
+
+                {sizeColumns.map((col) => (
+                  <th
+                    key={col.sizeId}
+                    className="w-12 px-4 py-2 text-center font-medium text-[13px]"
+                  >
+                    {col.sizeName}
+                  </th>
+                ))}
                 <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Order Qty
+                  Plan Qty
                 </th>
                 <th
                   className={`w-48 px-1 py-2 text-center font-medium text-[13px] `}
@@ -477,29 +540,29 @@ export default function CuttingOrderItems({
                         ))}
                       </select>
                     </td>
-
                     <td className="py-0.5 border border-gray-300 text-[11px]">
                       <select
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
-                            handleInputChange("", index, "sizeId");
+                            handleInputChange("", index, "uomId");
                           }
                         }}
-                        tabIndex={"0"}
+                        tabIndex={"-1"}
                         disabled={readOnly}
                         className="text-left w-full rounded py-1 table-data-input"
-                        value={row.sizeId}
+                        value={row.uomId}
                         onChange={(e) =>
-                          handleInputChange(e.target.value, index, "sizeId")
+                          handleInputChange(e.target.value, index, "uomId")
                         }
                         onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "sizeId");
+                          handleInputChange(e.target.value, index, "uomId");
                         }}
+                        onFocus={(e) => e.target.focus()}
                       >
                         <option></option>
                         {(id
-                          ? sizeList?.data
-                          : sizeList?.data?.filter((item) => item.active)
+                          ? uomList?.data
+                          : uomList?.data?.filter((item) => item.active)
                         )?.map((blend) => (
                           <option value={blend.id} key={blend.id}>
                             {blend?.name}
@@ -507,27 +570,71 @@ export default function CuttingOrderItems({
                         ))}
                       </select>
                     </td>
+                    {sizeColumns.map((col) => {
+                      // find matching size entry
+                      const sizeItem = row.sizeDetails?.find(
+                        (s) => s.sizeId === col.sizeId
+                      ) || { qty: "" };
+
+                      return (
+                        <td
+                          key={col.sizeId}
+                          className="py-0.5 border border-gray-300 text-[11px]"
+                        >
+                          <input
+                            type="number"
+                            disabled={readOnly}
+                            className="text-right rounded py-1 px-1 w-full table-data-input"
+                            value={sizeItem.qty}
+                            onChange={(e) => {
+                              const qty = e.target.value;
+
+                              setCuttingOrderItems((prev) => {
+                                const updated = [...prev];
+                                const rowData = { ...updated[index] };
+
+                                rowData.sizeDetails = rowData.sizeDetails?.map(
+                                  (s) =>
+                                    s.sizeId === col.sizeId ? { ...s, qty } : s
+                                );
+                                rowData.orderQty = rowData.sizeDetails.reduce(
+                                  (total, item) =>
+                                    total + Number(item.qty || 0),
+                                  0
+                                );
+
+                                updated[index] = rowData;
+                                return updated;
+                              });
+                            }}
+                            onFocus={(e) => e.target.select()}
+                            min={"0"}
+                          />
+                        </td>
+                      );
+                    })}
+
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
-                        onKeyDown={(e) => {
-                          if (e.code === "Minus" || e.code === "NumpadSubtract")
-                            e.preventDefault();
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "orderQty");
-                          }
-                        }}
+                        // onKeyDown={(e) => {
+                        //   if (e.code === "Minus" || e.code === "NumpadSubtract")
+                        //     e.preventDefault();
+                        //   if (e.key === "Delete") {
+                        //     handleInputChange("", index, "orderQty");
+                        //   }
+                        // }}
                         min={"0"}
                         type="number"
                         className="text-right rounded py-1 px-1 w-full table-data-input"
-                        onFocus={(e) => e.target.select()}
+                        // onFocus={(e) => e.target.select()}
                         value={row?.orderQty}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "orderQty")
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "orderQty");
-                        }}
-                        disabled={readOnly}
+                        // onChange={(e) =>
+                        //   handleInputChange(e.target.value, index, "orderQty")
+                        // }
+                        // onBlur={(e) => {
+                        //   handleInputChange(e.target.value, index, "orderQty");
+                        // }}
+                        disabled={true}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
@@ -599,7 +706,7 @@ export default function CuttingOrderItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={8}
+                  colSpan={8 + sizeColumns.length}
                 >
                   Total
                 </td>

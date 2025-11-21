@@ -129,7 +129,6 @@ async function getStyleDetail(req) {
       styleItemId: d.styleItemId,
       fabricId: d.fabricId,
       colorId: d.colorId,
-      sizeId: d.sizeId,
       fabWidth: d.fabWidth,
       fabMeter: d._sum.fabMeter,
       styleId: d.styleId,

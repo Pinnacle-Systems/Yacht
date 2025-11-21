@@ -166,7 +166,7 @@ const ActiveTabList = () => {
     "PURCHASE RETURN": <PurchaseReturn />,
     "PORTION MASTER": <PortionMaster />,
     "CUTTING PLAN": <CuttingOrder />,
-    "CUTTING DELIVERY": <CuttingDelivery />
+    "CUTTING PRODUCTION": <CuttingDelivery />
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

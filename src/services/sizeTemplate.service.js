@@ -23,7 +23,13 @@ async function getOne(id) {
       id: parseInt(id),
     },
     include: {
-      SizeTemplateList: true,
+      SizeTemplateList: {
+        select: {
+          id: true,
+          sizeId: true,
+          Size: true,
+        },
+      },
     },
   });
   if (!data) return NoRecordFound("sizeTemplate");

@@ -197,7 +197,7 @@ async function getOne(id) {
       // },
       cuttingOrderItems: {
         select: {
-          materialStocks: true,
+          sizeDetails: true,
           id: true,
           cuttingOrderId: true,
           styleItemId: true,
@@ -210,6 +210,7 @@ async function getOne(id) {
           styleId: true,
           orderQty: true,
           remarks: true,
+          uomId: true,
         },
       },
     },
@@ -308,7 +309,7 @@ async function createCuttingOrderItems(
         styleItemId: orderDetail?.styleItemId
           ? parseInt(orderDetail.styleItemId)
           : null,
-        sizeId: orderDetail?.sizeId ? parseInt(orderDetail.sizeId) : null,
+        uomId: orderDetail?.uomId ? parseInt(orderDetail.uomId) : null,
         colorId: orderDetail?.colorId ? parseInt(orderDetail.colorId) : null,
         fabWidth: orderDetail?.fabWidth
           ? parseFloat(orderDetail.fabWidth)
@@ -323,34 +324,44 @@ async function createCuttingOrderItems(
         remarks: orderDetail?.remarks ?? undefined,
       },
     });
+    const sizes = orderDetail.sizeDetails || [];
 
-    // Create corresponding Stock row
-    await tx.materialStock.create({
-      data: {
-        inOrOut: "cuttingOrder",
-        cuttingOrderItemsId: createdItem.id,
-        createdById: parseInt(userId),
-        branchId: parseInt(branchId),
-        // storeId: parseInt(storeId),
-        fabricId: orderDetail?.fabricId ? parseInt(orderDetail.fabricId) : null,
-        styleId: orderDetail?.styleId ? parseInt(orderDetail.styleId) : null,
-        styleItemId: orderDetail?.styleItemId
-          ? parseInt(orderDetail.styleItemId)
-          : null,
-        sizeId: orderDetail?.sizeId ? parseInt(orderDetail.sizeId) : null,
-        colorId: orderDetail?.colorId ? parseInt(orderDetail.colorId) : null,
-        fabWidth: orderDetail?.fabWidth
-          ? parseFloat(orderDetail.fabWidth)
-          : null,
-        fabMeter: orderDetail?.fabMeter
-          ? -Math.abs(parseFloat(orderDetail.fabMeter))
-          : null,
-        portionId: orderDetail?.portionId
-          ? parseInt(orderDetail.portionId)
-          : null,
-        remarks: orderDetail?.remarks ?? undefined,
-      },
-    });
+    for (const s of sizes) {
+      await tx.sizeDetails.create({
+        data: {
+          sizeId: s.sizeId ? parseInt(s.sizeId) : null,
+          qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
+          cuttingOrderItemsId: createdItem.id,
+        },
+      });
+    }
+    // // Create corresponding Stock row
+    // await tx.materialStock.create({
+    //   data: {
+    //     inOrOut: "cuttingOrder",
+    //     cuttingOrderItemsId: createdItem.id,
+    //     createdById: parseInt(userId),
+    //     branchId: parseInt(branchId),
+    //     // storeId: parseInt(storeId),
+    //     fabricId: orderDetail?.fabricId ? parseInt(orderDetail.fabricId) : null,
+    //     styleId: orderDetail?.styleId ? parseInt(orderDetail.styleId) : null,
+    //     styleItemId: orderDetail?.styleItemId
+    //       ? parseInt(orderDetail.styleItemId)
+    //       : null,
+    //     sizeId: orderDetail?.sizeId ? parseInt(orderDetail.sizeId) : null,
+    //     colorId: orderDetail?.colorId ? parseInt(orderDetail.colorId) : null,
+    //     fabWidth: orderDetail?.fabWidth
+    //       ? parseFloat(orderDetail.fabWidth)
+    //       : null,
+    //     fabMeter: orderDetail?.fabMeter
+    //       ? -Math.abs(parseFloat(orderDetail.fabMeter))
+    //       : null,
+    //     portionId: orderDetail?.portionId
+    //       ? parseInt(orderDetail.portionId)
+    //       : null,
+    //     remarks: orderDetail?.remarks ?? undefined,
+    //   },
+    // });
 
     return createdItem;
   });
@@ -395,7 +406,7 @@ async function update(id, body) {
   let removedItems = findRemovedItems(dataFound, cuttingOrderItems);
   let removeItemsIds = removedItems.map((item) => parseInt(item.id));
   await prisma.$transaction(async (tx) => {
-    await deleteItemsFromStock(tx, removeItemsIds);
+    // await deleteItemsFromStock(tx, removeItemsIds);
     if (removeItemsIds.length > 0) {
       await tx.cuttingOrderItems.deleteMany({
         where: { id: { in: removeItemsIds } },
@@ -426,6 +437,222 @@ async function update(id, body) {
   return { statusCode: 0, data };
 }
 
+// async function updateCuttingOrderItems(
+//   tx,
+//   cuttingOrderItems,
+//   cuttingOrder,
+//   userId,
+//   branchId,
+//   storeId
+// ) {
+//   const promises = cuttingOrderItems.map(async (orderDetail) => {
+//     const orderQty = orderDetail?.orderQty
+//       ? Math.round(parseFloat(orderDetail.orderQty))
+//       : null;
+//     if (orderDetail.id) {
+//       // Update existing cuttingOrderItem
+//       const updatedItem = await tx.cuttingOrderItems.update({
+//         where: { id: parseInt(orderDetail.id) },
+//         data: {
+//           cuttingOrderId: parseInt(cuttingOrder.id),
+//           fabricId: orderDetail?.fabricId
+//             ? parseInt(orderDetail.fabricId)
+//             : null,
+//           styleId: orderDetail?.styleId ? parseInt(orderDetail.styleId) : null,
+//           styleItemId: orderDetail?.styleItemId
+//             ? parseInt(orderDetail.styleItemId)
+//             : null,
+//           uomId: orderDetail?.uomId ? parseInt(orderDetail.uomId) : null,
+//           colorId: orderDetail?.colorId ? parseInt(orderDetail.colorId) : null,
+//           fabWidth: orderDetail?.fabWidth
+//             ? parseFloat(orderDetail.fabWidth)
+//             : null,
+//           fabMeter: orderDetail?.fabMeter
+//             ? parseFloat(orderDetail.fabMeter)
+//             : null,
+//           portionId: orderDetail?.portionId
+//             ? parseInt(orderDetail.portionId)
+//             : null,
+//           orderQty,
+//           remarks: orderDetail?.remarks ?? undefined,
+//         },
+//       });
+//       const sizes = orderDetail?.sizeDetails || [];
+//       const existingSize = await tx.sizeDetails.findMany({
+//         where: {
+//           cuttingOrderItemsId: updatedItem.id,
+//         },
+//       });
+
+//       if (existingSize) {
+//         for (const s of sizes) {
+//           await tx.sizeDetails.update({
+//             where: {
+//               id: existingSize.id,
+//             },
+//             data: {
+//               sizeId: s.sizeId ? parseInt(s.sizeId) : null,
+//               qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
+//             },
+//           });
+//         }
+//       } else {
+//         for (const s of sizes) {
+//           await tx.sizeDetails.create({
+//             data: {
+//               sizeId: s.sizeId ? parseInt(s.sizeId) : null,
+//               qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
+//               cuttingOrderItemsId: updatedItem.id,
+//             },
+//           });
+//         }
+//       }
+
+//       // // Update or create Stock row
+//       // const existingStock = await tx.materialStock.findFirst({
+//       //   where: { cuttingOrderItemsId: updatedItem.id },
+//       // });
+
+//       // if (existingStock) {
+//       //   await tx.materialStock.update({
+//       //     where: { id: existingStock.id },
+//       //     data: {
+//       //       updatedById: parseInt(userId),
+//       //       fabricId: orderDetail?.fabricId
+//       //         ? parseInt(orderDetail.fabricId)
+//       //         : null,
+//       //       styleId: orderDetail?.styleId
+//       //         ? parseInt(orderDetail.styleId)
+//       //         : null,
+//       //       styleItemId: orderDetail?.styleItemId
+//       //         ? parseInt(orderDetail.styleItemId)
+//       //         : null,
+//       //       sizeId: orderDetail?.sizeId ? parseInt(orderDetail.sizeId) : null,
+//       //       colorId: orderDetail?.colorId
+//       //         ? parseInt(orderDetail.colorId)
+//       //         : null,
+//       //       fabWidth: orderDetail?.fabWidth
+//       //         ? parseFloat(orderDetail.fabWidth)
+//       //         : null,
+//       //       fabMeter: orderDetail?.fabMeter
+//       //         ? -Math.abs(parseFloat(orderDetail.fabMeter))
+//       //         : null,
+//       //       portionId: orderDetail?.portionId
+//       //         ? parseInt(orderDetail.portionId)
+//       //         : null,
+//       //       remarks: orderDetail?.remarks ?? undefined,
+//       //     },
+//       //   });
+//       // } else {
+//       //   await tx.materialStock.create({
+//       //     data: {
+//       //       inOrOut: "cuttingOrder",
+//       //       cuttingOrderItemsId: updatedItem.id,
+//       //       createdById: parseInt(userId),
+//       //       branchId: parseInt(branchId),
+//       //       // storeId: parseInt(storeId),
+//       //       fabricId: orderDetail?.fabricId
+//       //         ? parseInt(orderDetail.fabricId)
+//       //         : null,
+//       //       styleId: orderDetail?.styleId
+//       //         ? parseInt(orderDetail.styleId)
+//       //         : null,
+//       //       styleItemId: orderDetail?.styleItemId
+//       //         ? parseInt(orderDetail.styleItemId)
+//       //         : null,
+//       //       sizeId: orderDetail?.sizeId ? parseInt(orderDetail.sizeId) : null,
+//       //       colorId: orderDetail?.colorId
+//       //         ? parseInt(orderDetail.colorId)
+//       //         : null,
+//       //       fabWidth: orderDetail?.fabWidth
+//       //         ? parseFloat(orderDetail.fabWidth)
+//       //         : null,
+//       //       fabMeter: orderDetail?.fabMeter
+//       //         ? -Math.abs(parseFloat(orderDetail.fabMeter))
+//       //         : null,
+//       //       portionId: orderDetail?.portionId
+//       //         ? parseInt(orderDetail.portionId)
+//       //         : null,
+//       //       remarks: orderDetail?.remarks ?? undefined,
+//       //     },
+//       //   });
+//       // }
+
+//       return updatedItem;
+//     } else {
+//       // Create new cuttingOrderItem
+//       const createdItem = await tx.cuttingOrderItems.create({
+//         data: {
+//           cuttingOrderId: parseInt(cuttingOrder.id),
+//           fabricId: orderDetail?.fabricId
+//             ? parseInt(orderDetail.fabricId)
+//             : null,
+//           styleId: orderDetail?.styleId ? parseInt(orderDetail.styleId) : null,
+//           styleItemId: orderDetail?.styleItemId
+//             ? parseInt(orderDetail.styleItemId)
+//             : null,
+//           uomId: orderDetail?.uomId ? parseInt(orderDetail.uomId) : null,
+//           colorId: orderDetail?.colorId ? parseInt(orderDetail.colorId) : null,
+//           fabWidth: orderDetail?.fabWidth
+//             ? parseFloat(orderDetail.fabWidth)
+//             : null,
+//           fabMeter: orderDetail?.fabMeter
+//             ? parseFloat(orderDetail.fabMeter)
+//             : null,
+//           portionId: orderDetail?.portionId
+//             ? parseInt(orderDetail.portionId)
+//             : null,
+//           orderQty,
+//           remarks: orderDetail?.remarks ?? undefined,
+//         },
+//       });
+//       for (const s of sizes) {
+//         await tx.sizeDetails.create({
+//           data: {
+//             sizeId: s.sizeId ? parseInt(s.sizeId) : null,
+//             qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
+//             cuttingOrderItemsId: createdItem.id,
+//           },
+//         });
+//       }
+
+//       // Create Stock row
+//       // await tx.materialStock.create({
+//       //   data: {
+//       //     inOrOut: "cuttingOrder",
+//       //     cuttingOrderItemsId: createdItem.id,
+//       //     createdById: parseInt(userId),
+//       //     branchId: parseInt(branchId),
+//       //     // storeId: parseInt(storeId),
+//       //     fabricId: orderDetail?.fabricId
+//       //       ? parseInt(orderDetail.fabricId)
+//       //       : null,
+//       //     styleId: orderDetail?.styleId ? parseInt(orderDetail.styleId) : null,
+//       //     styleItemId: orderDetail?.styleItemId
+//       //       ? parseInt(orderDetail.styleItemId)
+//       //       : null,
+//       //     sizeId: orderDetail?.sizeId ? parseInt(orderDetail.sizeId) : null,
+//       //     colorId: orderDetail?.colorId ? parseInt(orderDetail.colorId) : null,
+//       //     fabWidth: orderDetail?.fabWidth
+//       //       ? parseFloat(orderDetail.fabWidth)
+//       //       : null,
+//       //     fabMeter: orderDetail?.fabMeter
+//       //       ? -Math.abs(parseFloat(orderDetail.fabMeter))
+//       //       : null,
+//       //     portionId: orderDetail?.portionId
+//       //       ? parseInt(orderDetail.portionId)
+//       //       : null,
+//       //     remarks: orderDetail?.remarks ?? undefined,
+//       //   },
+//       // });
+
+//       return createdItem;
+//     }
+//   });
+
+//   return Promise.all(promises);
+// }
+
 async function updateCuttingOrderItems(
   tx,
   cuttingOrderItems,
@@ -438,8 +665,13 @@ async function updateCuttingOrderItems(
     const orderQty = orderDetail?.orderQty
       ? Math.round(parseFloat(orderDetail.orderQty))
       : null;
+
+    const sizes = orderDetail?.sizeDetails || [];
+
+    // =========================================================
+    // 1️⃣ UPDATE EXISTING CUTTING ORDER ITEM
+    // =========================================================
     if (orderDetail.id) {
-      // Update existing cuttingOrderItem
       const updatedItem = await tx.cuttingOrderItems.update({
         where: { id: parseInt(orderDetail.id) },
         data: {
@@ -451,7 +683,7 @@ async function updateCuttingOrderItems(
           styleItemId: orderDetail?.styleItemId
             ? parseInt(orderDetail.styleItemId)
             : null,
-          sizeId: orderDetail?.sizeId ? parseInt(orderDetail.sizeId) : null,
+          uomId: orderDetail?.uomId ? parseInt(orderDetail.uomId) : null,
           colorId: orderDetail?.colorId ? parseInt(orderDetail.colorId) : null,
           fabWidth: orderDetail?.fabWidth
             ? parseFloat(orderDetail.fabWidth)
@@ -467,79 +699,57 @@ async function updateCuttingOrderItems(
         },
       });
 
-      // Update or create Stock row
-      const existingStock = await tx.materialStock.findFirst({
+      // =========================================================
+      // 2️⃣ Handle sizeDetails (Update / Insert / Delete)
+      // =========================================================
+
+      // Fetch all existing size rows
+      const existingSizes = await tx.sizeDetails.findMany({
         where: { cuttingOrderItemsId: updatedItem.id },
       });
 
-      if (existingStock) {
-        await tx.materialStock.update({
-          where: { id: existingStock.id },
-          data: {
-            updatedById: parseInt(userId),
-            fabricId: orderDetail?.fabricId
-              ? parseInt(orderDetail.fabricId)
-              : null,
-            styleId: orderDetail?.styleId
-              ? parseInt(orderDetail.styleId)
-              : null,
-            styleItemId: orderDetail?.styleItemId
-              ? parseInt(orderDetail.styleItemId)
-              : null,
-            sizeId: orderDetail?.sizeId ? parseInt(orderDetail.sizeId) : null,
-            colorId: orderDetail?.colorId
-              ? parseInt(orderDetail.colorId)
-              : null,
-            fabWidth: orderDetail?.fabWidth
-              ? parseFloat(orderDetail.fabWidth)
-              : null,
-            fabMeter: orderDetail?.fabMeter
-              ? -Math.abs(parseFloat(orderDetail.fabMeter))
-              : null,
-            portionId: orderDetail?.portionId
-              ? parseInt(orderDetail.portionId)
-              : null,
-            remarks: orderDetail?.remarks ?? undefined,
-          },
-        });
-      } else {
-        await tx.materialStock.create({
-          data: {
-            inOrOut: "cuttingOrder",
-            cuttingOrderItemsId: updatedItem.id,
-            createdById: parseInt(userId),
-            branchId: parseInt(branchId),
-            // storeId: parseInt(storeId),
-            fabricId: orderDetail?.fabricId
-              ? parseInt(orderDetail.fabricId)
-              : null,
-            styleId: orderDetail?.styleId
-              ? parseInt(orderDetail.styleId)
-              : null,
-            styleItemId: orderDetail?.styleItemId
-              ? parseInt(orderDetail.styleItemId)
-              : null,
-            sizeId: orderDetail?.sizeId ? parseInt(orderDetail.sizeId) : null,
-            colorId: orderDetail?.colorId
-              ? parseInt(orderDetail.colorId)
-              : null,
-            fabWidth: orderDetail?.fabWidth
-              ? parseFloat(orderDetail.fabWidth)
-              : null,
-            fabMeter: orderDetail?.fabMeter
-              ? -Math.abs(parseFloat(orderDetail.fabMeter))
-              : null,
-            portionId: orderDetail?.portionId
-              ? parseInt(orderDetail.portionId)
-              : null,
-            remarks: orderDetail?.remarks ?? undefined,
-          },
+      // Create map for faster match
+      const existingMap = new Map();
+      existingSizes.forEach((s) => existingMap.set(s.sizeId, s));
+
+      // Loop through incoming sizes
+      for (const s of sizes) {
+        if (existingMap.has(s.sizeId)) {
+          // Update existing
+          await tx.sizeDetails.update({
+            where: { id: existingMap.get(s.sizeId).id },
+            data: {
+              qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
+            },
+          });
+
+          existingMap.delete(s.sizeId);
+        } else {
+          // Insert new
+          await tx.sizeDetails.create({
+            data: {
+              sizeId: parseInt(s.sizeId),
+              qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
+              cuttingOrderItemsId: updatedItem.id,
+            },
+          });
+        }
+      }
+
+      // Delete removed sizes
+      for (const leftover of existingMap.values()) {
+        await tx.sizeDetails.delete({
+          where: { id: leftover.id },
         });
       }
 
       return updatedItem;
-    } else {
-      // Create new cuttingOrderItem
+    }
+
+    // =========================================================
+    // 3️⃣ CREATE NEW CUTTING ORDER ITEM
+    // =========================================================
+    else {
       const createdItem = await tx.cuttingOrderItems.create({
         data: {
           cuttingOrderId: parseInt(cuttingOrder.id),
@@ -550,7 +760,7 @@ async function updateCuttingOrderItems(
           styleItemId: orderDetail?.styleItemId
             ? parseInt(orderDetail.styleItemId)
             : null,
-          sizeId: orderDetail?.sizeId ? parseInt(orderDetail.sizeId) : null,
+          uomId: orderDetail?.uomId ? parseInt(orderDetail.uomId) : null,
           colorId: orderDetail?.colorId ? parseInt(orderDetail.colorId) : null,
           fabWidth: orderDetail?.fabWidth
             ? parseFloat(orderDetail.fabWidth)
@@ -566,35 +776,16 @@ async function updateCuttingOrderItems(
         },
       });
 
-      // Create Stock row
-      await tx.materialStock.create({
-        data: {
-          inOrOut: "cuttingOrder",
-          cuttingOrderItemsId: createdItem.id,
-          createdById: parseInt(userId),
-          branchId: parseInt(branchId),
-          // storeId: parseInt(storeId),
-          fabricId: orderDetail?.fabricId
-            ? parseInt(orderDetail.fabricId)
-            : null,
-          styleId: orderDetail?.styleId ? parseInt(orderDetail.styleId) : null,
-          styleItemId: orderDetail?.styleItemId
-            ? parseInt(orderDetail.styleItemId)
-            : null,
-          sizeId: orderDetail?.sizeId ? parseInt(orderDetail.sizeId) : null,
-          colorId: orderDetail?.colorId ? parseInt(orderDetail.colorId) : null,
-          fabWidth: orderDetail?.fabWidth
-            ? parseFloat(orderDetail.fabWidth)
-            : null,
-          fabMeter: orderDetail?.fabMeter
-            ? -Math.abs(parseFloat(orderDetail.fabMeter))
-            : null,
-          portionId: orderDetail?.portionId
-            ? parseInt(orderDetail.portionId)
-            : null,
-          remarks: orderDetail?.remarks ?? undefined,
-        },
-      });
+      // Insert all new sizes
+      for (const s of sizes) {
+        await tx.sizeDetails.create({
+          data: {
+            sizeId: parseInt(s.sizeId),
+            qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
+            cuttingOrderItemsId: createdItem.id,
+          },
+        });
+      }
 
       return createdItem;
     }
@@ -651,4 +842,4 @@ async function getStyleDetail(req) {
   };
 }
 
-export { get, getOne, create, update, remove,getStyleDetail };
+export { get, getOne, create, update, remove, getStyleDetail };

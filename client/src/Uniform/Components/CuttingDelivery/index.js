@@ -3,9 +3,9 @@ import { FaPlus } from "react-icons/fa";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import StyleMasterApi from "../../../redux/uniformService/StyleMasterService.js";
-import { useDeleteCuttingOrderMutation } from "../../../redux/uniformService/CuttingOrderService.js";
 import CuttingDeliveryForm from "./CuttingDeliveryForm.js";
 import CuttingDeliveryFormReport from "./CuttingDeliveryFormReport.js";
+import { useDeleteCuttingDeliveryMutation } from "../../../redux/uniformService/CuttingDeliveryServices.js";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -13,7 +13,7 @@ export default function Form() {
   const [readOnly, setReadOnly] = useState(false);
   const dispatch = useDispatch();
 
-  const [removeData] = useDeleteCuttingOrderMutation();
+  const [removeData] = useDeleteCuttingDeliveryMutation();
 
   const handleView = (orderId) => {
     setId(orderId);
@@ -86,7 +86,7 @@ export default function Form() {
             <div>
               <h1 className="text-xl font-bold text-gray-800">
                 {" "}
-                Cutting Delivery Report
+                Cutting Production Report
               </h1>
             </div>
             <button
@@ -101,12 +101,12 @@ export default function Form() {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm overflow-hidden  ">
-            {/* <CuttingDeliveryFormReport
+            <CuttingDeliveryFormReport
               onView={handleView}
               onEdit={handleEdit}
               onDelete={handleDelete}
               itemsPerPage={10}
-            /> */}
+            />
           </div>
         </div>
       )}

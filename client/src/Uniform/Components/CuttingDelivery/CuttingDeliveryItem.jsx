@@ -189,7 +189,7 @@ export default function CuttingDeliveryItem({
                                     Meter
                                 </th>
                                 <th
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Portion
                                 </th>
@@ -201,12 +201,12 @@ export default function CuttingDeliveryItem({
                                 <th
                                     className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Order Qty
+                                    Plan Qty
                                 </th>
                                 <th
                                     className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Issue Qty
+                                    Production Qty
                                 </th>
                                 <th
                                     className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
@@ -506,7 +506,7 @@ export default function CuttingDeliveryItem({
                                                 disabled={readOnly}
                                             />
                                         </td>
-                                        <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                                        <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 px-1 text-right">
                                             {row.fabWidth && row.issueQty
                                                 ? (row.fabMeter / row.issueQty).toFixed(2)
                                                 : ""}
