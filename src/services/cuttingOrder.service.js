@@ -245,6 +245,7 @@ async function create(body) {
     styleId,
     docDate,
     draftSave,
+    sizeTemplateId
     // locationId,
   } = await body;
   console.log(branchId, "branchId");
@@ -274,7 +275,7 @@ async function create(body) {
         createdById: parseInt(userId),
         styleId: parseInt(styleId),
         docDate: docDate ? new Date(docDate) : null,
-        // locationId: parseInt(locationId),
+        sizeTemplateId: parseInt(sizeTemplateId),
       },
     });
     await createCuttingOrderItems(
@@ -386,7 +387,7 @@ async function update(id, body) {
     userId,
     // storeId,
     docDate,
-    // locationId,
+    sizeTemplateId,
     styleId,
   } = await body;
   let data;
@@ -422,7 +423,7 @@ async function update(id, body) {
         branchId: parseInt(branchId),
         styleId: parseInt(styleId),
         docDate: docDate ? new Date(docDate) : null,
-        // locationId: parseInt(locationId),
+        sizeTemplateId: parseInt(sizeTemplateId),
       },
     });
     await updateCuttingOrderItems(

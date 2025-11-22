@@ -18,7 +18,7 @@ export default function CuttingOrderItems({
   readOnly,
   id,
   styleId,
-  styleList,
+  sizeTemplateId,
   styleTemplateDetail,
   uomList,
 }) {
@@ -204,8 +204,8 @@ export default function CuttingOrderItems({
   //   }
   // };
   const getSizeTemplate = async () => {
-    const style = styleList?.data.find((item) => item.id === styleId);
-    const sizeTemplateId = style?.sizeTemplateId;
+    // const style = styleList?.data.find((item) => item.id === styleId);
+    // const sizeTemplateId = style?.sizeTemplateId;
 
     if (!sizeTemplateId) return;
 
@@ -230,9 +230,9 @@ export default function CuttingOrderItems({
   };
 
   useEffect(() => {
-    if (!styleId) return;
+    if (!sizeTemplateId) return;
     getSizeTemplate();
-  }, [styleId]);
+  }, [sizeTemplateId]);
 
   useEffect(() => {
     if (sizeColumns.length === 0 || cuttingOrderItems.length === 0) return;

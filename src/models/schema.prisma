@@ -76,6 +76,7 @@ model Company {
   SizeTemplate        SizeTemplate[]
   StyleItem           StyleItem[]
   portions            Portion[]
+  processes           Process[]
 }
 
 model Subscription {
@@ -1857,13 +1858,15 @@ model SalesEntryItems {
 }
 
 model SizeTemplate {
-  id               Int                @id @default(autoincrement())
-  name             String?
-  Company          Company?           @relation(fields: [companyId], references: [id])
-  companyId        Int?
-  active           Boolean?           @default(true)
-  SizeTemplateList SizeTemplateList[]
-  Style            Style[]
+  id                Int                @id @default(autoincrement())
+  name              String?
+  Company           Company?           @relation(fields: [companyId], references: [id])
+  companyId         Int?
+  active            Boolean?           @default(true)
+  SizeTemplateList  SizeTemplateList[]
+  Style             Style[]
+  cuttingOrders     CuttingOrder[]
+  cuttingDeliveries CuttingDelivery[]
 }
 
 model SizeTemplateList {
@@ -2177,6 +2180,8 @@ model CuttingOrder {
   Style             Style?              @relation(fields: [styleId], references: [id])
   styleId           Int?
   cuttingOrderItems CuttingOrderItems[]
+  SizeTemplate      SizeTemplate?       @relation(fields: [sizeTemplateId], references: [id])
+  sizeTemplateId    Int?
 }
 
 model CuttingOrderItems {
@@ -2240,6 +2245,8 @@ model CuttingDelivery {
   departmentId         Int?
   Supplier             Party?                 @relation(fields: [supplierId], references: [id])
   supplierId           Int?
+  SizeTemplate         SizeTemplate?          @relation(fields: [sizeTemplateId], references: [id])
+  sizeTemplateId       Int?
 }
 
 model CuttingDeliveryItems {
@@ -2317,4 +2324,13 @@ model ProductionStock {
   cuttingDeliveryItemsId Int?
   Department             Department?           @relation(fields: [departmentId], references: [id])
   departmentId           Int?
+}
+
+model Process {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  active    Boolean? @default(true)
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+  aliasName String?
 }

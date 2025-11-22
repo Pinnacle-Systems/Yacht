@@ -112,12 +112,6 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
         "FABRIC DESCRIPTION SHEET":
             <img src={style} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
         ,
-        "PROCESS MASTER":
-            <span className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow">
-                <img />
-            </span>
-        ,
-
         "DEPARTMENT MASTER":
             <img src={department} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
         ,

@@ -102,7 +102,6 @@ export default function Form() {
       : "",
   ];
 
-  console.log(active, "active");
   return (
     <>
       <div className="flex font-sans my-2 px-0  w-full  first-line:">

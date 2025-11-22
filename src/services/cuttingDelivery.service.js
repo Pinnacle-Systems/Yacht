@@ -249,6 +249,7 @@ async function create(body) {
     productionType,
     departmentId,
     supplierId,
+    sizeTemplateId,
   } = await body;
   console.log(branchId, "branchId");
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -280,6 +281,7 @@ async function create(body) {
         productionType,
         supplierId: supplierId ? parseInt(supplierId) : null,
         departmentId: departmentId ? parseInt(departmentId) : null,
+        sizeTemplateId: parseInt(sizeTemplateId),
       },
     });
     await createCuttingDeliveryItems(
@@ -452,6 +454,7 @@ async function update(id, body) {
     productionType,
     departmentId,
     supplierId,
+    sizeTemplateId,
   } = await body;
   let data;
   const dataFound = await prisma.cuttingDelivery.findUnique({
@@ -489,6 +492,7 @@ async function update(id, body) {
         productionType,
         supplierId: supplierId ? parseInt(supplierId) : null,
         departmentId: departmentId ? parseInt(departmentId) : null,
+        sizeTemplateId: parseInt(sizeTemplateId),
       },
     });
     await updateCuttingDeliveryItems(

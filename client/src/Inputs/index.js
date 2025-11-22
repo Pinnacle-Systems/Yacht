@@ -24,12 +24,12 @@ import secureLocalStorage from "react-secure-storage";
 import useOutsideClick from "../CustomHooks/handleOutsideClick";
 import zIndex from "@mui/material/styles/zIndex";
 
-export const handleOnChange = (event, setValue) => {
+export const handleOnChange = (event, setValue,type) => {
   const inputValue = event.target.value;
   const inputSelectionStart = event.target.selectionStart;
   const inputSelectionEnd = event.target.selectionEnd;
 
-  const upperCaseValue = inputValue.toUpperCase();
+  const upperCaseValue = type === "password" ? inputValue : inputValue.toUpperCase();
 
   const valueBeforeCursor = upperCaseValue.slice(0, inputSelectionStart);
   const valueAfterCursor = upperCaseValue.slice(inputSelectionEnd);
@@ -229,7 +229,7 @@ export const TextInput = forwardRef(
           onChange={(e) =>
             type === "number"
               ? setValue(e.target.value)
-              : handleOnChange(e, setValue)
+              : handleOnChange(e, setValue,type)
           }
           onBlur={onBlur}
           placeholder={name}

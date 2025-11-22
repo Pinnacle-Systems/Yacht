@@ -83,7 +83,6 @@ export const openTabs = createSlice({
         (item) => item.name === action.payload.name
 
       );
-      console.log(existingIndex, "existingIndex")
       state.tabs = state.tabs.map((tab) => {
         return { ...tab, active: false };
       });

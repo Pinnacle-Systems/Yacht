@@ -118,7 +118,7 @@ export default function Form() {
         
           if (foundItem) {
             Swal.fire({
-              text: "The Colour Name already exists.",
+              text: "The Portion Name already exists.",
               icon: "warning",
               timer: 1500,
               showConfirmButton: false,

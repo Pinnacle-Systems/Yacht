@@ -89,8 +89,6 @@ const SalesReport = forwardRef(
       indexOfLastItem
     );
 
-    console.log(indexOfLastItem, "indexOfLastItem");
-
     const handlePageChange = (newPage) => {
       if (newPage >= 1 && newPage <= totalPages) {
         setCurrentPage(newPage);

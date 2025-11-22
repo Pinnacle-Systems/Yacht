@@ -177,7 +177,6 @@ export default function OpeningStockForm({
     if (nextProcess == "draft" && !id) {
       const existingItems =
         allData?.data?.flatMap((d) => d.OpeningStockItems || []) || [];
-      console.log(allData?.data, "allData");
       const newItems = openingStockItems || [];
       const duplicate = newItems.some((newItem) =>
         existingItems.some(
@@ -186,7 +185,6 @@ export default function OpeningStockForm({
             existing.sizeId === newItem.sizeId
         )
       );
-      console.log(duplicate, "duplicate");
       if (duplicate) {
         Swal.fire({
           icon: "warning",
@@ -213,7 +211,6 @@ export default function OpeningStockForm({
     } else {
       const existingItems =
         allData?.data?.flatMap((d) => d.OpeningStockItems || []) || [];
-      console.log(allData?.data, "allData");
       const newItems = openingStockItems || [];
       const duplicate = newItems.some((newItem) =>
         existingItems.some(
@@ -222,7 +219,6 @@ export default function OpeningStockForm({
             existing.sizeId === newItem.sizeId
         )
       );
-      console.log(duplicate, "duplicate");
       if (duplicate) {
         Swal.fire({
           icon: "warning",

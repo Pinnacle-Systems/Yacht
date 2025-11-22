@@ -40,6 +40,7 @@ export default function CuttingOrderForm({
   const [storeId, setStoreId] = useState("");
   const [cuttingOrderItems, setCuttingOrderItems] = useState([]);
   const [styleId, setStyleId] = useState("");
+  const [sizeTemplateId, setSizeTemplateId] = useState("");
   const firstUpdate = useRef(true);
   const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
   const dispatch = useDispatch();
@@ -90,6 +91,7 @@ export default function CuttingOrderForm({
       setLocationId(data?.locationId ? data?.locationId : "");
       setStoreId(data?.storeId ? data.storeId : "");
       setStyleId(data?.styleId ? data?.styleId : "");
+      setSizeTemplateId(data?.sizeTemplateId ? data?.sizeTemplateId : "");
     },
     [id]
   );
@@ -194,12 +196,14 @@ export default function CuttingOrderForm({
     branchId,
     // storeId,
     cuttingOrderItems: cuttingOrderItems?.filter?.(
-      (item) => item?.styleId && item?.fabricId && item?.portionId && item?.orderQty
+      (item) =>
+        item?.styleId && item?.fabricId && item?.portionId && item?.orderQty
     ),
     userId,
     finYearId,
     // locationId,
     styleId,
+    sizeTemplateId,
   };
 
   useEffect(() => {
@@ -213,7 +217,7 @@ export default function CuttingOrderForm({
     // 🚫 block when readOnly mode
     if (readOnly) return;
     handleAddRow();
-  }, [styleId,id,readOnly]);
+  }, [styleId, id, readOnly]);
 
   const handleAddRow = async () => {
     if (!validateData(data)) {
@@ -222,6 +226,8 @@ export default function CuttingOrderForm({
       });
     } else {
       try {
+        const style = styleList?.data.find((item) => item.id === styleId);
+        setSizeTemplateId(style?.sizeTemplateId);
         const { data: fabricData } = await getFabricDetail({
           params: {
             styleId: styleId,
@@ -401,7 +407,7 @@ export default function CuttingOrderForm({
         <fieldset className="w-full  min-w-[1200px]">
           <CuttingOrderItems
             styleId={styleId}
-            styleList={styleList}
+            sizeTemplateId={sizeTemplateId}
             cuttingOrderItems={cuttingOrderItems}
             setCuttingOrderItems={setCuttingOrderItems}
             readOnly={readOnly}

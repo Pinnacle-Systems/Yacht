@@ -61,11 +61,9 @@ const Sidebar = ({
         params: { active: true },
       }).then(
         (result) => {
-          console.log("result", result.data.data);
           setAllowedPages(result.data.data);
         },
         (error) => {
-          console.log(error);
           toast.error("Server Down", { autoClose: 5000 });
         }
       );
@@ -102,7 +100,6 @@ const Sidebar = ({
           }
         },
         (error) => {
-          console.log(error);
           toast.error("Server Down", { autoClose: 5000 });
         }
       );
@@ -144,7 +141,6 @@ const Sidebar = ({
     return { id: pageId, name: findElement(pageId, pageGroup?.data) };
   });
 
-  console.log("masters", masters);
 
   const headers = [
     {
@@ -166,7 +162,6 @@ const Sidebar = ({
       pages: reports,
     },
   ];
-  console.log(isOpen, "isOpen", isMainDropdownOpen, "isMainDropdownOpen");
 
   function click() {
     if (isOpen && isMainDropdownOpen) {
@@ -243,7 +238,6 @@ const Sidebar = ({
 
             {isOpen &&
               headers.map((ele, index) => {
-                console.log("ele", ele);
 
                 return (
                   <div

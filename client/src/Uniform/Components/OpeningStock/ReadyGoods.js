@@ -225,7 +225,6 @@ export default function ReadyGoods({
             price: style.price || "",
             selected: false,
           }));
-          console.log("Mapped size rows:", sizeRows);
         }
       }
       setOpeningStockItems((prev) => {
@@ -332,7 +331,7 @@ export default function ReadyGoods({
                   className={`w-12 px-4 py-2 text-center  font-medium text-[13px]`}
                 >
                   Img
-                </th>{" "}
+                </th>
                 <th
                   className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
                 >

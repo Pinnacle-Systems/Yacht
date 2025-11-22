@@ -79,8 +79,6 @@ const CuttingDeliveryFormReport = ({
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
 
-  console.log(indexOfLastItem, "indexOfLastItem");
-
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
@@ -177,7 +175,7 @@ const CuttingDeliveryFormReport = ({
     <div className="flex flex-col w-full h-[93%] overflow-auto">
       <>
         <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
-          <div className="h-[360px]">
+          <div className="h-[88%]">
             <table className="mt-2">
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">
@@ -345,7 +343,7 @@ const CuttingDeliveryFormReport = ({
               )}
             </table>
           </div>
-          <div className="">
+          <div className="h-[10%]">
             <Pagination />
           </div>
         </div>

@@ -51,6 +51,7 @@ export default function CuttingDeliveryForm({
   const [supplierId, setSupplierId] = useState("");
   const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
   const firstUpdate = useRef(true);
+  const [sizeTemplateId, setSizeTemplateId] = useState("");
 
   const dispatch = useDispatch();
 
@@ -113,6 +114,7 @@ export default function CuttingDeliveryForm({
       );
       setSupplierId(data?.supplierId ? data?.supplierId : "");
       setDepartmentId(data?.departmentId ? data?.departmentId : "");
+      setSizeTemplateId(data?.sizeTemplateId ? data?.sizeTemplateId : "");
     },
     [id]
   );
@@ -236,6 +238,7 @@ export default function CuttingDeliveryForm({
     productionType,
     supplierId,
     departmentId,
+    sizeTemplateId,
   };
 
   useEffect(() => {
@@ -253,6 +256,8 @@ export default function CuttingDeliveryForm({
 
   const handleAddRow = async () => {
     try {
+      const style = styleList?.data.find((item) => item.id === styleId);
+      setSizeTemplateId(style?.sizeTemplateId);
       const { data: orderData } = await getOrderDetail({
         params: {
           styleId: styleId,
@@ -428,20 +433,20 @@ export default function CuttingDeliveryForm({
                   clear={true}
                 />
               )}
-                <DropdownNew
-                  name="Department"
-                  dataList={
-                    id
-                      ? departmentList?.data
-                      : departmentList?.data?.filter((item) => item.active)
-                  }
-                  value={departmentId}
-                  setValue={setDepartmentId}
-                  readOnly={readOnly}
-                  placeholder={"Select Department"}
-                  disabled={readOnly}
-                  required={true}
-                />
+              <DropdownNew
+                name="Department"
+                dataList={
+                  id
+                    ? departmentList?.data
+                    : departmentList?.data?.filter((item) => item.active)
+                }
+                value={departmentId}
+                setValue={setDepartmentId}
+                readOnly={readOnly}
+                placeholder={"Select Department"}
+                disabled={readOnly}
+                required={true}
+              />
             </div>
           </div>
         </div>
@@ -452,7 +457,7 @@ export default function CuttingDeliveryForm({
             readOnly={readOnly}
             id={id}
             styleId={styleId}
-            styleList={styleList}
+            sizeTemplateId={sizeTemplateId}
             uomList={uomList}
             styleTemplateDetail={styleTemplateDetail}
           />

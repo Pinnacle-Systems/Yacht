@@ -90,7 +90,6 @@ const PurchaseInwardFormReport = ({
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
 
-  console.log(indexOfLastItem, "indexOfLastItem");
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -188,7 +187,7 @@ const PurchaseInwardFormReport = ({
     <div className="flex flex-col w-full h-[93%] overflow-auto">
       <>
         <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
-          <div className="h-[420px]">
+          <div className="h-[90%]">
             <table className="">
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">
@@ -408,7 +407,7 @@ const PurchaseInwardFormReport = ({
               )}
             </table>
           </div>
-          <div className="">
+          <div className="h-[10%]">
             <Pagination />
           </div>
         </div>

@@ -31,7 +31,6 @@ const Header = ({ profile, setProfile, setLogout, logout }) => {
 
   const [allowedPages, setAllowedPages] = useState([]);
 
-  console.log(allowedPages, "allowedPages");
   const { data: pageGroup } = useGetPageGroupQuery({ searchParams: "" });
 
   const toggleNavMenu = () => {
@@ -70,11 +69,9 @@ const Header = ({ profile, setProfile, setLogout, logout }) => {
         headers: { Authorization: token },
       }).then(
         (result) => {
-          console.log("result", result.data.data);
           setAllowedPages(result.data.data);
         },
         (error) => {
-          console.log(error);
           toast.error("Server Down", { autoClose: 5000 });
         }
       );
@@ -92,10 +89,6 @@ const Header = ({ profile, setProfile, setLogout, logout }) => {
         (result) => {
           if (result.status === 200) {
             if (result.data.statusCode === 0) {
-              console.log(
-                result.data.data.RoleOnPage,
-                "result.data.data.RoleOnPage"
-              );
               setAllowedPages(
                 result.data.data.RoleOnPage.filter(
                   (page) => page.page.active && page.read
@@ -116,7 +109,6 @@ const Header = ({ profile, setProfile, setLogout, logout }) => {
           }
         },
         (error) => {
-          console.log(error);
           toast.error("Server Down", { autoClose: 5000 });
         }
       );
@@ -143,7 +135,6 @@ const Header = ({ profile, setProfile, setLogout, logout }) => {
       return { id: pageId, name: findElement(pageId, pageGroup?.data) };
     })
     .filter((group) => group.name);
-  console.log(mastersGroup, "mastersGroup");
 
   const transactions = allowedPages.filter(
     (page) => page.type === "Transactions"

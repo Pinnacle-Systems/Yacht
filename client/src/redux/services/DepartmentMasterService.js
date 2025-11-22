@@ -2,7 +2,6 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { DEPARTMENT_API } from "../../Api";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
-console.log(BASE_URL, "BASE_URL")
 
 const departmentMasterApi = createApi({
   reducerPath: "departmentMaster",

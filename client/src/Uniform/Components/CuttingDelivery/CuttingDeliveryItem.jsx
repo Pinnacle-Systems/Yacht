@@ -23,7 +23,7 @@ export default function CuttingDeliveryItem({
     readOnly,
     id,
     styleId,
-    styleList,
+  sizeTemplateId,
     uomList,
     styleTemplateDetail
 }) {
@@ -115,8 +115,8 @@ export default function CuttingDeliveryItem({
     };
 
     const getSizeTemplate = async () => {
-        const style = styleList?.data.find((item) => item.id === styleId);
-        const sizeTemplateId = style?.sizeTemplateId;
+        // const style = styleList?.data.find((item) => item.id === styleId);
+        // const sizeTemplateId = style?.sizeTemplateId;
 
         if (!sizeTemplateId) return;
 
@@ -129,21 +129,21 @@ export default function CuttingDeliveryItem({
             sizeName: s.Size?.name,
         }));
 
-        if (id) {
-            // 🔥 Delay only when editing
-            setTimeout(() => {
-                setSizeColumns(columns);
-            }, 500); // adjust delay if needed
-        } else {
+        // if (id) {
+        //     // 🔥 Delay only when editing
+        //     setTimeout(() => {
+        //         setSizeColumns(columns);
+        //     }, 500); // adjust delay if needed
+        // } else {
             // Create mode → immediate
             setSizeColumns(columns);
-        }
+        // }
     };
 
     useEffect(() => {
-        if (!styleId) return;
+        if (!sizeTemplateId) return;
         getSizeTemplate();
-    }, [styleId]);
+    }, [sizeTemplateId]);
 
     useEffect(() => {
         if (sizeColumns.length === 0 || cuttingDeliveryItems.length === 0) return;

@@ -88,7 +88,6 @@ const SalesReturnReport = forwardRef(
       indexOfLastItem
     );
 
-    console.log(indexOfLastItem, "indexOfLastItem");
 
     const handlePageChange = (newPage) => {
       if (newPage >= 1 && newPage <= totalPages) {
@@ -188,14 +187,8 @@ const SalesReturnReport = forwardRef(
     useEffect(() => {
       if (allData && onDataLoaded) {
         onDataLoaded(allData);
-        console.log(currentItems,"currentItems")
       }
     }, [allData, onDataLoaded]);
-
-    useEffect(() => {
-      console.log(currentItems,"currentItems")
-    }, [currentItems])
-    
 
     return (
       <>

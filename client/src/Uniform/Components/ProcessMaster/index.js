@@ -1,247 +1,357 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import secureLocalStorage from "react-secure-storage";
-import {
-    useGetProcessMasterQuery,
-    useGetProcessMasterByIdQuery,
-    useAddProcessMasterMutation,
-    useUpdateProcessMasterMutation,
-    useDeleteProcessMasterMutation,
-} from "../../../redux/uniformService/ProcessMasterService";
-import FormHeader from "../../../Basic/components/FormHeader";
-import FormReport from "../../../Basic/components/FormReportTemplate";
+import { Check, Power } from "lucide-react";
 import { toast } from "react-toastify";
-import { TextInput, CheckBox, DropdownInput } from "../../../Inputs";
-import ReportTemplate from '../../../Basic/components/ReportTemplate'
-import { ProcessIOOptions } from "../../../Utils/DropdownData";
-
+import {
+  TextInput,
+  CheckBox,
+  ReusableTable,
+  ToggleButton,
+} from "../../../Inputs";
+import Swal from "sweetalert2";
+import Modal from "../../../UiComponents/Modal";
+import { statusDropdown } from "../../../Utils/DropdownData";
+import { useAddProcessMasterMutation, useDeleteProcessMasterMutation, useGetProcessMasterByIdQuery, useGetProcessMasterQuery, useUpdateProcessMasterMutation } from "../../../redux/uniformService/ProcessMasterService";
 const MODEL = "Process Master";
 
 export default function Form() {
-    const [form, setForm] = useState(false);
-    const [readOnly, setReadOnly] = useState(false);
-    const [id, setId] = useState("");
-    const [name, setName] = useState("");
-    const [io, setIo] = useState("");
-    const [active, setActive] = useState(true);
-    const [isCutting, setIsCutting] = useState(false);
-    const [isPacking, setIsPacking] = useState(false);
-    const [isPcsStage, setIsPcsStage] = useState(false);
-    const [isStitching, setIsStitching] = useState(false);
-    const [isPrintingJobWork, setIsPrintingJobWork] = useState(false);
-    const [code, setCode] = useState("");
-    const [searchValue, setSearchValue] = useState("");
-    const [isIroning, setIsIroning] = useState(false)
-    const childRecord = useRef(0);
+  const [form, setForm] = useState(false);
 
-    const params = {
-        companyId: secureLocalStorage.getItem(
-            sessionStorage.getItem("sessionId") + "userCompanyId"
-        ),
-    };
-    const { data: allData, isLoading, isFetching } = useGetProcessMasterQuery({ params, searchParams: searchValue });
-    const {
-        data: singleData,
-        isFetching: isSingleFetching,
-        isLoading: isSingleLoading,
-    } = useGetProcessMasterByIdQuery(id, { skip: !id });
+  const [readOnly, setReadOnly] = useState(false);
+  const [id, setId] = useState("");
+  const [name, setName] = useState("");
+  const [active, setActive] = useState(true);
 
+  const [searchValue, setSearchValue] = useState("");
+  const childRecord = useRef(0);
 
-    const [addData] = useAddProcessMasterMutation();
-    const [updateData] = useUpdateProcessMasterMutation();
-    const [removeData] = useDeleteProcessMasterMutation();
+  const params = {
+    companyId: secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "userCompanyId"
+    ),
+  };
+  const {
+    data: allData,
+    isLoading,
+    isFetching,
+  } = useGetProcessMasterQuery({ params, searchParams: searchValue });
+  const {
+    data: singleData,
+    isFetching: isSingleFetching,
+    isLoading: isSingleLoading,
+  } = useGetProcessMasterByIdQuery(id, { skip: !id });
 
-    const syncFormWithDb = useCallback(
-        (data) => {
+  const [addData] = useAddProcessMasterMutation();
+  const [updateData] = useUpdateProcessMasterMutation();
+  const [removeData] = useDeleteProcessMasterMutation();
 
-
-            if (id) {
-                setReadOnly(true);
-            } else {
-                setReadOnly(false);
-            }
-            setName(data?.name ? data.name : "");
-            setCode(data?.code ? data.code : "");
-            setIo(data?.io ? data.io : "");
-            setIsCutting(data?.isCutting ? data.isCutting : false);
-            setIsPacking(data?.isPacking ? data.isPacking : false);
-            setIsStitching(data?.isStitching ? data?.isStitching : false)
-            setIsPcsStage(data?.isPcsStage ? data.isPcsStage : false);
-            setIsIroning(data?.isIroning ? data.isIroning : false);
-            setIsPrintingJobWork(data?.isPrintingJobWork ? data.isPrintingJobWork : false);
-            setActive(id ? (data?.active ? data.active : false) : true);
-        },
-        [id]
-    );
-
-    useEffect(() => {
-        syncFormWithDb(singleData?.data);
-    }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
-
-    const data = {
-        id, name, io, code, active, isCutting, isPacking, isIroning,
-        isPcsStage, isPrintingJobWork, isStitching,
-        companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
-    }
-
-    const validateData = (data) => {
-        return data.name && data.code && (data.isCutting || data.isPacking || data.isPcsStage ? true : data.io)
-    }
-
-    const handleSubmitCustom = async (callback, data, text) => {
-        try {
-            let returnData = await callback(data).unwrap();
-            setId(returnData.data.id)
-            toast.success(text + "Successfully");
-        } catch (error) {
-            console.log("handle");
-        }
-    };
-
-    const saveData = () => {
-        if (!validateData(data)) {
-            toast.info("Please fill all required fields...!", {
-                position: "top-center",
-            });
-            return;
-        }
-        if (!window.confirm("Are you sure save the details ...?")) {
-            return;
-        }
-        if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
-        } else {
-            handleSubmitCustom(addData, data, "Added");
-        }
-    };
-
-    const deleteData = async () => {
-        if (id) {
-            if (!window.confirm("Are you sure to delete...?")) {
-                return;
-            }
-            try {
-                await removeData(id)
-                setId("");
-                toast.success("Deleted Successfully");
-            } catch (error) {
-                toast.error("something went wrong");
-            }
-        }
-    };
-
-    const handleKeyDown = (event) => {
-        let charCode = String.fromCharCode(event.which).toLowerCase();
-        if ((event.ctrlKey || event.metaKey) && charCode === "s") {
-            event.preventDefault();
-            saveData();
-        }
-    };
-
-    const onNew = () => {
-        setId("");
+  const syncFormWithDb = useCallback(
+    (data) => {
+      if (!id) {
         setReadOnly(false);
-        setForm(true);
-        syncFormWithDb(undefined)
-        setSearchValue("");
-    };
+        setName("");
+        setActive(id ? data?.active : true);
+      } else {
+        setName(data?.name || "");
+        setActive(id ? data?.active ?? false : true);
+      }
+    },
+    [id]
+  );
 
-    function onDataClick(id) {
-        setId(id);
-        setForm(true);
+  useEffect(() => {
+    syncFormWithDb(singleData?.data);
+  }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+  const data = {
+    id,
+    name,
+    active,
+    companyId: secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "userCompanyId"
+    ),
+  };
+
+  const validateData = (data) => {
+    if (data.name) {
+      return true;
     }
+    return false;
+  };
 
-    const tableHeaders = [
-        "Name", "IO", "Status"
-    ]
-    const tableDataNames = ["dataObj.name", "dataObj.io", 'dataObj.active ? ACTIVE : INACTIVE']
+  const handleSubmitCustom = async (callback, data, text) => {
+    try {
+      let returnData;
+      if (text === "Updated") {
+        returnData = await callback(data).unwrap();
+      } else {
+        returnData = await callback(data).unwrap();
+      }
+      setId(returnData.data.id);
+      Swal.fire({
+        title: text + "  " + "Successfully",
+        icon: "success",
+        draggable: true,
+        timer: 1000,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+      setForm(false);
+    } catch (error) {
+      console.log("handle");
+    }
+  };
 
+  const saveData = () => {
+    let foundItem;
+          if (id) {
+            foundItem = allData?.data
+              ?.filter((i) => i.id !== id)
+              ?.some((item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase());
+          } else {
+            foundItem = allData?.data?.some(
+              (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+            );
+          }
+        
+          if (foundItem) {
+            Swal.fire({
+              text: "The Process Name already exists.",
+              icon: "warning",
+              timer: 1500,
+              showConfirmButton: false,
+            });
+            return false;
+          }
+    if (!validateData(data)) {
+      Swal.fire({
+        title: "Please fill all required fields...!",
+        icon: "success",
+        timer: 1000,
+      });
+      return;
+    }
+    if (!window.confirm("Are you sure save the details ...?")) {
+      return;
+    }
+    if (id) {
+      handleSubmitCustom(updateData, data, "Updated");
+    } else {
+      handleSubmitCustom(addData, data, "Added");
+    }
+  };
 
-    // useEffect(() => {
-    //     if (isCutting || isPacking) {
-    //         setIsPcsStage(true)
-    //     }
-    // }, [isCutting, isPacking, setIsPcsStage])
+  const handleDelete = async (id) => {
+    if (id) {
+      if (!window.confirm("Are you sure to delete...?")) {
+        return;
+      }
+      try {
+        let deldata = await removeData(id).unwrap();
+        if (deldata?.statusCode == 1) {
+          Swal.fire({
+            icon: "error",
+            title: "Child record Exists",
+            text: deldata.data?.message || "Data cannot be deleted!",
+          });
+          return;
+        }
+        setId("");
+        Swal.fire({
+          title: "Deleted Successfully",
+          icon: "success",
+          timer: 1000,
+        });
+        setForm(false);
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Submission error",
+          text: error.data?.message || "Something went wrong!",
+        });
+        setForm(false);
+      }
+    }
+  };
+  const handleKeyDown = (event) => {
+    let charCode = String.fromCharCode(event.which).toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && charCode === "s") {
+      event.preventDefault();
+      saveData();
+    }
+  };
 
-    // useEffect(() => {
-    //     if (!isPcsStage) {
-    //         setIsCutting(false);
-    //         setIsPacking(false);
-    //     }
-    // }, [isPcsStage, setIsCutting, setIsPacking])
+  const onNew = () => {
+    setId("");
+    setForm(true);
+    setSearchValue("");
+    syncFormWithDb(undefined);
+    setReadOnly(false);
+  };
 
-    if (!form)
-        return (
-            <ReportTemplate
-                heading={MODEL}
-                tableHeaders={tableHeaders}
-                tableDataNames={tableDataNames}
-                loading={
-                    isLoading || isFetching
-                }
-                setForm={setForm}
-                data={allData?.data}
-                onClick={onDataClick}
-                onNew={onNew}
-                searchValue={searchValue}
-                setSearchValue={setSearchValue}
-            />
-        );
+  const handleView = (id) => {
+    setId(id);
+    setForm(true);
+    setReadOnly(true);
+  };
 
-    return (
-        <div
-            onKeyDown={handleKeyDown}
-            className="md:items-start md:justify-items-center grid h-full bg-theme"
-        >
-            <div className="flex flex-col frame w-full h-full">
-                <FormHeader
-                    onNew={onNew}
-                    onClose={() => {
-                        setForm(false);
-                        setSearchValue("");
-                    }}
-                    model={MODEL}
-                    saveData={saveData}
-                    setReadOnly={setReadOnly}
-                    deleteData={deleteData}
+  const handleEdit = (id) => {
+    setId(id);
+    setForm(true);
+    setReadOnly(false);
+  };
 
-                />
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-x-2 overflow-clip">
-                    <div className="col-span-3 grid md:grid-cols-2 border overflow-auto">
-                        <div className='col-span-3 grid md:grid-cols-2 border overflow-auto'>
-                            <div className='mr-1 md:ml-2'>
-                                <fieldset className='frame my-1'>
-                                    <legend className='sub-heading'>Process Info</legend>{console.log(io, "io")}
-                                    <div className='grid grid-cols-1 my-2'>
-                                        <TextInput name="Process name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                        <TextInput name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                        <DropdownInput name="IO" options={ProcessIOOptions} value={io} setValue={setIo} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                        {/* <CheckBox name="PcsStage" readOnly={readOnly} value={isPcsStage} setValue={setIsPcsStage} />
-                                        <CheckBox name="Cutting" readOnly={readOnly} value={isCutting} setValue={setIsCutting} /> */}
-                                        <CheckBox name="Packing" readOnly={readOnly} value={isPacking} setValue={setIsPacking} />
-                                        <CheckBox name="Stitching" readOnly={readOnly} value={isStitching} setValue={setIsStitching} />
-                                        {/* <CheckBox name="Ironing" readOnly={readOnly} value={isPrintingJobWork} setValue={setIsPrintingJobWork} /> */}
-                                        <CheckBox name="Ironing" readOnly={readOnly} value={isIroning} setValue={setIsIroning} />
-                                        <CheckBox name="Active" readOnly={readOnly} value={active} setValue={setActive} />
-                                    </div>
-                                </fieldset>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="frame hidden md:block overflow-x-hidden">
-                        <FormReport
-                            searchValue={searchValue}
-                            setSearchValue={setSearchValue}
-                            setId={setId}
-                            tableHeaders={tableHeaders}
-                            tableDataNames={tableDataNames}
-                            data={allData?.data}
-                            loading={
-                                isLoading || isFetching
-                            }
-                        />
-                    </div>
-                </div>
-            </div>
+  const ACTIVE = (
+    <div className="bg-gradient-to-r from-green-200 to-green-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-green-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+      <Power size={10} />
+    </div>
+  );
+  const INACTIVE = (
+    <div className="bg-gradient-to-r from-red-200 to-red-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-red-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+      <Power size={10} />
+    </div>
+  );
+
+  const columns = [
+    {
+      header: "S.No",
+      accessor: (item, index) => parseInt(index) + parseInt(1),
+      className: "font-medium text-gray-900 text-center w-[10px] py-1",
+      search: "",
+    },
+    {
+      header: "Process Name",
+      accessor: (item) => item.name,
+      className: "font-medium text-gray-900  w-[250px]  py-1  px-2",
+      search: "Process Name",
+    },
+    {
+      header: "Status",
+      accessor: (item) => (item.active ? ACTIVE : INACTIVE),
+      className: "font-medium text-gray-900 text-center w-[10px] py-1",
+      search: "",
+    },
+  ];
+
+  return (
+    <div onKeyDown={handleKeyDown} className="p-1">
+      <div className="w-full flex bg-white p-1 justify-between  items-center">
+        <h5 className="text-xl font-bold font-segoe text-gray-800 ">
+          Process Master
+        </h5>
+        <div className="flex items-center">
+          <button
+            onClick={() => {
+              setForm(true);
+              onNew();
+            }}
+            className="bg-white border font-segoe border-green-600 text-green-600 hover:bg-green-700 hover:text-white text-sm px-2  rounded-md shadow transition-Portions duration-200 flex items-center gap-2"
+          >
+            + Add New Process
+          </button>
         </div>
-    );
+      </div>
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
+        <ReusableTable
+          columns={columns}
+          data={allData?.data || []}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          itemsPerPage={10}
+        />
+      </div>
+      {form && (
+        <Modal
+          isOpen={form}
+          form={form}
+          widthClass={"w-[450px] max-w-6xl h-[350px]"}
+          onClose={() => {
+            setForm(false);
+          }}
+        >
+          <div className="h-full flex flex-col bg-gray-100">
+            <div className="border-b py-2 px-4 mt-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                  {id
+                    ? !readOnly
+                      ? "Edit Process  Master"
+                      : "Process  Master"
+                    : "Add New Process"}
+                </h2>
+              </div>
+              <div className="flex gap-2">
+                <div>
+                  {readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReadOnly(false);
+                      }}
+                      className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={saveData}
+                      className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                  border border-green-600 flex items-center gap-1 text-xs"
+                    >
+                      <Check size={14} />
+                      {id ? "Update" : "Save"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto p-3">
+              <div className="grid grid-cols-1  gap-3  h-full">
+                <div className="lg:col-span- space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                    <div className="">
+                      <div className="flex justify-between">
+                        <div>
+                          <div className="mb-5 ">
+                            <TextInput
+                              name="Process"
+                              type="text"
+                              value={name}
+                              setValue={setName}
+                              required={true}
+                              readOnly={readOnly}
+                              disabled={childRecord.current > 0}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mb-5">
+                        <ToggleButton
+                          name="Status"
+                          options={statusDropdown}
+                          value={active}
+                          setActive={setActive}
+                          required={true}
+                          readOnly={readOnly}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
 }

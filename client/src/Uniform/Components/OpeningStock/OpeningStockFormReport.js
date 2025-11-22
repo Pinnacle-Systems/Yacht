@@ -80,8 +80,6 @@ const OpeningStockFormReport = ({
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
 
-  console.log(indexOfLastItem, "indexOfLastItem");
-
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
@@ -192,7 +190,7 @@ const OpeningStockFormReport = ({
               }}
             />
           </div>
-          <div className="h-[360px]">
+          <div className="h-[78%]">
             <table className="mt-2">
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">
@@ -360,7 +358,7 @@ const OpeningStockFormReport = ({
               )}
             </table>
           </div>
-          <div className="">
+          <div className="h-[10%]">
             <Pagination />
           </div>
         </div>
