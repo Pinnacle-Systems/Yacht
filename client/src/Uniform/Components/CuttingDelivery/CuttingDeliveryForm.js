@@ -28,6 +28,8 @@ import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformServic
 import { useGetDepartmentQuery } from "../../../redux/services/DepartmentMasterService.js";
 import { useGetPartyCategoryMasterQuery } from "../../../redux/services/PartyCategoryServices.js";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService.js";
+import { useLazyGetFabricDetailQuery } from "../../../redux/services/MaterialStockService.js";
+import { useLazyGetSizeTemplateByIdQuery } from "../../../redux/uniformService/SizeTemplateMasterServices.js";
 export default function CuttingDeliveryForm({
   onClose,
   id,
@@ -47,6 +49,7 @@ export default function CuttingDeliveryForm({
   const [productionType, setProductionType] = useState("");
   const [departmentId, setDepartmentId] = useState("");
   const [supplierId, setSupplierId] = useState("");
+  const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
   const firstUpdate = useRef(true);
 
   const dispatch = useDispatch();
@@ -58,6 +61,9 @@ export default function CuttingDeliveryForm({
     params: { companyId },
   });
   const { data: supplierList } = useGetPartyQuery({
+    params: { companyId },
+  });
+  const { data: uomList } = useGetUnitOfMeasurementMasterQuery({
     params: { companyId },
   });
 
@@ -82,14 +88,11 @@ export default function CuttingDeliveryForm({
     },
   });
 
+  const [getFabricDetail] = useLazyGetFabricDetailQuery();
+
   const syncFormWithDb = useCallback(
     (data) => {
       const today = new Date();
-      if (id) {
-        setReadOnly(true);
-      } else {
-        setReadOnly(false);
-      }
       setDocDate(
         data?.docDate
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
@@ -168,7 +171,13 @@ export default function CuttingDeliveryForm({
   };
 
   const validateData = (data) => {
-    if (cuttingDeliveryItems?.length > 0 && data.styleId) {
+    if (
+      cuttingDeliveryItems?.length > 0 &&
+      data.styleId &&
+      data?.cuttingNo &&
+      data?.productionType &&
+      data?.departmentId
+    ) {
       return true;
     }
     return false;
@@ -213,7 +222,12 @@ export default function CuttingDeliveryForm({
     docDate,
     branchId,
     cuttingDeliveryItems: cuttingDeliveryItems?.filter?.(
-      (item) => item?.styleId && item?.fabricId
+      (item) =>
+        item?.styleId &&
+        item?.fabricId &&
+        item?.portionId &&
+        item?.issueQty &&
+        item?.usedMeter
     ),
     userId,
     finYearId,
@@ -230,10 +244,12 @@ export default function CuttingDeliveryForm({
       return; // skip on first render
     }
     // Call the function whenever styleId changes
-    if (!readOnly) {
-      handleAddRow();
-    }
-  }, [styleId]);
+    if (id) return;
+
+    // 🚫 block when readOnly mode
+    if (readOnly) return;
+    handleAddRow();
+  }, [styleId, id, readOnly]);
 
   const handleAddRow = async () => {
     try {
@@ -244,7 +260,15 @@ export default function CuttingDeliveryForm({
         },
       });
       const fabricItems = orderData?.data?.cuttingOrderItems;
-      if (!fabricItems) return;
+      const { data: fabricData } = await getFabricDetail({
+        params: {
+          styleId: styleId,
+          branchId,
+        },
+      });
+      const fabricDetails = fabricData?.data;
+      if (!fabricDetails || !fabricItems) return;
+
       setCuttingNo(orderData?.data?.docId);
       setCuttingDeliveryItems((prev) => {
         const updated = [...prev];
@@ -264,18 +288,24 @@ export default function CuttingDeliveryForm({
         );
         if (startIndex === -1) startIndex = updated.length;
 
-        // Fill in sizeRows starting at first empty slot
-        fabricItems.forEach((row, i) => {
-          const cloned = structuredClone(row);
+        fabricItems.forEach((item, i) => {
+          const detail = fabricDetails.find(
+            (f) => f.styleId === item.styleId && f.colorId === item.colorId
+          );
+          const newRow = {
+            ...item,
+            fabWidth: detail?.fabWidth || "",
+            fabMeter: detail?.fabMeter || "",
+          };
           if (startIndex + i < updated.length) {
-            updated[startIndex + i] = cloned;
+            updated[startIndex + i] = newRow;
           } else {
-            updated.push(cloned); // append if no empty slot
+            updated.push(newRow);
           }
         });
 
         // Ensure at least 6 rows
-        while (updated.length < 6) {
+        while (updated.length < 5) {
           updated.push({
             styleId: "",
             styleItemId: "",
@@ -355,7 +385,7 @@ export default function CuttingDeliveryForm({
                 placeholder={"Select Style"}
                 otherField={"sku"}
                 autoFocus={true}
-                disabled={readOnly}
+                disabled={id}
                 clear={true}
               />
               <ReusableInput
@@ -382,21 +412,6 @@ export default function CuttingDeliveryForm({
                 required={true}
                 readOnly={id}
               />
-              {data?.productionType === "INHOUSE" && (
-                <DropdownNew
-                  name="Department"
-                  dataList={
-                    id
-                      ? departmentList?.data
-                      : departmentList?.data?.filter((item) => item.active)
-                  }
-                  value={departmentId}
-                  setValue={setDepartmentId}
-                  readOnly={readOnly}
-                  placeholder={"Select Department"}
-                  disabled={readOnly}
-                />
-              )}
               {data?.productionType === "OUTSIDE" && (
                 <DropdownNew
                   name="Supplier"
@@ -413,6 +428,20 @@ export default function CuttingDeliveryForm({
                   clear={true}
                 />
               )}
+                <DropdownNew
+                  name="Department"
+                  dataList={
+                    id
+                      ? departmentList?.data
+                      : departmentList?.data?.filter((item) => item.active)
+                  }
+                  value={departmentId}
+                  setValue={setDepartmentId}
+                  readOnly={readOnly}
+                  placeholder={"Select Department"}
+                  disabled={readOnly}
+                  required={true}
+                />
             </div>
           </div>
         </div>
@@ -421,6 +450,11 @@ export default function CuttingDeliveryForm({
             cuttingDeliveryItems={cuttingDeliveryItems}
             setCuttingDeliveryItems={setCuttingDeliveryItems}
             readOnly={readOnly}
+            id={id}
+            styleId={styleId}
+            styleList={styleList}
+            uomList={uomList}
+            styleTemplateDetail={styleTemplateDetail}
           />
         </fieldset>
         <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">

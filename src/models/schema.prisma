@@ -2207,12 +2207,14 @@ model CuttingOrderItems {
 }
 
 model sizeDetails {
-  id                  Int                @id @default(autoincrement())
-  Size                Size?              @relation(fields: [sizeId], references: [id])
-  sizeId              Int?
-  qty                 Float?
-  CuttingOrderItems   CuttingOrderItems? @relation(fields: [cuttingOrderItemsId], references: [id],onDelete: Cascade)
-  cuttingOrderItemsId Int?
+  id                     Int                   @id @default(autoincrement())
+  Size                   Size?                 @relation(fields: [sizeId], references: [id])
+  sizeId                 Int?
+  qty                    Float?
+  CuttingOrderItems      CuttingOrderItems?    @relation(fields: [cuttingOrderItemsId], references: [id], onDelete: Cascade)
+  cuttingOrderItemsId    Int?
+  CuttingDeliveryItems   CuttingDeliveryItems? @relation(fields: [cuttingDeliveryItemsId], references: [id], onDelete: Cascade)
+  cuttingDeliveryItemsId Int?
 }
 
 model CuttingDelivery {
@@ -2257,6 +2259,7 @@ model CuttingDeliveryItems {
   sizeId            Int?
   fabWidth          Float?
   fabMeter          Float?
+  usedMeter         Float?
   Portion           Portion?           @relation(fields: [portionId], references: [id])
   portionId         Int?
   orderQty          Float?
@@ -2268,6 +2271,7 @@ model CuttingDeliveryItems {
   uomId             Int?
   Employee          Employee?          @relation(fields: [employeeId], references: [id])
   employeeId        Int?
+  sizeDetails       sizeDetails[]
 }
 
 model ProductionStock {

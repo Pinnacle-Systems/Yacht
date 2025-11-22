@@ -816,15 +816,15 @@ async function getStyleDetail(req) {
     include: {
       cuttingOrderItems: {
         select: {
-          materialStocks: true,
+          // sizeDetails: true,
           id: true,
           cuttingOrderId: true,
           styleItemId: true,
           fabricId: true,
           colorId: true,
           sizeId: true,
-          fabWidth: true,
-          fabMeter: true,
+          // fabWidth: true,
+          // fabMeter: true,
           portionId: true,
           styleId: true,
           orderQty: true,

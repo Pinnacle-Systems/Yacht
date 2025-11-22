@@ -148,7 +148,7 @@ export default function CuttingOrderForm({
   };
 
   const validateData = (data) => {
-    if (cuttingOrderItems?.length > 0) {
+    if (cuttingOrderItems?.length > 0 && styleId) {
       return true;
     }
     return false;
@@ -194,7 +194,7 @@ export default function CuttingOrderForm({
     branchId,
     // storeId,
     cuttingOrderItems: cuttingOrderItems?.filter?.(
-      (item) => item?.styleId && item?.fabricId
+      (item) => item?.styleId && item?.fabricId && item?.portionId && item?.orderQty
     ),
     userId,
     finYearId,

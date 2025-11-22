@@ -30,7 +30,6 @@ export default function CuttingOrderItems({
   const { data: fabricList } = useGetFabricMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const { data: portionList } = useGetPortionMasterQuery({ params });
-  const sizeInitializedRef = useRef(false);
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
   );
@@ -219,15 +218,15 @@ export default function CuttingOrderItems({
       sizeName: s.Size?.name,
     }));
 
-    if (id) {
-      // 🔥 Delay only when editing
-      setTimeout(() => {
-        setSizeColumns(columns);
-      }, 500); // adjust delay if needed
-    } else {
+    // if (id) {
+    //   // 🔥 Delay only when editing
+    //   setTimeout(() => {
+    //     setSizeColumns(columns);
+    //   }, 500); // adjust delay if needed
+    // } else {
       // Create mode → immediate
       setSizeColumns(columns);
-    }
+    // }
   };
 
   useEffect(() => {
@@ -237,7 +236,7 @@ export default function CuttingOrderItems({
 
   useEffect(() => {
     if (sizeColumns.length === 0 || cuttingOrderItems.length === 0) return;
-    if (sizeInitializedRef.current) return;
+
     setCuttingOrderItems((prev) =>
       prev.map((row) => ({
         ...row,
@@ -250,8 +249,7 @@ export default function CuttingOrderItems({
               })),
       }))
     );
-    sizeInitializedRef.current = true;
-  }, [sizeColumns, cuttingOrderItems]);
+  }, [sizeColumns, cuttingOrderItems,setCuttingOrderItems]);
 
   return (
     <>
@@ -376,7 +374,7 @@ export default function CuttingOrderItems({
                           }
                         }}
                         tabIndex={"0"}
-                        disabled={true}
+                        disabled={readOnly}
                         className="text-left w-full rounded py-1 table-data-input"
                         value={row.styleItemId}
                         onChange={(e) =>
@@ -413,7 +411,7 @@ export default function CuttingOrderItems({
                           }
                         }}
                         tabIndex={"0"}
-                        disabled={true}
+                        disabled={readOnly}
                         className="text-left w-full rounded py-1 table-data-input"
                         value={row.fabricId}
                         onChange={(e) =>
@@ -442,7 +440,7 @@ export default function CuttingOrderItems({
                           }
                         }}
                         tabIndex={"0"}
-                        disabled={true}
+                        disabled={readOnly}
                         className="text-left w-full rounded py-1 table-data-input"
                         value={row.colorId}
                         onChange={(e) =>
@@ -483,7 +481,7 @@ export default function CuttingOrderItems({
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "fabWidth");
                         }}
-                        disabled={true}
+                        disabled={readOnly}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
@@ -506,7 +504,7 @@ export default function CuttingOrderItems({
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "fabMeter");
                         }}
-                        disabled={true}
+                        disabled={readOnly}
                       />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px]">

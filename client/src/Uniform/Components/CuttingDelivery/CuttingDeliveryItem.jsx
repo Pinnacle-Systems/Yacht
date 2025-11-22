@@ -14,6 +14,7 @@ import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleI
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { VIEW } from "../../../icons";
 import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService";
+import Swal from "sweetalert2";
 
 export default function CuttingDeliveryItem({
     cuttingDeliveryItems,
@@ -21,7 +22,12 @@ export default function CuttingDeliveryItem({
     params,
     readOnly,
     id,
+    styleId,
+    styleList,
+    uomList,
+    styleTemplateDetail
 }) {
+    const [sizeColumns, setSizeColumns] = useState([]);
     const [contextMenu, setContextMenu] = useState(null);
     const { data: sizeList } = useGetSizeMasterQuery({ params });
     const { data: colorList } = useGetColorMasterQuery({ params });
@@ -48,11 +54,25 @@ export default function CuttingDeliveryItem({
             issueQty: "",
             remarks: "",
             selected: false,
+            usedMeter: ""
         };
         setCuttingDeliveryItems([...cuttingDeliveryItems, newRow]);
     };
 
     const handleInputChange = (value, index, field) => {
+        if (field === "usedMeter") {
+            const row = cuttingDeliveryItems[index];
+            const stkMeter = row?.fabMeter || 0;
+            if (parseFloat(stkMeter) < parseFloat(value)) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Invalid Meter",
+                    text: "Used Meter cannot be more than Stock Meter!",
+                    confirmButtonText: "OK",
+                });
+                return;
+            }
+        }
         const newBlend = structuredClone(cuttingDeliveryItems);
         newBlend[index][field] = value;
         setCuttingDeliveryItems(newBlend);
@@ -94,16 +114,64 @@ export default function CuttingDeliveryItem({
         setContextMenu(null);
     };
 
+    const getSizeTemplate = async () => {
+        const style = styleList?.data.find((item) => item.id === styleId);
+        const sizeTemplateId = style?.sizeTemplateId;
+
+        if (!sizeTemplateId) return;
+
+        const { data: sizeData } = await styleTemplateDetail(sizeTemplateId);
+
+        if (!sizeData?.data?.SizeTemplateList?.length) return;
+
+        const columns = sizeData.data.SizeTemplateList.map((s) => ({
+            sizeId: s.sizeId,
+            sizeName: s.Size?.name,
+        }));
+
+        if (id) {
+            // 🔥 Delay only when editing
+            setTimeout(() => {
+                setSizeColumns(columns);
+            }, 500); // adjust delay if needed
+        } else {
+            // Create mode → immediate
+            setSizeColumns(columns);
+        }
+    };
+
+    useEffect(() => {
+        if (!styleId) return;
+        getSizeTemplate();
+    }, [styleId]);
+
+    useEffect(() => {
+        if (sizeColumns.length === 0 || cuttingDeliveryItems.length === 0) return;
+
+        setCuttingDeliveryItems((prev) =>
+            prev.map((row) => ({
+                ...row,
+                sizeDetails:
+                    row.sizeDetails?.length > 0
+                        ? row.sizeDetails // backend already provided ✓
+                        : sizeColumns.map((col) => ({
+                            sizeId: col.sizeId,
+                            qty: "",
+                        })),
+            }))
+        );
+    }, [sizeColumns, cuttingDeliveryItems, setCuttingDeliveryItems]);
+
     useEffect(() => {
         if (cuttingDeliveryItems) {
             setCuttingDeliveryItems((prev) => {
                 const filledRows = prev.length;
 
-                if (filledRows < 6) {
+                if (filledRows < 5) {
                     // add empty rows until total becomes 6
                     return [
                         ...prev,
-                        ...Array.from({ length: 6 - filledRows }, () => ({
+                        ...Array.from({ length: 5 - filledRows }, () => ({
                             styleNo: "",
                             styleItemId: "",
                             fabricId: "",
@@ -116,6 +184,7 @@ export default function CuttingDeliveryItem({
                             remarks: "",
                             selected: false,
                             issueQty: "",
+                            userMeter: ""
                         })),
                     ];
                 }
@@ -124,7 +193,7 @@ export default function CuttingDeliveryItem({
         } else {
             // if null/undefined, initialize with 6 empty rows
             setCuttingDeliveryItems(
-                Array.from({ length: 6 }, () => ({
+                Array.from({ length: 5 }, () => ({
                     styleNo: "",
                     styleItemId: "",
                     fabricId: "",
@@ -137,10 +206,13 @@ export default function CuttingDeliveryItem({
                     remarks: "",
                     selected: false,
                     issueQty: "",
+                    usedMeter: ""
                 }))
             );
         }
     }, [cuttingDeliveryItems, setCuttingDeliveryItems]);
+
+
 
     return (
         <>
@@ -177,17 +249,6 @@ export default function CuttingDeliveryItem({
                                 >
                                     Color
                                 </th>
-
-                                <th
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Width
-                                </th>
-                                <th
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Meter
-                                </th>
                                 <th
                                     className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
@@ -196,8 +257,28 @@ export default function CuttingDeliveryItem({
                                 <th
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Size
+                                    Width
                                 </th>
+                                <th
+                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Fabric Stock
+                                </th>
+                                <th
+                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Used Fabric
+                                </th>
+
+
+                                {sizeColumns.map((col) => (
+                                    <th
+                                        key={col.sizeId}
+                                        className="w-12 px-4 py-2 text-center font-medium text-[13px]"
+                                    >
+                                        {col.sizeName}
+                                    </th>
+                                ))}
                                 <th
                                     className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                                 >
@@ -354,6 +435,35 @@ export default function CuttingDeliveryItem({
                                                 ))}
                                             </select>
                                         </td>
+                                        <td className="py-0.5 border border-gray-300 text-[11px]">
+                                            <select
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "Delete") {
+                                                        handleInputChange("", index, "portionId");
+                                                    }
+                                                }}
+                                                tabIndex={"0"}
+                                                disabled={true}
+                                                className="text-left w-full rounded py-1 table-data-input"
+                                                value={row.portionId}
+                                                onChange={(e) =>
+                                                    handleInputChange(e.target.value, index, "portionId")
+                                                }
+                                                onBlur={(e) => {
+                                                    handleInputChange(e.target.value, index, "portionId");
+                                                }}
+                                            >
+                                                <option></option>
+                                                {(id
+                                                    ? portionList?.data
+                                                    : portionList?.data?.filter((item) => item.active)
+                                                )?.map((blend) => (
+                                                    <option value={blend.id} key={blend.id}>
+                                                        {blend?.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </td>
                                         <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                                             <input
                                                 onKeyDown={(e) => {
@@ -400,65 +510,83 @@ export default function CuttingDeliveryItem({
                                                 disabled={true}
                                             />
                                         </td>
-                                        <td className="py-0.5 border border-gray-300 text-[11px]">
-                                            <select
+                                        <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                                            <input
                                                 onKeyDown={(e) => {
+                                                    if (e.code === "Minus" || e.code === "NumpadSubtract")
+                                                        e.preventDefault();
                                                     if (e.key === "Delete") {
-                                                        handleInputChange("", index, "portionId");
+                                                        handleInputChange("", index, "usedMeter");
                                                     }
                                                 }}
-                                                tabIndex={"0"}
-                                                disabled={true}
-                                                className="text-left w-full rounded py-1 table-data-input"
-                                                value={row.portionId}
+                                                min={"0"}
+                                                type="number"
+                                                className="text-right rounded py-1 px-1 w-full table-data-input"
+                                                onFocus={(e) => e.target.select()}
+                                                value={row?.usedMeter}
                                                 onChange={(e) =>
-                                                    handleInputChange(e.target.value, index, "portionId")
+                                                    handleInputChange(e.target.value, index, "usedMeter")
                                                 }
                                                 onBlur={(e) => {
-                                                    handleInputChange(e.target.value, index, "portionId");
+                                                    handleInputChange(e.target.value, index, "usedMeter");
                                                 }}
-                                            >
-                                                <option></option>
-                                                {(id
-                                                    ? portionList?.data
-                                                    : portionList?.data?.filter((item) => item.active)
-                                                )?.map((blend) => (
-                                                    <option value={blend.id} key={blend.id}>
-                                                        {blend?.name}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                                disabled={readOnly}
+                                            />
                                         </td>
 
-                                        <td className="py-0.5 border border-gray-300 text-[11px]">
-                                            <select
-                                                onKeyDown={(e) => {
-                                                    if (e.key === "Delete") {
-                                                        handleInputChange("", index, "sizeId");
-                                                    }
-                                                }}
-                                                tabIndex={"0"}
-                                                disabled={true}
-                                                className="text-left w-full rounded py-1 table-data-input"
-                                                value={row.sizeId}
-                                                onChange={(e) =>
-                                                    handleInputChange(e.target.value, index, "sizeId")
-                                                }
-                                                onBlur={(e) => {
-                                                    handleInputChange(e.target.value, index, "sizeId");
-                                                }}
-                                            >
-                                                <option></option>
-                                                {(id
-                                                    ? sizeList?.data
-                                                    : sizeList?.data?.filter((item) => item.active)
-                                                )?.map((blend) => (
-                                                    <option value={blend.id} key={blend.id}>
-                                                        {blend?.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </td>
+
+
+                                        {sizeColumns.map((col) => {
+                                            // find matching size entry
+                                            const sizeItem = row.sizeDetails?.find(
+                                                (s) => s.sizeId === col.sizeId
+                                            ) || { qty: "" };
+
+                                            return (
+                                                <td
+                                                    key={col.sizeId}
+                                                    className="py-0.5 border border-gray-300 text-[11px]"
+                                                >
+                                                    <input
+                                                        type="number"
+                                                        disabled={readOnly}
+                                                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                                                        value={sizeItem.qty}
+                                                        onChange={(e) => {
+                                                            const qty = e.target.value;
+                                                            if (!row.usedMeter) {
+                                                                Swal.fire({
+                                                                    icon: "warning",
+                                                                    title: "Invalid Meter",
+                                                                    text: "Please Enter Valid Used Meter!",
+                                                                    confirmButtonText: "OK",
+                                                                });
+                                                                return;
+                                                            }
+                                                            setCuttingDeliveryItems((prev) => {
+                                                                const updated = [...prev];
+                                                                const rowData = { ...updated[index] };
+
+                                                                rowData.sizeDetails = rowData.sizeDetails?.map(
+                                                                    (s) =>
+                                                                        s.sizeId === col.sizeId ? { ...s, qty } : s
+                                                                );
+                                                                rowData.issueQty = rowData.sizeDetails.reduce(
+                                                                    (total, item) =>
+                                                                        total + Number(item.qty || 0),
+                                                                    0
+                                                                );
+
+                                                                updated[index] = rowData;
+                                                                return updated;
+                                                            });
+                                                        }}
+                                                        onFocus={(e) => e.target.select()}
+                                                        min={"0"}
+                                                    />
+                                                </td>
+                                            );
+                                        })}
                                         <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                                             <input
                                                 onKeyDown={(e) => {
@@ -503,12 +631,12 @@ export default function CuttingDeliveryItem({
                                                 onBlur={(e) => {
                                                     handleInputChange(e.target.value, index, "issueQty");
                                                 }}
-                                                disabled={readOnly}
+                                                disabled={true}
                                             />
                                         </td>
                                         <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 px-1 text-right">
-                                            {row.fabWidth && row.issueQty
-                                                ? (row.fabMeter / row.issueQty).toFixed(2)
+                                            {row.usedMeter && row.issueQty
+                                                ? (row.usedMeter / row.issueQty).toFixed(2)
                                                 : ""}
                                         </td>
                                         <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
@@ -578,7 +706,7 @@ export default function CuttingDeliveryItem({
                             <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                                 <td
                                     className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                                    colSpan={8}
+                                    colSpan={8 + sizeColumns.length}
                                 >
                                     Total
                                 </td>
