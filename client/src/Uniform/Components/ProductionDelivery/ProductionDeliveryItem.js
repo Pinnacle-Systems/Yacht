@@ -16,14 +16,14 @@ import { VIEW } from "../../../icons";
 import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService";
 import Swal from "sweetalert2";
 
-export default function CuttingDeliveryItem({
-    cuttingDeliveryItems,
-    setCuttingDeliveryItems,
+export default function ProductionDeliveryItem({
+    productionDeliveryItems,
+    setProductionDeliveryItems,
     params,
     readOnly,
     id,
     styleId,
-  sizeTemplateId,
+    sizeTemplateId,
     uomList,
     styleTemplateDetail
 }) {
@@ -53,15 +53,15 @@ export default function CuttingDeliveryItem({
             orderQty: "",
             issueQty: "",
             remarks: "",
-            selected: "",
+            selected: false,
             usedMeter: ""
         };
-        setCuttingDeliveryItems([...cuttingDeliveryItems, newRow]);
+        setProductionDeliveryItems([...productionDeliveryItems, newRow]);
     };
 
     const handleInputChange = (value, index, field) => {
         if (field === "usedMeter") {
-            const row = cuttingDeliveryItems[index];
+            const row = productionDeliveryItems[index];
             const stkMeter = row?.fabMeter || 0;
             if (parseFloat(stkMeter) < parseFloat(value)) {
                 Swal.fire({
@@ -73,14 +73,14 @@ export default function CuttingDeliveryItem({
                 return;
             }
         }
-        const newBlend = structuredClone(cuttingDeliveryItems);
+        const newBlend = structuredClone(productionDeliveryItems);
         newBlend[index][field] = value;
-        setCuttingDeliveryItems(newBlend);
+        setProductionDeliveryItems(newBlend);
         console.log("index", index);
     };
 
     const deleteRow = (id) => {
-        setCuttingDeliveryItems((currentRows) => {
+        setProductionDeliveryItems((currentRows) => {
             if (currentRows.length > 1) {
                 return currentRows.filter((row, index) => index !== parseInt(id));
             }
@@ -89,12 +89,12 @@ export default function CuttingDeliveryItem({
     };
 
     const deleteSelectedRows = () => {
-        setCuttingDeliveryItems((rows) => rows.filter((r) => !r.selected));
+        setProductionDeliveryItems((rows) => rows.filter((r) => !r.selected));
         setContextMenu(null);
     };
 
     const handleDeleteAllRows = () => {
-        setCuttingDeliveryItems((prevRows) => {
+        setProductionDeliveryItems((prevRows) => {
             if (prevRows.length <= 1) return prevRows;
             return [prevRows[0]];
         });
@@ -146,9 +146,9 @@ export default function CuttingDeliveryItem({
     }, [sizeTemplateId]);
 
     useEffect(() => {
-        if (sizeColumns.length === 0 || cuttingDeliveryItems.length === 0) return;
+        if (sizeColumns.length === 0 || productionDeliveryItems.length === 0) return;
 
-        setCuttingDeliveryItems((prev) =>
+        setProductionDeliveryItems((prev) =>
             prev.map((row) => ({
                 ...row,
                 sizeDetails:
@@ -160,11 +160,11 @@ export default function CuttingDeliveryItem({
                         })),
             }))
         );
-    }, [sizeColumns, cuttingDeliveryItems, setCuttingDeliveryItems]);
+    }, [sizeColumns, productionDeliveryItems, setProductionDeliveryItems]);
 
     useEffect(() => {
-        if (cuttingDeliveryItems) {
-            setCuttingDeliveryItems((prev) => {
+        if (productionDeliveryItems) {
+            setProductionDeliveryItems((prev) => {
                 const filledRows = prev.length;
 
                 if (filledRows < 5) {
@@ -182,7 +182,7 @@ export default function CuttingDeliveryItem({
                             sizeId: "",
                             orderQty: "",
                             remarks: "",
-                            selected: "",
+                            selected: false,
                             issueQty: "",
                             usedMeter: ""
                         })),
@@ -192,7 +192,7 @@ export default function CuttingDeliveryItem({
             });
         } else {
             // if null/undefined, initialize with 6 empty rows
-            setCuttingDeliveryItems(
+            setProductionDeliveryItems(
                 Array.from({ length: 5 }, () => ({
                     styleNo: "",
                     styleItemId: "",
@@ -204,13 +204,13 @@ export default function CuttingDeliveryItem({
                     sizeId: "",
                     orderQty: "",
                     remarks: "",
-                    selected: "",
+                    selected: false,
                     issueQty: "",
                     usedMeter: ""
                 }))
             );
         }
-    }, [cuttingDeliveryItems, setCuttingDeliveryItems]);
+    }, [productionDeliveryItems, setProductionDeliveryItems]);
 
 
 
@@ -218,7 +218,7 @@ export default function CuttingDeliveryItem({
         <>
             <div className="border border-slate-200  bg-white rounded-md shadow-sm max-h-[450px] px-2 overflow-auto overflow-x-auto w-full">
                 <div className="flex justify-between items-center mb-2 m-2">
-                    <h2 className="font-medium text-slate-700">Cutting Delivery Items</h2>
+                    <h2 className="font-medium text-slate-700">Production Items</h2>
                 </div>
                 <div className={`w-full max-h-[300px]  overflow-y-auto  my-1`}>
                     <table className="w-full border-collapse table-fixed">
@@ -239,11 +239,6 @@ export default function CuttingDeliveryItem({
                                 >
                                     Fabric
                                 </th>
-                                {/* <th
-                  className={`w-12 px-4 py-2 text-center  font-medium text-[13px]`}
-                >
-                  Img
-                </th>{" "} */}
                                 <th
                                     className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
@@ -254,23 +249,6 @@ export default function CuttingDeliveryItem({
                                 >
                                     Portion
                                 </th>
-                                <th
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Width
-                                </th>
-                                <th
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Fabric Stock
-                                </th>
-                                <th
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Used Fabric
-                                </th>
-
-
                                 {sizeColumns.map((col) => (
                                     <th
                                         key={col.sizeId}
@@ -290,11 +268,6 @@ export default function CuttingDeliveryItem({
                                     Production Qty
                                 </th>
                                 <th
-                                    className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Consumtion
-                                </th>
-                                <th
                                     className={`w-48 px-1 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Remarks
@@ -305,12 +278,12 @@ export default function CuttingDeliveryItem({
                                         <input
                                             type="checkbox"
                                             checked={
-                                                cuttingDeliveryItems.length > 0 &&
-                                                cuttingDeliveryItems.every((row) => row.selected)
+                                                productionDeliveryItems.length > 0 &&
+                                                productionDeliveryItems.every((row) => row.selected)
                                             }
                                             onChange={(e) => {
                                                 const checked = e.target.checked;
-                                                setCuttingDeliveryItems((prev) =>
+                                                setProductionDeliveryItems((prev) =>
                                                     prev.map((row) => ({ ...row, selected: checked }))
                                                 );
                                             }}
@@ -331,7 +304,7 @@ export default function CuttingDeliveryItem({
                             </tr>
                         </thead>
                         <tbody>
-                            {(cuttingDeliveryItems ? cuttingDeliveryItems : [])?.map(
+                            {(productionDeliveryItems ? productionDeliveryItems : [])?.map(
                                 (row, index) => (
                                     <tr
                                         className="border border-blue-gray-200 cursor-pointer "
@@ -464,78 +437,6 @@ export default function CuttingDeliveryItem({
                                                 ))}
                                             </select>
                                         </td>
-                                        <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                                            <input
-                                                onKeyDown={(e) => {
-                                                    if (e.code === "Minus" || e.code === "NumpadSubtract")
-                                                        e.preventDefault();
-                                                    if (e.key === "Delete") {
-                                                        handleInputChange("", index, "fabWidth");
-                                                    }
-                                                }}
-                                                min={"0"}
-                                                type="number"
-                                                className="text-right rounded py-1 px-1 w-full table-data-input"
-                                                onFocus={(e) => e.target.select()}
-                                                value={row?.fabWidth}
-                                                onChange={(e) =>
-                                                    handleInputChange(e.target.value, index, "fabWidth")
-                                                }
-                                                onBlur={(e) => {
-                                                    handleInputChange(e.target.value, index, "fabWidth");
-                                                }}
-                                                disabled={true}
-                                            />
-                                        </td>
-                                        <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                                            <input
-                                                onKeyDown={(e) => {
-                                                    if (e.code === "Minus" || e.code === "NumpadSubtract")
-                                                        e.preventDefault();
-                                                    if (e.key === "Delete") {
-                                                        handleInputChange("", index, "fabMeter");
-                                                    }
-                                                }}
-                                                min={"0"}
-                                                type="number"
-                                                className="text-right rounded py-1 px-1 w-full table-data-input"
-                                                onFocus={(e) => e.target.select()}
-                                                value={row?.fabMeter}
-                                                onChange={(e) =>
-                                                    handleInputChange(e.target.value, index, "fabMeter")
-                                                }
-                                                onBlur={(e) => {
-                                                    handleInputChange(e.target.value, index, "fabMeter");
-                                                }}
-                                                disabled={true}
-                                            />
-                                        </td>
-                                        <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                                            <input
-                                                onKeyDown={(e) => {
-                                                    if (e.code === "Minus" || e.code === "NumpadSubtract")
-                                                        e.preventDefault();
-                                                    if (e.key === "Delete") {
-                                                        handleInputChange("", index, "usedMeter");
-                                                    }
-                                                }}
-                                                min={"0"}
-                                                type="number"
-                                                className="text-right rounded py-1 px-1 w-full table-data-input"
-                                                onFocus={(e) => e.target.select()}
-                                                value={row?.usedMeter}
-                                                onChange={(e) =>
-                                                    handleInputChange(e.target.value, index, "usedMeter")
-                                                }
-                                                onBlur={(e) => {
-                                                    handleInputChange(e.target.value, index, "usedMeter");
-                                                }}
-                                                disabled={readOnly}
-                                            />
-                                        </td>
-
-
-
                                         {sizeColumns.map((col) => {
                                             // find matching size entry
                                             const sizeItem = row.sizeDetails?.find(
@@ -563,7 +464,7 @@ export default function CuttingDeliveryItem({
                                                                 });
                                                                 return;
                                                             }
-                                                            setCuttingDeliveryItems((prev) => {
+                                                            setProductionDeliveryItems((prev) => {
                                                                 const updated = [...prev];
                                                                 const rowData = { ...updated[index] };
 
@@ -634,11 +535,6 @@ export default function CuttingDeliveryItem({
                                                 disabled={true}
                                             />
                                         </td>
-                                        <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 px-1 text-right">
-                                            {row.usedMeter && row.issueQty
-                                                ? (row.usedMeter / row.issueQty).toFixed(2)
-                                                : ""}
-                                        </td>
                                         <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                                             <input
                                                 onKeyDown={(e) => {
@@ -706,23 +602,23 @@ export default function CuttingDeliveryItem({
                             <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                                 <td
                                     className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                                    colSpan={8 + sizeColumns.length}
+                                    colSpan={5 + sizeColumns.length}
                                 >
                                     Total
                                 </td>
                                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
-                                    {cuttingDeliveryItems.reduce(
+                                    {productionDeliveryItems.reduce(
                                         (sum, row) => sum + (Number(row.orderQty) || 0),
                                         0
                                     )}
                                 </td>
                                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
-                                    {cuttingDeliveryItems.reduce(
+                                    {productionDeliveryItems.reduce(
                                         (sum, row) => sum + (Number(row.issueQty) || 0),
                                         0
                                     )}
                                 </td>
-                                <td className="border border-gray-300" colSpan={4}></td>
+                                <td className="border border-gray-300" colSpan={3}></td>
                             </tr>
                         </tfoot>
                     </table>

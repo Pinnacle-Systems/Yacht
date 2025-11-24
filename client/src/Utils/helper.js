@@ -298,6 +298,12 @@ export function convertSpaceToUnderScore(str) {
   return str.toLowerCase().trim().split(' ').join('_');
 }
 
+  export const isRowEmpty = (row) => {
+    return Object.values(row).every(
+      (v) => v === "" || v === null || v === undefined || v === 0
+    );
+  };
+
 export function isGridDatasValid(datas, isRequiredAllData, mandatoryFields = []) {
 
   if (isRequiredAllData) {

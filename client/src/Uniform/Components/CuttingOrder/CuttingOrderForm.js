@@ -4,7 +4,11 @@ import { ReusableInput } from "../../../Utils/CommonInput";
 import { DropdownInput, DropdownNew } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
-import { getCommonParams, params } from "../../../Utils/helper";
+import {
+  getCommonParams,
+  isGridDatasValid,
+  params,
+} from "../../../Utils/helper";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import Swal from "sweetalert2";
@@ -149,11 +153,22 @@ export default function CuttingOrderForm({
     }
   };
 
+  // const validateData = (data) => {
+  //   if (cuttingOrderItems?.length > 0 && styleId) {
+  //     return true;
+  //   }
+  //   return false;
+  // };
+
   const validateData = (data) => {
-    if (cuttingOrderItems?.length > 0 && styleId) {
-      return true;
-    }
-    return false;
+    return (
+      data.styleId &&
+      isGridDatasValid(
+        data?.cuttingOrderItems?.filter((item) => item.styleId),
+        false,
+        ["fabWidth", "fabMeter", "orderQty","fabricId"]
+      )
+    );
   };
 
   const saveData = (nextProcess) => {
@@ -195,10 +210,7 @@ export default function CuttingOrderForm({
     docDate,
     branchId,
     // storeId,
-    cuttingOrderItems: cuttingOrderItems?.filter?.(
-      (item) =>
-        item?.styleId && item?.fabricId && item?.portionId && item?.orderQty
-    ),
+    cuttingOrderItems: cuttingOrderItems?.filter((item) => item?.styleId),
     userId,
     finYearId,
     // locationId,
@@ -220,80 +232,82 @@ export default function CuttingOrderForm({
   }, [styleId, id, readOnly]);
 
   const handleAddRow = async () => {
-    if (!validateData(data)) {
-      toast.info("Please fill all required fields...!", {
-        position: "top-center",
+    try {
+      const style = styleList?.data.find((item) => item.id === styleId);
+      setSizeTemplateId(style?.sizeTemplateId);
+      const { data: fabricData } = await getFabricDetail({
+        params: {
+          styleId: styleId,
+          storeId,
+          branchId,
+        },
       });
-    } else {
-      try {
-        const style = styleList?.data.find((item) => item.id === styleId);
-        setSizeTemplateId(style?.sizeTemplateId);
-        const { data: fabricData } = await getFabricDetail({
-          params: {
-            styleId: styleId,
-            storeId,
-            branchId,
-          },
-        });
-        const fabricItems = fabricData?.data;
-        if (!fabricItems) return;
+      const fabricItems = fabricData?.data;
+      if (!fabricItems) return;
 
-        setCuttingOrderItems((prev) => {
-          const updated = [...prev];
-          // Find first empty slot index
-          let startIndex = updated.findIndex(
-            (row) =>
-              !row.styleId &&
-              !row.styleItemId &&
-              !row.fabricId &&
-              !row.colorId &&
-              !row.fabWidth &&
-              !row.fabMeter &&
-              !row.portionId &&
-              !row.sizeId &&
-              !row.orderQty &&
-              !row.remarks
-          );
-          if (startIndex === -1) startIndex = updated.length;
+      setCuttingOrderItems((prev) => {
+        const updated = [...prev];
+        // Find first empty slot index
+        let startIndex = updated.findIndex(
+          (row) =>
+            !row.styleId &&
+            !row.styleItemId &&
+            !row.fabricId &&
+            !row.colorId &&
+            !row.fabWidth &&
+            !row.fabMeter &&
+            !row.portionId &&
+            !row.sizeId &&
+            !row.orderQty &&
+            !row.remarks
+        );
+        if (startIndex === -1) startIndex = updated.length;
 
-          // Fill in sizeRows starting at first empty slot
-          fabricItems.forEach((row, i) => {
-            const cloned = structuredClone(row);
-            if (startIndex + i < updated.length) {
-              updated[startIndex + i] = cloned;
-            } else {
-              updated.push(cloned); // append if no empty slot
-            }
-          });
-
-          // Ensure at least 6 rows
-          while (updated.length < 5) {
-            updated.push({
-              styleId: "",
-              styleItemId: "",
-              fabricId: "",
-              colorId: "",
-              fabWidth: "",
-              fabMeter: "",
-              portionId: "",
-              sizeId: "",
-              orderQty: "",
-              remarks: "",
-              selected: false,
-              uomId: "",
-              sizeDetails: [],
-            });
+        // Fill in sizeRows starting at first empty slot
+        fabricItems.forEach((row, i) => {
+          const cloned = structuredClone(row);
+          if (startIndex + i < updated.length) {
+            updated[startIndex + i] = cloned;
+          } else {
+            updated.push(cloned); // append if no empty slot
           }
-          return updated;
         });
-      } catch (error) {
-        console.error("Error adding row:", error);
-      }
+
+        // Ensure at least 6 rows
+        while (updated.length < 5) {
+          updated.push({
+            styleId: "",
+            styleItemId: "",
+            fabricId: "",
+            colorId: "",
+            fabWidth: "",
+            fabMeter: "",
+            portionId: "",
+            sizeId: "",
+            orderQty: "",
+            remarks: "",
+            selected: false,
+            uomId: "",
+            sizeDetails: [],
+          });
+        }
+        return updated;
+      });
+    } catch (error) {
+      console.error("Error adding row:", error);
+    }
+  };
+
+  const handleKeyDown = (event) => {
+    let charCode = String.fromCharCode(event.which).toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && charCode === "s") {
+      event.preventDefault();
+      saveData();
     }
   };
 
   return (
-    <>
+    <div onKeyDown={handleKeyDown}>
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
           <h1 className="text-xl font-bold text-gray-800">
@@ -462,6 +476,6 @@ export default function CuttingOrderForm({
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

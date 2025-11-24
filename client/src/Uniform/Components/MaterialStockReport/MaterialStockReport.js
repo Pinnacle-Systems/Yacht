@@ -140,7 +140,6 @@ const MaterialStockReport = forwardRef(
       indexOfLastItem
     );
 
-
     const handlePageChange = (newPage) => {
       if (newPage >= 1 && newPage <= totalPages) {
         setCurrentPage(newPage);
@@ -348,7 +347,11 @@ const MaterialStockReport = forwardRef(
                                 <td className="text-center h-8">{index + 1}</td>
 
                                 <td className="py-1.5 text-center">
-                                  {dataObj.styleNo}
+                                  {findFromList(
+                                    dataObj?.styleId,
+                                    styleList?.data,
+                                    "sku"
+                                  )}
                                 </td>
 
                                 <td className="py-1.5 text-center">

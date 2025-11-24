@@ -62,6 +62,7 @@ import {
   Order,
   PortionMaster,
   ProcessMaster,
+  ProductionDelivery,
   PurchaseInward,
   PurchaseOrder,
   PurchaseReturn,
@@ -168,7 +169,8 @@ const ActiveTabList = () => {
     "PORTION MASTER": <PortionMaster />,
     "CUTTING PLAN": <CuttingOrder />,
     "CUTTING PRODUCTION": <CuttingDelivery />,
-    "PROCESS MASTER": <ProcessMaster />
+    "PROCESS MASTER": <ProcessMaster />,
+    "PRODUCTION ENTRY":<ProductionDelivery/>
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

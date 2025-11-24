@@ -7,7 +7,6 @@ import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import {
   getCommonParams,
   isGridDatasValid,
-  isRowEmpty,
   params,
 } from "../../../Utils/helper";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
@@ -20,14 +19,7 @@ import { useDispatch } from "react-redux";
 import StyleMasterApi, {
   useGetStyleMasterQuery,
 } from "../../../redux/uniformService/StyleMasterService.js";
-import CuttingDeliveryItem from "./CuttingDeliveryItem.jsx";
-import {
-  useAddCuttingDeliveryMutation,
-  useGetCuttingDeliveryByIdQuery,
-  useGetCuttingDeliveryQuery,
-  useUpdateCuttingDeliveryMutation,
-} from "../../../redux/uniformService/CuttingDeliveryServices.js";
-import { useLazyGetOrderDetailsQuery } from "../../../redux/uniformService/CuttingOrderService.js";
+
 import { inHouseOutsideTypes } from "../../../Utils/DropdownData.js";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices.js";
 import { useGetDepartmentQuery } from "../../../redux/services/DepartmentMasterService.js";
@@ -35,7 +27,16 @@ import { useGetPartyCategoryMasterQuery } from "../../../redux/services/PartyCat
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService.js";
 import { useLazyGetFabricDetailQuery } from "../../../redux/services/MaterialStockService.js";
 import { useLazyGetSizeTemplateByIdQuery } from "../../../redux/uniformService/SizeTemplateMasterServices.js";
-export default function CuttingDeliveryForm({
+import {
+  useAddProductionDeliveryMutation,
+  useGetProductionDeliveryByIdQuery,
+  useGetProductionDeliveryQuery,
+  useUpdateProductionDeliveryMutation,
+} from "../../../redux/uniformService/ProductionDeliveryServices.js";
+import { useLazyGetOrderDetailsQuery } from "../../../redux/uniformService/CuttingOrderService.js";
+import ProductionDeliveryItem from "./ProductionDeliveryItem.js";
+import { useGetProcessMasterQuery } from "../../../redux/uniformService/ProcessMasterService.js";
+export default function ProductionDeliveryForm({
   onClose,
   id,
   setId,
@@ -48,12 +49,13 @@ export default function CuttingDeliveryForm({
   const [locationId, setLocationId] = useState("");
   const [searchValue, setSearchValue] = useState("");
   const [storeId, setStoreId] = useState("");
-  const [cuttingDeliveryItems, setCuttingDeliveryItems] = useState([]);
+  const [productionDeliveryItems, setProductionDeliveryItems] = useState([]);
   const [styleId, setStyleId] = useState("");
-  const [cuttingNo, setCuttingNo] = useState("");
   const [productionType, setProductionType] = useState("");
   const [departmentId, setDepartmentId] = useState("");
   const [supplierId, setSupplierId] = useState("");
+  const [fromProcessId, setFromProcessId] = useState("");
+  const [toProcessId, setToProcessId] = useState("");
 
   const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
   const firstUpdate = useRef(true);
@@ -73,6 +75,9 @@ export default function CuttingDeliveryForm({
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({
     params: { companyId },
   });
+  const { data: processList } = useGetProcessMasterQuery({
+    params: { companyId },
+  });
 
   const { data: locationData } = useGetLocationMasterQuery({
     params: { branchId },
@@ -83,13 +88,13 @@ export default function CuttingDeliveryForm({
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
-  } = useGetCuttingDeliveryByIdQuery(id, { skip: !id });
+  } = useGetProductionDeliveryByIdQuery(id, { skip: !id });
 
   const {
     data: allData,
     isFetching,
     isLoading,
-  } = useGetCuttingDeliveryQuery({
+  } = useGetProductionDeliveryQuery({
     params: {
       branchId,
     },
@@ -105,8 +110,8 @@ export default function CuttingDeliveryForm({
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
           : moment.utc(today).format("YYYY-MM-DD")
       );
-      setCuttingDeliveryItems(
-        data?.cuttingDeliveryItems ? data.cuttingDeliveryItems : []
+      setProductionDeliveryItems(
+        data?.productionDeliveryItems ? data.productionDeliveryItems : []
       );
       if (data?.docId) {
         setDocId(data?.docId);
@@ -114,13 +119,14 @@ export default function CuttingDeliveryForm({
       setLocationId(data?.locationId ? data?.locationId : "");
       setStoreId(data?.storeId ? data.storeId : "");
       setStyleId(data?.styleId ? data?.styleId : "");
-      setCuttingNo(data?.cuttingNo ? data?.cuttingNo : "");
       setProductionType(
         data?.productionType ? data?.productionType : "INHOUSE"
       );
       setSupplierId(data?.supplierId ? data?.supplierId : "");
       setDepartmentId(data?.departmentId ? data?.departmentId : "");
       setSizeTemplateId(data?.sizeTemplateId ? data?.sizeTemplateId : "");
+      setToProcessId(data?.toProcessId ? data?.toProcessId : "");
+      setFromProcessId(data?.fromProcessId ? data?.fromProcessId : "");
     },
     [id]
   );
@@ -133,8 +139,8 @@ export default function CuttingDeliveryForm({
     }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-  const [addData] = useAddCuttingDeliveryMutation();
-  const [updateData] = useUpdateCuttingDeliveryMutation();
+  const [addData] = useAddProductionDeliveryMutation();
+  const [updateData] = useUpdateProductionDeliveryMutation();
   const [getOrderDetail] = useLazyGetOrderDetailsQuery();
 
   const storeOptions = locationData
@@ -180,7 +186,7 @@ export default function CuttingDeliveryForm({
 
   // const validateData = (data) => {
   //   if (
-  //     cuttingDeliveryItems?.length > 0 &&
+  //     productionDeliveryItems?.length > 0 &&
   //     data.styleId &&
   //     data?.cuttingNo &&
   //     data?.productionType &&
@@ -193,34 +199,14 @@ export default function CuttingDeliveryForm({
 
   const isOutside = productionType === "OUTSIDE";
 
-  const validRows = cuttingDeliveryItems.filter((row) => !isRowEmpty(row));
-  const data = {
-    id,
-    docDate,
-    branchId,
-    cuttingDeliveryItems: cuttingDeliveryItems?.filter((item) => item?.styleId),
-    // cuttingDeliveryItems: validRows,
-    userId,
-    finYearId,
-    styleId,
-    cuttingNo,
-    productionType,
-    supplierId,
-    departmentId,
-    sizeTemplateId,
-  };
   const validateData = (data) => {
     return (
       (isOutside ? data?.supplierId : true) &&
       data.styleId &&
       data?.cuttingNo &&
       data?.productionType &&
-      data?.departmentId &&
-      isGridDatasValid(
-        data?.cuttingDeliveryItems?.filter((item) => item.styleId),
-        false,
-        ["issueQty", "usedMeter", "styleId"]
-      )
+      data?.departmentId
+      // isGridDatasValid(data?.productionDeliveryItems, false, ["remarks"])
     );
   };
 
@@ -236,7 +222,7 @@ export default function CuttingDeliveryForm({
     }
     if (nextProcess == "draft" && !id) {
       const existingItems =
-        allData?.data?.flatMap((d) => d.cuttingDeliveryItems || []) || [];
+        allData?.data?.flatMap((d) => d.productionDeliveryItems || []) || [];
       console.log(allData?.data, "allData");
       handleSubmitCustom(
         addData,
@@ -256,6 +242,39 @@ export default function CuttingDeliveryForm({
     } else {
       handleSubmitCustom(addData, data, "Added", nextProcess);
     }
+  };
+
+  const filterItems = productionDeliveryItems?.filter?.(
+    (item) =>
+      item?.styleId &&
+      item?.fabricId &&
+      item?.portionId &&
+      item?.issueQty &&
+      item?.usedMeter
+  );
+
+  const data = {
+    id,
+    docDate,
+    branchId,
+    // productionDeliveryItems: productionDeliveryItems?.filter?.(
+    //   (item) =>
+    //     item?.styleId &&
+    //     item?.fabricId &&
+    //     item?.portionId &&
+    //     item?.issueQty &&
+    //     item?.usedMeter
+    // ),
+    productionDeliveryItems: filterItems,
+    userId,
+    finYearId,
+    styleId,
+    productionType,
+    supplierId,
+    departmentId,
+    sizeTemplateId,
+    fromProcessId,
+    toProcessId
   };
 
   useEffect(() => {
@@ -291,8 +310,7 @@ export default function CuttingDeliveryForm({
       const fabricDetails = fabricData?.data;
       if (!fabricDetails || !fabricItems) return;
 
-      setCuttingNo(orderData?.data?.docId);
-      setCuttingDeliveryItems((prev) => {
+      setProductionDeliveryItems((prev) => {
         const updated = [...prev];
         // Find first empty slot index
         let startIndex = updated.findIndex(
@@ -339,7 +357,7 @@ export default function CuttingDeliveryForm({
             sizeId: "",
             orderQty: "",
             remarks: "",
-            selected: "",
+            selected: false,
           });
         }
 
@@ -350,20 +368,12 @@ export default function CuttingDeliveryForm({
     }
   };
 
-  const handleKeyDown = (event) => {
-    let charCode = String.fromCharCode(event.which).toLowerCase();
-    if ((event.ctrlKey || event.metaKey) && charCode === "s") {
-      event.preventDefault();
-      saveData();
-    }
-  };
-
   return (
-    <div onKeyDown={handleKeyDown}>
+    <>
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
           <h1 className="text-xl font-bold text-gray-800">
-            Cutting Production Details
+            Production Entry Details
           </h1>
           <button
             onClick={onClose}
@@ -379,13 +389,9 @@ export default function CuttingDeliveryForm({
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
             <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
             <div className="grid grid-cols-2 gap-1">
+              <ReusableInput label="Production No" readOnly value={docId} />
               <ReusableInput
-                label="Cutting Production No"
-                readOnly
-                value={docId}
-              />
-              <ReusableInput
-                label="Cutting Production Date"
+                label="Production Date"
                 value={docDate}
                 type={"date"}
                 required={true}
@@ -406,7 +412,6 @@ export default function CuttingDeliveryForm({
                 setValue={setProductionType}
                 required={true}
                 readOnly={id}
-                autoFocus={true}
               />
               {data?.productionType === "OUTSIDE" && (
                 <DropdownNew
@@ -441,9 +446,7 @@ export default function CuttingDeliveryForm({
             </div>
           </div>
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">
-              Cutting Plan Details
-            </h2>
+            <h2 className="font-medium text-slate-700 mb-2">Process Details</h2>
 
             <div className="grid grid-cols-2 gap-1">
               <DropdownNew
@@ -459,25 +462,46 @@ export default function CuttingDeliveryForm({
                 readOnly={readOnly}
                 placeholder={"Select Style"}
                 otherField={"sku"}
+                autoFocus={true}
                 disabled={id}
                 clear={true}
               />
-              <ReusableInput
-                label="Cutting Plan No"
-                value={cuttingNo}
-                setValue={setCuttingNo}
-                type={"text"}
+              <DropdownNew
+                name="From Process"
+                dataList={
+                  id
+                    ? processList?.data
+                    : processList?.data?.filter((item) => item.active)
+                }
+                value={fromProcessId}
+                setValue={setFromProcessId}
+                readOnly={readOnly}
+                placeholder={"Select Process"}
+                disabled={readOnly}
                 required={true}
-                readOnly={true}
+              />
+              <DropdownNew
+                name="To Process"
+                dataList={
+                  id
+                    ? processList?.data
+                    : processList?.data?.filter((item) => item.active)
+                }
+                value={toProcessId}
+                setValue={setToProcessId}
+                readOnly={readOnly}
+                placeholder={"Select Process"}
+                disabled={readOnly}
+                required={true}
               />
             </div>
             <div className="grid grid-cols-2 gap-1"></div>
           </div>
         </div>
         <fieldset className="w-full  min-w-[1200px]">
-          <CuttingDeliveryItem
-            cuttingDeliveryItems={cuttingDeliveryItems}
-            setCuttingDeliveryItems={setCuttingDeliveryItems}
+          <ProductionDeliveryItem
+            productionDeliveryItems={productionDeliveryItems}
+            setProductionDeliveryItems={setProductionDeliveryItems}
             readOnly={readOnly}
             id={id}
             styleId={styleId}
@@ -532,6 +556,6 @@ export default function CuttingDeliveryForm({
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
