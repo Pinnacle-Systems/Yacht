@@ -23,7 +23,7 @@ export default function CuttingDeliveryItem({
     readOnly,
     id,
     styleId,
-  sizeTemplateId,
+    sizeTemplateId,
     uomList,
     styleTemplateDetail
 }) {
@@ -135,8 +135,8 @@ export default function CuttingDeliveryItem({
         //         setSizeColumns(columns);
         //     }, 500); // adjust delay if needed
         // } else {
-            // Create mode → immediate
-            setSizeColumns(columns);
+        // Create mode → immediate
+        setSizeColumns(columns);
         // }
     };
 
@@ -145,22 +145,40 @@ export default function CuttingDeliveryItem({
         getSizeTemplate();
     }, [sizeTemplateId]);
 
+    const initSizeDetails = (row) => {
+        if (row.sizeDetails && row.sizeDetails.length > 0) {
+            // already initialized (edit mode)
+            return row.sizeDetails;
+        }
+
+        // create sizeDetails (create mode)
+        return sizeColumns.map((col) => ({
+            sizeId: col.sizeId,
+            qty: "",
+        }));
+    };
+
     useEffect(() => {
         if (sizeColumns.length === 0 || cuttingDeliveryItems.length === 0) return;
 
-        setCuttingDeliveryItems((prev) =>
-            prev.map((row) => ({
-                ...row,
-                sizeDetails:
-                    row.sizeDetails?.length > 0
-                        ? row.sizeDetails // backend already provided ✓
-                        : sizeColumns.map((col) => ({
-                            sizeId: col.sizeId,
-                            qty: "",
-                        })),
-            }))
-        );
-    }, [sizeColumns, cuttingDeliveryItems, setCuttingDeliveryItems]);
+        setCuttingDeliveryItems((prev) => {
+            let changed = false;
+
+            const updated = prev.map((row) => {
+                if (!row.sizeDetails || row.sizeDetails.length === 0) {
+                    changed = true;
+                    return {
+                        ...row,
+                        sizeDetails: initSizeDetails(row),
+                    };
+                }
+                return row;
+            });
+
+            return changed ? updated : prev;  // prevent unnecessary rerender
+        });
+    }, [sizeColumns]);
+
 
     useEffect(() => {
         if (cuttingDeliveryItems) {
@@ -224,6 +242,32 @@ export default function CuttingDeliveryItem({
                     <table className="w-full border-collapse table-fixed">
                         <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
                             <tr>
+                                <th className="w-12 px-1 py-1 justify-center font-medium text-[13px]">
+                                    {/* <tr className="flex items-center justify-center">Select</tr> */}
+                                    <tr className="flex items-center justify-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            checked={
+                                                cuttingDeliveryItems.length > 0 &&
+                                                cuttingDeliveryItems.every((row) => row.selected)
+                                            }
+                                            onChange={(e) => {
+                                                const checked = e.target.checked;
+                                                setCuttingDeliveryItems((prev) =>
+                                                    prev.map((row) => ({ ...row, selected: checked }))
+                                                );
+                                            }}
+                                            onContextMenu={(e) => {
+                                                if (!readOnly) {
+                                                    handleRightClick(e, "notes");
+                                                }
+                                            }}
+                                            tabIndex={-1}
+                                            onFocus={(e) => e.target.blur()}
+                                            disabled={readOnly}
+                                        />
+                                    </tr>
+                                </th>
                                 <th
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px]`}
                                 >
@@ -299,32 +343,7 @@ export default function CuttingDeliveryItem({
                                 >
                                     Remarks
                                 </th>
-                                <th className="w-20 px-1 py-1 justify-center font-medium text-[13px]">
-                                    <tr className="flex items-center justify-center">Select</tr>
-                                    <tr className="flex items-center justify-center gap-2">
-                                        <input
-                                            type="checkbox"
-                                            checked={
-                                                cuttingDeliveryItems.length > 0 &&
-                                                cuttingDeliveryItems.every((row) => row.selected)
-                                            }
-                                            onChange={(e) => {
-                                                const checked = e.target.checked;
-                                                setCuttingDeliveryItems((prev) =>
-                                                    prev.map((row) => ({ ...row, selected: checked }))
-                                                );
-                                            }}
-                                            onContextMenu={(e) => {
-                                                if (!readOnly) {
-                                                    handleRightClick(e, "notes");
-                                                }
-                                            }}
-                                            tabIndex={-1}
-                                            onFocus={(e) => e.target.blur()}
-                                            disabled={readOnly}
-                                        />
-                                    </tr>
-                                </th>
+
                                 <th
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                 ></th>
@@ -337,6 +356,22 @@ export default function CuttingDeliveryItem({
                                         className="border border-blue-gray-200 cursor-pointer "
                                         key={index}
                                     >
+                                        <td className="border-blue-gray-200 text-[11px]  border border-gray-300 py-0.5 text-right">
+                                            <input
+                                                type="checkbox"
+                                                checked={row.selected || false}
+                                                disabled={readOnly}
+                                                onChange={(e) =>
+                                                    handleInputChange(e.target.checked, index, "selected")
+                                                }
+                                                className="justify-center flex items-center mx-auto w-full"
+                                                onContextMenu={(e) => {
+                                                    if (!readOnly) {
+                                                        handleRightClick(e, index, "notes");
+                                                    }
+                                                }}
+                                            />
+                                        </td>
                                         <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
                                             {index + 1}
                                         </td>
@@ -512,6 +547,7 @@ export default function CuttingDeliveryItem({
                                         </td>
                                         <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                                             <input
+                                                id={`usedMeter-input-${index}`}
                                                 onKeyDown={(e) => {
                                                     if (e.code === "Minus" || e.code === "NumpadSubtract")
                                                         e.preventDefault();
@@ -540,7 +576,7 @@ export default function CuttingDeliveryItem({
                                             // find matching size entry
                                             const sizeItem = row.sizeDetails?.find(
                                                 (s) => s.sizeId === col.sizeId
-                                            ) || { qty: "" };
+                                            ) || { sizeId: col.sizeId, qty: "" };
 
                                             return (
                                                 <td
@@ -570,7 +606,7 @@ export default function CuttingDeliveryItem({
                                                                 rowData.sizeDetails = rowData.sizeDetails?.map(
                                                                     (s) =>
                                                                         s.sizeId === col.sizeId ? { ...s, qty } : s
-                                                                );
+                                                                )|| initSizeDetails(rowData);
                                                                 rowData.issueQty = rowData.sizeDetails.reduce(
                                                                     (total, item) =>
                                                                         total + Number(item.qty || 0),
@@ -646,7 +682,7 @@ export default function CuttingDeliveryItem({
                                                         e.preventDefault();
                                                         e.stopPropagation();
                                                         const nextQtyInput = document.querySelector(
-                                                            `#issueQty-input-${index + 1}`
+                                                            `#usedMeter-input-${index + 1}`
                                                         );
                                                         if (nextQtyInput) {
                                                             nextQtyInput.focus();
@@ -669,22 +705,7 @@ export default function CuttingDeliveryItem({
                                                 disabled={readOnly}
                                             />
                                         </td>
-                                        <td className="border-blue-gray-200 text-[11px]  border border-gray-300 py-0.5 text-right">
-                                            <input
-                                                type="checkbox"
-                                                checked={row.selected || false}
-                                                disabled={readOnly}
-                                                onChange={(e) =>
-                                                    handleInputChange(e.target.checked, index, "selected")
-                                                }
-                                                className="justify-center flex items-center mx-auto w-full"
-                                                onContextMenu={(e) => {
-                                                    if (!readOnly) {
-                                                        handleRightClick(e, index, "notes");
-                                                    }
-                                                }}
-                                            />
-                                        </td>
+
 
                                         <td className="w-2 border border-gray-300">
                                             <input
@@ -706,7 +727,7 @@ export default function CuttingDeliveryItem({
                             <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                                 <td
                                     className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                                    colSpan={8 + sizeColumns.length}
+                                    colSpan={9 + sizeColumns.length}
                                 >
                                     Total
                                 </td>
@@ -722,7 +743,7 @@ export default function CuttingDeliveryItem({
                                         0
                                     )}
                                 </td>
-                                <td className="border border-gray-300" colSpan={4}></td>
+                                <td className="border border-gray-300" colSpan={3}></td>
                             </tr>
                         </tfoot>
                     </table>

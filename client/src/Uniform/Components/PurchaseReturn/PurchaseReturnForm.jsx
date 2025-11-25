@@ -15,7 +15,7 @@ import {
 } from "../../../redux/services/PartyMasterService";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
-import { getCommonParams } from "../../../Utils/helper";
+import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import moment from "moment";
@@ -29,7 +29,7 @@ import { useLazyGetPurchaseDetailQuery } from "../../../redux/uniformService/Pur
 import ReturnItems from "./ReturnItems";
 
 const PurchaseReturnForm = ({ onClose, id, setId }) => {
-    const [docId, setDocId] = useState("");
+    const [docId, setDocId] = useState("New");
     const [readOnly, setReadOnly] = useState("");
     const [returnType, setReturnType] = useState("Fabric");
     const [supplierId, setSupplierId] = useState("");
@@ -69,6 +69,8 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
     const [updateData] = useUpdatePurchaseReturnMutation();
     const [removeData] = useDeletePurchaseReturnMutation();
     const [getPurchaseDetail] = useLazyGetPurchaseDetailQuery();
+    const isFabric = returnType === "Fabric"
+
     const data = {
         docId,
         docDate,
@@ -78,7 +80,8 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
         id,
         userId,
         storeId,
-        purchaseReturnItems: purchaseReturnItems?.filter((item) => item.styleId && item.fabricId || item.accessoryId),
+        purchaseReturnItems: isFabric ?
+            purchaseReturnItems?.filter((item) => item.styleId) : purchaseReturnItems?.filter((item) => item.accessoryId),
         finYearId,
         locationId,
         invNo
@@ -148,10 +151,10 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
     };
 
     const validateData = (data) => {
-        if (purchaseReturnItems?.length > 0 && data.storeId && data.locationId && data.supplierId && data.invNo) {
-            return true;
-        }
-        return false;
+        return (
+            data?.storeId && data?.supplierId && data?.invNo && (isFabric ? isGridDatasValid(data?.purchaseReturnItems.filter((item) => item?.styleId), false, ["returnFabMeter"]) : isGridDatasValid(data?.purchaseReturnItems.filter((item) => item?.accessoryId), false, ["returnQty"]))
+            && data?.purchaseReturnItems.length > 0
+        )
     };
 
     const saveData = (nextProcess) => {
@@ -194,77 +197,81 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     const handleAddRow = async () => {
-        if (!validateData(data)) {
-            toast.info("Please fill all required fields...!", {
-                position: "top-center",
+        try {
+            const { data: purchaseData } = await getPurchaseDetail({
+                params: {
+                    invNo: invNo,
+                    storeId,
+                    branchId,
+                },
             });
-        } else {
-            try {
-                const { data: purchaseData } = await getPurchaseDetail({
-                    params: {
-                        invNo: invNo,
-                        storeId,
-                        branchId,
-                    },
-                });
-                const purchaseItems = purchaseData?.data;
-                if (!purchaseItems) return;
+            const purchaseItems = purchaseData?.data;
+            if (!purchaseItems) return;
 
-                setPurchaseReturnItems((prev) => {
-                    const updated = [...prev];
-                    // Find first empty slot index
-                    let startIndex = updated.findIndex(
-                        (row) =>
-                            !row.styleNo &&
-                            !row.styleItemId &&
-                            !row.fabricId &&
-                            !row.accessoryId &&
-                            !row.accessoryGroupId &&
-                            !row.styleId
-                    );
-                    if (startIndex === -1) startIndex = updated.length;
+            setPurchaseReturnItems((prev) => {
+                const updated = [...prev];
+                // Find first empty slot index
+                let startIndex = updated.findIndex(
+                    (row) =>
+                        !row.styleNo &&
+                        !row.styleItemId &&
+                        !row.fabricId &&
+                        !row.accessoryId &&
+                        !row.accessoryGroupId &&
+                        !row.styleId
+                );
+                if (startIndex === -1) startIndex = updated.length;
 
-                    // Fill in sizeRows starting at first empty slot
-                    purchaseItems.forEach((row, i) => {
-                        if (startIndex + i < updated.length) {
-                            updated[startIndex + i] = row;
-                        } else {
-                            updated.push(row); // append if no empty slot
-                        }
-                    });
-
-                    // Ensure at least 6 rows
-                    while (updated.length < 6) {
-                        updated.push({
-                            styleNo: "",
-                            fabricId: "",
-                            styleId: "",
-                            styleItemId: "",
-                            colorId: "",
-                            qty: "",
-                            fabWidth: "",
-                            fabMeter: "",
-                            noOfPcs: "",
-                            accessoryId: "",
-                            accessoryGroupId: "",
-                            sizeId: "",
-                            uomId: "",
-                            qty: "",
-                            selected: false,
-                        });
+                // Fill in sizeRows starting at first empty slot
+                purchaseItems.forEach((row, i) => {
+                    if (startIndex + i < updated.length) {
+                        updated[startIndex + i] = { ...row };
+                    } else {
+                        updated.push({ ...row }); // append if no empty slot
                     }
-
-                    return updated;
                 });
-            } catch (error) {
-                console.error("Error adding row:", error);
-            }
+
+                // Ensure at least 6 rows
+                while (updated.length < 6) {
+                    updated.push({
+                        styleNo: "",
+                        fabricId: "",
+                        styleId: "",
+                        styleItemId: "",
+                        colorId: "",
+                        qty: "",
+                        fabWidth: "",
+                        fabMeter: "",
+                        noOfPcs: "",
+                        accessoryId: "",
+                        accessoryGroupId: "",
+                        sizeId: "",
+                        uomId: "",
+                        qty: "",
+                        selected: false,
+                    });
+                }
+
+                return updated;
+            });
+        } catch (error) {
+            console.error("Error adding row:", error);
+        }
+
+    };
+
+    const handleKeyDown = (event) => {
+        let charCode = String.fromCharCode(event.which).toLowerCase();
+        if ((event.ctrlKey || event.metaKey) && charCode === "s") {
+            event.preventDefault();
+            saveData();
         }
     };
 
 
+
     return (
-        <>
+        <div onKeyDown={handleKeyDown}>
             {/* <Modal
                 isOpen={pdfOpen}
                 onClose={() => setPdfOpen(false)}
@@ -477,7 +484,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
                     </div>
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { DropdownInput, DropdownNew, TextInput } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
-import { getCommonParams } from "../../../Utils/helper";
+import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import { ReusableInput } from "../../../Utils/CommonInput";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
@@ -56,10 +56,16 @@ export default function SalesReturnForm({
     : [];
 
   const validateData = (data) => {
-    if (salesReturnItems?.length > 0 && data.storeId) {
-      return true;
-    }
-    return false;
+    return (
+      data?.storeId &&
+      data?.customerId &&
+      data?.salesReturnItems.length > 0 &&
+      isGridDatasValid(
+        data?.salesReturnItems.filter((item) => item?.styleId),
+        false,
+        ["returnQty"]
+      )
+    );
   };
 
   const {
@@ -73,9 +79,7 @@ export default function SalesReturnForm({
     docDate,
     branchId,
     storeId,
-    salesReturnItems: salesReturnItems?.filter(
-      (item) => item?.styleId && item?.sizeId
-    ),
+    salesReturnItems: salesReturnItems?.filter((item) => item?.styleId),
     userId,
     finYearId,
     locationId,
@@ -182,8 +186,16 @@ export default function SalesReturnForm({
     }
   };
 
+  const handleKeyDown = (event) => {
+    let charCode = String.fromCharCode(event.which).toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && charCode === "s") {
+      event.preventDefault();
+      saveData();
+    }
+  };
+
   return (
-    <div className="">
+    <div className="" onKeyDown={handleKeyDown}>
       <Modal
         isOpen={pdfOpen}
         onClose={() => setPdfOpen(false)}
@@ -239,6 +251,7 @@ export default function SalesReturnForm({
                 disabled={readOnly}
                 otherField={"branchName"}
                 placeholder={"Select Location"}
+                autoFocus={true}
               />
               <DropdownNew
                 name="Store"

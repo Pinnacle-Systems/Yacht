@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
-import {  useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 import secureLocalStorage from "react-secure-storage";
@@ -169,6 +169,31 @@ const ReturnItems = ({
           <table className="w-full border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
+                <th className="w-12 px-1 py-1 justify-center font-medium text-[13px]">
+                  {/* <tr className="flex items-center justify-center">Select</tr> */}
+                  <tr className="flex items-center justify-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={
+                        purchaseReturnItems.length > 0 &&
+                        purchaseReturnItems.every((row) => row.selected)
+                      }
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setPurchaseReturnItems((prev) =>
+                          prev.map((row) => ({ ...row, selected: checked }))
+                        );
+                      }}
+                      onContextMenu={(e) => {
+                        if (!readOnly) {
+                          handleRightClick(e, "notes");
+                        }
+                      }}
+                      tabIndex={-1}
+                      disabled={readOnly}
+                    />
+                  </tr>
+                </th>
                 {(returnType === "Fabric" || returnType === "Accessory") && (
                   <th
                     className={`w-12 px-4 py-2 text-center font-medium text-[13px]`}
@@ -275,31 +300,7 @@ const ReturnItems = ({
                     Return Qty
                   </th>
                 )}
-                <th className="w-16 px-1 py-1 justify-center font-medium text-[13px]">
-                  <tr className="flex items-center justify-center">Select</tr>
-                  <tr className="flex items-center justify-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={
-                        purchaseReturnItems.length > 0 &&
-                        purchaseReturnItems.every((row) => row.selected)
-                      }
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setPurchaseReturnItems((prev) =>
-                          prev.map((row) => ({ ...row, selected: checked }))
-                        );
-                      }}
-                      onContextMenu={(e) => {
-                        if (!readOnly) {
-                          handleRightClick(e, "notes");
-                        }
-                      }}
-                      tabIndex={-1}
-                      disabled={readOnly}
-                    />
-                  </tr>
-                </th>
+
                 <th
                   className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                 ></th>
@@ -312,6 +313,29 @@ const ReturnItems = ({
                     className="border border-blue-gray-200 cursor-pointer "
                     key={index}
                   >
+                    {(returnType === "Fabric" ||
+                      returnType === "Accessory") && (
+                      <td className="border-blue-gray-200 text-[11px]  border border-gray-300 py-0.5 text-right">
+                        <input
+                          type="checkbox"
+                          checked={row.selected || false}
+                          disabled={readOnly}
+                          onChange={(e) =>
+                            handleInputChange(
+                              e.target.checked,
+                              index,
+                              "selected"
+                            )
+                          }
+                          className="justify-center flex items-center mx-auto w-full"
+                          onContextMenu={(e) => {
+                            if (!readOnly) {
+                              handleRightClick(e, index, "notes");
+                            }
+                          }}
+                        />
+                      </td>
+                    )}
                     {(returnType === "Fabric" ||
                       returnType === "Accessory") && (
                       <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
@@ -347,7 +371,7 @@ const ReturnItems = ({
                             }
                           }}
                           tabIndex={"0"}
-                          disabled={readOnly}
+                          disabled={true}
                           className="text-left w-full rounded py-1 table-data-input"
                           value={row.styleId}
                           onChange={(e) =>
@@ -378,7 +402,7 @@ const ReturnItems = ({
                             }
                           }}
                           tabIndex={"0"}
-                          disabled={id}
+                          disabled={true}
                           className="text-left w-full rounded py-1 table-data-input"
                           value={row.styleItemId}
                           onChange={(e) =>
@@ -417,7 +441,7 @@ const ReturnItems = ({
                             }
                           }}
                           tabIndex={"0"}
-                          disabled={id}
+                          disabled={true}
                           className="text-left w-full rounded py-1 table-data-input"
                           value={row.fabricId}
                           onChange={(e) =>
@@ -453,7 +477,7 @@ const ReturnItems = ({
                             }
                           }}
                           tabIndex={"0"}
-                          disabled={id}
+                          disabled={true}
                           className="text-left w-full rounded py-1 table-data-input"
                           value={row.accessoryId}
                           onFocus={(e) => e.target.focus()}
@@ -493,7 +517,7 @@ const ReturnItems = ({
                             }
                           }}
                           tabIndex={"0"}
-                          disabled={id}
+                          disabled={true}
                           className="text-left w-full rounded py-1 table-data-input"
                           value={row.accessoryGroupId}
                           onChange={(e) =>
@@ -536,7 +560,7 @@ const ReturnItems = ({
                             }
                           }}
                           tabIndex={"0"}
-                          disabled={id}
+                          disabled={true}
                           className="text-left w-full rounded py-1 table-data-input"
                           value={row.colorId}
                           onChange={(e) =>
@@ -586,7 +610,7 @@ const ReturnItems = ({
                               "fabWidth"
                             );
                           }}
-                          disabled={id}
+                          disabled={true}
                         />
                       </td>
                     )}
@@ -618,13 +642,14 @@ const ReturnItems = ({
                               "fabMeter"
                             );
                           }}
-                          disabled={id}
+                          disabled={true}
                         />
                       </td>
                     )}
                     {returnType === "Fabric" && (
                       <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                         <input
+                          id={`noOfPcs-input-${index}`}
                           onKeyDown={(e) => {
                             if (e.key === "Delete") {
                               handleInputChange("", index, "noOfPcs");
@@ -660,7 +685,7 @@ const ReturnItems = ({
                               e.preventDefault(); // prevent form submit or line break
                               e.stopPropagation();
                               const nextQtyInput = document.querySelector(
-                                `#styleId-input-${index + 1}`
+                                `#noOfPcs-input-${index + 1}`
                               );
                               if (nextQtyInput) {
                                 nextQtyInput.focus();
@@ -699,7 +724,7 @@ const ReturnItems = ({
                             }
                           }}
                           tabIndex={"0"}
-                          disabled={id}
+                          disabled={true}
                           className="text-left w-full rounded py-1 table-data-input"
                           value={row.sizeId}
                           onChange={(e) =>
@@ -730,7 +755,7 @@ const ReturnItems = ({
                             }
                           }}
                           tabIndex={"0"}
-                          disabled={id}
+                          disabled={true}
                           className="text-left w-full rounded py-1 table-data-input"
                           value={row.uomId}
                           onChange={(e) =>
@@ -770,19 +795,20 @@ const ReturnItems = ({
                           onBlur={(e) => {
                             handleInputChange(e.target.value, index, "qty");
                           }}
-                          disabled={id}
+                          disabled={true}
                         />
                       </td>
                     )}
                     {returnType === "Accessory" && (
                       <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                         <input
+                          id={`returnQty-input-${index}`}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               e.preventDefault(); // prevent form submit or line break
                               e.stopPropagation();
                               const nextQtyInput = document.querySelector(
-                                `#accessory-input-${index + 1}`
+                                `#returnQty-input-${index + 1}`
                               );
                               if (nextQtyInput) {
                                 nextQtyInput.focus();
@@ -811,29 +837,6 @@ const ReturnItems = ({
                             );
                           }}
                           disabled={readOnly}
-                        />
-                      </td>
-                    )}
-                    {(returnType === "Fabric" ||
-                      returnType === "Accessory") && (
-                      <td className="border-blue-gray-200 text-[11px]  border border-gray-300 py-0.5 text-right">
-                        <input
-                          type="checkbox"
-                          checked={row.selected || false}
-                          disabled={readOnly}
-                          onChange={(e) =>
-                            handleInputChange(
-                              e.target.checked,
-                              index,
-                              "selected"
-                            )
-                          }
-                          className="justify-center flex items-center mx-auto w-full"
-                          onContextMenu={(e) => {
-                            if (!readOnly) {
-                              handleRightClick(e, index, "notes");
-                            }
-                          }}
                         />
                       </td>
                     )}
@@ -866,7 +869,7 @@ const ReturnItems = ({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={returnType === "Fabric" ? 8 : 7}
+                  colSpan={returnType === "Fabric" ? 9 : 8}
                 >
                   Total
                 </td>
@@ -876,7 +879,7 @@ const ReturnItems = ({
                     0
                   )}
                 </td>
-                <td className="border border-gray-300" colSpan={2}></td>
+                <td className="border border-gray-300" colSpan={1}></td>
               </tr>
             </tfoot>
           </table>

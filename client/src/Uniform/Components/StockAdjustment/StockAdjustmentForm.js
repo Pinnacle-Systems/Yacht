@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { DropdownInput, TextInput } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
-import { getCommonParams } from "../../../Utils/helper";
+import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import { ReusableInput } from "../../../Utils/CommonInput";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
@@ -52,10 +52,15 @@ export default function StockAdjustmentForm({
     : [];
 
   const validateData = (data) => {
-    if (stockAdjustmentItems?.length > 0 && data.storeId) {
-      return true;
-    }
-    return false;
+    return (
+      data?.stockAdjustmentItems.length > 0 &&
+      data?.storeId &&
+      isGridDatasValid(
+        data?.stockAdjustmentItems.filter((item) => item.styleId),
+        false,
+        ["adjType", "adjQty"]
+      )
+    );
   };
 
   const {
@@ -69,9 +74,7 @@ export default function StockAdjustmentForm({
     docDate,
     branchId,
     storeId,
-    stockAdjustmentItems: stockAdjustmentItems?.filter(
-      (item) => item?.styleId && item?.sizeId
-    ),
+    stockAdjustmentItems: stockAdjustmentItems?.filter((item) => item?.styleId),
     userId,
     finYearId,
     locationId,
@@ -178,8 +181,16 @@ export default function StockAdjustmentForm({
     }
   };
 
+  const handleKeyDown = (event) => {
+    let charCode = String.fromCharCode(event.which).toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && charCode === "s") {
+      event.preventDefault();
+      saveData();
+    }
+  };
+
   return (
-    <div className="">
+    <div className="" onKeyDown={handleKeyDown}>
       <Modal
         isOpen={barcodePrintOpen}
         onClose={() => setBarcodePrintOpen(false)}
@@ -248,6 +259,7 @@ export default function StockAdjustmentForm({
                 }}
                 required={true}
                 readOnly={readOnly}
+                autoFocus={true}
               />
               <DropdownInput
                 name="Store"

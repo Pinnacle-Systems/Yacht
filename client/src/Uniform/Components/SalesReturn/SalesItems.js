@@ -212,7 +212,7 @@ export default function SalesItems({
 
       if (!isFirstTime) {
         // const hasEmpty = salesReturnItems.some((row) => !row.returnQty);
-         const hasEmpty = salesReturnItems.some((row) => {
+        const hasEmpty = salesReturnItems.some((row) => {
           const hasStyle =
             row.styleNo !== "" &&
             row.styleNo !== null &&
@@ -324,6 +324,30 @@ export default function SalesItems({
           <table className="w-full border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
+                <th className="w-12 px-1 py-1 justify-center font-medium text-[13px]">
+                  <tr className="flex items-center justify-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={
+                        salesReturnItems.length > 0 &&
+                        salesReturnItems.every((row) => row.selected)
+                      }
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setSalesReturnItems((prev) =>
+                          prev.map((row) => ({ ...row, selected: checked }))
+                        );
+                      }}
+                      onContextMenu={(e) => {
+                        if (!readOnly) {
+                          handleRightClick(e, "notes");
+                        }
+                      }}
+                      tabIndex={-1}
+                      disabled={readOnly}
+                    />
+                  </tr>
+                </th>
                 <th
                   className={`w-12 px-2 py-2 text-center font-medium text-[13px]`}
                 >
@@ -374,31 +398,6 @@ export default function SalesItems({
                 >
                   Remarks
                 </th>
-                <th className="w-16 px-1 py-1 justify-center font-medium text-[13px]">
-                  <tr className="flex items-center justify-center">Select</tr>
-                  <tr className="flex items-center justify-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={
-                        salesReturnItems.length > 0 &&
-                        salesReturnItems.every((row) => row.selected)
-                      }
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setSalesReturnItems((prev) =>
-                          prev.map((row) => ({ ...row, selected: checked }))
-                        );
-                      }}
-                      onContextMenu={(e) => {
-                        if (!readOnly) {
-                          handleRightClick(e, "notes");
-                        }
-                      }}
-                      tabIndex={-1}
-                      disabled={readOnly}
-                    />
-                  </tr>
-                </th>
                 <th
                   className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                 ></th>
@@ -410,6 +409,22 @@ export default function SalesItems({
                   className="border border-blue-gray-200 cursor-pointer "
                   key={index}
                 >
+                  <td className="border-blue-gray-200 text-[11px]  border border-gray-300 py-0.5 text-right">
+                    <input
+                      type="checkbox"
+                      checked={row.selected || false}
+                      disabled={readOnly}
+                      onChange={(e) =>
+                        handleInputChange(e.target.checked, index, "selected")
+                      }
+                      className="justify-center flex items-center mx-auto w-full"
+                      onContextMenu={(e) => {
+                        if (!readOnly) {
+                          handleRightClick(e, index, "notes");
+                        }
+                      }}
+                    />
+                  </td>
                   <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
                     {index + 1}
                   </td>
@@ -644,22 +659,7 @@ export default function SalesItems({
                       }}
                     />
                   </td>
-                  <td className="border-blue-gray-200 text-[11px]  border border-gray-300 py-0.5 text-right">
-                    <input
-                      type="checkbox"
-                      checked={row.selected || false}
-                      disabled={readOnly}
-                      onChange={(e) =>
-                        handleInputChange(e.target.checked, index, "selected")
-                      }
-                      className="justify-center flex items-center mx-auto w-full"
-                      onContextMenu={(e) => {
-                        if (!readOnly) {
-                          handleRightClick(e, index, "notes");
-                        }
-                      }}
-                    />
-                  </td>
+
                   <td className="w-2 border border-gray-300">
                     <input
                       // onContextMenu={(e) => {
@@ -684,7 +684,7 @@ export default function SalesItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={8}
+                  colSpan={9}
                 >
                   Total
                 </td>
@@ -702,7 +702,7 @@ export default function SalesItems({
                 </td>
                 {/* <td className="border border-gray-300"></td> */}
                 {/* <td className="border border-gray-300"></td> */}
-                <td className="border border-gray-300" colSpan={3}></td>
+                <td className="border border-gray-300" colSpan={2}></td>
               </tr>
             </tfoot>
           </table>
@@ -732,9 +732,9 @@ export default function SalesItems({
         {contextMenu && (
           <div
             style={{
-              position: "fixed",
-              top: `${contextMenu.mouseY - 0}px`,
-              left: `${contextMenu.mouseX - 80}px`,
+              position: "absolute",
+               top: `${contextMenu.mouseY}px`,
+              left: `${contextMenu.mouseX}px`,
               boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
               padding: "8px",
               borderRadius: "4px",

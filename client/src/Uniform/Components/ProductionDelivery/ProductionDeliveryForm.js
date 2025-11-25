@@ -2,13 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../../../Utils/CommonInput";
 import { DropdownInput, DropdownNew } from "../../../Inputs";
-import { dropDownListObject } from "../../../Utils/contructObject";
-import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
-import {
-  getCommonParams,
-  isGridDatasValid,
-  params,
-} from "../../../Utils/helper";
+import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import Swal from "sweetalert2";
@@ -22,8 +16,6 @@ import StyleMasterApi, {
 
 import { inHouseOutsideTypes } from "../../../Utils/DropdownData.js";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices.js";
-import { useGetDepartmentQuery } from "../../../redux/services/DepartmentMasterService.js";
-import { useGetPartyCategoryMasterQuery } from "../../../redux/services/PartyCategoryServices.js";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService.js";
 import { useLazyGetFabricDetailQuery } from "../../../redux/services/MaterialStockService.js";
 import { useLazyGetSizeTemplateByIdQuery } from "../../../redux/uniformService/SizeTemplateMasterServices.js";
@@ -49,10 +41,9 @@ export default function ProductionDeliveryForm({
   const [locationId, setLocationId] = useState("");
   const [searchValue, setSearchValue] = useState("");
   const [storeId, setStoreId] = useState("");
-  const [productionDeliveryItems, setProductionDeliveryItems] = useState([]);
+  const [productionEntryItems, setProductionEntryItems] = useState([]);
   const [styleId, setStyleId] = useState("");
   const [productionType, setProductionType] = useState("");
-  const [departmentId, setDepartmentId] = useState("");
   const [supplierId, setSupplierId] = useState("");
   const [fromProcessId, setFromProcessId] = useState("");
   const [toProcessId, setToProcessId] = useState("");
@@ -66,9 +57,7 @@ export default function ProductionDeliveryForm({
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
   const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
-  const { data: departmentList } = useGetDepartmentQuery({
-    params: { companyId },
-  });
+
   const { data: supplierList } = useGetPartyQuery({
     params: { companyId },
   });
@@ -110,23 +99,20 @@ export default function ProductionDeliveryForm({
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
           : moment.utc(today).format("YYYY-MM-DD")
       );
-      setProductionDeliveryItems(
-        data?.productionDeliveryItems ? data.productionDeliveryItems : []
-      );
       if (data?.docId) {
         setDocId(data?.docId);
       }
-      setLocationId(data?.locationId ? data?.locationId : "");
-      setStoreId(data?.storeId ? data.storeId : "");
       setStyleId(data?.styleId ? data?.styleId : "");
+      setSizeTemplateId(data?.sizeTemplateId ? data?.sizeTemplateId : "");
       setProductionType(
         data?.productionType ? data?.productionType : "INHOUSE"
       );
       setSupplierId(data?.supplierId ? data?.supplierId : "");
-      setDepartmentId(data?.departmentId ? data?.departmentId : "");
-      setSizeTemplateId(data?.sizeTemplateId ? data?.sizeTemplateId : "");
       setToProcessId(data?.toProcessId ? data?.toProcessId : "");
       setFromProcessId(data?.fromProcessId ? data?.fromProcessId : "");
+      setProductionEntryItems(
+        data?.productionEntryItems ? data.productionEntryItems : []
+      );
     },
     [id]
   );
@@ -142,12 +128,6 @@ export default function ProductionDeliveryForm({
   const [addData] = useAddProductionDeliveryMutation();
   const [updateData] = useUpdateProductionDeliveryMutation();
   const [getOrderDetail] = useLazyGetOrderDetailsQuery();
-
-  const storeOptions = locationData
-    ? locationData.data.filter(
-        (item) => parseInt(item.locationId) === parseInt(locationId)
-      )
-    : [];
 
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
@@ -184,29 +164,17 @@ export default function ProductionDeliveryForm({
     }
   };
 
-  // const validateData = (data) => {
-  //   if (
-  //     productionDeliveryItems?.length > 0 &&
-  //     data.styleId &&
-  //     data?.cuttingNo &&
-  //     data?.productionType &&
-  //     data?.departmentId
-  //   ) {
-  //     return true;
-  //   }
-  //   return false;
-  // };
-
   const isOutside = productionType === "OUTSIDE";
 
   const validateData = (data) => {
     return (
       (isOutside ? data?.supplierId : true) &&
       data.styleId &&
-      data?.cuttingNo &&
       data?.productionType &&
-      data?.departmentId
-      // isGridDatasValid(data?.productionDeliveryItems, false, ["remarks"])
+      data?.fromProcessId &&
+      data?.toProcessId &&
+      isGridDatasValid(data?.productionEntryItems, false, ["issueQty"]) &&
+      data?.productionEntryItems?.length > 0
     );
   };
 
@@ -222,7 +190,7 @@ export default function ProductionDeliveryForm({
     }
     if (nextProcess == "draft" && !id) {
       const existingItems =
-        allData?.data?.flatMap((d) => d.productionDeliveryItems || []) || [];
+        allData?.data?.flatMap((d) => d.productionEntryItems || []) || [];
       console.log(allData?.data, "allData");
       handleSubmitCustom(
         addData,
@@ -244,37 +212,21 @@ export default function ProductionDeliveryForm({
     }
   };
 
-  const filterItems = productionDeliveryItems?.filter?.(
-    (item) =>
-      item?.styleId &&
-      item?.fabricId &&
-      item?.portionId &&
-      item?.issueQty &&
-      item?.usedMeter
-  );
+  const filterItems = productionEntryItems?.filter?.((item) => item?.styleId);
 
   const data = {
     id,
     docDate,
     branchId,
-    // productionDeliveryItems: productionDeliveryItems?.filter?.(
-    //   (item) =>
-    //     item?.styleId &&
-    //     item?.fabricId &&
-    //     item?.portionId &&
-    //     item?.issueQty &&
-    //     item?.usedMeter
-    // ),
-    productionDeliveryItems: filterItems,
+    productionEntryItems: filterItems,
     userId,
     finYearId,
     styleId,
     productionType,
     supplierId,
-    departmentId,
     sizeTemplateId,
     fromProcessId,
-    toProcessId
+    toProcessId,
   };
 
   useEffect(() => {
@@ -310,7 +262,7 @@ export default function ProductionDeliveryForm({
       const fabricDetails = fabricData?.data;
       if (!fabricDetails || !fabricItems) return;
 
-      setProductionDeliveryItems((prev) => {
+      setProductionEntryItems((prev) => {
         const updated = [...prev];
         // Find first empty slot index
         let startIndex = updated.findIndex(
@@ -368,8 +320,16 @@ export default function ProductionDeliveryForm({
     }
   };
 
+  const handleKeyDown = (event) => {
+    let charCode = String.fromCharCode(event.which).toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && charCode === "s") {
+      event.preventDefault();
+      saveData();
+    }
+  };
+
   return (
-    <>
+    <div onKeyDown={handleKeyDown}>
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
           <h1 className="text-xl font-bold text-gray-800">
@@ -412,6 +372,7 @@ export default function ProductionDeliveryForm({
                 setValue={setProductionType}
                 required={true}
                 readOnly={id}
+                autoFocus={true}
               />
               {data?.productionType === "OUTSIDE" && (
                 <DropdownNew
@@ -430,26 +391,6 @@ export default function ProductionDeliveryForm({
                 />
               )}
               <DropdownNew
-                name="Department"
-                dataList={
-                  id
-                    ? departmentList?.data
-                    : departmentList?.data?.filter((item) => item.active)
-                }
-                value={departmentId}
-                setValue={setDepartmentId}
-                readOnly={readOnly}
-                placeholder={"Select Department"}
-                disabled={readOnly}
-                required={true}
-              />
-            </div>
-          </div>
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">Process Details</h2>
-
-            <div className="grid grid-cols-2 gap-1">
-              <DropdownNew
                 name="Style No"
                 dataList={
                   id
@@ -462,10 +403,15 @@ export default function ProductionDeliveryForm({
                 readOnly={readOnly}
                 placeholder={"Select Style"}
                 otherField={"sku"}
-                autoFocus={true}
                 disabled={id}
                 clear={true}
               />
+            </div>
+          </div>
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+            <h2 className="font-medium text-slate-700 mb-2">Process Details</h2>
+
+            <div className="grid grid-cols-2 gap-1">
               <DropdownNew
                 name="From Process"
                 dataList={
@@ -477,7 +423,7 @@ export default function ProductionDeliveryForm({
                 setValue={setFromProcessId}
                 readOnly={readOnly}
                 placeholder={"Select Process"}
-                disabled={readOnly}
+                disabled={id}
                 required={true}
               />
               <DropdownNew
@@ -491,7 +437,7 @@ export default function ProductionDeliveryForm({
                 setValue={setToProcessId}
                 readOnly={readOnly}
                 placeholder={"Select Process"}
-                disabled={readOnly}
+                disabled={id}
                 required={true}
               />
             </div>
@@ -500,8 +446,8 @@ export default function ProductionDeliveryForm({
         </div>
         <fieldset className="w-full  min-w-[1200px]">
           <ProductionDeliveryItem
-            productionDeliveryItems={productionDeliveryItems}
-            setProductionDeliveryItems={setProductionDeliveryItems}
+            productionEntryItems={productionEntryItems}
+            setProductionEntryItems={setProductionEntryItems}
             readOnly={readOnly}
             id={id}
             styleId={styleId}
@@ -556,6 +502,6 @@ export default function ProductionDeliveryForm({
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

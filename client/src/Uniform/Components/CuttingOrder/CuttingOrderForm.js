@@ -167,7 +167,9 @@ export default function CuttingOrderForm({
         data?.cuttingOrderItems?.filter((item) => item.styleId),
         false,
         ["fabWidth", "fabMeter", "orderQty","fabricId"]
-      )
+      ) 
+      &&
+      data?.cuttingOrderItems.length > 0
     );
   };
 

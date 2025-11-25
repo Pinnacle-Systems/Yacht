@@ -137,6 +137,31 @@ const AccessoryInwardItems = ({
           <table className="w-full border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
+                <th className="w-12 px-1 py-1 justify-center font-medium text-[13px]">
+                  {/* <tr className="flex items-center justify-center">Select</tr> */}
+                  <tr className="flex items-center justify-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={
+                        fabricInwardItems.length > 0 &&
+                        fabricInwardItems.every((row) => row.selected)
+                      }
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setFabricInwardItems((prev) =>
+                          prev.map((row) => ({ ...row, selected: checked }))
+                        );
+                      }}
+                      onContextMenu={(e) => {
+                        if (!readOnly) {
+                          handleRightClick(e, "notes");
+                        }
+                      }}
+                      tabIndex={-1}
+                      disabled={readOnly}
+                    />
+                  </tr>
+                </th>
                 <th
                   className={`w-12 px-4 py-2 text-center font-medium text-[13px]`}
                 >
@@ -172,31 +197,6 @@ const AccessoryInwardItems = ({
                 >
                   Quantity
                 </th>
-                <th className="w-20 px-1 py-1 justify-center font-medium text-[13px]">
-                  <tr className="flex items-center justify-center">Select</tr>
-                  <tr className="flex items-center justify-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={
-                        fabricInwardItems.length > 0 &&
-                        fabricInwardItems.every((row) => row.selected)
-                      }
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setFabricInwardItems((prev) =>
-                          prev.map((row) => ({ ...row, selected: checked }))
-                        );
-                      }}
-                      onContextMenu={(e) => {
-                        if (!readOnly) {
-                          handleRightClick(e, "notes");
-                        }
-                      }}
-                      tabIndex={-1}
-                      disabled={readOnly}
-                    />
-                  </tr>
-                </th>
                 <th
                   className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                 ></th>
@@ -209,6 +209,22 @@ const AccessoryInwardItems = ({
                     className="border border-blue-gray-200 cursor-pointer "
                     key={index}
                   >
+                    <td className="border-blue-gray-200 text-[11px]  border border-gray-300 py-0.5 text-right">
+                      <input
+                        type="checkbox"
+                        checked={row.selected || false}
+                        disabled={readOnly}
+                        onChange={(e) =>
+                          handleInputChange(e.target.checked, index, "selected")
+                        }
+                        className="justify-center flex items-center mx-auto w-full"
+                        onContextMenu={(e) => {
+                          if (!readOnly) {
+                            handleRightClick(e, index, "notes");
+                          }
+                        }}
+                      />
+                    </td>
                     <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
                       {index + 1}
                     </td>
@@ -408,22 +424,7 @@ const AccessoryInwardItems = ({
                         disabled={readOnly}
                       />
                     </td>
-                    <td className="border-blue-gray-200 text-[11px]  border border-gray-300 py-0.5 text-right">
-                      <input
-                        type="checkbox"
-                        checked={row.selected || false}
-                        disabled={readOnly}
-                        onChange={(e) =>
-                          handleInputChange(e.target.checked, index, "selected")
-                        }
-                        className="justify-center flex items-center mx-auto w-full"
-                        onContextMenu={(e) => {
-                          if (!readOnly) {
-                            handleRightClick(e, index, "notes");
-                          }
-                        }}
-                      />
-                    </td>
+
                     <td className="w-2 border border-gray-300">
                       <input
                         // onContextMenu={(e) => {
@@ -449,7 +450,7 @@ const AccessoryInwardItems = ({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={6}
+                  colSpan={7}
                 >
                   Total
                 </td>
@@ -459,7 +460,7 @@ const AccessoryInwardItems = ({
                     0
                   )}
                 </td>
-                <td className="border border-gray-300" colSpan={2}></td>
+                <td className="border border-gray-300" colSpan={1}></td>
               </tr>
             </tfoot>
           </table>

@@ -15,7 +15,7 @@ import {
 } from "../../../redux/services/PartyMasterService";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
-import { getCommonParams } from "../../../Utils/helper";
+import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import moment from "moment";
@@ -29,7 +29,7 @@ import { PDFViewer } from "@react-pdf/renderer";
 import PDF from "./PrintFormat/PDF";
 import tw from "../../../Utils/tailwind-react-pdf";
 const PurchaseInwardForm = ({ onClose, id, setId }) => {
-  const [docId, setDocId] = useState("");
+  const [docId, setDocId] = useState("New");
   const [readOnly, setReadOnly] = useState("");
   const [inwardType, setInwardType] = useState("Fabric");
   const [dcNo, setDcNo] = useState("");
@@ -74,6 +74,9 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
   const [updateData] = useUpdatePurchaseInwardEntryMutation();
   const [removeData] = useDeletePurchaseInwardEntryMutation();
 
+
+  const isFabric = inwardType === "Fabric"
+
   const data = {
     docId,
     docDate,
@@ -84,7 +87,9 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
     id,
     userId,
     storeId,
-    fabricInwardItems: fabricInwardItems?.filter((item) => item.styleId && item.fabricId || item.accessoryId),
+    fabricInwardItems: isFabric ?
+      fabricInwardItems?.filter((item) => item.styleId) : fabricInwardItems?.filter((item) => item.accessoryId)
+    ,
     dcNo,
     finYearId,
     locationId,
@@ -193,11 +198,12 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
     }
   };
 
+
   const validateData = (data) => {
-    if (fabricInwardItems?.length > 0 && data.storeId && data.supplierId && data.invNo) {
-      return true;
-    }
-    return false;
+    return (
+      data?.storeId && data?.supplierId && data?.invNo && (isFabric ? isGridDatasValid(data?.fabricInwardItems.filter((item) => item?.styleId), false, ["fabricId", "fabWidth", "fabMeter"]) : isGridDatasValid(data?.fabricInwardItems.filter((item) => item?.accessoryId), false, ["sizeId", "qty"]))
+      && data?.fabricInwardItems.length > 0
+    )
   };
 
   const saveData = (nextProcess) => {
@@ -239,8 +245,16 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
     }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
+  const handleKeyDown = (event) => {
+    let charCode = String.fromCharCode(event.which).toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && charCode === "s") {
+      event.preventDefault();
+      saveData();
+    }
+  };
+
   return (
-    <>
+    <div onKeyDown={handleKeyDown}>
       <Modal
         isOpen={pdfOpen}
         onClose={() => setPdfOpen(false)}
@@ -518,7 +532,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

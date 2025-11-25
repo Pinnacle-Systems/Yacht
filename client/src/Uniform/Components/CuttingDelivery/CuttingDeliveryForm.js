@@ -199,7 +199,6 @@ export default function CuttingDeliveryForm({
     docDate,
     branchId,
     cuttingDeliveryItems: cuttingDeliveryItems?.filter((item) => item?.styleId),
-    // cuttingDeliveryItems: validRows,
     userId,
     finYearId,
     styleId,
@@ -220,7 +219,8 @@ export default function CuttingDeliveryForm({
         data?.cuttingDeliveryItems?.filter((item) => item.styleId),
         false,
         ["issueQty", "usedMeter", "styleId"]
-      )
+      ) &&
+      data?.cuttingDeliveryItems.length > 0
     );
   };
 

@@ -4,7 +4,11 @@ import { ReusableInput } from "../../../Utils/CommonInput";
 import { DropdownInput } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
-import { getCommonParams, params } from "../../../Utils/helper";
+import {
+  getCommonParams,
+  isGridDatasValid,
+  params,
+} from "../../../Utils/helper";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import Swal from "sweetalert2";
@@ -158,10 +162,15 @@ export default function OpeningStockForm({
   };
 
   const validateData = (data) => {
-    if (openingStockItems?.length > 0 && data.storeId) {
-      return true;
-    }
-    return false;
+    return (
+      data?.openingStockItems.length > 0 &&
+      data.storeId &&
+      isGridDatasValid(
+        data?.openingStockItems.filter((item) => item.styleId),
+        false,
+        ["qty"]
+      )
+    );
   };
 
   const saveData = (nextProcess) => {
@@ -236,9 +245,7 @@ export default function OpeningStockForm({
     docDate,
     branchId,
     storeId,
-    openingStockItems: openingStockItems?.filter?.(
-      (item) => item?.styleId && item?.sizeId
-    ),
+    openingStockItems: openingStockItems?.filter((item) => item?.styleId),
     userId,
     finYearId,
     locationId,
@@ -246,8 +253,16 @@ export default function OpeningStockForm({
     notes,
   };
 
+  const handleKeyDown = (event) => {
+    let charCode = String.fromCharCode(event.which).toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && charCode === "s") {
+      event.preventDefault();
+      saveData();
+    }
+  };
+
   return (
-    <>
+    <div onKeyDown={handleKeyDown}>
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
           <h1 className="text-xl font-bold text-gray-800">
@@ -304,6 +319,7 @@ export default function OpeningStockForm({
                 }}
                 required={true}
                 readOnly={readOnly}
+                autoFocus={true}
               />
               <DropdownInput
                 name="Store"
@@ -406,6 +422,6 @@ export default function OpeningStockForm({
           autoPrint={true}
         />
       )} */}
-    </>
+    </div>
   );
 }

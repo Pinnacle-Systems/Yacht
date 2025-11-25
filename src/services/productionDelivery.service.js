@@ -23,7 +23,7 @@ async function getNextDocId(
   if (saveType) {
     return "Draft Save";
   } else if (isUpdate === "drift") {
-    lastObject = await prisma.cuttingDelivery.findFirst({
+    lastObject = await prisma.productionEntry.findFirst({
       where: {
         branchId: parseInt(branchId),
         draftSave: false,
@@ -37,17 +37,17 @@ async function getNextDocId(
     const branchObj = await getTableRecordWithId(branchId, "branch");
     let newDocId = `${branchObj.branchCode}${getYearShortCode(
       new Date()
-    )}/CPD/1`;
+    )}/PE/1`;
 
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/CPD/${
+      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/PE/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
 
     return newDocId;
   } else {
-    let lastObject = await prisma.cuttingDelivery.findFirst({
+    let lastObject = await prisma.productionEntry.findFirst({
       where: {
         branchId: parseInt(branchId),
         AND: [
@@ -71,9 +71,9 @@ async function getNextDocId(
     const branchObj = await getTableRecordWithId(branchId, "branch");
     let newDocId = `${branchObj.branchCode}${getYearShortCode(
       new Date()
-    )}/CPD/1`;
+    )}/PE/1`;
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/CPD/${
+      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/PE/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
@@ -118,7 +118,7 @@ async function get(req) {
   );
   let data;
   let totalCount;
-  data = await prisma.cuttingDelivery.findMany({
+  data = await prisma.productionEntry.findMany({
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
       AND: finYearDate
@@ -154,7 +154,7 @@ async function get(req) {
           storeName: true,
         },
       },
-      cuttingDeliveryItems: true,
+      productionEntryItems: true,
       Style: {
         select: {
           id: true,
@@ -185,38 +185,30 @@ async function get(req) {
 }
 
 async function getOne(id) {
-  const data = await prisma.cuttingDelivery.findUnique({
+  const data = await prisma.productionEntry.findUnique({
     where: {
       id: parseInt(id),
     },
     include: {
-      // Store: {
-      //   select: {
-      //     locationId: true,
-      //   },
-      // },
-      cuttingDeliveryItems: {
+      productionEntryItems: {
         select: {
           id: true,
-          cuttingDeliveryId: true,
+          productionEntryId: true,
           styleItemId: true,
           fabricId: true,
           colorId: true,
           sizeId: true,
-          fabWidth: true,
-          fabMeter: true,
           portionId: true,
           styleId: true,
           orderQty: true,
           remarks: true,
           issueQty: true,
-          sizeDetails: true,
-          usedMeter: true,
+          pcsSizeDetails: true,
         },
       },
     },
   });
-  if (!data) return NoRecordFound("CuttingDelivery");
+  if (!data) return NoRecordFound("ProductionEntry");
   return {
     statusCode: 0,
     data: {
@@ -225,9 +217,9 @@ async function getOne(id) {
   };
 }
 
-function findRemovedItems(dataFound, cuttingDeliveryItems) {
-  let removedItems = dataFound.cuttingDeliveryItems.filter((oldItem) => {
-    let result = cuttingDeliveryItems.find(
+function findRemovedItems(dataFound, productionEntryItems) {
+  let removedItems = dataFound.productionEntryItems.filter((oldItem) => {
+    let result = productionEntryItems.find(
       (newItem) => parseInt(newItem.id) === parseInt(oldItem.id)
     );
     if (result) return false;
@@ -241,15 +233,15 @@ async function create(body) {
     userId,
     branchId,
     finYearId,
-    cuttingDeliveryItems,
+    productionEntryItems,
     styleId,
     docDate,
     draftSave,
-    cuttingNo,
     productionType,
-    departmentId,
     supplierId,
     sizeTemplateId,
+    fromProcessId,
+    toProcessId,
   } = await body;
   console.log(branchId, "branchId");
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -270,86 +262,74 @@ async function create(body) {
   console.log(newDocId);
 
   await prisma.$transaction(async (tx) => {
-    data = await tx.cuttingDelivery.create({
+    data = await tx.productionEntry.create({
       data: {
         docId: newDocId,
         branchId: parseInt(branchId),
         createdById: parseInt(userId),
         styleId: parseInt(styleId),
         docDate: docDate ? new Date(docDate) : null,
-        cuttingNo,
         productionType,
         supplierId: supplierId ? parseInt(supplierId) : null,
-        departmentId: departmentId ? parseInt(departmentId) : null,
         sizeTemplateId: parseInt(sizeTemplateId),
+        fromProcessId: parseInt(fromProcessId),
+        toProcessId: parseInt(toProcessId),
       },
     });
-    await createCuttingDeliveryItems(
+    await createProductionEntryItems(
       tx,
-      cuttingDeliveryItems,
+      productionEntryItems,
       data,
       userId,
-      branchId,
-      departmentId
+      branchId
     );
   });
   return { statusCode: 0, data };
 }
 
-async function createCuttingDeliveryItems(
+async function createProductionEntryItems(
   tx,
-  cuttingDeliveryItems,
-  cuttingDelivery,
+  productionEntryItems,
+  productionEntry,
   userId,
-  branchId,
-  departmentId
-  // storeId
+  branchId
 ) {
-  const promises = cuttingDeliveryItems.map(async (deliveryDetail, index) => {
-    const orderQty = deliveryDetail?.orderQty
-      ? Math.round(parseFloat(deliveryDetail.orderQty))
+  const promises = productionEntryItems.map(async (entryDetail, index) => {
+    const prevProcessId = productionEntry?.fromProcessId
+      ? productionEntry.fromProcessId
       : null;
-    const createdItem = await tx.cuttingDeliveryItems.create({
+    const orderQty = entryDetail?.orderQty
+      ? Math.round(parseFloat(entryDetail.orderQty))
+      : null;
+    const createdItem = await tx.productionEntryItems.create({
       data: {
-        cuttingDeliveryId: parseInt(cuttingDelivery.id),
-        styleId: deliveryDetail?.styleId ?? undefined,
-        fabricId: deliveryDetail?.fabricId
-          ? parseInt(deliveryDetail.fabricId)
+        productionEntryId: parseInt(productionEntry.id),
+        styleId: entryDetail?.styleId ?? undefined,
+        fabricId: entryDetail?.fabricId ? parseInt(entryDetail.fabricId) : null,
+        styleItemId: entryDetail?.styleItemId
+          ? parseInt(entryDetail.styleItemId)
           : null,
-        styleItemId: deliveryDetail?.styleItemId
-          ? parseInt(deliveryDetail.styleItemId)
-          : null,
-        sizeId: deliveryDetail?.sizeId ? parseInt(deliveryDetail.sizeId) : null,
-        colorId: deliveryDetail?.colorId
-          ? parseInt(deliveryDetail.colorId)
-          : null,
-        fabWidth: deliveryDetail?.fabWidth
-          ? parseFloat(deliveryDetail.fabWidth)
-          : null,
-        fabMeter: deliveryDetail?.fabMeter
-          ? parseFloat(deliveryDetail.fabMeter)
-          : null,
-        portionId: deliveryDetail?.portionId
-          ? parseInt(deliveryDetail.portionId)
+        sizeId: entryDetail?.sizeId ? parseInt(entryDetail.sizeId) : null,
+        colorId: entryDetail?.colorId ? parseInt(entryDetail.colorId) : null,
+        portionId: entryDetail?.portionId
+          ? parseInt(entryDetail.portionId)
           : null,
         orderQty,
-        issueQty: deliveryDetail?.issueQty
-          ? Math.round(parseFloat(deliveryDetail.issueQty))
+        issueQty: entryDetail?.issueQty
+          ? Math.round(parseFloat(entryDetail.issueQty))
           : null,
-        remarks: deliveryDetail?.remarks ?? undefined,
-        usedMeter: deliveryDetail?.usedMeter
-          ? parseFloat(deliveryDetail.usedMeter)
-          : null,
-        uomId: deliveryDetail?.uomId ? parseInt(deliveryDetail.uomId) : null,
+        remarks: entryDetail?.remarks ?? undefined,
+        uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
+        prevProcessId: prevProcessId,
       },
     });
-    const sizes = deliveryDetail.sizeDetails || [];
+    const sizes = entryDetail.pcsSizeDetails || [];
     for (const s of sizes) {
-      await tx.sizeDetails.create({
+      await tx.pcsSizeDetails.create({
         data: {
           sizeId: s.sizeId ? parseInt(s.sizeId) : null,
           qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
-          cuttingDeliveryItemsId: createdItem.id,
+          productionEntryItemsId: createdItem.id,
         },
       });
     }
@@ -357,76 +337,31 @@ async function createCuttingDeliveryItems(
     for (const s of sizes) {
       await tx.productionStock.create({
         data: {
-          inOrOut: "cuttingDelivery",
-          cuttingDeliveryItemsId: createdItem.id,
+          inOrOut: "productionEntry",
+          productionEntryItemsId: createdItem.id,
           createdById: parseInt(userId),
           branchId: parseInt(branchId),
 
-          fabricId: deliveryDetail?.fabricId
-            ? parseInt(deliveryDetail.fabricId)
+          fabricId: entryDetail?.fabricId
+            ? parseInt(entryDetail.fabricId)
             : null,
-          styleId: deliveryDetail?.styleId
-            ? parseInt(deliveryDetail.styleId)
+          styleId: entryDetail?.styleId ? parseInt(entryDetail.styleId) : null,
+          styleItemId: entryDetail?.styleItemId
+            ? parseInt(entryDetail.styleItemId)
             : null,
-          styleItemId: deliveryDetail?.styleItemId
-            ? parseInt(deliveryDetail.styleItemId)
+          colorId: entryDetail?.colorId ? parseInt(entryDetail.colorId) : null,
+          portionId: entryDetail?.portionId
+            ? parseInt(entryDetail.portionId)
             : null,
-          colorId: deliveryDetail?.colorId
-            ? parseInt(deliveryDetail.colorId)
-            : null,
-          fabWidth: deliveryDetail?.fabWidth
-            ? parseFloat(deliveryDetail.fabWidth)
-            : null,
-          fabMeter: deliveryDetail?.usedMeter
-            ? parseFloat(deliveryDetail.usedMeter)
-            : null,
-          portionId: deliveryDetail?.portionId
-            ? parseInt(deliveryDetail.portionId)
-            : null,
-          remarks: deliveryDetail?.remarks ?? undefined,
+          remarks: entryDetail?.remarks ?? undefined,
           sizeId: s?.sizeId ? parseInt(s.sizeId) : null,
           qty: s?.qty ? Math.round(parseFloat(s.qty)) : null,
           orderQty,
-          uomId: deliveryDetail?.uomId ? parseInt(deliveryDetail.uomId) : null,
-          departmentId: departmentId ? parseInt(departmentId) : null,
+          uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
+          prevProcessId: prevProcessId,
         },
       });
     }
-
-    // Create corresponding Stock row
-    await tx.materialStock.create({
-      data: {
-        inOrOut: "cuttingReturn",
-        cuttingDeliveryItemsId: createdItem.id,
-        createdById: parseInt(userId),
-        branchId: parseInt(branchId),
-        fabricId: deliveryDetail?.fabricId
-          ? parseInt(deliveryDetail.fabricId)
-          : null,
-        styleId: deliveryDetail?.styleId
-          ? parseInt(deliveryDetail.styleId)
-          : null,
-        styleItemId: deliveryDetail?.styleItemId
-          ? parseInt(deliveryDetail.styleItemId)
-          : null,
-        colorId: deliveryDetail?.colorId
-          ? parseInt(deliveryDetail.colorId)
-          : null,
-        fabWidth: deliveryDetail?.fabWidth
-          ? parseFloat(deliveryDetail.fabWidth)
-          : null,
-        fabMeter: deliveryDetail?.usedMeter
-          ? -Math.abs(parseFloat(deliveryDetail.usedMeter))
-          : null,
-        portionId: deliveryDetail?.portionId
-          ? parseInt(deliveryDetail.portionId)
-          : null,
-        remarks: deliveryDetail?.remarks ?? undefined,
-        uomId: deliveryDetail?.uomId ? parseInt(deliveryDetail.uomId) : null,
-        itemType: "Fabric",
-      },
-    });
-
     return createdItem;
   });
 
@@ -447,39 +382,39 @@ async function update(id, body) {
   const {
     userId,
     branchId,
-    cuttingDeliveryItems,
+    productionEntryItems,
     styleId,
     docDate,
-    cuttingNo,
     productionType,
-    departmentId,
     supplierId,
     sizeTemplateId,
+    fromProcessId,
+    toProcessId,
   } = await body;
   let data;
-  const dataFound = await prisma.cuttingDelivery.findUnique({
+  const dataFound = await prisma.productionEntry.findUnique({
     where: {
       id: parseInt(id),
     },
     include: {
-      cuttingDeliveryItems: {
+      productionEntryItems: {
         select: {
           id: true,
         },
       },
     },
   });
-  if (!dataFound) return NoRecordFound("cuttingDelivery");
-  let removedItems = findRemovedItems(dataFound, cuttingDeliveryItems);
+  if (!dataFound) return NoRecordFound("productionEntry");
+  let removedItems = findRemovedItems(dataFound, productionEntryItems);
   let removeItemsIds = removedItems.map((item) => parseInt(item.id));
   await prisma.$transaction(async (tx) => {
     // await deleteItemsFromStock(tx, removeItemsIds);
     if (removeItemsIds.length > 0) {
-      await tx.cuttingDeliveryItems.deleteMany({
+      await tx.productionEntryItems.deleteMany({
         where: { id: { in: removeItemsIds } },
       });
     }
-    data = await tx.cuttingDelivery.update({
+    data = await tx.productionEntry.update({
       where: {
         id: parseInt(id),
       },
@@ -488,81 +423,68 @@ async function update(id, body) {
         branchId: parseInt(branchId),
         styleId: parseInt(styleId),
         docDate: docDate ? new Date(docDate) : null,
-        cuttingNo,
         productionType,
         supplierId: supplierId ? parseInt(supplierId) : null,
-        departmentId: departmentId ? parseInt(departmentId) : null,
         sizeTemplateId: parseInt(sizeTemplateId),
+        fromProcessId: parseInt(fromProcessId),
+        toProcessId: parseInt(toProcessId),
       },
     });
-    await updateCuttingDeliveryItems(
+    await updateProductionEntryItems(
       tx,
-      cuttingDeliveryItems,
+      productionEntryItems,
       data,
       userId,
-      branchId,
-      departmentId
+      branchId
     );
   });
   return { statusCode: 0, data };
 }
 
-async function updateCuttingDeliveryItems(
+async function updateProductionEntryItems(
   tx,
-  cuttingDeliveryItems,
-  cuttingDelivery,
+  productionEntryItems,
+  productionEntry,
   userId,
-  branchId,
-  departmentId
+  branchId
 ) {
-  const promises = cuttingDeliveryItems.map(async (deliveryDetail) => {
-    const orderQty = deliveryDetail?.orderQty
-      ? Math.round(parseFloat(deliveryDetail.orderQty))
+  const promises = productionEntryItems.map(async (entryDetail) => {
+    const prevProcessId = productionEntry?.fromProcessId
+      ? productionEntry.fromProcessId
       : null;
-    const sizes = deliveryDetail?.sizeDetails || [];
-    if (deliveryDetail.id) {
-      // Update existing cuttingDeliveryItem
-      const updatedItem = await tx.cuttingDeliveryItems.update({
-        where: { id: parseInt(deliveryDetail.id) },
+    const orderQty = entryDetail?.orderQty
+      ? Math.round(parseFloat(entryDetail.orderQty))
+      : null;
+    const sizes = entryDetail?.pcsSizeDetails || [];
+    if (entryDetail.id) {
+      // Update existing productionEntryItem
+      const updatedItem = await tx.productionEntryItems.update({
+        where: { id: parseInt(entryDetail.id) },
         data: {
-          cuttingDeliveryId: parseInt(cuttingDelivery.id),
-          fabricId: deliveryDetail?.fabricId
-            ? parseInt(deliveryDetail.fabricId)
+          productionEntryId: parseInt(productionEntry.id),
+          fabricId: entryDetail?.fabricId
+            ? parseInt(entryDetail.fabricId)
             : null,
-          styleId: deliveryDetail?.styleId
-            ? parseInt(deliveryDetail.styleId)
+          styleId: entryDetail?.styleId ? parseInt(entryDetail.styleId) : null,
+          styleItemId: entryDetail?.styleItemId
+            ? parseInt(entryDetail.styleItemId)
             : null,
-          styleItemId: deliveryDetail?.styleItemId
-            ? parseInt(deliveryDetail.styleItemId)
-            : null,
-          sizeId: deliveryDetail?.sizeId
-            ? parseInt(deliveryDetail.sizeId)
-            : null,
-          colorId: deliveryDetail?.colorId
-            ? parseInt(deliveryDetail.colorId)
-            : null,
-          fabWidth: deliveryDetail?.fabWidth
-            ? parseFloat(deliveryDetail.fabWidth)
-            : null,
-          fabMeter: deliveryDetail?.fabMeter
-            ? parseFloat(deliveryDetail.fabMeter)
-            : null,
-          portionId: deliveryDetail?.portionId
-            ? parseInt(deliveryDetail.portionId)
+          sizeId: entryDetail?.sizeId ? parseInt(entryDetail.sizeId) : null,
+          colorId: entryDetail?.colorId ? parseInt(entryDetail.colorId) : null,
+          portionId: entryDetail?.portionId
+            ? parseInt(entryDetail.portionId)
             : null,
           orderQty,
-          remarks: deliveryDetail?.remarks ?? undefined,
-          issueQty: deliveryDetail?.issueQty
-            ? Math.round(parseFloat(deliveryDetail.issueQty))
+          remarks: entryDetail?.remarks ?? undefined,
+          issueQty: entryDetail?.issueQty
+            ? Math.round(parseFloat(entryDetail.issueQty))
             : null,
-          usedMeter: deliveryDetail?.usedMeter
-            ? parseFloat(deliveryDetail.usedMeter)
-            : null,
-          uomId: deliveryDetail?.uomId ? parseInt(deliveryDetail.uomId) : null,
+          uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
+          prevProcessId: prevProcessId,
         },
       });
-      const existingSizes = await tx.sizeDetails.findMany({
-        where: { cuttingDeliveryItemsId: updatedItem.id },
+      const existingSizes = await tx.pcsSizeDetails.findMany({
+        where: { productionEntryItemsId: updatedItem.id },
       });
       // Create map for faster match
       const existingMap = new Map();
@@ -572,7 +494,7 @@ async function updateCuttingDeliveryItems(
       for (const s of sizes) {
         if (existingMap.has(s.sizeId)) {
           // Update existing
-          await tx.sizeDetails.update({
+          await tx.pcsSizeDetails.update({
             where: { id: existingMap.get(s.sizeId).id },
             data: {
               qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
@@ -582,11 +504,11 @@ async function updateCuttingDeliveryItems(
           existingMap.delete(s.sizeId);
         } else {
           // Insert new
-          await tx.sizeDetails.create({
+          await tx.pcsSizeDetails.create({
             data: {
               sizeId: parseInt(s.sizeId),
               qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
-              cuttingDeliveryItemsId: updatedItem.id,
+              productionEntryItemsId: updatedItem.id,
             },
           });
         }
@@ -594,7 +516,7 @@ async function updateCuttingDeliveryItems(
 
       // Delete removed sizes
       for (const leftover of existingMap.values()) {
-        await tx.sizeDetails.delete({
+        await tx.pcsSizeDetails.delete({
           where: { id: leftover.id },
         });
       }
@@ -603,7 +525,7 @@ async function updateCuttingDeliveryItems(
 
       // 1. Fetch existing stock rows for this item
       const existingStockRows = await tx.productionStock.findMany({
-        where: { cuttingDeliveryItemsId: updatedItem.id },
+        where: { productionEntryItemsId: updatedItem.id },
       });
       // Create a map for quick lookup
       const stockMap = new Map();
@@ -620,37 +542,28 @@ async function updateCuttingDeliveryItems(
             where: { id: row.id },
             data: {
               updatedById: parseInt(userId),
-              fabricId: deliveryDetail?.fabricId
-                ? parseInt(deliveryDetail.fabricId)
+              fabricId: entryDetail?.fabricId
+                ? parseInt(entryDetail.fabricId)
                 : null,
-              styleId: deliveryDetail?.styleId
-                ? parseInt(deliveryDetail.styleId)
+              styleId: entryDetail?.styleId
+                ? parseInt(entryDetail.styleId)
                 : null,
-              styleItemId: deliveryDetail?.styleItemId
-                ? parseInt(deliveryDetail.styleItemId)
+              styleItemId: entryDetail?.styleItemId
+                ? parseInt(entryDetail.styleItemId)
                 : null,
-              colorId: deliveryDetail?.colorId
-                ? parseInt(deliveryDetail.colorId)
+              colorId: entryDetail?.colorId
+                ? parseInt(entryDetail.colorId)
                 : null,
-              fabWidth: deliveryDetail?.fabWidth
-                ? parseFloat(deliveryDetail.fabWidth)
+              portionId: entryDetail?.portionId
+                ? parseInt(entryDetail.portionId)
                 : null,
-              fabMeter: deliveryDetail?.usedMeter
-                ? parseFloat(deliveryDetail.usedMeter)
-                : null,
-              portionId: deliveryDetail?.portionId
-                ? parseInt(deliveryDetail.portionId)
-                : null,
-              remarks: deliveryDetail?.remarks ?? undefined,
+              remarks: entryDetail?.remarks ?? undefined,
               orderQty,
-              uomId: deliveryDetail?.uomId
-                ? parseInt(deliveryDetail.uomId)
-                : null,
-
+              uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
+              prevProcessId: prevProcessId,
               // size-level fields
               sizeId,
               qty,
-              departmentId: departmentId ? parseInt(departmentId) : null,
             },
           });
 
@@ -660,38 +573,30 @@ async function updateCuttingDeliveryItems(
           // ==== INSERT NEW STOCK ROW ====
           await tx.productionStock.create({
             data: {
-              inOrOut: "cuttingDelivery",
-              cuttingDeliveryItemsId: updatedItem.id,
+              inOrOut: "productionEntry",
+              productionEntryItemsId: updatedItem.id,
               createdById: parseInt(userId),
               branchId: parseInt(branchId),
 
-              fabricId: deliveryDetail?.fabricId
-                ? parseInt(deliveryDetail.fabricId)
+              fabricId: entryDetail?.fabricId
+                ? parseInt(entryDetail.fabricId)
                 : null,
-              styleId: deliveryDetail?.styleId
-                ? parseInt(deliveryDetail.styleId)
+              styleId: entryDetail?.styleId
+                ? parseInt(entryDetail.styleId)
                 : null,
-              styleItemId: deliveryDetail?.styleItemId
-                ? parseInt(deliveryDetail.styleItemId)
+              styleItemId: entryDetail?.styleItemId
+                ? parseInt(entryDetail.styleItemId)
                 : null,
-              colorId: deliveryDetail?.colorId
-                ? parseInt(deliveryDetail.colorId)
+              colorId: entryDetail?.colorId
+                ? parseInt(entryDetail.colorId)
                 : null,
-              fabWidth: deliveryDetail?.fabWidth
-                ? parseFloat(deliveryDetail.fabWidth)
+              portionId: entryDetail?.portionId
+                ? parseInt(entryDetail.portionId)
                 : null,
-              fabMeter: deliveryDetail?.usedMeter
-                ? parseFloat(deliveryDetail.usedMeter)
-                : null,
-              portionId: deliveryDetail?.portionId
-                ? parseInt(deliveryDetail.portionId)
-                : null,
-              remarks: deliveryDetail?.remarks ?? undefined,
+              remarks: entryDetail?.remarks ?? undefined,
               orderQty,
-              uomId: deliveryDetail?.uomId
-                ? parseInt(deliveryDetail.uomId)
-                : null,
-              departmentId: departmentId ? parseInt(departmentId) : null,
+              uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
+              prevProcessId: prevProcessId,
               // size-level
               sizeId,
               qty,
@@ -707,136 +612,41 @@ async function updateCuttingDeliveryItems(
         });
       }
 
-      const existingMaterialStock = await tx.materialStock.findFirst({
-        where: { cuttingDeliveryItemsId: updatedItem.id },
-      });
-
-      if (existingMaterialStock) {
-        await tx.materialStock.update({
-          where: { id: existingMaterialStock.id },
-          data: {
-            updatedById: parseInt(userId),
-            fabricId: deliveryDetail?.fabricId
-              ? parseInt(deliveryDetail.fabricId)
-              : null,
-            styleId: deliveryDetail?.styleId
-              ? parseInt(deliveryDetail.styleId)
-              : null,
-            styleItemId: deliveryDetail?.styleItemId
-              ? parseInt(deliveryDetail.styleItemId)
-              : null,
-            sizeId: deliveryDetail?.sizeId
-              ? parseInt(deliveryDetail.sizeId)
-              : null,
-            colorId: deliveryDetail?.colorId
-              ? parseInt(deliveryDetail.colorId)
-              : null,
-            fabWidth: deliveryDetail?.fabWidth
-              ? parseFloat(deliveryDetail.fabWidth)
-              : null,
-            fabMeter: deliveryDetail?.usedMeter
-              ? -Math.abs(parseFloat(deliveryDetail.usedMeter))
-              : null,
-            portionId: deliveryDetail?.portionId
-              ? parseInt(deliveryDetail.portionId)
-              : null,
-            remarks: deliveryDetail?.remarks ?? undefined,
-            uomId: deliveryDetail?.uomId
-              ? parseInt(deliveryDetail.uomId)
-              : null,
-            itemType: "Fabric",
-          },
-        });
-      } else {
-        await tx.materialStock.create({
-          data: {
-            inOrOut: "cuttingDelivery",
-            cuttingDeliveryItemsId: updatedItem.id,
-            createdById: parseInt(userId),
-            branchId: parseInt(branchId),
-            // storeId: parseInt(storeId),
-            fabricId: deliveryDetail?.fabricId
-              ? parseInt(deliveryDetail.fabricId)
-              : null,
-            styleId: deliveryDetail?.styleId
-              ? parseInt(deliveryDetail.styleId)
-              : null,
-            styleItemId: deliveryDetail?.styleItemId
-              ? parseInt(deliveryDetail.styleItemId)
-              : null,
-            sizeId: deliveryDetail?.sizeId
-              ? parseInt(deliveryDetail.sizeId)
-              : null,
-            colorId: deliveryDetail?.colorId
-              ? parseInt(deliveryDetail.colorId)
-              : null,
-            fabWidth: deliveryDetail?.fabWidth
-              ? parseFloat(deliveryDetail.fabWidth)
-              : null,
-            fabMeter: deliveryDetail?.usedMeter
-              ? -Math.abs(parseFloat(deliveryDetail.usedMeter))
-              : null,
-            portionId: deliveryDetail?.portionId
-              ? parseInt(deliveryDetail.portionId)
-              : null,
-            remarks: deliveryDetail?.remarks ?? undefined,
-            uomId: deliveryDetail?.uomId
-              ? parseInt(deliveryDetail.uomId)
-              : null,
-            itemType: "Fabric",
-          },
-        });
-      }
-
       return updatedItem;
     } else {
-      // Create new cuttingDeliveryItem
-      const createdItem = await tx.cuttingDeliveryItems.create({
+      // Create new productionEntryItem
+      const createdItem = await tx.productionEntryItems.create({
         data: {
-          cuttingDeliveryId: parseInt(cuttingDelivery.id),
+          productionEntryId: parseInt(productionEntry.id),
 
-          fabricId: deliveryDetail?.fabricId
-            ? parseInt(deliveryDetail.fabricId)
+          fabricId: entryDetail?.fabricId
+            ? parseInt(entryDetail.fabricId)
             : null,
-          styleId: deliveryDetail?.styleId
-            ? parseInt(deliveryDetail.styleId)
+          styleId: entryDetail?.styleId ? parseInt(entryDetail.styleId) : null,
+          styleItemId: entryDetail?.styleItemId
+            ? parseInt(entryDetail.styleItemId)
             : null,
-          styleItemId: deliveryDetail?.styleItemId
-            ? parseInt(deliveryDetail.styleItemId)
+          sizeId: entryDetail?.sizeId ? parseInt(entryDetail.sizeId) : null,
+          colorId: entryDetail?.colorId ? parseInt(entryDetail.colorId) : null,
+          portionId: entryDetail?.portionId
+            ? parseInt(entryDetail.portionId)
             : null,
-          sizeId: deliveryDetail?.sizeId
-            ? parseInt(deliveryDetail.sizeId)
-            : null,
-          colorId: deliveryDetail?.colorId
-            ? parseInt(deliveryDetail.colorId)
-            : null,
-          fabWidth: deliveryDetail?.fabWidth
-            ? parseFloat(deliveryDetail.fabWidth)
-            : null,
-          fabMeter: deliveryDetail?.fabMeter
-            ? parseFloat(deliveryDetail.fabMeter)
-            : null,
-          portionId: deliveryDetail?.portionId
-            ? parseInt(deliveryDetail.portionId)
-            : null,
-          remarks: deliveryDetail?.remarks ?? undefined,
+          remarks: entryDetail?.remarks ?? undefined,
           orderQty,
-          issueQty: deliveryDetail?.issueQty
-            ? Math.round(parseFloat(deliveryDetail.issueQty))
+          issueQty: entryDetail?.issueQty
+            ? Math.round(parseFloat(entryDetail.issueQty))
             : null,
-          usedMeter: deliveryDetail?.usedMeter
-            ? parseFloat(deliveryDetail.usedMeter)
-            : null,
-          uomId: deliveryDetail?.uomId ? parseInt(deliveryDetail.uomId) : null,
+          uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
+          prevProcessId: prevProcessId,
         },
       });
 
       for (const s of sizes) {
-        await tx.sizeDetails.create({
+        await tx.pcsSizeDetails.create({
           data: {
             sizeId: parseInt(s.sizeId),
             qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
-            cuttingDeliveryItems: createdItem.id,
+            productionEntryItems: createdItem.id,
           },
         });
       }
@@ -844,79 +654,35 @@ async function updateCuttingDeliveryItems(
         // Create Stock row
         await tx.productionStock.create({
           data: {
-            inOrOut: "cuttingDelivery",
-            cuttingDeliveryItemsId: createdItem.id,
+            inOrOut: "productionEntry",
+            productionEntryItemsId: createdItem.id,
             createdById: parseInt(userId),
             branchId: parseInt(branchId),
 
-            fabricId: deliveryDetail?.fabricId
-              ? parseInt(deliveryDetail.fabricId)
+            fabricId: entryDetail?.fabricId
+              ? parseInt(entryDetail.fabricId)
               : null,
-            styleId: deliveryDetail?.styleId
-              ? parseInt(deliveryDetail.styleId)
+            styleId: entryDetail?.styleId
+              ? parseInt(entryDetail.styleId)
               : null,
-            styleItemId: deliveryDetail?.styleItemId
-              ? parseInt(deliveryDetail.styleItemId)
+            styleItemId: entryDetail?.styleItemId
+              ? parseInt(entryDetail.styleItemId)
               : null,
-            colorId: deliveryDetail?.colorId
-              ? parseInt(deliveryDetail.colorId)
+            colorId: entryDetail?.colorId
+              ? parseInt(entryDetail.colorId)
               : null,
-            fabWidth: deliveryDetail?.fabWidth
-              ? parseFloat(deliveryDetail.fabWidth)
+            portionId: entryDetail?.portionId
+              ? parseInt(entryDetail.portionId)
               : null,
-            fabMeter: deliveryDetail?.usedMeter
-              ? parseFloat(deliveryDetail.usedMeter)
-              : null,
-            portionId: deliveryDetail?.portionId
-              ? parseInt(deliveryDetail.portionId)
-              : null,
-            remarks: deliveryDetail?.remarks ?? undefined,
+            remarks: entryDetail?.remarks ?? undefined,
             orderQty,
             sizeId: s?.sizeId ? parseInt(s.sizeId) : null,
             qty: s?.qty ? Math.round(parseFloat(s.qty)) : null,
-            uomId: deliveryDetail?.uomId
-              ? parseInt(deliveryDetail.uomId)
-              : null,
-            departmentId: departmentId ? parseInt(departmentId) : null,
+            uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
+            prevProcessId: prevProcessId,
           },
         });
       }
-
-      await tx.materialStock.create({
-        data: {
-          inOrOut: "cuttingDelivery",
-          cuttingDeliveryItemsId: createdItem.id,
-          createdById: parseInt(userId),
-          branchId: parseInt(branchId),
-          // storeId: parseInt(storeId),
-          fabricId: deliveryDetail?.fabricId
-            ? parseInt(deliveryDetail.fabricId)
-            : null,
-          styleId: deliveryDetail?.styleId
-            ? parseInt(deliveryDetail.styleId)
-            : null,
-          styleItemId: deliveryDetail?.styleItemId
-            ? parseInt(deliveryDetail.styleItemId)
-            : null,
-          sizeId: deliveryDetail?.sizeId
-            ? parseInt(deliveryDetail.sizeId)
-            : null,
-          colorId: deliveryDetail?.colorId
-            ? parseInt(deliveryDetail.colorId)
-            : null,
-          fabWidth: deliveryDetail?.fabWidth
-            ? parseFloat(deliveryDetail.fabWidth)
-            : null,
-          fabMeter: deliveryDetail?.usedMeter
-            ? -Math.abs(parseFloat(deliveryDetail.usedMeter))
-            : null,
-          portionId: deliveryDetail?.portionId
-            ? parseInt(deliveryDetail.portionId)
-            : null,
-          remarks: deliveryDetail?.remarks ?? undefined,
-          uomId: deliveryDetail?.uomId ? parseInt(deliveryDetail.uomId) : null,
-        },
-      });
 
       return createdItem;
     }
@@ -927,7 +693,7 @@ async function updateCuttingDeliveryItems(
 
 async function remove(id) {
   console.log(id, "id");
-  const data = await prisma.cuttingDelivery.delete({
+  const data = await prisma.productionEntry.delete({
     where: {
       id: parseInt(id),
     },

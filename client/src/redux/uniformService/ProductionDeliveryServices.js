@@ -34,9 +34,9 @@ const ProductionDeliveryApi = createApi({
       providesTags: ["ProductionDelivery"],
     }),
     getProductionDeliveryById: builder.query({
-      query: ({id, productionReceiptId}) => {
+      query: (id) => {
         return {
-          url: `${PRODUCTION_DELIVERY_API}/${id}/${productionReceiptId ? productionReceiptId : null}`,
+          url: `${PRODUCTION_DELIVERY_API}/${id}`,
           method: "GET",
           headers: {
             "Content-type": "application/json; charset=UTF-8",

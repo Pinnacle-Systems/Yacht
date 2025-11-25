@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { DropdownInput, DropdownNew, TextInput } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
-import { getCommonParams } from "../../../Utils/helper";
+import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import { ReusableInput } from "../../../Utils/CommonInput";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
@@ -65,16 +65,18 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
     : [];
 
   const validateData = (data) => {
-    if (
-      salesEntryItems?.length > 0 &&
-      data.storeId &&
-      data.customerId &&
-      data.destinationId &&
-      data.salesType
-    ) {
-      return true;
-    }
-    return false;
+    return (
+      data?.storeId &&
+      data?.customerId &&
+      data?.destinationId &&
+      data?.salesType &&
+      data?.salesEntryItems.length > 0 &&
+      isGridDatasValid(
+        data?.salesEntryItems.filter((item) => item?.styleId),
+        false,
+        ["qty"]
+      )
+    );
   };
 
   const {
@@ -98,9 +100,7 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
     docDate,
     branchId,
     storeId,
-    salesEntryItems: salesEntryItems?.filter(
-      (item) => item?.styleId && item?.sizeId
-    ),
+    salesEntryItems: salesEntryItems?.filter((item) => item?.styleId),
     userId,
     finYearId,
     locationId,
@@ -233,8 +233,16 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
     }
   }, [customerId, setCustomerId]);
 
+  const handleKeyDown = (event) => {
+    let charCode = String.fromCharCode(event.which).toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && charCode === "s") {
+      event.preventDefault();
+      saveData();
+    }
+  };
+
   return (
-    <div className="">
+    <div className="" onKeyDown={handleKeyDown}>
       <Modal
         isOpen={pdfOpen}
         onClose={() => setPdfOpen(false)}
@@ -277,6 +285,7 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
                 setValue={setSalesType}
                 required={true}
                 readOnly={readOnly}
+                autoFocus={true}
               />
             </div>
           </div>
