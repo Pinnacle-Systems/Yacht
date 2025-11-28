@@ -77,6 +77,8 @@ model Company {
   StyleItem           StyleItem[]
   portions            Portion[]
   processes           Process[]
+  processGroupSeqs    ProcessGroupSeq[]
+  processGroups       ProcessGroup[]
 }
 
 model Subscription {
@@ -340,6 +342,8 @@ model Employee {
   EmployeeFamilyDetails    EmployeeFamilyDetails[]
   cuttingDeliveryItems     CuttingDeliveryItems[]
   productionEntryItems     ProductionEntryItems[]
+  sizeDetails              sizeDetails[]
+  productionStocks         ProductionStock[]
 }
 
 model EmployeeBankDetails {
@@ -2237,6 +2241,8 @@ model sizeDetails {
   cuttingOrderItemsId    Int?
   CuttingDeliveryItems   CuttingDeliveryItems? @relation(fields: [cuttingDeliveryItemsId], references: [id], onDelete: Cascade)
   cuttingDeliveryItemsId Int?
+  Employee               Employee?             @relation(fields: [employeeId], references: [id])
+  employeeId             Int?
 }
 
 model CuttingDelivery {
@@ -2264,6 +2270,8 @@ model CuttingDelivery {
   supplierId           Int?
   SizeTemplate         SizeTemplate?          @relation(fields: [sizeTemplateId], references: [id])
   sizeTemplateId       Int?
+  FromProcess          Process?               @relation(fields: [fromProcessId], references: [id])
+  fromProcessId        Int?
 }
 
 model CuttingDeliveryItems {
@@ -2345,6 +2353,8 @@ model ProductionStock {
   prevProcessId          Int?
   ProductionEntryItems   ProductionEntryItems? @relation(fields: [productionEntryItemsId], references: [id], onDelete: Cascade)
   productionEntryItemsId Int?
+  Employee               Employee?             @relation(fields: [employeeId], references: [id])
+  employeeId             Int?
 }
 
 model Process {
@@ -2358,6 +2368,8 @@ model Process {
   productionEntriesToProcess   ProductionEntry[]      @relation(name: "toProcess")
   productionEntryItems         ProductionEntryItems[]
   productionStocks             ProductionStock[]
+  processGroupLists            ProcessGroupList[]
+  cuttingDeliveries            CuttingDelivery[]
 }
 
 model ProductionEntry {
@@ -2426,4 +2438,34 @@ model PcsSizeDetails {
   qty                    Float?
   ProductionEntryItems   ProductionEntryItems? @relation(fields: [productionEntryItemsId], references: [id], onDelete: Cascade)
   productionEntryItemsId Int?
+}
+
+model ProcessGroupSeq {
+  id            Int            @id @default(autoincrement())
+  name          String?
+  active        Boolean?       @default(true)
+  Company       Company?       @relation(fields: [companyId], references: [id])
+  companyId     Int?
+  sequence      Int?
+  processGroups ProcessGroup[]
+}
+
+model ProcessGroup {
+  id                 Int                @id @default(autoincrement())
+  ProcessGroupSeq    ProcessGroupSeq?   @relation(fields: [processGroupSeqsId], references: [id], onDelete: Cascade)
+  processGroupSeqsId Int?
+  active             Boolean?           @default(true)
+  Company            Company?           @relation(fields: [companyId], references: [id])
+  companyId          Int?
+  processGroupLists  ProcessGroupList[]
+}
+
+model ProcessGroupList {
+  id             Int           @id @default(autoincrement())
+  Process        Process?      @relation(fields: [processId], references: [id])
+  processId      Int?
+  seqNo          Int?
+  isRequired     Boolean?
+  ProcessGroup   ProcessGroup? @relation(fields: [processGroupId], references: [id], onDelete: Cascade)
+  processGroupId Int?
 }

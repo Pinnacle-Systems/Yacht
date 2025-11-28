@@ -35,6 +35,7 @@ import { useGetPartyCategoryMasterQuery } from "../../../redux/services/PartyCat
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService.js";
 import { useLazyGetFabricDetailQuery } from "../../../redux/services/MaterialStockService.js";
 import { useLazyGetSizeTemplateByIdQuery } from "../../../redux/uniformService/SizeTemplateMasterServices.js";
+import { useGetProcessMasterQuery } from "../../../redux/uniformService/ProcessMasterService.js";
 export default function CuttingDeliveryForm({
   onClose,
   id,
@@ -52,7 +53,7 @@ export default function CuttingDeliveryForm({
   const [styleId, setStyleId] = useState("");
   const [cuttingNo, setCuttingNo] = useState("");
   const [productionType, setProductionType] = useState("");
-  const [departmentId, setDepartmentId] = useState("");
+  const [fromProcessId, setFromProcessId] = useState("");
   const [supplierId, setSupplierId] = useState("");
 
   const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
@@ -64,7 +65,7 @@ export default function CuttingDeliveryForm({
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
   const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
-  const { data: departmentList } = useGetDepartmentQuery({
+  const { data: processList } = useGetProcessMasterQuery({
     params: { companyId },
   });
   const { data: supplierList } = useGetPartyQuery({
@@ -119,7 +120,7 @@ export default function CuttingDeliveryForm({
         data?.productionType ? data?.productionType : "INHOUSE"
       );
       setSupplierId(data?.supplierId ? data?.supplierId : "");
-      setDepartmentId(data?.departmentId ? data?.departmentId : "");
+      setFromProcessId(data?.fromProcessId ? data?.fromProcessId : "");
       setSizeTemplateId(data?.sizeTemplateId ? data?.sizeTemplateId : "");
     },
     [id]
@@ -184,7 +185,7 @@ export default function CuttingDeliveryForm({
   //     data.styleId &&
   //     data?.cuttingNo &&
   //     data?.productionType &&
-  //     data?.departmentId
+  //     data?.fromProcessId
   //   ) {
   //     return true;
   //   }
@@ -205,7 +206,7 @@ export default function CuttingDeliveryForm({
     cuttingNo,
     productionType,
     supplierId,
-    departmentId,
+    fromProcessId,
     sizeTemplateId,
   };
   const validateData = (data) => {
@@ -214,7 +215,7 @@ export default function CuttingDeliveryForm({
       data.styleId &&
       data?.cuttingNo &&
       data?.productionType &&
-      data?.departmentId &&
+      data?.fromProcessId &&
       isGridDatasValid(
         data?.cuttingDeliveryItems?.filter((item) => item.styleId),
         false,
@@ -425,14 +426,14 @@ export default function CuttingDeliveryForm({
                 />
               )}
               <DropdownNew
-                name="Department"
+                name="Process"
                 dataList={
                   id
-                    ? departmentList?.data
-                    : departmentList?.data?.filter((item) => item.active)
+                    ? processList?.data
+                    : processList?.data?.filter((item) => item.active)
                 }
-                value={departmentId}
-                setValue={setDepartmentId}
+                value={fromProcessId}
+                setValue={setFromProcessId}
                 readOnly={readOnly}
                 placeholder={"Select Department"}
                 disabled={readOnly}
@@ -484,6 +485,7 @@ export default function CuttingDeliveryForm({
             sizeTemplateId={sizeTemplateId}
             uomList={uomList}
             styleTemplateDetail={styleTemplateDetail}
+            companyId={companyId}
           />
         </fieldset>
         <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">

@@ -66,3 +66,6 @@ export { default as portionMaster } from "./portion.route.js";
 export { default as cuttingOrder } from "./cuttingOrder.route.js";
 export { default as cuttingDelivery } from "./cuttingDelivery.route.js";
 export { default as productionDelivery } from "./productionDelivery.route.js";
+export {default as processGroupSeq } from "./processGroupSeq.route.js"
+export {default as processGroup } from "./processGroupMaster.route.js"
+export {default as productionStock} from "./productionStock.route.js"

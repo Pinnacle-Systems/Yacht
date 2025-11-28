@@ -2,7 +2,7 @@ import {
   useGetStyleMasterQuery,
   useLazyGetStyleCodeDetailQuery,
 } from "../../../redux/uniformService/StyleMasterService";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { ReusableInput } from "../../../Utils/CommonInput";
 import { useLazyGetSizeTemplateByIdQuery } from "../../../redux/uniformService/SizeTemplateMasterServices";
@@ -15,6 +15,7 @@ import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMaste
 import { VIEW } from "../../../icons";
 import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService";
 import Swal from "sweetalert2";
+import { useGetEmployeeQuery } from "../../../redux/services/EmployeeMasterService";
 
 export default function ProductionDeliveryItem({
   productionEntryItems,
@@ -32,10 +33,9 @@ export default function ProductionDeliveryItem({
   const { data: fabricList } = useGetFabricMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const { data: portionList } = useGetPortionMasterQuery({ params });
+  const { data: employeeList } = useGetEmployeeQuery({ params });
 
-  const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
-  );
+  const firstLoad = useRef(true);
 
   const addRow = () => {
     const newRow = {
@@ -51,11 +51,26 @@ export default function ProductionDeliveryItem({
       remarks: "",
       selected: false,
       prevProcessId: "",
+      sizeId: "",
     };
     setProductionEntryItems([...productionEntryItems, newRow]);
   };
 
   const handleInputChange = (value, index, field) => {
+    if (field === "issueQty") {
+      const row = productionEntryItems[index];
+      const balanceQty = row?.stkQty || 0;
+
+      if (parseFloat(balanceQty) < parseFloat(value)) {
+        Swal.fire({
+          icon: "warning",
+          title: "Invalid Quantity",
+          text: "Production Qty cannot be more than Stock Qty!",
+          confirmButtonText: "OK",
+        });
+        return;
+      }
+    }
     const newBlend = structuredClone(productionEntryItems);
     newBlend[index][field] = value;
     setProductionEntryItems(newBlend);
@@ -97,70 +112,70 @@ export default function ProductionDeliveryItem({
     setContextMenu(null);
   };
 
-  const getSizeTemplate = async () => {
-    // const style = styleList?.data.find((item) => item.id === styleId);
-    // const sizeTemplateId = style?.sizeTemplateId;
+  // const getSizeTemplate = async () => {
+  //   // const style = styleList?.data.find((item) => item.id === styleId);
+  //   // const sizeTemplateId = style?.sizeTemplateId;
 
-    if (!sizeTemplateId) return;
+  //   if (!sizeTemplateId) return;
 
-    const { data: sizeData } = await styleTemplateDetail(sizeTemplateId);
+  //   const { data: sizeData } = await styleTemplateDetail(sizeTemplateId);
 
-    if (!sizeData?.data?.SizeTemplateList?.length) return;
+  //   if (!sizeData?.data?.SizeTemplateList?.length) return;
 
-    const columns = sizeData.data.SizeTemplateList.map((s) => ({
-      sizeId: s.sizeId,
-      sizeName: s.Size?.name,
-    }));
+  //   const columns = sizeData.data.SizeTemplateList.map((s) => ({
+  //     sizeId: s.sizeId,
+  //     sizeName: s.Size?.name,
+  //   }));
 
-    // if (id) {
-    //     // 🔥 Delay only when editing
-    //     setTimeout(() => {
-    //         setSizeColumns(columns);
-    //     }, 500); // adjust delay if needed
-    // } else {
-    // Create mode → immediate
-    setSizeColumns(columns);
-    // }
-  };
+  //   // if (id) {
+  //   //     // 🔥 Delay only when editing
+  //   //     setTimeout(() => {
+  //   //         setSizeColumns(columns);
+  //   //     }, 500); // adjust delay if needed
+  //   // } else {
+  //   // Create mode → immediate
+  //   setSizeColumns(columns);
+  //   // }
+  // };
 
-  useEffect(() => {
-    if (!sizeTemplateId) return;
-    getSizeTemplate();
-  }, [sizeTemplateId]);
+  // useEffect(() => {
+  //   if (!sizeTemplateId) return;
+  //   getSizeTemplate();
+  // }, [sizeTemplateId]);
 
-  const initSizeDetails = (row) => {
-    if (row.pcsSizeDetails && row.pcsSizeDetails.length > 0) {
-      // already initialized (edit mode)
-      return row.pcsSizeDetails;
-    }
+  // const initSizeDetails = (row) => {
+  //   if (row.pcsSizeDetails && row.pcsSizeDetails.length > 0) {
+  //     // already initialized (edit mode)
+  //     return row.pcsSizeDetails;
+  //   }
 
-    // create sizeDetails (create mode)
-    return sizeColumns.map((col) => ({
-      sizeId: col.sizeId,
-      qty: "",
-    }));
-  };
+  //   // create sizeDetails (create mode)
+  //   return sizeColumns.map((col) => ({
+  //     sizeId: col.sizeId,
+  //     qty: "",
+  //   }));
+  // };
 
-  useEffect(() => {
-    if (sizeColumns.length === 0 || productionEntryItems.length === 0) return;
+  // useEffect(() => {
+  //   if (sizeColumns.length === 0 || productionEntryItems.length === 0) return;
 
-    setProductionEntryItems((prev) => {
-      let changed = false;
+  //   setProductionEntryItems((prev) => {
+  //     let changed = false;
 
-      const updated = prev.map((row) => {
-        if (!row.pcsSizeDetails || row.pcsSizeDetails.length === 0) {
-          changed = true;
-          return {
-            ...row,
-            pcsSizeDetails: initSizeDetails(row),
-          };
-        }
-        return row;
-      });
+  //     const updated = prev.map((row) => {
+  //       if (!row.pcsSizeDetails || row.pcsSizeDetails.length === 0) {
+  //         changed = true;
+  //         return {
+  //           ...row,
+  //           pcsSizeDetails: initSizeDetails(row),
+  //         };
+  //       }
+  //       return row;
+  //     });
 
-      return changed ? updated : prev; // prevent unnecessary rerender
-    });
-  }, [sizeColumns]);
+  //     return changed ? updated : prev; // prevent unnecessary rerender
+  //   });
+  // }, [sizeColumns]);
 
   useEffect(() => {
     if (productionEntryItems) {
@@ -171,7 +186,7 @@ export default function ProductionDeliveryItem({
           // add empty rows until total becomes 6
           return [
             ...prev,
-            ...Array.from({ length: 5 - filledRows }, () => ({
+            ...Array.from({ length: 6 - filledRows }, () => ({
               styleNo: "",
               styleItemId: "",
               fabricId: "",
@@ -183,6 +198,7 @@ export default function ProductionDeliveryItem({
               selected: false,
               issueQty: "",
               prevProcessId: "",
+              styleId: "",
             })),
           ];
         }
@@ -191,7 +207,7 @@ export default function ProductionDeliveryItem({
     } else {
       // if null/undefined, initialize with 6 empty rows
       setProductionEntryItems(
-        Array.from({ length: 5 }, () => ({
+        Array.from({ length: 6 }, () => ({
           styleNo: "",
           styleItemId: "",
           fabricId: "",
@@ -203,6 +219,7 @@ export default function ProductionDeliveryItem({
           selected: false,
           issueQty: "",
           prevProcessId: "",
+          styleId: "",
         }))
       );
     }
@@ -219,7 +236,6 @@ export default function ProductionDeliveryItem({
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
                 <th className="w-12 px-1 py-1 justify-center font-medium text-[13px]">
-                  {/* <tr className="flex items-center justify-center">Select</tr> */}
                   <tr className="flex items-center justify-center gap-2">
                     <input
                       type="checkbox"
@@ -269,23 +285,25 @@ export default function ProductionDeliveryItem({
                 >
                   Portion
                 </th>
-                {sizeColumns.map((col) => (
-                  <th
-                    key={col.sizeId}
-                    className="w-12 px-4 py-2 text-center font-medium text-[13px]"
-                  >
-                    {col.sizeName}
-                  </th>
-                ))}
+                <th
+                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Size
+                </th>
                 <th
                   className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Plan Qty
+                  Stock Qty
                 </th>
                 <th
                   className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Production Qty
+                </th>
+                <th
+                  className={`w-36 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Employee
                 </th>
                 <th
                   className={`w-48 px-1 py-2 text-center font-medium text-[13px] `}
@@ -294,7 +312,7 @@ export default function ProductionDeliveryItem({
                 </th>
 
                 <th
-                  className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                  className={`w-12 px-3 py-2 text-center font-medium text-[13px] `}
                 ></th>
               </tr>
             </thead>
@@ -448,7 +466,59 @@ export default function ProductionDeliveryItem({
                         ))}
                       </select>
                     </td>
-                    {sizeColumns.map((col) => {
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <select
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "sizeId");
+                          }
+                        }}
+                        tabIndex={"0"}
+                        disabled={true}
+                        className="text-left w-full rounded py-1 table-data-input"
+                        value={row.sizeId}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "sizeId")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "sizeId");
+                        }}
+                      >
+                        <option></option>
+                        {(id
+                          ? sizeList?.data
+                          : sizeList?.data?.filter((item) => item.active)
+                        )?.map((blend) => (
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        onKeyDown={(e) => {
+                          if (e.code === "Minus" || e.code === "NumpadSubtract")
+                            e.preventDefault();
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "stkQty");
+                          }
+                        }}
+                        min={"0"}
+                        type="number"
+                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        onFocus={(e) => e.target.select()}
+                        value={row?.stkQty}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "stkQty")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "stkQty");
+                        }}
+                        disabled={true}
+                      />
+                    </td>
+                    {/* {sizeColumns.map((col) => {
                       // find matching size entry
                       const sizeItem = row.pcsSizeDetails?.find(
                         (s) => s.sizeId === col.sizeId
@@ -488,33 +558,18 @@ export default function ProductionDeliveryItem({
                             }}
                             onFocus={(e) => e.target.select()}
                             min={"0"}
+                            onKeyDown={(e) => {
+                              if (
+                                e.code === "Minus" ||
+                                e.code === "NumpadSubtract"
+                              )
+                                e.preventDefault();
+                            }}
                           />
                         </td>
                       );
-                    })}
-                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                      <input
-                        onKeyDown={(e) => {
-                          if (e.code === "Minus" || e.code === "NumpadSubtract")
-                            e.preventDefault();
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "orderQty");
-                          }
-                        }}
-                        min={"0"}
-                        type="number"
-                        className="text-right rounded py-1 px-1 w-full table-data-input"
-                        onFocus={(e) => e.target.select()}
-                        value={row?.orderQty}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "orderQty")
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "orderQty");
-                        }}
-                        disabled={true}
-                      />
-                    </td>
+                    })} */}
+
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
                         id={`issueQty-input-${index}`}
@@ -536,8 +591,38 @@ export default function ProductionDeliveryItem({
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "issueQty");
                         }}
-                        disabled={true}
+                        disabled={readOnly}
                       />
+                    </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <select
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "employeeId");
+                          }
+                        }}
+                        tabIndex={"0"}
+                        disabled={readOnly}
+                        className="text-left w-full rounded py-1 table-data-input"
+                        value={row.employeeId}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "employeeId")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "employeeId"
+                          );
+                        }}
+                      >
+                        <option></option>
+                        {employeeList?.data?.map((blend) => (
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.firstName}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
@@ -590,13 +675,13 @@ export default function ProductionDeliveryItem({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={6 + sizeColumns.length}
+                  colSpan={7}
                 >
                   Total
                 </td>
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
                   {productionEntryItems.reduce(
-                    (sum, row) => sum + (Number(row.orderQty) || 0),
+                    (sum, row) => sum + (Number(row.stkQty) || 0),
                     0
                   )}
                 </td>
@@ -606,7 +691,7 @@ export default function ProductionDeliveryItem({
                     0
                   )}
                 </td>
-                <td className="border border-gray-300" colSpan={2}></td>
+                <td className="border border-gray-300" colSpan={3}></td>
               </tr>
             </tfoot>
           </table>

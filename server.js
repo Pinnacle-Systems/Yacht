@@ -74,6 +74,9 @@ import {
   cuttingOrder,
   cuttingDelivery,
   productionDelivery,
+  processGroupSeq,
+  processGroup,
+  productionStock,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";
@@ -176,10 +179,13 @@ app.use("/styleItem", styleItem);
 app.use("/salesReturn", salesReturn);
 app.use("/purchaseReturn", purchaseReturn);
 app.use("/materialStock", materialStock);
+app.use("/productionStock", productionStock);
 app.use("/portion", portionMaster);
 app.use("/cuttingOrder", cuttingOrder);
 app.use("/cuttingDelivery", cuttingDelivery);
 app.use("/productionDelivery", productionDelivery);
+app.use("/processGroupSeq", processGroupSeq);
+app.use("/processGroup", processGroup);
 app.get("/retreiveFile/:fileName", (req, res) => {
   const { fileName } = req.params;
   res.sendFile(__dirname + "/uploads/" + fileName);

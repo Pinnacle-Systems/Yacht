@@ -63,3 +63,5 @@ export { default as PurchaseReturn } from "./PurchaseReturn";
 export { default as MaterialStockReport } from "./MaterialStockReport";
 export { default as PortionMaster } from "./PortionMaster";
 export { default as CuttingOrder } from "./CuttingOrder";
+export { default as ProcessGroupSeqMaster } from "./ProcessGroupSeqMaster";
+export { default as ProcessGroupMaster } from "./ProcessGroupMaster";

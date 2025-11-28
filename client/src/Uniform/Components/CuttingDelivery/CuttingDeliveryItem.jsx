@@ -15,6 +15,8 @@ import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMaste
 import { VIEW } from "../../../icons";
 import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService";
 import Swal from "sweetalert2";
+import Modal from "../../../UiComponents/Modal";
+import { useGetEmployeeQuery } from "../../../redux/services/EmployeeMasterService";
 
 export default function CuttingDeliveryItem({
     cuttingDeliveryItems,
@@ -25,10 +27,12 @@ export default function CuttingDeliveryItem({
     styleId,
     sizeTemplateId,
     uomList,
-    styleTemplateDetail
+    styleTemplateDetail,
 }) {
     const [sizeColumns, setSizeColumns] = useState([]);
     const [contextMenu, setContextMenu] = useState(null);
+    const [selectedRowIndex, setSelectedRowIndex] = useState(null);
+    const [employeeOpen, setEmployeeOpen] = useState("")
     const { data: sizeList } = useGetSizeMasterQuery({ params });
     const { data: colorList } = useGetColorMasterQuery({ params });
     const { data: fabricList } = useGetFabricMasterQuery({ params });
@@ -38,6 +42,12 @@ export default function CuttingDeliveryItem({
     const companyId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "userCompanyId"
     );
+
+    const { data: employeeList } = useGetEmployeeQuery({
+        params: {
+            companyId
+        }
+    });
 
     const addRow = () => {
         const newRow = {
@@ -127,6 +137,7 @@ export default function CuttingDeliveryItem({
         const columns = sizeData.data.SizeTemplateList.map((s) => ({
             sizeId: s.sizeId,
             sizeName: s.Size?.name,
+            employeeId: ""
         }));
 
         // if (id) {
@@ -155,6 +166,7 @@ export default function CuttingDeliveryItem({
         return sizeColumns.map((col) => ({
             sizeId: col.sizeId,
             qty: "",
+            employeeId: ""
         }));
     };
 
@@ -244,29 +256,27 @@ export default function CuttingDeliveryItem({
                             <tr>
                                 <th className="w-12 px-1 py-1 justify-center font-medium text-[13px]">
                                     {/* <tr className="flex items-center justify-center">Select</tr> */}
-                                    <tr className="flex items-center justify-center gap-2">
-                                        <input
-                                            type="checkbox"
-                                            checked={
-                                                cuttingDeliveryItems.length > 0 &&
-                                                cuttingDeliveryItems.every((row) => row.selected)
+                                    <input
+                                        type="checkbox"
+                                        checked={
+                                            cuttingDeliveryItems.length > 0 &&
+                                            cuttingDeliveryItems.every((row) => row.selected)
+                                        }
+                                        onChange={(e) => {
+                                            const checked = e.target.checked;
+                                            setCuttingDeliveryItems((prev) =>
+                                                prev.map((row) => ({ ...row, selected: checked }))
+                                            );
+                                        }}
+                                        onContextMenu={(e) => {
+                                            if (!readOnly) {
+                                                handleRightClick(e, "notes");
                                             }
-                                            onChange={(e) => {
-                                                const checked = e.target.checked;
-                                                setCuttingDeliveryItems((prev) =>
-                                                    prev.map((row) => ({ ...row, selected: checked }))
-                                                );
-                                            }}
-                                            onContextMenu={(e) => {
-                                                if (!readOnly) {
-                                                    handleRightClick(e, "notes");
-                                                }
-                                            }}
-                                            tabIndex={-1}
-                                            onFocus={(e) => e.target.blur()}
-                                            disabled={readOnly}
-                                        />
-                                    </tr>
+                                        }}
+                                        tabIndex={-1}
+                                        onFocus={(e) => e.target.blur()}
+                                        disabled={readOnly}
+                                    />
                                 </th>
                                 <th
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px]`}
@@ -337,6 +347,11 @@ export default function CuttingDeliveryItem({
                                     className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Consumtion
+                                </th>
+                                <th
+                                    className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Employee
                                 </th>
                                 <th
                                     className={`w-48 px-1 py-2 text-center font-medium text-[13px] `}
@@ -606,7 +621,7 @@ export default function CuttingDeliveryItem({
                                                                 rowData.sizeDetails = rowData.sizeDetails?.map(
                                                                     (s) =>
                                                                         s.sizeId === col.sizeId ? { ...s, qty } : s
-                                                                )|| initSizeDetails(rowData);
+                                                                ) || initSizeDetails(rowData);
                                                                 rowData.issueQty = rowData.sizeDetails.reduce(
                                                                     (total, item) =>
                                                                         total + Number(item.qty || 0),
@@ -619,6 +634,13 @@ export default function CuttingDeliveryItem({
                                                         }}
                                                         onFocus={(e) => e.target.select()}
                                                         min={"0"}
+                                                        onKeyDown={(e) => {
+                                                            if (
+                                                                e.code === "Minus" ||
+                                                                e.code === "NumpadSubtract"
+                                                            )
+                                                                e.preventDefault();
+                                                        }}
                                                     />
                                                 </td>
                                             );
@@ -674,6 +696,19 @@ export default function CuttingDeliveryItem({
                                             {row.usedMeter && row.issueQty
                                                 ? (row.usedMeter / row.issueQty).toFixed(2)
                                                 : ""}
+                                        </td>
+                                        <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 px-1 text-center">
+                                            <button
+                                                className="text-xs"
+                                                onClick={() => {
+                                                    if (sizeColumns) {
+                                                        setEmployeeOpen(true)
+                                                        setSelectedRowIndex(index)
+                                                    }
+                                                }}
+                                            >
+                                                {VIEW}
+                                            </button>
                                         </td>
                                         <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                                             <input
@@ -776,6 +811,86 @@ export default function CuttingDeliveryItem({
                     )}
                 </div>
             </div>
+            <Modal
+                isOpen={employeeOpen}
+                onClose={() => setEmployeeOpen(!employeeOpen)}
+            >
+                <div className="w-[300px]">
+                    <h1 className="font-medium">Employee Details</h1>
+                    <table className="w-full border-collapse table-fixed mt-2">
+                        <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
+                            <tr>
+                                <th
+                                    className={`w-12 px-4 py-2 text-center font-medium text-[13px]`}
+                                >
+                                    Sizes
+                                </th>
+                                <th
+                                    className={`w-48 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Employee
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {sizeColumns.map((col, index) => {
+                                const sizeItem = cuttingDeliveryItems[selectedRowIndex]?.sizeDetails?.find(
+                                    s => s.sizeId === col.sizeId
+                                ) || { sizeId: col.sizeId, qty: "", employeeId: "" };
+                                return (
+                                    <tr
+                                        className="border border-blue-gray-200 cursor-pointer"
+                                        key={index}
+                                    >
+                                        <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
+                                            {col.sizeName}
+                                        </td>
+                                        <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                                            <select
+                                                id={`employeeId-input-${index}`}
+                                                tabIndex={"0"}
+                                                disabled={readOnly}
+                                                className="text-left w-full rounded py-1 table-data-input"
+                                                value={sizeItem.employeeId || ""}
+                                                onChange={(e) => {
+                                                    const empId = e.target.value;
+                                                    setCuttingDeliveryItems((prev) => {
+                                                        const updated = [...prev];
+                                                        const rowData = { ...updated[selectedRowIndex] }
+                                                        rowData.sizeDetails = rowData?.sizeDetails?.map(s =>
+                                                            s.sizeId === col.sizeId ? { ...s, employeeId: empId } : s
+                                                        ) || [];
+                                                        updated[selectedRowIndex] = rowData;
+                                                        return updated;
+                                                    })
+                                                }}
+                                            >
+                                                <option></option>
+                                                {(employeeList?.data
+
+                                                )?.map((blend) => (
+                                                    <option value={blend.id} key={blend.id}>
+                                                        {blend?.firstName}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+
+                    </table>
+                    <div className="flex justify-end ">
+                        <button
+                            className="px-4 mt-2 mr-0 justify-end  bg-green-700 text-white rounded-md hover:bg-green-800 transition"
+                            onClick={() => setEmployeeOpen(!employeeOpen)}
+                        >
+                            Ok
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </>
     );
 }

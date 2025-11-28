@@ -1,43 +1,71 @@
 import React, { useEffect, useState } from 'react'
-import { useGetPcsStockQuery, useGetStockByIdQuery } from '../../../redux/services/StockService';
-import { Loader } from '../../../Basic/components';
-import { pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from '../../../Utils/helper';
-import ReactPaginate from 'react-paginate';
-import { showEntries } from '../../../Utils/DropdownData';
+import { findFromList } from '../../../Utils/helper';
 
-const ProductionDetailsFillGrid = ({ isStitching, processIdTo, productionDeliveryDetails, setProductionDeliveryDetails, setFillGrid, storeId, fromProcessId, itemId, orderId }) => {
-    const [localProductionDeliveryDetails, setLocaProductionDeliveryDetails] = useState(productionDeliveryDetails);
+const ProductionDetailsFillGrid = ({ productionEntryItems, setProductionEntryItems, setFillGrid, styleData, styleItemList, fabricList, colorList, portionList, processList }) => {
+    const [localProductionEntryItems, setLocalProductionEntryItems] = useState([]);
+    const isRowEmpty = (row) =>
+        !row.styleId &&
+        !row.styleItemId &&
+        !row.fabricId &&
+        !row.colorId &&
+        !row.portionId &&
+        !row.orderQty &&
+        !row.issueQty &&
+        !row.remarks;
 
     function handleDone() {
-        setProductionDeliveryDetails(localProductionDeliveryDetails);
+        setProductionEntryItems((prev) => {
+            let updated = [...prev];
+
+            // 1️⃣ Find ALL empty rows first
+            const emptyRowIndices = updated.reduce((indices, row, index) => {
+                if (isRowEmpty(row)) {
+                    indices.push(index);
+                }
+                return indices;
+            }, []);
+
+            console.log("Empty row indices:", emptyRowIndices);
+
+            // 2️⃣ Fill empty rows with our items
+            localProductionEntryItems.forEach((item, i) => {
+                const newRow = {
+                    ...item,
+                    styleItemId: item.styleItemId ?? "",
+                    fabricId: item.fabricId ?? "",
+                    colorId: item.colorId ?? "",
+                    portionId: item.portionId ?? "",
+                    styleId: item.styleId ?? "",
+                    stkQty: item.stkQty ?? ""
+                };
+
+                // If we have an empty row at this position, use it
+                if (i < emptyRowIndices.length) {
+                    updated[emptyRowIndices[i]] = newRow;
+                }
+                // Otherwise, append to the end
+                else {
+                    updated.push(newRow);
+                }
+            });
+
+            return updated;
+        });
+
         setFillGrid(false);
     }
+
+
 
     function handleCancel() {
-        setLocaProductionDeliveryDetails([]);
+        setLocalProductionEntryItems([]);
         setFillGrid(false);
     }
-    const [dataPerPage, setDataPerPage] = useState("10");
-    const [totalCount, setTotalCount] = useState(0);
-    const [currentPageNumber, setCurrentPageNumber] = useState(1);
 
-    const { data, isFetching, isLoading } = useGetPcsStockQuery({
-        params: {
-            storeId, prevProcessId: fromProcessId, itemId, isForProductionDelivery: true,
-            pagination: true, orderId, toProcessId: processIdTo,
-            dataPerPage, pageNumber: currentPageNumber
-        }
-    })
-
-    useEffect(() => {
-        if (data?.totalCount) {
-            setTotalCount(data?.totalCount)
-        }
-    }, [data, isLoading, isFetching])
-    if (!data?.data || isFetching || isLoading) return <Loader />
+    // if (!data?.data || isFetching || isLoading) return <Loader />
 
     function addItem(item) {
-        setLocaProductionDeliveryDetails(localInwardItems => {
+        setLocalProductionEntryItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems);
             newItems.push(item);
             newItems = newItems?.map(j => { return { ...j, delQty: j.qty } })
@@ -47,41 +75,29 @@ const ProductionDetailsFillGrid = ({ isStitching, processIdTo, productionDeliver
 
 
     function removeItem(removeItem) {
-        setLocaProductionDeliveryDetails(localInwardItems => {
+        setLocalProductionEntryItems(localInwardItems => {
             return localInwardItems.filter(item =>
                 !(removeItem.itemId === item.itemId
                     &&
                     removeItem.prevProcessId === item.prevProcessId
                     &&
-                    removeItem.panelId === item.panelId
-                    &&
                     removeItem.sizeId === item.sizeId
                     &&
                     removeItem.colorId === item.colorId
-                    &&
-                    removeItem.storeId === item.storeId
-                    &&
-                    removeItem.panelColorId === item.panelColorId
                 )
             )
         });
     }
 
     function isItemChecked(checkItem) {
-        let item = localProductionDeliveryDetails.find(item =>
+        let item = localProductionEntryItems.find(item =>
             checkItem.itemId === item.itemId
             &&
             checkItem.prevProcessId === item.prevProcessId
             &&
-            checkItem.panelId === item.panelId
-            &&
             checkItem.sizeId === item.sizeId
             &&
             checkItem.colorId === item.colorId
-            &&
-            checkItem.storeId === item.storeId
-            &&
-            checkItem.panelColorId === item.panelColorId
         )
         if (!item) return false
         return true
@@ -98,104 +114,104 @@ const ProductionDetailsFillGrid = ({ isStitching, processIdTo, productionDeliver
 
     function handleSelectAllChange(value) {
         if (value) {
-            (data?.data ? data.data : []).forEach(item => addItem(item))
+            (styleData ? styleData : []).forEach(item => addItem(item))
         } else {
-            (data?.data ? data.data : []).forEach(item => removeItem(item))
+            (styleData ? styleData : []).forEach(item => removeItem(item))
         }
     }
 
     function getSelectAll() {
-        return (data?.data ? data.data : []).every(item => isItemChecked(item))
+        return (styleData ? styleData : []).every(item => isItemChecked(item))
     }
 
 
     return (
-        <div>
-            <div className={`bg-gray-200 z-50 w-[1000px] h-[400px] overflow-auto`}>
-                <div className="md:flex md:items-center md:justify-between page-heading p-1">
-                    <div className="heading text-center md:mx-10 text-xs"> Stock Items</div>
+        <div
+            className="bg-black/30 backdrop-blur-sm flex items-center justify-center "
+        >
+            <div className="w-[1000px] bg-white  shadow-2xl overflow-hidden">
 
-                    <div className=" sub-heading justify-center md:justify-start items-center">
-                        <label className="text-white text-xs rounded-md m-1  border-none">Show Entries</label>
-                        <select value={dataPerPage}
-                            onChange={(e) => setDataPerPage(e.target.value)} className='h-6 w-40 border border-gray-500 rounded mr-9'>
-                            {showEntries.map((option) => <option value={option.value} >{option.show}</option>)}
-                        </select>
-                    </div>
-                    <button className='p-1 bg-blue-400 rounded-lg' onClick={handleDone}>Done</button>
+                {/* HEADER */}
+                <div className="bg-gradient-to-r from-gray-400 to-gray-500 text-white px-4 py-2 flex justify-between items-center">
+                    <h2 className="text-sm font-semibold tracking-wide">Stock Items</h2>
+                    {/* <button
+                        className="px-3 py-1 bg-white/20 border border-white/30 text-white rounded-md hover:bg-white/30 transition"
+                        onClick={handleDone}
+                    >
+                        Done
+                    </button> */}
                 </div>
-                <table className="border border-gray-500 w-full text-xs text-start">
-                    <thead className="border border-gray-500">
-                        <tr>
-                            <th className='w-8 p-5'>
-                                Mark All
-                                <input type="checkbox" className='w-full' onChange={(e) => handleSelectAllChange(e.target.checked)}
-                                    checked={getSelectAll()}
-                                />
-                            </th>
-                            <th className="w-20 border border-gray-500">S.no</th>
-                            <th className="border border-gray-500">Item</th>
-                            {
-                                !isStitching() &&
-                                <th className="border border-gray-500">panel</th>
-                            }
 
-                            <th className="border border-gray-500">Color</th>
-                            <th className="border border-gray-500">Size</th>
-                            <th className="border border-gray-500">Prev. Process</th>
-                            <th className="border border-gray-500">Stock Qty</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {(data?.data || []).map((item, index) =>
-                            <tr key={index} className='table-row' onClick={() => {
-                                handleCheckBoxChange(!isItemChecked(item), item)
-                            }}>
-                                <td className='table-data'>
-                                    <input type="checkbox" className='w-full table-data-input'
-                                        checked={isItemChecked(item)} />
-                                </td>
-                                <td>{index + 1}</td>
-                                <td>{item.itemName}</td>
-
-                                {
-                                    !isStitching() &&
-                                    <td className='text-center'>{item?.panelName}</td>
-                                }
-                                <td className='text-center'>{item?.colorName}</td>
-                                <td className='text-center'>{item.sizeName}</td>
-                                <td className='text-center'>{item.stage}</td>
-                                <td className='text-right'>{item.qty}</td>
+                {/* TABLE CONTENT */}
+                <div className="overflow-auto h-[350px]">
+                    <table className="w-full text-xs border border-gray-200">
+                        <thead className="bg-gray-100 text-gray-700">
+                            <tr className='border border-gray-200'>
+                                <th className="px-2 py-1 w-10">
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-[10px] font-medium mb-[2px]">Select</span>
+                                        <input
+                                            type="checkbox"
+                                            className="cursor-pointer"
+                                            onChange={(e) => handleSelectAllChange(e.target.checked)}
+                                            checked={getSelectAll()}
+                                        />
+                                    </div>
+                                </th>
+                                <th className="p-2 ">S.No</th>
+                                <th className="p-2 ">Style</th>
+                                <th className="p-2 ">Fabric</th>
+                                <th className="p-2 ">Color</th>
+                                <th className="p-2 ">Portion</th>
+                                <th className="p-2 ">Prev Process</th>
+                                <th className="p-2 ">Stock Qty</th>
                             </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
-            <div className=''>
-                <ReactPaginate
-                    previousLabel={"<"}
-                    nextLabel={">"}
-                    breakLabel={"..."}
-                    breakClassName={"break-me"}
-                    forcePage={pageNumberToReactPaginateIndex(currentPageNumber)}
-                    pageCount={Math.ceil(totalCount / dataPerPage)}
-                    marginPagesDisplayed={1}
-                    onPageChange={(e) => {
-                        setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
-                    }}
-                    containerClassName={"flex justify-center mt-3 gap-3 items-center w-full"}
-                    pageClassName={"border custom-circle text-center"}
-                    disabledClassName={"p-1 bg-gray-200"}
-                    previousLinkClassName={"border p-1 text-center"}
-                    nextLinkClassName={"border p-1"}
-                    activeClassName={"bg-blue-900 text-white px-2"} />
-            </div>
-            <div className='flex justify-end -mt-5'>
-                <button className='p-1 bg-blue-400 rounded-lg' onClick={handleDone}>Done</button>
+                        </thead>
+
+                        <tbody>
+                            {(styleData || []).map((item, index) => (
+                                <tr
+                                    key={index}
+                                    className={`border-b hover:bg-gray-50 cursor-pointer ${isItemChecked(item) ? "bg-gray-50" : ""
+                                        }`}
+                                    onClick={() =>
+                                        handleCheckBoxChange(!isItemChecked(item), item)
+                                    }
+                                >
+                                    <td className="text-center py-2">
+                                        <input
+                                            type="checkbox"
+                                            className="cursor-pointer"
+                                            checked={isItemChecked(item)}
+                                        />
+                                    </td>
+
+                                    <td className="text-center">{index + 1}</td>
+                                    <td className="text-center">{findFromList(item.styleItemId, styleItemList?.data, "name")}</td>
+                                    <td className="text-center">{findFromList(item.fabricId, fabricList?.data, "name")}</td>
+                                    <td className="text-center">{findFromList(item.colorId, colorList?.data, "name")}</td>
+                                    <td className="text-center">{findFromList(item.portionId, portionList?.data, "name")}</td>
+                                    <td className="text-center">{findFromList(item.prevProcessId, processList?.data, "name")}</td>
+                                    <td className="text-center pr-2">{item.stkQty}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* FOOTER */}
+                <div className="flex justify-end p-3 bg-gray-50">
+                    <button
+                        className="px-4 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                        onClick={handleDone}
+                    >
+                        Done
+                    </button>
+                </div>
             </div>
         </div>
+    );
 
-    )
 }
 
 export default ProductionDetailsFillGrid;

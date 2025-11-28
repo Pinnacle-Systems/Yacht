@@ -83,6 +83,9 @@ import {
   purchaseInwardEntryApi,
   MeasurementMasterApi,
   PortionMasterApi,
+  ProcessGroupSeqApi,
+  ProcessGroupApi,
+  productionStockApi,
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -185,6 +188,8 @@ const commonReducers = {
   lossReason: LossReasonApi.reducer,
   processDelivery: ProcessDeliveryApi.reducer,
   process: ProcessMasterApi.reducer,
+  processGroupSeq: ProcessGroupSeqApi.reducer,
+  processGroup: ProcessGroupApi.reducer,
   productionDelivery: ProductionDeliveryApi.reducer,
   dispatched: DispatchedApi.reducer,
   generalPurchase: GeneralPurchaseApi.reducer,
@@ -215,6 +220,7 @@ const commonReducers = {
   SizeTemplate: sizeTemplateApi.reducer,
   StockInward: StockInwardApi.reducer,
   StyleItemMaster: StyleItemMasterApi.reducer,
+  productionStock:productionStockApi.reducer
 };
 const commonMiddleware = [
   countryMasterApi.middleware,
@@ -290,6 +296,8 @@ const commonMiddleware = [
   LossReasonApi.middleware,
   ProcessDeliveryApi.middleware,
   ProcessMasterApi.middleware,
+  ProcessGroupSeqApi.middleware,
+  productionStockApi.middleware,
   ProductionDeliveryApi.middleware,
   ProductionReceiptApi.middleware,
   DispatchedApi.middleware,
@@ -319,6 +327,7 @@ const commonMiddleware = [
   SalesEntryApi.middleware,
   StockInwardApi.middleware,
   StyleItemMasterApi.middleware,
+  ProcessGroupApi.middleware
 ];
 
 const store = configureStore({

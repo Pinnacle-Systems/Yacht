@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { NoRecordFound } from "../configs/Responses.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 
 const prisma = new PrismaClient();

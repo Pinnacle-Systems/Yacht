@@ -24,7 +24,7 @@ const ProductionDeliveryFormReport = ({
   const [serachDocNo, setSerachDocNo] = useState("");
   const [searchStyleNo, setSearchStyleNo] = useState("");
   const [searchDocDate, setSearchDocDate] = useState("");
-  const [searchStore, setSearchStore] = useState("");
+  const [searchProcess, setSearchProcess] = useState("");
   const [totalCount, setTotalCount] = useState(0);
   const [currentPageNumber, setCurrentPageNumber] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,13 +36,13 @@ const ProductionDeliveryFormReport = ({
   const searchFields = {
     serachDocNo,
     searchDocDate,
-    searchStore,
+    searchProcess,
     searchStyleNo,
   };
 
   useEffect(() => {
     setCurrentPageNumber(1);
-  }, [serachDocNo, searchDocDate, searchStore, searchStyleNo]);
+  }, [serachDocNo, searchDocDate, searchProcess, searchStyleNo]);
 
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -192,6 +192,9 @@ const ProductionDeliveryFormReport = ({
                   <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Style No</div>
                   </th>
+                  <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                    <div>Process</div>
+                  </th>
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
                   </th>
@@ -230,6 +233,17 @@ const ProductionDeliveryFormReport = ({
                       value={searchStyleNo}
                       onChange={(e) => {
                         setSearchStyleNo(e.target.value);
+                      }}
+                    />
+                  </th>
+                  <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                    <input
+                      type="text"
+                      className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                      placeholder="Search"
+                      value={searchProcess}
+                      onChange={(e) => {
+                        setSearchProcess(e.target.value);
                       }}
                     />
                   </th>
@@ -275,6 +289,10 @@ const ProductionDeliveryFormReport = ({
                         <td className="py-1.5 text-left px-4">
                           {" "}
                           {dataObj?.Style?.sku}
+                        </td>
+                        <td className="py-1.5 text-left px-4">
+                          {" "}
+                          {dataObj?.FromProcess?.name}
                         </td>
                         {rowActions && (
                           <td className=" w-[30px] border-gray-200 gap-1 px-2  justify-end">

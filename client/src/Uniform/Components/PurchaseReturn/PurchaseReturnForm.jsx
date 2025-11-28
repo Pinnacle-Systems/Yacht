@@ -197,6 +197,13 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     const handleAddRow = async () => {
+        if (!storeId) {
+            toast.info("Please Choose Store...!", {
+                position: "top-center",
+                autoClose: 2000,
+            });
+            return;
+        }
         try {
             const { data: purchaseData } = await getPurchaseDetail({
                 params: {
@@ -232,7 +239,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
                 });
 
                 // Ensure at least 6 rows
-                while (updated.length < 6) {
+                while (updated.length < 4) {
                     updated.push({
                         styleNo: "",
                         fabricId: "",

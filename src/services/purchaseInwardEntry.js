@@ -845,7 +845,7 @@ async function getPurchaseDetailStock(req) {
       "fabricId",
       "colorId",
       "fabWidth",
-      "noOfPcs",
+      // "noOfPcs",
       "accessoryId",
       "accessoryGroupId",
       "sizeId",
@@ -854,7 +854,7 @@ async function getPurchaseDetailStock(req) {
     ],
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
-      storeId: storeId ? parseInt(storeId) : undefined,
+      // storeId: storeId ? parseInt(storeId) : undefined,
       invNo: invNo,
     },
     _sum: {
@@ -876,7 +876,7 @@ async function getPurchaseDetailStock(req) {
       sizeId: d.sizeId,
       fabWidth: d.fabWidth,
       fabMeter: d._sum.fabMeter,
-      noOfPcs: d.noOfPcs,
+      // noOfPcs: d.noOfPcs,
       accessoryId: d.accessoryId,
       accessoryGroupId: d.accessoryGroupId,
       sizeId: d.sizeId,

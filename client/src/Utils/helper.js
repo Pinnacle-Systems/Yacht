@@ -200,8 +200,6 @@ export function findFromList(id, list, property) {
   if (!list) return ""
   // let data = list?.filter(j => j.active).find(i => parseInt(i.id) === parseInt(id))
   let data = list?.find(i => parseInt(i.id) === parseInt(id))
-    console.log(data,"findfromList")
- 
   if (!data) return ""
 
 
@@ -417,10 +415,6 @@ export function handleMailSend(blob, mailAddress, subject, fileName, logo, headi
   }).catch(err => {
     toast.error("Please Resend !")
   });
-
-
-  console.log(form, "formmmmm")
-
 }
 
 

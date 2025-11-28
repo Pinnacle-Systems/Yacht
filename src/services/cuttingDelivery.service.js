@@ -247,7 +247,7 @@ async function create(body) {
     draftSave,
     cuttingNo,
     productionType,
-    departmentId,
+    fromProcessId,
     supplierId,
     sizeTemplateId,
   } = await body;
@@ -280,7 +280,7 @@ async function create(body) {
         cuttingNo,
         productionType,
         supplierId: supplierId ? parseInt(supplierId) : null,
-        departmentId: departmentId ? parseInt(departmentId) : null,
+        fromProcessId: fromProcessId ? parseInt(fromProcessId) : null,
         sizeTemplateId: parseInt(sizeTemplateId),
       },
     });
@@ -290,7 +290,7 @@ async function create(body) {
       data,
       userId,
       branchId,
-      departmentId
+      fromProcessId
     );
   });
   return { statusCode: 0, data };
@@ -302,7 +302,7 @@ async function createCuttingDeliveryItems(
   cuttingDelivery,
   userId,
   branchId,
-  departmentId
+  fromProcessId
   // storeId
 ) {
   const promises = cuttingDeliveryItems.map(async (deliveryDetail, index) => {
@@ -350,6 +350,7 @@ async function createCuttingDeliveryItems(
           sizeId: s.sizeId ? parseInt(s.sizeId) : null,
           qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
           cuttingDeliveryItemsId: createdItem.id,
+          employeeId: s.employeeId ? parseInt(s.employeeId) : null,
         },
       });
     }
@@ -386,9 +387,10 @@ async function createCuttingDeliveryItems(
           remarks: deliveryDetail?.remarks ?? undefined,
           sizeId: s?.sizeId ? parseInt(s.sizeId) : null,
           qty: s?.qty ? Math.round(parseFloat(s.qty)) : null,
+          employeeId: s.employeeId ? parseInt(s.employeeId) : null,
           orderQty,
           uomId: deliveryDetail?.uomId ? parseInt(deliveryDetail.uomId) : null,
-          departmentId: departmentId ? parseInt(departmentId) : null,
+          prevProcessId: fromProcessId ? parseInt(fromProcessId) : null,
         },
       });
     }
@@ -452,7 +454,7 @@ async function update(id, body) {
     docDate,
     cuttingNo,
     productionType,
-    departmentId,
+    fromProcessId,
     supplierId,
     sizeTemplateId,
   } = await body;
@@ -491,7 +493,7 @@ async function update(id, body) {
         cuttingNo,
         productionType,
         supplierId: supplierId ? parseInt(supplierId) : null,
-        departmentId: departmentId ? parseInt(departmentId) : null,
+        fromProcessId: fromProcessId ? parseInt(fromProcessId) : null,
         sizeTemplateId: parseInt(sizeTemplateId),
       },
     });
@@ -501,7 +503,7 @@ async function update(id, body) {
       data,
       userId,
       branchId,
-      departmentId
+      fromProcessId
     );
   });
   return { statusCode: 0, data };
@@ -513,7 +515,7 @@ async function updateCuttingDeliveryItems(
   cuttingDelivery,
   userId,
   branchId,
-  departmentId
+  fromProcessId
 ) {
   const promises = cuttingDeliveryItems.map(async (deliveryDetail) => {
     const orderQty = deliveryDetail?.orderQty
@@ -576,6 +578,7 @@ async function updateCuttingDeliveryItems(
             where: { id: existingMap.get(s.sizeId).id },
             data: {
               qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
+              employeeId: s.employeeId ? parseInt(s.employeeId) : null,
             },
           });
 
@@ -587,6 +590,7 @@ async function updateCuttingDeliveryItems(
               sizeId: parseInt(s.sizeId),
               qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
               cuttingDeliveryItemsId: updatedItem.id,
+              employeeId: s.employeeId ? parseInt(s.employeeId) : null,
             },
           });
         }
@@ -650,7 +654,8 @@ async function updateCuttingDeliveryItems(
               // size-level fields
               sizeId,
               qty,
-              departmentId: departmentId ? parseInt(departmentId) : null,
+              employeeId: s.employeeId ? parseInt(s.employeeId) : null,
+              prevProcessId: fromProcessId ? parseInt(fromProcessId) : null,
             },
           });
 
@@ -691,10 +696,11 @@ async function updateCuttingDeliveryItems(
               uomId: deliveryDetail?.uomId
                 ? parseInt(deliveryDetail.uomId)
                 : null,
-              departmentId: departmentId ? parseInt(departmentId) : null,
+              prevProcessId: fromProcessId ? parseInt(fromProcessId) : null,
               // size-level
               sizeId,
               qty,
+              employeeId: s.employeeId ? parseInt(s.employeeId) : null,
             },
           });
         }
@@ -837,6 +843,7 @@ async function updateCuttingDeliveryItems(
             sizeId: parseInt(s.sizeId),
             qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
             cuttingDeliveryItems: createdItem.id,
+            employeeId: s.employeeId ? parseInt(s.employeeId) : null,
           },
         });
       }
@@ -877,7 +884,8 @@ async function updateCuttingDeliveryItems(
             uomId: deliveryDetail?.uomId
               ? parseInt(deliveryDetail.uomId)
               : null,
-            departmentId: departmentId ? parseInt(departmentId) : null,
+            prevProcessId: fromProcessId ? parseInt(fromProcessId) : null,
+            employeeId: s.employeeId ? parseInt(s.employeeId) : null,
           },
         });
       }

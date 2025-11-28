@@ -17,7 +17,6 @@ import StyleMasterApi, {
 import { inHouseOutsideTypes } from "../../../Utils/DropdownData.js";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices.js";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService.js";
-import { useLazyGetFabricDetailQuery } from "../../../redux/services/MaterialStockService.js";
 import { useLazyGetSizeTemplateByIdQuery } from "../../../redux/uniformService/SizeTemplateMasterServices.js";
 import {
   useAddProductionDeliveryMutation,
@@ -28,6 +27,14 @@ import {
 import { useLazyGetOrderDetailsQuery } from "../../../redux/uniformService/CuttingOrderService.js";
 import ProductionDeliveryItem from "./ProductionDeliveryItem.js";
 import { useGetProcessMasterQuery } from "../../../redux/uniformService/ProcessMasterService.js";
+import { useLazyGetStyleDetailQuery } from "../../../redux/uniformService/ProductionStockServices.js";
+import ProductionDetailsFillGrid from "./ProductionDetailsFillGrid";
+import Modal from "../../../UiComponents/Modal/index.js";
+import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService.js";
+import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService.js";
+import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService.js";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService.js";
+
 export default function ProductionDeliveryForm({
   onClose,
   id,
@@ -47,17 +54,29 @@ export default function ProductionDeliveryForm({
   const [supplierId, setSupplierId] = useState("");
   const [fromProcessId, setFromProcessId] = useState("");
   const [toProcessId, setToProcessId] = useState("");
+  const [stockDetailsFillGrid, setStockDetailsFillGrid] = useState(false);
 
   const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
   const firstUpdate = useRef(true);
-  const [sizeTemplateId, setSizeTemplateId] = useState("");
+  // const [sizeTemplateId, setSizeTemplateId] = useState("");
 
   const dispatch = useDispatch();
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
   const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
-
+  const { data: styleItemList } = useGetStyleItemMasterQuery({
+    params: { companyId },
+  });
+  const { data: fabricList } = useGetFabricMasterQuery({
+    params: { companyId },
+  });
+  const { data: portionList } = useGetPortionMasterQuery({
+    params: { companyId },
+  });
+  const { data: colorList } = useGetColorMasterQuery({
+    params: { companyId },
+  });
   const { data: supplierList } = useGetPartyQuery({
     params: { companyId },
   });
@@ -89,7 +108,7 @@ export default function ProductionDeliveryForm({
     },
   });
 
-  const [getFabricDetail] = useLazyGetFabricDetailQuery();
+  const [getStyleStkDetail] = useLazyGetStyleDetailQuery();
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -103,7 +122,7 @@ export default function ProductionDeliveryForm({
         setDocId(data?.docId);
       }
       setStyleId(data?.styleId ? data?.styleId : "");
-      setSizeTemplateId(data?.sizeTemplateId ? data?.sizeTemplateId : "");
+      // setSizeTemplateId(data?.sizeTemplateId ? data?.sizeTemplateId : "");
       setProductionType(
         data?.productionType ? data?.productionType : "INHOUSE"
       );
@@ -111,7 +130,7 @@ export default function ProductionDeliveryForm({
       setToProcessId(data?.toProcessId ? data?.toProcessId : "");
       setFromProcessId(data?.fromProcessId ? data?.fromProcessId : "");
       setProductionEntryItems(
-        data?.productionEntryItems ? data.productionEntryItems : []
+        data?.productionEntryItems ? data?.productionEntryItems : []
       );
     },
     [id]
@@ -224,7 +243,6 @@ export default function ProductionDeliveryForm({
     styleId,
     productionType,
     supplierId,
-    sizeTemplateId,
     fromProcessId,
     toProcessId,
   };
@@ -244,24 +262,22 @@ export default function ProductionDeliveryForm({
 
   const handleAddRow = async () => {
     try {
-      const style = styleList?.data.find((item) => item.id === styleId);
-      setSizeTemplateId(style?.sizeTemplateId);
-      const { data: orderData } = await getOrderDetail({
+      if (!fromProcessId) {
+        toast.info("Please Choose From Process and Style No...!", {
+          position: "top-center",
+          autoClose: 2000,
+        });
+        return;
+      }
+      const { data: styleData } = await getStyleStkDetail({
         params: {
           styleId: styleId,
+          fromProcessId: fromProcessId,
           branchId,
         },
       });
-      const fabricItems = orderData?.data?.cuttingOrderItems;
-      const { data: fabricData } = await getFabricDetail({
-        params: {
-          styleId: styleId,
-          branchId,
-        },
-      });
-      const fabricDetails = fabricData?.data;
-      if (!fabricDetails || !fabricItems) return;
-
+      const styleItems = styleData.data || [];
+      if (!styleItems) return;
       setProductionEntryItems((prev) => {
         const updated = [...prev];
         // Find first empty slot index
@@ -271,45 +287,28 @@ export default function ProductionDeliveryForm({
             !row.styleItemId &&
             !row.fabricId &&
             !row.colorId &&
-            !row.fabWidth &&
-            !row.fabMeter &&
             !row.portionId &&
-            !row.sizeId &&
-            !row.orderQty &&
-            !row.remarks
+            !row.sizeId
         );
         if (startIndex === -1) startIndex = updated.length;
-
-        fabricItems.forEach((item, i) => {
-          const detail = fabricDetails.find(
-            (f) => f.styleId === item.styleId && f.colorId === item.colorId
-          );
-          const newRow = {
-            ...item,
-            fabWidth: detail?.fabWidth || "",
-            fabMeter: detail?.fabMeter || "",
-          };
+        styleItems.forEach((row, i) => {
+          const cloned = structuredClone(row);
           if (startIndex + i < updated.length) {
-            updated[startIndex + i] = newRow;
+            updated[startIndex + i] = cloned;
           } else {
-            updated.push(newRow);
+            updated.push(cloned); // append if no empty slot
           }
         });
-
-        // Ensure at least 6 rows
-        while (updated.length < 5) {
+        while (updated.length < 6) {
           updated.push({
             styleId: "",
             styleItemId: "",
             fabricId: "",
             colorId: "",
-            fabWidth: "",
-            fabMeter: "",
             portionId: "",
             sizeId: "",
             orderQty: "",
             remarks: "",
-            selected: false,
           });
         }
 
@@ -326,6 +325,16 @@ export default function ProductionDeliveryForm({
       event.preventDefault();
       saveData();
     }
+  };
+
+  const handleStyleChange = (newValue) => {
+    setStyleId(newValue);
+    // Use Promise to ensure state update
+    Promise.resolve().then(() => {
+      if (newValue) {
+        handleAddRow();
+      }
+    });
   };
 
   return (
@@ -360,6 +369,43 @@ export default function ProductionDeliveryForm({
               />
             </div>
           </div>
+
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+            <h2 className="font-medium text-slate-700 mb-2">Process Details</h2>
+
+            <div className="grid grid-cols-2 gap-1">
+              <DropdownNew
+                name="From Process"
+                dataList={
+                  id
+                    ? processList?.data
+                    : processList?.data?.filter((item) => item.active)
+                }
+                value={fromProcessId}
+                setValue={setFromProcessId}
+                readOnly={readOnly}
+                placeholder={"Select Process"}
+                disabled={id}
+                required={true}
+                autoFocus={true}
+              />
+              <DropdownNew
+                name="To Process"
+                dataList={
+                  id
+                    ? processList?.data
+                    : processList?.data?.filter((item) => item.active)
+                }
+                value={toProcessId}
+                setValue={setToProcessId}
+                readOnly={readOnly}
+                placeholder={"Select Process"}
+                disabled={id}
+                required={true}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-1"></div>
+          </div>
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
             <h2 className="font-medium text-slate-700 mb-2">
               Production Details
@@ -372,7 +418,6 @@ export default function ProductionDeliveryForm({
                 setValue={setProductionType}
                 required={true}
                 readOnly={id}
-                autoFocus={true}
               />
               {data?.productionType === "OUTSIDE" && (
                 <DropdownNew
@@ -398,50 +443,22 @@ export default function ProductionDeliveryForm({
                     : styleList?.data?.filter((item) => item.active)
                 }
                 value={styleId}
-                setValue={setStyleId}
+                setValue={handleStyleChange}
                 required={true}
                 readOnly={readOnly}
                 placeholder={"Select Style"}
                 otherField={"sku"}
                 disabled={id}
                 clear={true}
+                // onKeyDown={(e) => {
+                //   if (e.key === "Enter") {
+                //     setTimeout(() => {
+                //       handleAddRow();
+                //     }, 100);
+                //   }
+                // }}
               />
             </div>
-          </div>
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">Process Details</h2>
-
-            <div className="grid grid-cols-2 gap-1">
-              <DropdownNew
-                name="From Process"
-                dataList={
-                  id
-                    ? processList?.data
-                    : processList?.data?.filter((item) => item.active)
-                }
-                value={fromProcessId}
-                setValue={setFromProcessId}
-                readOnly={readOnly}
-                placeholder={"Select Process"}
-                disabled={id}
-                required={true}
-              />
-              <DropdownNew
-                name="To Process"
-                dataList={
-                  id
-                    ? processList?.data
-                    : processList?.data?.filter((item) => item.active)
-                }
-                value={toProcessId}
-                setValue={setToProcessId}
-                readOnly={readOnly}
-                placeholder={"Select Process"}
-                disabled={id}
-                required={true}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-1"></div>
           </div>
         </div>
         <fieldset className="w-full  min-w-[1200px]">
@@ -451,7 +468,7 @@ export default function ProductionDeliveryForm({
             readOnly={readOnly}
             id={id}
             styleId={styleId}
-            sizeTemplateId={sizeTemplateId}
+            // sizeTemplateId={sizeTemplateId}
             uomList={uomList}
             styleTemplateDetail={styleTemplateDetail}
           />
@@ -502,6 +519,25 @@ export default function ProductionDeliveryForm({
           </div>
         </div>
       </div>
+      {/* <Modal
+        isOpen={stockDetailsFillGrid}
+        onClose={() => {
+          setStockDetailsFillGrid(false);
+        }}
+        // widthClass={"bg-gray-300"}
+      >
+        <ProductionDetailsFillGrid
+          styleData={styleData}
+          setFillGrid={setStockDetailsFillGrid}
+          productionEntryItems={productionEntryItems}
+          setProductionEntryItems={setProductionEntryItems}
+          styleItemList={styleItemList}
+          fabricList={fabricList}
+          portionList={portionList}
+          processList={processList}
+          colorList={colorList}
+        />
+      </Modal> */}
     </div>
   );
 }

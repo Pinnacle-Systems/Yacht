@@ -87,11 +87,11 @@ const FabricInwardItems = ({
       setFabricInwardItems((prev) => {
         const filledRows = prev.length;
 
-        if (filledRows < 6) {
+        if (filledRows < 4) {
           // add empty rows until total becomes 6
           return [
             ...prev,
-            ...Array.from({ length: 6 - filledRows }, () => ({
+            ...Array.from({ length: 4 - filledRows }, () => ({
               styleNo: "",
               fabricId: "",
               styleId: "",
@@ -109,7 +109,7 @@ const FabricInwardItems = ({
       });
     } else {
       setFabricInwardItems(
-        Array.from({ length: 6 }, () => ({
+        Array.from({ length: 4 }, () => ({
           styleNo: "",
           fabricId: "",
           styleId: "",
@@ -493,6 +493,8 @@ const FabricInwardItems = ({
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
                         onKeyDown={(e) => {
+                          if (e.code === "Minus" || e.code === "NumpadSubtract")
+                            e.preventDefault();
                           if (e.key === "Enter") {
                             e.preventDefault(); // prevent form submit or line break
                             e.stopPropagation();
@@ -507,7 +509,7 @@ const FabricInwardItems = ({
                             handleInputChange("", index, "noOfPcs");
                           }
                         }}
-                        type="string"
+                        type="number"
                         className="text-right rounded py-1 px-1 w-full table-data-input"
                         onFocus={(e) => e.target.select()}
                         value={row?.noOfPcs}

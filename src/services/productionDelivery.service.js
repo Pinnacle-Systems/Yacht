@@ -101,7 +101,7 @@ async function get(req) {
     dataPerPage,
     serachDocNo,
     searchDocDate,
-    searchStore,
+    searchProcess,
     finYearId,
     searchStyleNo,
   } = req.query;
@@ -140,8 +140,8 @@ async function get(req) {
             contains: serachDocNo,
           }
         : undefined,
-      Store: {
-        storeName: searchStore ? { contains: searchStore } : undefined,
+      FromProcess: {
+        name: searchProcess ? { contains: searchProcess } : undefined,
       },
       Style: {
         sku: searchStyleNo ? { contains: searchStyleNo } : undefined,
@@ -161,6 +161,11 @@ async function get(req) {
           sku: true,
         },
       },
+      FromProcess:{
+        select:{
+          name:true
+        }
+      }
     },
   });
   totalCount = data.length;
@@ -191,28 +196,66 @@ async function getOne(id) {
     },
     include: {
       productionEntryItems: {
-        select: {
-          id: true,
-          productionEntryId: true,
-          styleItemId: true,
-          fabricId: true,
-          colorId: true,
-          sizeId: true,
-          portionId: true,
-          styleId: true,
-          orderQty: true,
-          remarks: true,
-          issueQty: true,
+        include: {
           pcsSizeDetails: true,
         },
       },
     },
   });
+
   if (!data) return NoRecordFound("ProductionEntry");
+  let beforeProcessId = null;
+  if (data) {
+    const currentProcess = await prisma.processGroupList.findFirst({
+      where: {
+        processId: data?.fromProcessId,
+      },
+      select: {
+        seqNo: true,
+      },
+    });
+    if (currentProcess?.seqNo) {
+      const beforeProcess = await prisma.processGroupList.findFirst({
+        where: {
+          seqNo: currentProcess.seqNo - 1,
+        },
+        select: {
+          processId: true,
+        },
+      });
+      beforeProcessId = beforeProcess?.processId || null;
+    }
+  }
+  // Add stkQty to each production entry item
+  const productionEntryItemsWithStkQty = await Promise.all(
+    data.productionEntryItems.map(async (item) => {
+      const stockData = await prisma.productionStock.aggregate({
+        where: {
+          styleItemId: item.styleItemId,
+          fabricId: item.fabricId,
+          colorId: item.colorId,
+          portionId: item.portionId,
+          styleId: item.styleId,
+          prevProcessId: beforeProcessId,
+          sizeId: item.sizeId,
+        },
+        _sum: {
+          qty: true,
+        },
+      });
+
+      return {
+        ...item,
+        stkQty: stockData._sum.qty + item.issueQty || 0, // Dynamic field for view
+      };
+    })
+  );
+
   return {
     statusCode: 0,
     data: {
       ...data,
+      productionEntryItems: productionEntryItemsWithStkQty,
     },
   };
 }
@@ -239,7 +282,6 @@ async function create(body) {
     draftSave,
     productionType,
     supplierId,
-    sizeTemplateId,
     fromProcessId,
     toProcessId,
   } = await body;
@@ -271,7 +313,7 @@ async function create(body) {
         docDate: docDate ? new Date(docDate) : null,
         productionType,
         supplierId: supplierId ? parseInt(supplierId) : null,
-        sizeTemplateId: parseInt(sizeTemplateId),
+        // sizeTemplateId: parseInt(sizeTemplateId),
         fromProcessId: parseInt(fromProcessId),
         toProcessId: parseInt(toProcessId),
       },
@@ -301,6 +343,28 @@ async function createProductionEntryItems(
     const orderQty = entryDetail?.orderQty
       ? Math.round(parseFloat(entryDetail.orderQty))
       : null;
+    let beforeProcessId = null;
+    if (prevProcessId) {
+      const currentProcess = await tx.processGroupList.findFirst({
+        where: {
+          processId: prevProcessId,
+        },
+        select: {
+          seqNo: true,
+        },
+      });
+      if (currentProcess?.seqNo) {
+        const beforeProcess = await tx.processGroupList.findFirst({
+          where: {
+            seqNo: currentProcess.seqNo - 1,
+          },
+          select: {
+            processId: true,
+          },
+        });
+        beforeProcessId = beforeProcess?.processId || null;
+      }
+    }
     const createdItem = await tx.productionEntryItems.create({
       data: {
         productionEntryId: parseInt(productionEntry.id),
@@ -321,47 +385,82 @@ async function createProductionEntryItems(
         remarks: entryDetail?.remarks ?? undefined,
         uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
         prevProcessId: prevProcessId,
+        employeeId: entryDetail?.employeeId
+          ? parseInt(entryDetail?.employeeId)
+          : null,
       },
     });
-    const sizes = entryDetail.pcsSizeDetails || [];
-    for (const s of sizes) {
-      await tx.pcsSizeDetails.create({
-        data: {
-          sizeId: s.sizeId ? parseInt(s.sizeId) : null,
-          qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
-          productionEntryItemsId: createdItem.id,
-        },
-      });
-    }
+    // const sizes = entryDetail.pcsSizeDetails || [];
+    // for (const s of sizes) {
+    //   await tx.pcsSizeDetails.create({
+    //     data: {
+    //       sizeId: s.sizeId ? parseInt(s.sizeId) : null,
+    //       qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
+    //       productionEntryItemsId: createdItem.id,
+    //     },
+    //   });
+    // }
     // Create corresponding Stock row
-    for (const s of sizes) {
-      await tx.productionStock.create({
-        data: {
-          inOrOut: "productionEntry",
-          productionEntryItemsId: createdItem.id,
-          createdById: parseInt(userId),
-          branchId: parseInt(branchId),
+    // for (const s of sizes) {
+    await tx.productionStock.create({
+      data: {
+        inOrOut: "productionAdd",
+        productionEntryItemsId: createdItem.id,
+        createdById: parseInt(userId),
+        branchId: parseInt(branchId),
 
-          fabricId: entryDetail?.fabricId
-            ? parseInt(entryDetail.fabricId)
-            : null,
-          styleId: entryDetail?.styleId ? parseInt(entryDetail.styleId) : null,
-          styleItemId: entryDetail?.styleItemId
-            ? parseInt(entryDetail.styleItemId)
-            : null,
-          colorId: entryDetail?.colorId ? parseInt(entryDetail.colorId) : null,
-          portionId: entryDetail?.portionId
-            ? parseInt(entryDetail.portionId)
-            : null,
-          remarks: entryDetail?.remarks ?? undefined,
-          sizeId: s?.sizeId ? parseInt(s.sizeId) : null,
-          qty: s?.qty ? Math.round(parseFloat(s.qty)) : null,
-          orderQty,
-          uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
-          prevProcessId: prevProcessId,
-        },
-      });
-    }
+        fabricId: entryDetail?.fabricId ? parseInt(entryDetail.fabricId) : null,
+        styleId: entryDetail?.styleId ? parseInt(entryDetail.styleId) : null,
+        styleItemId: entryDetail?.styleItemId
+          ? parseInt(entryDetail.styleItemId)
+          : null,
+        colorId: entryDetail?.colorId ? parseInt(entryDetail.colorId) : null,
+        sizeId: entryDetail?.sizeId ? parseInt(entryDetail.sizeId) : null,
+        portionId: entryDetail?.portionId
+          ? parseInt(entryDetail.portionId)
+          : null,
+        remarks: entryDetail?.remarks ?? undefined,
+        qty: entryDetail?.issueQty
+          ? Math.round(parseFloat(entryDetail.issueQty))
+          : null,
+        orderQty,
+        uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
+        prevProcessId: prevProcessId,
+        employeeId: entryDetail?.employeeId
+          ? parseInt(entryDetail?.employeeId)
+          : null,
+      },
+    });
+    await tx.productionStock.create({
+      data: {
+        inOrOut: "productionMinus",
+        productionEntryItemsId: createdItem.id,
+        createdById: parseInt(userId),
+        branchId: parseInt(branchId),
+
+        fabricId: entryDetail?.fabricId ? parseInt(entryDetail.fabricId) : null,
+        styleId: entryDetail?.styleId ? parseInt(entryDetail.styleId) : null,
+        styleItemId: entryDetail?.styleItemId
+          ? parseInt(entryDetail.styleItemId)
+          : null,
+        colorId: entryDetail?.colorId ? parseInt(entryDetail.colorId) : null,
+        portionId: entryDetail?.portionId
+          ? parseInt(entryDetail.portionId)
+          : null,
+        remarks: entryDetail?.remarks ?? undefined,
+        sizeId: entryDetail?.sizeId ? parseInt(entryDetail.sizeId) : null,
+        qty: entryDetail?.issueQty
+          ? -Math.round(parseFloat(entryDetail.issueQty))
+          : null,
+        orderQty,
+        uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
+        prevProcessId: beforeProcessId,
+        employeeId: entryDetail?.employeeId
+          ? parseInt(entryDetail?.employeeId)
+          : null,
+      },
+    });
+
     return createdItem;
   });
 
@@ -387,7 +486,7 @@ async function update(id, body) {
     docDate,
     productionType,
     supplierId,
-    sizeTemplateId,
+    // sizeTemplateId,
     fromProcessId,
     toProcessId,
   } = await body;
@@ -425,7 +524,7 @@ async function update(id, body) {
         docDate: docDate ? new Date(docDate) : null,
         productionType,
         supplierId: supplierId ? parseInt(supplierId) : null,
-        sizeTemplateId: parseInt(sizeTemplateId),
+        // sizeTemplateId: parseInt(sizeTemplateId),
         fromProcessId: parseInt(fromProcessId),
         toProcessId: parseInt(toProcessId),
       },
@@ -441,6 +540,259 @@ async function update(id, body) {
   return { statusCode: 0, data };
 }
 
+// async function updateProductionEntryItems(
+//   tx,
+//   productionEntryItems,
+//   productionEntry,
+//   userId,
+//   branchId
+// ) {
+//   const promises = productionEntryItems.map(async (entryDetail) => {
+//     const prevProcessId = productionEntry?.fromProcessId
+//       ? productionEntry.fromProcessId
+//       : null;
+//     const orderQty = entryDetail?.orderQty
+//       ? Math.round(parseFloat(entryDetail.orderQty))
+//       : null;
+//     const sizes = entryDetail?.pcsSizeDetails || [];
+//     if (entryDetail.id) {
+//       // Update existing productionEntryItem
+//       const updatedItem = await tx.productionEntryItems.update({
+//         where: { id: parseInt(entryDetail.id) },
+//         data: {
+//           productionEntryId: parseInt(productionEntry.id),
+//           fabricId: entryDetail?.fabricId
+//             ? parseInt(entryDetail.fabricId)
+//             : null,
+//           styleId: entryDetail?.styleId ? parseInt(entryDetail.styleId) : null,
+//           styleItemId: entryDetail?.styleItemId
+//             ? parseInt(entryDetail.styleItemId)
+//             : null,
+//           sizeId: entryDetail?.sizeId ? parseInt(entryDetail.sizeId) : null,
+//           colorId: entryDetail?.colorId ? parseInt(entryDetail.colorId) : null,
+//           portionId: entryDetail?.portionId
+//             ? parseInt(entryDetail.portionId)
+//             : null,
+//           orderQty,
+//           remarks: entryDetail?.remarks ?? undefined,
+//           issueQty: entryDetail?.issueQty
+//             ? Math.round(parseFloat(entryDetail.issueQty))
+//             : null,
+//           uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
+//           prevProcessId: prevProcessId,
+//           employeeId: entryDetail?.employeeId
+//             ? parseInt(entryDetail?.employeeId)
+//             : null,
+//         },
+//       });
+//       const existingSizes = await tx.pcsSizeDetails.findMany({
+//         where: { productionEntryItemsId: updatedItem.id },
+//       });
+//       // Create map for faster match
+//       const existingMap = new Map();
+//       existingSizes.forEach((s) => existingMap.set(s.sizeId, s));
+
+//       // Loop through incoming sizes
+//       for (const s of sizes) {
+//         if (existingMap.has(s.sizeId)) {
+//           // Update existing
+//           await tx.pcsSizeDetails.update({
+//             where: { id: existingMap.get(s.sizeId).id },
+//             data: {
+//               qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
+//             },
+//           });
+
+//           existingMap.delete(s.sizeId);
+//         } else {
+//           // Insert new
+//           await tx.pcsSizeDetails.create({
+//             data: {
+//               sizeId: parseInt(s.sizeId),
+//               qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
+//               productionEntryItemsId: updatedItem.id,
+//             },
+//           });
+//         }
+//       }
+
+//       // Delete removed sizes
+//       for (const leftover of existingMap.values()) {
+//         await tx.pcsSizeDetails.delete({
+//           where: { id: leftover.id },
+//         });
+//       }
+//       // Update or create Stock row
+//       // === SIZE-WISE STOCK ===
+
+//       // 1. Fetch existing stock rows for this item
+//       const existingStockRows = await tx.productionStock.findMany({
+//         where: { productionEntryItemsId: updatedItem.id },
+//       });
+//       // Create a map for quick lookup
+//       const stockMap = new Map();
+//       existingStockRows.forEach((row) => stockMap.set(row.sizeId, row));
+//       for (const s of sizes) {
+//         const sizeId = parseInt(s.sizeId);
+//         const qty = s.qty ? Math.round(parseFloat(s.qty)) : null;
+
+//         if (stockMap.has(sizeId)) {
+//           // ==== UPDATE EXISTING STOCK ====
+//           const row = stockMap.get(sizeId);
+
+//           await tx.productionStock.update({
+//             where: { id: row.id },
+//             data: {
+//               updatedById: parseInt(userId),
+//               fabricId: entryDetail?.fabricId
+//                 ? parseInt(entryDetail.fabricId)
+//                 : null,
+//               styleId: entryDetail?.styleId
+//                 ? parseInt(entryDetail.styleId)
+//                 : null,
+//               styleItemId: entryDetail?.styleItemId
+//                 ? parseInt(entryDetail.styleItemId)
+//                 : null,
+//               colorId: entryDetail?.colorId
+//                 ? parseInt(entryDetail.colorId)
+//                 : null,
+//               portionId: entryDetail?.portionId
+//                 ? parseInt(entryDetail.portionId)
+//                 : null,
+//               remarks: entryDetail?.remarks ?? undefined,
+//               orderQty,
+//               uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
+//               prevProcessId: prevProcessId,
+//               // size-level fields
+//               sizeId,
+//               qty,
+//             },
+//           });
+
+//           // remove from map (means processed)
+//           stockMap.delete(sizeId);
+//         } else {
+//           // ==== INSERT NEW STOCK ROW ====
+//           await tx.productionStock.create({
+//             data: {
+//               inOrOut: "productionEntry",
+//               productionEntryItemsId: updatedItem.id,
+//               createdById: parseInt(userId),
+//               branchId: parseInt(branchId),
+
+//               fabricId: entryDetail?.fabricId
+//                 ? parseInt(entryDetail.fabricId)
+//                 : null,
+//               styleId: entryDetail?.styleId
+//                 ? parseInt(entryDetail.styleId)
+//                 : null,
+//               styleItemId: entryDetail?.styleItemId
+//                 ? parseInt(entryDetail.styleItemId)
+//                 : null,
+//               colorId: entryDetail?.colorId
+//                 ? parseInt(entryDetail.colorId)
+//                 : null,
+//               portionId: entryDetail?.portionId
+//                 ? parseInt(entryDetail.portionId)
+//                 : null,
+//               remarks: entryDetail?.remarks ?? undefined,
+//               orderQty,
+//               uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
+//               prevProcessId: prevProcessId,
+//               // size-level
+//               sizeId,
+//               qty,
+//             },
+//           });
+//         }
+//       }
+
+//       // 3. DELETE leftover rows (sizes removed in UI)
+//       for (const leftover of stockMap.values()) {
+//         await tx.productionStock.delete({
+//           where: { id: leftover.id },
+//         });
+//       }
+
+//       return updatedItem;
+//     } else {
+//       // Create new productionEntryItem
+//       const createdItem = await tx.productionEntryItems.create({
+//         data: {
+//           productionEntryId: parseInt(productionEntry.id),
+
+//           fabricId: entryDetail?.fabricId
+//             ? parseInt(entryDetail.fabricId)
+//             : null,
+//           styleId: entryDetail?.styleId ? parseInt(entryDetail.styleId) : null,
+//           styleItemId: entryDetail?.styleItemId
+//             ? parseInt(entryDetail.styleItemId)
+//             : null,
+//           sizeId: entryDetail?.sizeId ? parseInt(entryDetail.sizeId) : null,
+//           colorId: entryDetail?.colorId ? parseInt(entryDetail.colorId) : null,
+//           portionId: entryDetail?.portionId
+//             ? parseInt(entryDetail.portionId)
+//             : null,
+//           remarks: entryDetail?.remarks ?? undefined,
+//           orderQty,
+//           issueQty: entryDetail?.issueQty
+//             ? Math.round(parseFloat(entryDetail.issueQty))
+//             : null,
+//           uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
+//           prevProcessId: prevProcessId,
+//         },
+//       });
+
+//       for (const s of sizes) {
+//         await tx.pcsSizeDetails.create({
+//           data: {
+//             sizeId: parseInt(s.sizeId),
+//             qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
+//             productionEntryItems: createdItem.id,
+//           },
+//         });
+//       }
+//       for (const s of sizes) {
+//         // Create Stock row
+//         await tx.productionStock.create({
+//           data: {
+//             inOrOut: "productionEntry",
+//             productionEntryItemsId: createdItem.id,
+//             createdById: parseInt(userId),
+//             branchId: parseInt(branchId),
+
+//             fabricId: entryDetail?.fabricId
+//               ? parseInt(entryDetail.fabricId)
+//               : null,
+//             styleId: entryDetail?.styleId
+//               ? parseInt(entryDetail.styleId)
+//               : null,
+//             styleItemId: entryDetail?.styleItemId
+//               ? parseInt(entryDetail.styleItemId)
+//               : null,
+//             colorId: entryDetail?.colorId
+//               ? parseInt(entryDetail.colorId)
+//               : null,
+//             portionId: entryDetail?.portionId
+//               ? parseInt(entryDetail.portionId)
+//               : null,
+//             remarks: entryDetail?.remarks ?? undefined,
+//             orderQty,
+//             sizeId: s?.sizeId ? parseInt(s.sizeId) : null,
+//             qty: s?.qty ? Math.round(parseFloat(s.qty)) : null,
+//             uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
+//             prevProcessId: prevProcessId,
+//           },
+//         });
+//       }
+
+//       return createdItem;
+//     }
+//   });
+
+//   return Promise.all(promises);
+// }
+
 async function updateProductionEntryItems(
   tx,
   productionEntryItems,
@@ -455,234 +807,162 @@ async function updateProductionEntryItems(
     const orderQty = entryDetail?.orderQty
       ? Math.round(parseFloat(entryDetail.orderQty))
       : null;
-    const sizes = entryDetail?.pcsSizeDetails || [];
+    let beforeProcessId = null;
+    if (prevProcessId) {
+      const currentProcess = await tx.processGroupList.findFirst({
+        where: {
+          processId: prevProcessId,
+        },
+        select: {
+          seqNo: true,
+        },
+      });
+      if (currentProcess?.seqNo) {
+        const beforeProcess = await tx.processGroupList.findFirst({
+          where: {
+            seqNo: currentProcess.seqNo - 1,
+          },
+          select: {
+            processId: true,
+          },
+        });
+        beforeProcessId = beforeProcess?.processId || null;
+      }
+    }
+    const commonStockData = {
+      fabricId: entryDetail?.fabricId ? parseInt(entryDetail.fabricId) : null,
+      styleId: entryDetail?.styleId ? parseInt(entryDetail.styleId) : null,
+      styleItemId: entryDetail?.styleItemId
+        ? parseInt(entryDetail.styleItemId)
+        : null,
+      colorId: entryDetail?.colorId ? parseInt(entryDetail.colorId) : null,
+      portionId: entryDetail?.portionId
+        ? parseInt(entryDetail.portionId)
+        : null,
+      sizeId: entryDetail?.sizeId ? parseInt(entryDetail.sizeId) : null,
+      remarks: entryDetail?.remarks ?? undefined,
+      orderQty,
+      uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
+      employeeId: entryDetail?.employeeId
+        ? parseInt(entryDetail?.employeeId)
+        : null,
+    };
     if (entryDetail.id) {
       // Update existing productionEntryItem
       const updatedItem = await tx.productionEntryItems.update({
         where: { id: parseInt(entryDetail.id) },
         data: {
+          ...commonStockData,
           productionEntryId: parseInt(productionEntry.id),
-          fabricId: entryDetail?.fabricId
-            ? parseInt(entryDetail.fabricId)
-            : null,
-          styleId: entryDetail?.styleId ? parseInt(entryDetail.styleId) : null,
-          styleItemId: entryDetail?.styleItemId
-            ? parseInt(entryDetail.styleItemId)
-            : null,
-          sizeId: entryDetail?.sizeId ? parseInt(entryDetail.sizeId) : null,
-          colorId: entryDetail?.colorId ? parseInt(entryDetail.colorId) : null,
-          portionId: entryDetail?.portionId
-            ? parseInt(entryDetail.portionId)
-            : null,
-          orderQty,
-          remarks: entryDetail?.remarks ?? undefined,
           issueQty: entryDetail?.issueQty
             ? Math.round(parseFloat(entryDetail.issueQty))
             : null,
-          uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
           prevProcessId: prevProcessId,
         },
       });
-      const existingSizes = await tx.pcsSizeDetails.findMany({
-        where: { productionEntryItemsId: updatedItem.id },
-      });
-      // Create map for faster match
-      const existingMap = new Map();
-      existingSizes.forEach((s) => existingMap.set(s.sizeId, s));
-
-      // Loop through incoming sizes
-      for (const s of sizes) {
-        if (existingMap.has(s.sizeId)) {
-          // Update existing
-          await tx.pcsSizeDetails.update({
-            where: { id: existingMap.get(s.sizeId).id },
-            data: {
-              qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
-            },
-          });
-
-          existingMap.delete(s.sizeId);
-        } else {
-          // Insert new
-          await tx.pcsSizeDetails.create({
-            data: {
-              sizeId: parseInt(s.sizeId),
-              qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
-              productionEntryItemsId: updatedItem.id,
-            },
-          });
-        }
-      }
-
-      // Delete removed sizes
-      for (const leftover of existingMap.values()) {
-        await tx.pcsSizeDetails.delete({
-          where: { id: leftover.id },
-        });
-      }
-      // Update or create Stock row
-      // === SIZE-WISE STOCK ===
-
       // 1. Fetch existing stock rows for this item
-      const existingStockRows = await tx.productionStock.findMany({
+      const existingStock = await tx.productionStock.findMany({
         where: { productionEntryItemsId: updatedItem.id },
       });
-      // Create a map for quick lookup
-      const stockMap = new Map();
-      existingStockRows.forEach((row) => stockMap.set(row.sizeId, row));
-      for (const s of sizes) {
-        const sizeId = parseInt(s.sizeId);
-        const qty = s.qty ? Math.round(parseFloat(s.qty)) : null;
-
-        if (stockMap.has(sizeId)) {
-          // ==== UPDATE EXISTING STOCK ====
-          const row = stockMap.get(sizeId);
-
-          await tx.productionStock.update({
-            where: { id: row.id },
-            data: {
-              updatedById: parseInt(userId),
-              fabricId: entryDetail?.fabricId
-                ? parseInt(entryDetail.fabricId)
-                : null,
-              styleId: entryDetail?.styleId
-                ? parseInt(entryDetail.styleId)
-                : null,
-              styleItemId: entryDetail?.styleItemId
-                ? parseInt(entryDetail.styleItemId)
-                : null,
-              colorId: entryDetail?.colorId
-                ? parseInt(entryDetail.colorId)
-                : null,
-              portionId: entryDetail?.portionId
-                ? parseInt(entryDetail.portionId)
-                : null,
-              remarks: entryDetail?.remarks ?? undefined,
-              orderQty,
-              uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
-              prevProcessId: prevProcessId,
-              // size-level fields
-              sizeId,
-              qty,
-            },
-          });
-
-          // remove from map (means processed)
-          stockMap.delete(sizeId);
-        } else {
-          // ==== INSERT NEW STOCK ROW ====
-          await tx.productionStock.create({
-            data: {
-              inOrOut: "productionEntry",
-              productionEntryItemsId: updatedItem.id,
-              createdById: parseInt(userId),
-              branchId: parseInt(branchId),
-
-              fabricId: entryDetail?.fabricId
-                ? parseInt(entryDetail.fabricId)
-                : null,
-              styleId: entryDetail?.styleId
-                ? parseInt(entryDetail.styleId)
-                : null,
-              styleItemId: entryDetail?.styleItemId
-                ? parseInt(entryDetail.styleItemId)
-                : null,
-              colorId: entryDetail?.colorId
-                ? parseInt(entryDetail.colorId)
-                : null,
-              portionId: entryDetail?.portionId
-                ? parseInt(entryDetail.portionId)
-                : null,
-              remarks: entryDetail?.remarks ?? undefined,
-              orderQty,
-              uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
-              prevProcessId: prevProcessId,
-              // size-level
-              sizeId,
-              qty,
-            },
-          });
-        }
-      }
-
-      // 3. DELETE leftover rows (sizes removed in UI)
-      for (const leftover of stockMap.values()) {
-        await tx.productionStock.delete({
-          where: { id: leftover.id },
+      const addStock = existingStock.find((s) => s.inOrOut === "productionAdd");
+      const minusStock = existingStock.find(
+        (s) => s.inOrOut === "productionMinus"
+      );
+      if (addStock) {
+        await tx.productionStock.update({
+          where: { id: addStock.id },
+          data: {
+            ...commonStockData,
+            qty: entryDetail?.issueQty
+              ? Math.round(parseFloat(entryDetail.issueQty))
+              : null,
+            prevProcessId: prevProcessId,
+            updatedById: parseInt(userId),
+          },
+        });
+      } else {
+        await tx.productionStock.create({
+          data: {
+            ...commonStockData,
+            inOrOut: "productionAdd",
+            productionEntryItemsId: updatedItem.id,
+            createdById: parseInt(userId),
+            branchId: parseInt(branchId),
+            qty: entryDetail?.issueQty
+              ? Math.round(parseFloat(entryDetail.issueQty))
+              : null,
+            prevProcessId: prevProcessId,
+          },
         });
       }
-
+      if (minusStock) {
+        await tx.productionStock.update({
+          where: { id: minusStock.id },
+          data: {
+            ...commonStockData,
+            qty: entryDetail?.issueQty
+              ? -Math.round(parseFloat(entryDetail.issueQty))
+              : null,
+            prevProcessId: beforeProcessId,
+            updatedById: parseInt(userId),
+          },
+        });
+      } else {
+        await tx.productionStock.create({
+          data: {
+            ...commonStockData,
+            inOrOut: "productionMinus",
+            productionEntryItemsId: updatedItem.id,
+            createdById: parseInt(userId),
+            branchId: parseInt(branchId),
+            qty: entryDetail?.issueQty
+              ? -Math.round(parseFloat(entryDetail.issueQty))
+              : null,
+            prevProcessId: beforeProcessId,
+          },
+        });
+      }
       return updatedItem;
     } else {
       // Create new productionEntryItem
       const createdItem = await tx.productionEntryItems.create({
         data: {
+          ...commonStockData,
           productionEntryId: parseInt(productionEntry.id),
-
-          fabricId: entryDetail?.fabricId
-            ? parseInt(entryDetail.fabricId)
-            : null,
-          styleId: entryDetail?.styleId ? parseInt(entryDetail.styleId) : null,
-          styleItemId: entryDetail?.styleItemId
-            ? parseInt(entryDetail.styleItemId)
-            : null,
-          sizeId: entryDetail?.sizeId ? parseInt(entryDetail.sizeId) : null,
-          colorId: entryDetail?.colorId ? parseInt(entryDetail.colorId) : null,
-          portionId: entryDetail?.portionId
-            ? parseInt(entryDetail.portionId)
-            : null,
-          remarks: entryDetail?.remarks ?? undefined,
-          orderQty,
           issueQty: entryDetail?.issueQty
             ? Math.round(parseFloat(entryDetail.issueQty))
             : null,
-          uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
+          prevProcessId: prevProcessId,
+        },
+      });
+      // Create Stock row
+      await tx.productionStock.create({
+        data: {
+          ...commonStockData,
+          inOrOut: "productionAdd",
+          productionEntryItemsId: createdItem.id,
+          createdById: parseInt(userId),
+          branchId: parseInt(branchId),
+          qty: entryDetail?.issueQty
+            ? Math.round(parseFloat(entryDetail.issueQty))
+            : null,
           prevProcessId: prevProcessId,
         },
       });
 
-      for (const s of sizes) {
-        await tx.pcsSizeDetails.create({
-          data: {
-            sizeId: parseInt(s.sizeId),
-            qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
-            productionEntryItems: createdItem.id,
-          },
-        });
-      }
-      for (const s of sizes) {
-        // Create Stock row
-        await tx.productionStock.create({
-          data: {
-            inOrOut: "productionEntry",
-            productionEntryItemsId: createdItem.id,
-            createdById: parseInt(userId),
-            branchId: parseInt(branchId),
-
-            fabricId: entryDetail?.fabricId
-              ? parseInt(entryDetail.fabricId)
-              : null,
-            styleId: entryDetail?.styleId
-              ? parseInt(entryDetail.styleId)
-              : null,
-            styleItemId: entryDetail?.styleItemId
-              ? parseInt(entryDetail.styleItemId)
-              : null,
-            colorId: entryDetail?.colorId
-              ? parseInt(entryDetail.colorId)
-              : null,
-            portionId: entryDetail?.portionId
-              ? parseInt(entryDetail.portionId)
-              : null,
-            remarks: entryDetail?.remarks ?? undefined,
-            orderQty,
-            sizeId: s?.sizeId ? parseInt(s.sizeId) : null,
-            qty: s?.qty ? Math.round(parseFloat(s.qty)) : null,
-            uomId: entryDetail?.uomId ? parseInt(entryDetail.uomId) : null,
-            prevProcessId: prevProcessId,
-          },
-        });
-      }
+      await tx.productionStock.create({
+        data: {
+          ...commonStockData,
+          inOrOut: "productionMinus",
+          productionEntryItemsId: createdItem.id,
+          createdById: parseInt(userId),
+          branchId: parseInt(branchId),
+          qty: entryDetail?.issueQty
+            ? -Math.round(parseFloat(entryDetail.issueQty))
+            : null,
+          prevProcessId: beforeProcessId,
+        },
+      });
 
       return createdItem;
     }

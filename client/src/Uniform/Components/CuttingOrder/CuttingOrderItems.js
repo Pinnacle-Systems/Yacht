@@ -638,6 +638,13 @@ export default function CuttingOrderItems({
                             }}
                             onFocus={(e) => e.target.select()}
                             min={"0"}
+                            onKeyDown={(e) => {
+                              if (
+                                e.code === "Minus" ||
+                                e.code === "NumpadSubtract"
+                              )
+                                e.preventDefault();
+                            }}
                           />
                         </td>
                       );
