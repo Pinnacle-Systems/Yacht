@@ -11,7 +11,13 @@ import {
 import Swal from "sweetalert2";
 import Modal from "../../../UiComponents/Modal";
 import { statusDropdown } from "../../../Utils/DropdownData";
-import { useAddProcessMasterMutation, useDeleteProcessMasterMutation, useGetProcessMasterByIdQuery, useGetProcessMasterQuery, useUpdateProcessMasterMutation } from "../../../redux/uniformService/ProcessMasterService";
+import {
+  useAddProcessMasterMutation,
+  useDeleteProcessMasterMutation,
+  useGetProcessMasterByIdQuery,
+  useGetProcessMasterQuery,
+  useUpdateProcessMasterMutation,
+} from "../../../redux/uniformService/ProcessMasterService";
 const MODEL = "Process Master";
 
 export default function Form() {
@@ -21,6 +27,9 @@ export default function Form() {
   const [id, setId] = useState("");
   const [name, setName] = useState("");
   const [active, setActive] = useState(true);
+  const [isCutting, setIsCutting] = useState(false);
+  const [isStiching, setIsStiching] = useState(false);
+  const [isPacking, setIsPacking] = useState(false);
 
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
@@ -51,9 +60,15 @@ export default function Form() {
         setReadOnly(false);
         setName("");
         setActive(id ? data?.active : true);
+        setIsCutting(false);
+        setIsPacking(false);
+        setIsStiching(false);
       } else {
         setName(data?.name || "");
         setActive(id ? data?.active ?? false : true);
+        setIsPacking(data?.isPacking ? data?.isPacking : false);
+        setIsStiching(data?.isStiching ? data?.isStiching :false);
+        setIsCutting(data?.isCutting ? data?.isCutting :false);
       }
     },
     [id]
@@ -67,6 +82,9 @@ export default function Form() {
     id,
     name,
     active,
+    isCutting,
+    isStiching,
+    isPacking,
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
     ),
@@ -106,25 +124,28 @@ export default function Form() {
 
   const saveData = () => {
     let foundItem;
-          if (id) {
-            foundItem = allData?.data
-              ?.filter((i) => i.id !== id)
-              ?.some((item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase());
-          } else {
-            foundItem = allData?.data?.some(
-              (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
-            );
-          }
-        
-          if (foundItem) {
-            Swal.fire({
-              text: "The Process Name already exists.",
-              icon: "warning",
-              timer: 1500,
-              showConfirmButton: false,
-            });
-            return false;
-          }
+    if (id) {
+      foundItem = allData?.data
+        ?.filter((i) => i.id !== id)
+        ?.some(
+          (item) =>
+            item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+        );
+    } else {
+      foundItem = allData?.data?.some(
+        (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+      );
+    }
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The Process Name already exists.",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return false;
+    }
     if (!validateData(data)) {
       Swal.fire({
         title: "Please fill all required fields...!",
@@ -329,6 +350,26 @@ export default function Form() {
                               required={true}
                               readOnly={readOnly}
                               disabled={childRecord.current > 0}
+                            />
+                          </div>
+                          <div className="mb-5 flex gap-2">
+                            <CheckBox
+                              name="Cutting"
+                              value={isCutting}
+                              setValue={setIsCutting}
+                              readOnly={readOnly}
+                            />
+                            <CheckBox
+                              name="Stiching"
+                              value={isStiching}
+                              setValue={setIsStiching}
+                              readOnly={readOnly}
+                            />
+                            <CheckBox
+                              name="Packing"
+                              value={isPacking}
+                              setValue={setIsPacking}
+                              readOnly={readOnly}
                             />
                           </div>
                         </div>

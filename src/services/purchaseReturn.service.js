@@ -201,7 +201,7 @@ async function getOne(id) {
           styleId: true,
           colorId: true,
           fabWidth: true,
-          fabMeter: true,
+          // fabMeter: true,
           sizeId: true,
           noOfPcs: true,
           accessoryId: true,
@@ -209,7 +209,7 @@ async function getOne(id) {
           accessoryItemId: true,
           sizeId: true,
           uomId: true,
-          qty: true,
+          // qty: true,
           price: true,
           Fabric: true,
           Color: true,
@@ -229,7 +229,37 @@ async function getOne(id) {
     },
   });
   if (!data) return NoRecordFound("PurchaseReturn");
-  return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+  const purchaseReturnStkQty = await Promise.all(
+    data.purchaseReturnItems.map(async (item) => {
+      const stkQty = await prisma.materialStock.aggregate({
+        where: {
+          styleItemId: item.styleItemId,
+          fabricId: item.fabricId,
+          colorId: item.colorId,
+          styleId: item.styleId,
+          fabWidth: item.fabWidth,
+          invNo: item.invNo,
+        },
+        _sum: {
+          fabMeter: true,
+          qty:true
+        },
+      });
+      return {
+        ...item,
+        fabMeter: stkQty._sum.fabMeter + item.returnFabMeter,
+        qty: stkQty._sum.qty + item.returnQty
+      };
+    })
+  );
+  return {
+    statusCode: 0,
+    data: {
+      ...data,
+      purchaseReturnItems: purchaseReturnStkQty,
+      ...{ childRecord },
+    },
+  };
 }
 
 async function create(body) {

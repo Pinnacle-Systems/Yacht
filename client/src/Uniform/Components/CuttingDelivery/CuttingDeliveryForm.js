@@ -172,7 +172,9 @@ export default function CuttingDeliveryForm({
         });
         dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
       } else {
-        toast.error(returnData?.message);
+        toast.error(returnData?.message, {
+          autoClose: 2000,
+        });
       }
     } catch (error) {
       console.log("handle");
@@ -341,6 +343,7 @@ export default function CuttingDeliveryForm({
             orderQty: "",
             remarks: "",
             selected: "",
+            invNo: "",
           });
         }
 
@@ -435,8 +438,8 @@ export default function CuttingDeliveryForm({
                 value={fromProcessId}
                 setValue={setFromProcessId}
                 readOnly={readOnly}
-                placeholder={"Select Department"}
-                disabled={readOnly}
+                placeholder={"Select Process"}
+                disabled={id}
                 required={true}
               />
             </div>

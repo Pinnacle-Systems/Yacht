@@ -110,7 +110,7 @@ async function getStyleDetail(req) {
   }
   // 1️⃣ First try fetching by styleNo
   let data = await prisma.materialStock.groupBy({
-    by: ["styleItemId", "fabricId", "colorId", "fabWidth", "styleId"],
+    by: ["styleItemId", "fabricId", "colorId", "fabWidth", "styleId","invNo"],
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
       storeId: storeId ? parseInt(storeId) : undefined,
@@ -133,6 +133,7 @@ async function getStyleDetail(req) {
       fabWidth: d.fabWidth,
       fabMeter: d._sum.fabMeter,
       styleId: d.styleId,
+      invNo:d.invNo
     })),
   };
 }

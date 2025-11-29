@@ -94,6 +94,7 @@ export const {
   useGetCuttingOrderQuery,
   useLazyGetOrderDetailsQuery,
   useGetCuttingOrderByIdQuery,
+  useLazyGetCuttingOrderByIdQuery,
   useAddCuttingOrderMutation,
   useUpdateCuttingOrderMutation,
   useDeleteCuttingOrderMutation,

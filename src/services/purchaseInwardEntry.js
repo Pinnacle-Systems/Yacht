@@ -232,10 +232,29 @@ async function getOne(id) {
     },
   });
   if (!data) return NoRecordFound("Purchase Inward");
+  const styleIds = data.fabricInwardItems
+    .map((item) => item.styleId)
+    .filter(Boolean);
+  const childRecordCutting = await prisma.cuttingOrderItems.count({
+    where: {
+      styleId: {
+        in: styleIds,
+      },
+    },
+  });
+  const childRecordReturn = await prisma.purchaseReturnItems.count({
+    where: {
+      styleId: {
+        in: styleIds,
+      },
+    },
+  });
   return {
     statusCode: 0,
     data: {
       ...data,
+      childRecordCutting: childRecordCutting,
+      childRecordReturn: childRecordReturn,
     },
   };
 }
@@ -840,7 +859,7 @@ async function getPurchaseDetailStock(req) {
 
   let data = await prisma.materialStock.groupBy({
     by: [
-      "styleNo",
+      // "styleNo",
       "styleItemId",
       "fabricId",
       "colorId",
@@ -850,7 +869,8 @@ async function getPurchaseDetailStock(req) {
       "accessoryGroupId",
       "sizeId",
       "uomId",
-      "styleId"
+      "styleId",
+      "invNo",
     ],
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
@@ -869,7 +889,7 @@ async function getPurchaseDetailStock(req) {
   return {
     statusCode: 0,
     data: data.map((d) => ({
-      styleNo: d.styleNo,
+      invNo: d.invNo,
       styleItemId: d.styleItemId,
       fabricId: d.fabricId,
       colorId: d.colorId,
@@ -882,7 +902,7 @@ async function getPurchaseDetailStock(req) {
       sizeId: d.sizeId,
       uomId: d.uomId,
       qty: d._sum.qty,
-      styleId: d.styleId
+      styleId: d.styleId,
     })),
   };
 }

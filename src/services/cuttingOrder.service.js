@@ -211,15 +211,27 @@ async function getOne(id) {
           orderQty: true,
           remarks: true,
           uomId: true,
+          invNo: true,
         },
       },
     },
   });
   if (!data) return NoRecordFound("CuttingOrder");
+  const styleIds = data.cuttingOrderItems
+    .map((item) => item.styleId)
+    .filter(Boolean);
+  const childRecordCutting = await prisma.cuttingDeliveryItems.count({
+    where: {
+      styleId: {
+        in: styleIds,
+      },
+    },
+  });
   return {
     statusCode: 0,
     data: {
       ...data,
+      childRecordCutting: childRecordCutting,
     },
   };
 }
@@ -245,7 +257,7 @@ async function create(body) {
     styleId,
     docDate,
     draftSave,
-    sizeTemplateId
+    sizeTemplateId,
     // locationId,
   } = await body;
   console.log(branchId, "branchId");
@@ -323,6 +335,7 @@ async function createCuttingOrderItems(
           : null,
         orderQty,
         remarks: orderDetail?.remarks ?? undefined,
+        invNo: orderDetail?.invNo ? orderDetail?.invNo : null,
       },
     });
     const sizes = orderDetail.sizeDetails || [];
@@ -697,6 +710,7 @@ async function updateCuttingOrderItems(
             : null,
           orderQty,
           remarks: orderDetail?.remarks ?? undefined,
+          invNo: orderDetail?.invNo ? orderDetail?.invNo : null,
         },
       });
 
@@ -774,6 +788,7 @@ async function updateCuttingOrderItems(
             : null,
           orderQty,
           remarks: orderDetail?.remarks ?? undefined,
+          invNo: orderDetail?.invNo ? orderDetail?.invNo : null,
         },
       });
 
@@ -830,6 +845,7 @@ async function getStyleDetail(req) {
           styleId: true,
           orderQty: true,
           remarks: true,
+          invNo: true,
         },
       },
     },

@@ -10,6 +10,7 @@ import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/Access
 import { useGetAccessoryGroupMasterQuery } from "../../../redux/uniformService/AccessoryGroupMasterServices";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
+import Swal from "sweetalert2";
 
 const ReturnItems = ({
   id,
@@ -60,6 +61,34 @@ const ReturnItems = ({
   };
 
   const handleInputChange = (value, index, field) => {
+    if (field === "returnFabMeter") {
+      const row = purchaseReturnItems[index];
+      const balanceQty = row?.fabMeter || 0;
+
+      if (parseFloat(balanceQty) < parseFloat(value)) {
+        Swal.fire({
+          icon: "warning",
+          title: "Invalid Quantity",
+          text: "Return Meter cannot be more than Stock Meter!",
+          confirmButtonText: "OK",
+        });
+        return;
+      }
+    }
+    if (field === "returnQty") {
+      const row = purchaseReturnItems[index];
+      const balanceQty = row?.qty || 0;
+
+      if (parseFloat(balanceQty) < parseFloat(value)) {
+        Swal.fire({
+          icon: "warning",
+          title: "Invalid Quantity",
+          text: "Return Qty cannot be more than Stock Qty!",
+          confirmButtonText: "OK",
+        });
+        return;
+      }
+    }
     const newBlend = structuredClone(purchaseReturnItems);
     newBlend[index][field] = value;
     setPurchaseReturnItems(newBlend);
@@ -254,7 +283,7 @@ const ReturnItems = ({
                   <th
                     className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
                   >
-                    Meter
+                    Stock Meter
                   </th>
                 )}
                 {returnType === "Fabric" && (
@@ -829,7 +858,7 @@ const ReturnItems = ({
                             }
                           }}
                           type="number"
-                          className="text-left rounded py-1 px-1 w-full table-data-input"
+                          className="text-right rounded py-1 px-1 w-full table-data-input"
                           onFocus={(e) => e.target.select()}
                           value={row?.returnQty}
                           onChange={(e) =>
@@ -884,10 +913,15 @@ const ReturnItems = ({
                   Total
                 </td>
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
-                  {purchaseReturnItems.reduce(
-                    (sum, row) => sum + (Number(row.qty) || 0),
-                    0
-                  )}
+                  {returnType === "Fabric"
+                    ? purchaseReturnItems.reduce(
+                        (sum, row) => sum + (Number(row.returnFabMeter) || 0),
+                        0
+                      )
+                    : purchaseReturnItems.reduce(
+                        (sum, row) => sum + (Number(row.returnQty) || 0),
+                        0
+                      )}
                 </td>
                 <td className="border border-gray-300" colSpan={1}></td>
               </tr>

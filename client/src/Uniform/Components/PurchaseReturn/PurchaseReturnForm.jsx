@@ -90,11 +90,6 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
     const syncFormWithDb = useCallback(
         (data) => {
             const today = new Date();
-            if (id) {
-                setReadOnly(true);
-            } else {
-                setReadOnly(false);
-            }
             if (data?.docId) {
                 setDocId(data?.docId);
             }

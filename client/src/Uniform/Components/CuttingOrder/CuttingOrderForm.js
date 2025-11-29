@@ -291,6 +291,7 @@ export default function CuttingOrderForm({
             selected: false,
             uomId: "",
             sizeDetails: [],
+            invNo:""
           });
         }
         return updated;

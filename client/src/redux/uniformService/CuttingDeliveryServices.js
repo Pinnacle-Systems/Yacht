@@ -80,6 +80,7 @@ const CuttingDeliveryApi = createApi({
 export const {
   useGetCuttingDeliveryQuery,
   useGetCuttingDeliveryByIdQuery,
+  useLazyGetCuttingDeliveryByIdQuery,
   useAddCuttingDeliveryMutation,
   useUpdateCuttingDeliveryMutation,
   useDeleteCuttingDeliveryMutation,

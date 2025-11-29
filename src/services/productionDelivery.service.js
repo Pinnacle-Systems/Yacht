@@ -1,4 +1,4 @@
-import { NoRecordFound } from "../configs/Responses.js";
+import { CustomError, NoRecordFound } from "../configs/Responses.js";
 import { getTableRecordWithId } from "../utils/helperQueries.js";
 import {
   getDateFromDateTime,
@@ -161,11 +161,11 @@ async function get(req) {
           sku: true,
         },
       },
-      FromProcess:{
-        select:{
-          name:true
-        }
-      }
+      FromProcess: {
+        select: {
+          name: true,
+        },
+      },
     },
   });
   totalCount = data.length;
@@ -204,6 +204,21 @@ async function getOne(id) {
   });
 
   if (!data) return NoRecordFound("ProductionEntry");
+  const styleIds = data.productionEntryItems
+    .map((item) => item.styleId)
+    .filter(Boolean);
+  const toProcessId = data.toProcessId;
+  const styleId = data.styleId;
+  const childRecordProduction = await prisma.productionEntryItems.count({
+    where: {
+      prevProcessId: {
+        in: toProcessId,
+      },
+      styleId: {
+        in: styleId,
+      },
+    },
+  });
   let beforeProcessId = null;
   if (data) {
     const currentProcess = await prisma.processGroupList.findFirst({
@@ -257,6 +272,7 @@ async function getOne(id) {
       ...data,
       productionEntryItems: productionEntryItemsWithStkQty,
     },
+    childRecordProduction: childRecordProduction,
   };
 }
 
@@ -302,7 +318,40 @@ async function create(body) {
   );
   let data;
   console.log(newDocId);
-
+  if (fromProcessId) {
+    const existProcess = await prisma.productionStock.findFirst({
+      where: {
+        prevProcessId: parseInt(fromProcessId),
+        styleId: parseInt(styleId),
+      },
+    });
+    if (existProcess) {
+      CustomError("Process Already Exist");
+    }
+  }
+  const currentProcess = await prisma.processGroupList.findFirst({
+    where: {
+      processId: parseInt(fromProcessId),
+    },
+    select: {
+      seqNo: true,
+    },
+  });
+  let nextProcessId;
+  if (currentProcess) {
+    const nextProcess = await prisma.processGroupList.findFirst({
+      where: {
+        seqNo: currentProcess?.seqNo + 1,
+      },
+    });
+    nextProcessId = nextProcess?.processId;
+  }
+  if (nextProcessId !== parseInt(toProcessId)) {
+    return {
+      statusCode: 400,
+      message: "Choose Correct To Process",
+    };
+  }
   await prisma.$transaction(async (tx) => {
     data = await tx.productionEntry.create({
       data: {

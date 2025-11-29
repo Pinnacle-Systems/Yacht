@@ -440,7 +440,7 @@ export default function Form({ partyId, onCloseForm }) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-      if (data?.data?.childRecord > 0) {
+      if (data?.data?.childRecordSales > 0 || data?.data?.childRecordPurchase > 0) {
         Swal.fire({
           icon: "error",
           title: "Child record Exists",

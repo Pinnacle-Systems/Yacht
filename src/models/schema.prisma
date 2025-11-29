@@ -2228,6 +2228,7 @@ model CuttingOrderItems {
   remarks        String?
   Uom            UnitOfMeasurement? @relation(fields: [uomId], references: [id])
   uomId          Int?
+  invNo          String?
   materialStocks MaterialStock[]
   sizeDetails    sizeDetails[]
 }
@@ -2304,6 +2305,7 @@ model CuttingDeliveryItems {
   Employee          Employee?          @relation(fields: [employeeId], references: [id])
   employeeId        Int?
   sizeDetails       sizeDetails[]
+  invNo             String?
 }
 
 model ProductionStock {
@@ -2370,6 +2372,9 @@ model Process {
   productionStocks             ProductionStock[]
   processGroupLists            ProcessGroupList[]
   cuttingDeliveries            CuttingDelivery[]
+  isCutting                    Boolean?
+  isStiching                   Boolean?
+  isPacking                    Boolean?
 }
 
 model ProductionEntry {

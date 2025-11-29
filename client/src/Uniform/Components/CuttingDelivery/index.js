@@ -5,13 +5,19 @@ import { useDispatch } from "react-redux";
 import StyleMasterApi from "../../../redux/uniformService/StyleMasterService.js";
 import CuttingDeliveryForm from "./CuttingDeliveryForm.js";
 import CuttingDeliveryFormReport from "./CuttingDeliveryFormReport.js";
-import { useDeleteCuttingDeliveryMutation } from "../../../redux/uniformService/CuttingDeliveryServices.js";
+import {
+  useDeleteCuttingDeliveryMutation,
+  useLazyGetCuttingDeliveryByIdQuery,
+} from "../../../redux/uniformService/CuttingDeliveryServices.js";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
   const [id, setId] = useState("");
   const [readOnly, setReadOnly] = useState(false);
   const dispatch = useDispatch();
+
+  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
+    useLazyGetCuttingDeliveryByIdQuery();
 
   const [removeData] = useDeleteCuttingDeliveryMutation();
 
@@ -29,36 +35,44 @@ export default function Form() {
 
   const handleDelete = async (id) => {
     setId(id);
+    const { data } = await trigger(id);
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-
-      try {
-        let deldata = await removeData(id).unwrap();
-        if (deldata?.statusCode == 1) {
-          Swal.fire({
-            icon: "error",
-            title: "Child record Exists",
-            text: deldata.data?.message || "Data cannot be deleted!",
-          });
-          return;
-        }
-        setId("");
-        Swal.fire({
-          title: "Deleted Successfully",
-          icon: "success",
-          timer: 1000,
-        });
-        setShowForm(false);
-        dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
-      } catch (error) {
+      if (data?.childRecordProduction > 0) {
         Swal.fire({
           icon: "error",
-          title: "Submission error",
-          text: error.data?.message || "Something went wrong!",
+          title: "Child record Exists in Production Entry",
+          text: "Data cannot be deleted!",
         });
-        setShowForm(false);
+      } else {
+        try {
+          let deldata = await removeData(id).unwrap();
+          if (deldata?.statusCode == 1) {
+            Swal.fire({
+              icon: "error",
+              title: "Child record Exists",
+              text: deldata.data?.message || "Data cannot be deleted!",
+            });
+            return;
+          }
+          setId("");
+          Swal.fire({
+            title: "Deleted Successfully",
+            icon: "success",
+            timer: 1000,
+          });
+          setShowForm(false);
+          dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
+        } catch (error) {
+          Swal.fire({
+            icon: "error",
+            title: "Submission error",
+            text: error.data?.message || "Something went wrong!",
+          });
+          setShowForm(false);
+        }
       }
     }
   };

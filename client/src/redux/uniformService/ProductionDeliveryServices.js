@@ -80,6 +80,7 @@ const ProductionDeliveryApi = createApi({
 export const {
   useGetProductionDeliveryQuery,
   useGetProductionDeliveryByIdQuery,
+  useLazyGetProductionDeliveryByIdQuery,
   useAddProductionDeliveryMutation,
   useUpdateProductionDeliveryMutation,
   useDeleteProductionDeliveryMutation,

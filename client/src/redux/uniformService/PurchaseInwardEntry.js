@@ -91,6 +91,7 @@ const purchaseInwardEntryApi = createApi({
 export const {
   useGetPurchaseInwardEntryQuery,
   useGetPurchaseInwardEntryByIdQuery,
+  useLazyGetPurchaseInwardEntryByIdQuery,
   useAddPurchaseInwardEntryMutation,
   useUpdatePurchaseInwardEntryMutation,
   useDeletePurchaseInwardEntryMutation,

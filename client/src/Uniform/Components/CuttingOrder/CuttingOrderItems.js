@@ -50,6 +50,7 @@ export default function CuttingOrderItems({
       selected: false,
       uomId: "",
       sizeDetails: [],
+      invNo: "",
     };
     setCuttingOrderItems([...cuttingOrderItems, newRow]);
   };
@@ -120,6 +121,7 @@ export default function CuttingOrderItems({
               styleId: "",
               uomId: "",
               sizeDetails: [],
+              invNo: "",
             })),
           ];
         }
@@ -143,6 +145,7 @@ export default function CuttingOrderItems({
           styleId: "",
           uomId: "",
           sizeDetails: [],
+          invNo: "",
         }))
       );
     }
@@ -329,7 +332,7 @@ export default function CuttingOrderItems({
                 >
                   Color
                 </th>
-                <th
+                {/* <th
                   className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Width
@@ -338,7 +341,7 @@ export default function CuttingOrderItems({
                   className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Meter
-                </th>
+                </th> */}
                 <th
                   className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                 >
@@ -494,7 +497,7 @@ export default function CuttingOrderItems({
                         ))}
                       </select>
                     </td>
-                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                    {/* <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
                         onKeyDown={(e) => {
                           if (e.code === "Minus" || e.code === "NumpadSubtract")
@@ -539,7 +542,7 @@ export default function CuttingOrderItems({
                         }}
                         disabled={readOnly}
                       />
-                    </td>
+                    </td> */}
                     <td className="py-0.5 border border-gray-300 text-[11px]">
                       <select
                         // id={`portionId-input-${index}`}
@@ -724,7 +727,7 @@ export default function CuttingOrderItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={9 + sizeColumns.length}
+                  colSpan={7 + sizeColumns.length}
                 >
                   Total
                 </td>

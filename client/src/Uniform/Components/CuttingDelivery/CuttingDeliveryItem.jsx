@@ -64,7 +64,8 @@ export default function CuttingDeliveryItem({
             issueQty: "",
             remarks: "",
             selected: "",
-            usedMeter: ""
+            usedMeter: "",
+            invNo: ""
         };
         setCuttingDeliveryItems([...cuttingDeliveryItems, newRow]);
     };
@@ -214,7 +215,8 @@ export default function CuttingDeliveryItem({
                             remarks: "",
                             selected: "",
                             issueQty: "",
-                            usedMeter: ""
+                            usedMeter: "",
+                            invNo: ""
                         })),
                     ];
                 }
@@ -236,7 +238,8 @@ export default function CuttingDeliveryItem({
                     remarks: "",
                     selected: "",
                     issueQty: "",
-                    usedMeter: ""
+                    usedMeter: "",
+                    invNo: ""
                 }))
             );
         }

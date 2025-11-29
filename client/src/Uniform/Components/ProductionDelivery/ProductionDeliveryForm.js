@@ -87,11 +87,6 @@ export default function ProductionDeliveryForm({
     params: { companyId },
   });
 
-  const { data: locationData } = useGetLocationMasterQuery({
-    params: { branchId },
-    searchParams: searchValue,
-  });
-
   const {
     data: singleData,
     isFetching: isSingleFetching,
@@ -176,7 +171,9 @@ export default function ProductionDeliveryForm({
         });
         dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
       } else {
-        toast.error(returnData?.message);
+        toast.error(returnData?.message, {
+          autoClose: 2000,
+        });
       }
     } catch (error) {
       console.log("handle");
@@ -257,7 +254,7 @@ export default function ProductionDeliveryForm({
 
     // 🚫 block when readOnly mode
     if (readOnly) return;
-    handleAddRow();
+    // handleAddRow();
   }, [styleId, id, readOnly]);
 
   const handleAddRow = async () => {
@@ -276,6 +273,10 @@ export default function ProductionDeliveryForm({
           branchId,
         },
       });
+      if (styleData?.statusCode === 400) {
+        toast.error(styleData.message, { autoClose: 2000 });
+        return; // stop function
+      }
       const styleItems = styleData.data || [];
       if (!styleItems) return;
       setProductionEntryItems((prev) => {
@@ -327,14 +328,81 @@ export default function ProductionDeliveryForm({
     }
   };
 
-  const handleStyleChange = (newValue) => {
-    setStyleId(newValue);
-    // Use Promise to ensure state update
-    Promise.resolve().then(() => {
-      if (newValue) {
-        handleAddRow();
+  // const handleStyleChange = (newValue) => {
+  //   console.log(newValue, "newValue");
+  //   if (!newValue) return;
+  //   setStyleId(newValue);
+  //   // Use Promise to ensure state update
+  //   Promise.resolve().then(() => {
+  //     handleAddRow();
+  //   });
+  // };
+
+  const handleStyleChange = async (newValue) => {
+    console.log(newValue, "newValue");
+    if (!newValue) return;
+    try {
+      if (!fromProcessId || !toProcessId) {
+        toast.info("Please Choose From Process and To Process...!", {
+          position: "top-center",
+          autoClose: 2000,
+        });
+        return;
       }
-    });
+      const { data: styleData } = await getStyleStkDetail({
+        params: {
+          styleId: newValue,
+          fromProcessId: fromProcessId,
+          branchId,
+          toProcessId:toProcessId
+        },
+      });
+      if (styleData?.statusCode === 400) {
+        toast.error(styleData.message, { autoClose: 2000 });
+        return; // stop function
+      }
+      const styleItems = styleData.data || [];
+      if (!styleItems) return;
+      setProductionEntryItems((prev) => {
+        const updated = [...prev];
+        // Find first empty slot index
+        let startIndex = updated.findIndex(
+          (row) =>
+            !row.styleId &&
+            !row.styleItemId &&
+            !row.fabricId &&
+            !row.colorId &&
+            !row.portionId &&
+            !row.sizeId
+        );
+        if (startIndex === -1) startIndex = updated.length;
+        styleItems.forEach((row, i) => {
+          const cloned = structuredClone(row);
+          if (startIndex + i < updated.length) {
+            updated[startIndex + i] = cloned;
+          } else {
+            updated.push(cloned); // append if no empty slot
+          }
+        });
+        while (updated.length < 6) {
+          updated.push({
+            styleId: "",
+            styleItemId: "",
+            fabricId: "",
+            colorId: "",
+            portionId: "",
+            sizeId: "",
+            orderQty: "",
+            remarks: "",
+          });
+        }
+
+        return updated;
+      });
+    } catch (error) {
+      console.error("Error adding row:", error);
+    }
+    setStyleId(newValue);
   };
 
   return (
@@ -448,7 +516,7 @@ export default function ProductionDeliveryForm({
                 readOnly={readOnly}
                 placeholder={"Select Style"}
                 otherField={"sku"}
-                disabled={id}
+                disabled={readOnly}
                 clear={true}
                 // onKeyDown={(e) => {
                 //   if (e.key === "Enter") {

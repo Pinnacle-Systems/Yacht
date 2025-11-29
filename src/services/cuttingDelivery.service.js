@@ -1,4 +1,4 @@
-import { NoRecordFound } from "../configs/Responses.js";
+import { CustomError, NoRecordFound } from "../configs/Responses.js";
 import { getTableRecordWithId } from "../utils/helperQueries.js";
 import {
   getDateFromDateTime,
@@ -204,7 +204,7 @@ async function getOne(id) {
           colorId: true,
           sizeId: true,
           fabWidth: true,
-          fabMeter: true,
+          // fabMeter: true,
           portionId: true,
           styleId: true,
           orderQty: true,
@@ -217,11 +217,44 @@ async function getOne(id) {
     },
   });
   if (!data) return NoRecordFound("CuttingDelivery");
+  const styleIds = data.cuttingDeliveryItems
+    .map((item) => item.styleId)
+    .filter(Boolean);
+  const childRecordProduction = await prisma.productionEntryItems.count({
+    where: {
+      styleId: {
+        in: styleIds,
+      },
+    },
+  });
+  const cuttingDeliveryWithStkQty = await Promise.all(
+    data.cuttingDeliveryItems.map(async (item) => {
+      const stockData = await prisma.materialStock.aggregate({
+        where: {
+          styleItemId: item.styleItemId,
+          fabricId: item.fabricId,
+          colorId: item.colorId,
+          styleId: item.styleId,
+          fabWidth: item.fabWidth,
+          invNo: item.invNo,
+        },
+        _sum: {
+          fabMeter: true,
+        },
+      });
+      return {
+        ...item,
+        fabMeter: stockData._sum.fabMeter + item.usedMeter,
+      };
+    })
+  );
   return {
     statusCode: 0,
     data: {
       ...data,
+      cuttingDeliveryItems: cuttingDeliveryWithStkQty,
     },
+    childRecordProduction: childRecordProduction,
   };
 }
 
@@ -268,7 +301,16 @@ async function create(body) {
   );
   let data;
   console.log(newDocId);
-
+  if (fromProcessId) {
+    const processData = await prisma.process.findUnique({
+      where: {
+        id: fromProcessId,
+      },
+    });
+    if (processData?.isCutting === false) {
+      CustomError("Invalid Process");
+    }
+  }
   await prisma.$transaction(async (tx) => {
     data = await tx.cuttingDelivery.create({
       data: {
@@ -341,6 +383,7 @@ async function createCuttingDeliveryItems(
           ? parseFloat(deliveryDetail.usedMeter)
           : null,
         uomId: deliveryDetail?.uomId ? parseInt(deliveryDetail.uomId) : null,
+        invNo: deliveryDetail?.invNo ? deliveryDetail?.invNo : undefined,
       },
     });
     const sizes = deliveryDetail.sizeDetails || [];
@@ -426,6 +469,7 @@ async function createCuttingDeliveryItems(
         remarks: deliveryDetail?.remarks ?? undefined,
         uomId: deliveryDetail?.uomId ? parseInt(deliveryDetail.uomId) : null,
         itemType: "Fabric",
+        invNo: deliveryDetail?.invNo ? deliveryDetail?.invNo : undefined,
       },
     });
 
@@ -561,6 +605,7 @@ async function updateCuttingDeliveryItems(
             ? parseFloat(deliveryDetail.usedMeter)
             : null,
           uomId: deliveryDetail?.uomId ? parseInt(deliveryDetail.uomId) : null,
+          invNo: deliveryDetail?.invNo ? deliveryDetail?.invNo : undefined,
         },
       });
       const existingSizes = await tx.sizeDetails.findMany({
@@ -751,6 +796,7 @@ async function updateCuttingDeliveryItems(
               ? parseInt(deliveryDetail.uomId)
               : null,
             itemType: "Fabric",
+            invNo: deliveryDetail?.invNo ? deliveryDetail?.invNo : undefined,
           },
         });
       } else {
@@ -790,6 +836,7 @@ async function updateCuttingDeliveryItems(
               ? parseInt(deliveryDetail.uomId)
               : null,
             itemType: "Fabric",
+            invNo: deliveryDetail?.invNo ? deliveryDetail?.invNo : undefined,
           },
         });
       }
@@ -834,6 +881,7 @@ async function updateCuttingDeliveryItems(
             ? parseFloat(deliveryDetail.usedMeter)
             : null,
           uomId: deliveryDetail?.uomId ? parseInt(deliveryDetail.uomId) : null,
+          invNo: deliveryDetail?.invNo ? deliveryDetail?.invNo : undefined,
         },
       });
 
@@ -923,6 +971,7 @@ async function updateCuttingDeliveryItems(
             : null,
           remarks: deliveryDetail?.remarks ?? undefined,
           uomId: deliveryDetail?.uomId ? parseInt(deliveryDetail.uomId) : null,
+          invNo: deliveryDetail?.invNo ? deliveryDetail?.invNo : undefined,
         },
       });
 
