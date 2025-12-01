@@ -14,13 +14,17 @@ async function get(req) {
 }
 
 async function getOne(id) {
-  const childRecord = 0;
   const data = await prisma.process.findUnique({
     where: {
       id: parseInt(id),
     },
   });
   if (!data) return NoRecordFound("process");
+  const childRecord = await prisma.processGroupList.count({
+    where: {
+      processId: parseInt(id),
+    },
+  });
   return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
@@ -51,6 +55,7 @@ async function create(body) {
     isCutting,
     isStiching,
     isPacking,
+    isIroning
   } = await body;
 
   const data = await prisma.process.create({
@@ -60,6 +65,7 @@ async function create(body) {
       isCutting,
       isStiching,
       isPacking,
+      isIroning,
       Company: {
         connect: {
           id: parseInt(companyId),
@@ -72,7 +78,7 @@ async function create(body) {
 }
 
 async function update(id, body) {
-  const { name, active, companyId, isCutting, isStiching, isPacking } =
+  const { name, active, companyId, isCutting, isStiching, isPacking,isIroning } =
     await body;
   const dataFound = await prisma.process.findUnique({
     where: {
@@ -90,6 +96,7 @@ async function update(id, body) {
       isCutting,
       isStiching,
       isPacking,
+      isIroning
     },
   });
   return { statusCode: 0, data };

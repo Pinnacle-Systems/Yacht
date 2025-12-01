@@ -1170,6 +1170,7 @@ model Color {
   cuttingDeliveryItems       CuttingDeliveryItems[]
   productionStocks           ProductionStock[]
   productionEntryItems       ProductionEntryItems[]
+  stockInwardItems           StockInwardItems[]
 }
 
 model UnitOfMeasurement {
@@ -1929,6 +1930,10 @@ model StockInwardItems {
   remarks       String?
   barcode       String?
   Stock         Stock[]
+  StyleItem     StyleItem?   @relation(fields: [styleItemId], references: [id])
+  styleItemId   Int?
+  Color         Color?       @relation(fields: [colorId], references: [id])
+  colorId       Int?
 }
 
 model StyleItem {
@@ -1950,6 +1955,7 @@ model StyleItem {
   cuttingDeliveryItems CuttingDeliveryItems[]
   productionStocks     ProductionStock[]
   productionEntryItems ProductionEntryItems[]
+  stockInwardItems     StockInwardItems[]
 }
 
 model SalesReturn {
@@ -2375,6 +2381,7 @@ model Process {
   isCutting                    Boolean?
   isStiching                   Boolean?
   isPacking                    Boolean?
+  isIroning                    Boolean?
 }
 
 model ProductionEntry {

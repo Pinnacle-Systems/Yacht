@@ -14,13 +14,17 @@ async function get(req) {
 }
 
 async function getOne(id) {
-  const childRecord = 0;
   const data = await prisma.processGroupSeq.findUnique({
     where: {
       id: parseInt(id),
     },
   });
   if (!data) return NoRecordFound("processGroupSeq");
+  const childRecord = await prisma.processGroup.count({
+    where: {
+      processGroupSeqsId: parseInt(id),
+    },
+  });
   return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 

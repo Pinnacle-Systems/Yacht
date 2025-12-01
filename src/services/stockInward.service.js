@@ -36,10 +36,10 @@ async function getNextDocId(
     const branchObj = await getTableRecordWithId(branchId, "branch");
     let newDocId = `${branchObj.branchCode}${getYearShortCode(
       new Date()
-    )}/OST/1`;
+    )}/FGI/1`;
 
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/OST/${
+      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/FGI/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
@@ -70,9 +70,9 @@ async function getNextDocId(
     const branchObj = await getTableRecordWithId(branchId, "branch");
     let newDocId = `${branchObj.branchCode}${getYearShortCode(
       new Date()
-    )}/OST/1`;
+    )}/FGI/1`;
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/OST/${
+      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/FGI/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
@@ -195,6 +195,8 @@ async function getOne(id) {
           remarks: true,
           styleNo: true,
           fabricId: true,
+          styleItemId: true,
+          colorId: true,
         },
       },
     },
@@ -231,8 +233,6 @@ async function create(body) {
     storeId,
     stockInwardItems,
     finYearId,
-    term,
-    notes,
     docDate,
     draftSave,
     locationId,
@@ -252,8 +252,6 @@ async function create(body) {
     draftSave
   );
   let data;
-  // console.log("No stockInwardItems passed");
-  // console.log(newDocId);
   await prisma.$transaction(async (tx) => {
     data = await tx.stockInward.create({
       data: {
@@ -261,8 +259,6 @@ async function create(body) {
         branchId: parseInt(branchId),
         storeId: parseInt(storeId),
         createdById: parseInt(userId),
-        notes,
-        term,
         docDate: docDate ? new Date(docDate) : null,
         locationId: parseInt(locationId),
       },
@@ -280,16 +276,8 @@ async function create(body) {
 }
 
 async function update(id, body) {
-  const {
-    branchId,
-    stockInwardItems,
-    userId,
-    storeId,
-    term,
-    notes,
-    docDate,
-    locationId,
-  } = await body;
+  const { branchId, stockInwardItems, userId, storeId, docDate, locationId } =
+    await body;
   let data;
   const dataFound = await prisma.stockInward.findUnique({
     where: {
@@ -307,7 +295,6 @@ async function update(id, body) {
   let removedItems = findRemovedItems(dataFound, stockInwardItems);
   let removeItemsIds = removedItems.map((item) => parseInt(item.id));
   await prisma.$transaction(async (tx) => {
-    await deleteItemsFromStock(tx, removeItemsIds);
     if (removeItemsIds.length > 0) {
       await tx.stockInwardItems.deleteMany({
         where: { id: { in: removeItemsIds } },
@@ -321,8 +308,6 @@ async function update(id, body) {
         storeId: parseInt(storeId),
         updatedById: parseInt(userId),
         branchId: parseInt(branchId),
-        notes,
-        term,
         docDate: docDate ? new Date(docDate) : null,
         locationId: parseInt(locationId),
       },
@@ -337,18 +322,6 @@ async function update(id, body) {
     );
   });
   return { statusCode: 0, data };
-}
-
-async function getLastBarcodeNumber(tx) {
-  const lastItem = await tx.stockInwardItems.findFirst({
-    orderBy: { id: "desc" },
-  });
-
-  if (lastItem?.barcode) {
-    return parseInt(lastItem.barcode.replace("YS", "")) || 0;
-  }
-
-  return 0;
 }
 
 async function updateStockInwardItems(
@@ -396,7 +369,11 @@ async function updateStockInwardItems(
             ? parseInt(stockDetail.fabricId)
             : null,
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
+            : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
           qty,
           remarks: stockDetail?.remarks ?? undefined,
           barcode,
@@ -415,19 +392,26 @@ async function updateStockInwardItems(
             styleId: stockDetail?.styleId
               ? parseInt(stockDetail.styleId)
               : null,
+            styleItemId: stockDetail?.styleItemId
+              ? parseInt(stockDetail.styleItemId)
+              : null,
             sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+            colorId: stockDetail?.colorId
+              ? parseInt(stockDetail.colorId)
+              : null,
             qty,
             barCode: barcode,
             updatedById: parseInt(userId),
             fabricId: stockDetail?.fabricId
               ? parseInt(stockDetail.fabricId)
               : null,
+            styleNo: stockDetail?.styleNo ?? undefined,
           },
         });
       } else {
         await tx.stock.create({
           data: {
-            inOrOut: "StockInward",
+            inOrOut: "ReadyGoodsInward",
             createdById: parseInt(userId),
             branchId: parseInt(branchId),
             storeId: parseInt(storeId),
@@ -435,12 +419,19 @@ async function updateStockInwardItems(
               ? parseInt(stockDetail.styleId)
               : null,
             sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+            colorId: stockDetail?.colorId
+              ? parseInt(stockDetail.colorId)
+              : null,
             qty,
             stockInwardItemsId: updatedItem.id,
             barCode: barcode,
             fabricId: stockDetail?.fabricId
               ? parseInt(stockDetail.fabricId)
               : null,
+            styleItemId: stockDetail?.styleItemId
+              ? parseInt(stockDetail.styleItemId)
+              : null,
+            styleNo: stockDetail?.styleNo ?? undefined,
           },
         });
       }
@@ -452,6 +443,7 @@ async function updateStockInwardItems(
           stockInwardId: parseInt(stockInward.id),
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
           qty,
           remarks: stockDetail?.remarks ?? undefined,
           barcode,
@@ -459,13 +451,16 @@ async function updateStockInwardItems(
             ? parseInt(stockDetail.fabricId)
             : null,
           styleNo: stockDetail?.styleNo ?? undefined,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
+            : null,
         },
       });
 
       // Create Stock row
       await tx.stock.create({
         data: {
-          inOrOut: "StockInward",
+          inOrOut: "ReadyGoodsInward",
           createdById: parseInt(userId),
           branchId: parseInt(branchId),
           storeId: parseInt(storeId),
@@ -474,9 +469,14 @@ async function updateStockInwardItems(
             : null,
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
           qty,
           stockInwardItemsId: createdItem.id,
           barCode: barcode,
+          styleNo: stockDetail?.styleNo ?? undefined,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
+            : null,
         },
       });
 
@@ -522,7 +522,11 @@ async function createStockInwardItems(
         styleNo: stockDetail?.styleNo ?? undefined,
         fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
         styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+        styleItemId: stockDetail?.styleItemId
+          ? parseInt(stockDetail.styleItemId)
+          : null,
         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+        colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
         qty,
         remarks: stockDetail?.remarks ?? undefined,
         barcode,
@@ -532,16 +536,21 @@ async function createStockInwardItems(
     // Create corresponding Stock row
     await tx.stock.create({
       data: {
-        inOrOut: "StockInward",
+        inOrOut: "ReadyGoodsInward",
         createdById: parseInt(userId),
         branchId: parseInt(branchId),
         storeId: parseInt(storeId),
         styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+        colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
         fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
         qty,
         stockInwardItemsId: createdItem.id,
         barCode: barcode,
+        styleNo: stockDetail?.styleNo ?? undefined,
+        styleItemId: stockDetail?.styleItemId
+          ? parseInt(stockDetail.styleItemId)
+          : null,
       },
     });
 
@@ -560,16 +569,6 @@ function findRemovedItems(dataFound, stockInwardItems) {
     return true;
   });
   return removedItems;
-}
-
-async function deleteItemsFromStock(tx, removeItemsStockIds) {
-  return await tx.stock.deleteMany({
-    where: {
-      id: {
-        in: removeItemsStockIds,
-      },
-    },
-  });
 }
 
 async function remove(id) {

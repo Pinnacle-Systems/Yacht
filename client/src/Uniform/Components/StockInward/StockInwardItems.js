@@ -1,13 +1,18 @@
-import {
-  useGetStyleMasterQuery,
-  useLazyGetStyleCodeDetailQuery,
-} from "../../../redux/uniformService/StyleMasterService";
+import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import { useEffect, useState } from "react";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { ReusableInput } from "../../../Utils/CommonInput";
-import { FaPlus } from "react-icons/fa";
 import { useLazyGetSizeTemplateByIdQuery } from "../../../redux/uniformService/SizeTemplateMasterServices";
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
+import secureLocalStorage from "react-secure-storage";
+import { toast } from "react-toastify";
+import { findFromList } from "../../../Utils/helper";
+import { IMAGE_UPLOAD_URL } from "../../../Constants";
+import { VIEW } from "../../../icons";
+import { useLazyGetProductionDetailQuery } from "../../../redux/uniformService/ProductionStockServices";
+import { DropdownNew } from "../../../Inputs";
 
 export default function StockInwardItems({
   stockInwardItems,
@@ -15,14 +20,22 @@ export default function StockInwardItems({
   params,
   readOnly,
   id,
+  branchId,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
-  const [styleNo, setStyleNo] = useState("");
-  const [getStyleCodeDetail] = useLazyGetStyleCodeDetailQuery();
+  const [styleId, setStyleId] = useState("");
+  const [previewImage, setPreviewImage] = useState(null);
+  const [getProductionStyleDetail] = useLazyGetProductionDetailQuery();
   const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
   const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
+  const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: fabricList } = useGetFabricMasterQuery({ params });
+  const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
+
+  const companyId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "userCompanyId"
+  );
 
   const addRow = () => {
     const newRow = {
@@ -32,6 +45,9 @@ export default function StockInwardItems({
       sizeId: "",
       qty: "",
       remarks: "",
+      styleItemId: "",
+      colorId: "",
+      selected: false,
     };
     setStockInwardItems([...stockInwardItems, newRow]);
   };
@@ -51,6 +67,11 @@ export default function StockInwardItems({
     });
   };
 
+  const deleteSelectedRows = () => {
+    setStockInwardItems((rows) => rows.filter((r) => !r.selected));
+    setContextMenu(null);
+  };
+
   const handleDeleteAllRows = () => {
     setStockInwardItems((prevRows) => {
       if (prevRows.length <= 1) return prevRows;
@@ -58,7 +79,7 @@ export default function StockInwardItems({
     });
   };
 
-  const handleRightClick = (event, rowIndex, type) => {
+  const handleRightClick = (event, rowIndex = 0, type) => {
     event.preventDefault();
     setContextMenu({
       mouseX: event.clientX,
@@ -88,6 +109,9 @@ export default function StockInwardItems({
               sizeId: "",
               qty: "",
               remarks: "",
+              styleItemId: "",
+              colorId: "",
+              selected: false,
             })),
           ];
         }
@@ -103,38 +127,48 @@ export default function StockInwardItems({
           sizeId: "",
           qty: "",
           remarks: "",
+          styleItemId: "",
+          colorId: "",
+          selected: false,
         }))
       );
     }
   }, [stockInwardItems, setStockInwardItems]);
 
-  const handleAddRow = async () => {
+  const handleStyleChange = async (newValue) => {
+    if (!newValue) return;
+    const isFirstTime = stockInwardItems.every((row) => !row.qty);
+    if (!isFirstTime) {
+      // const hasEmpty = stockInwardItems.some((row) => !row.qty);
+      const hasEmpty = stockInwardItems.some((row) => {
+        const hasStyle =
+          row.styleId !== "" &&
+          row.styleId !== null &&
+          row.styleId !== undefined;
+
+        return hasStyle && !row.qty;
+      });
+      if (hasEmpty) {
+        toast.info("Please fill all required fields...!", {
+          position: "top-center",
+        });
+        return;
+      }
+    }
     try {
-      const { data: styleData } = await getStyleCodeDetail({
+      const { data: styleData } = await getProductionStyleDetail({
         params: {
-          styleNo: styleNo,
+          styleId: newValue,
+          branchId: branchId,
         },
       });
-      const style = styleData?.data && Object.values(styleData.data)[0];
-      if (!style) return;
-
-      const sizeTemplateId = style.sizeTemplateId;
-      let sizeRows = [];
-
-      if (sizeTemplateId) {
-        const { data: sizeData } = await styleTemplateDetail(sizeTemplateId);
-
-        if (sizeData?.data?.SizeTemplateList?.length) {
-          sizeRows = sizeData.data.SizeTemplateList.map((s) => ({
-            styleNo: styleNo || "",
-            fabricId: style.fabricId || "",
-            styleId: style.id || "",
-            sizeId: s.sizeId,
-            qty: "",
-            remarks: "",
-          }));
-          console.log("Mapped size rows:", sizeRows);
-        }
+      const styleItems = styleData.data || [];
+      if (!styleItems) return;
+      if (styleData.statusCode === 1) {
+        toast.info(styleData?.message, {
+          position: "top-center",
+          autoClose: 2000,
+        });
       }
       setStockInwardItems((prev) => {
         const updated = [...prev];
@@ -145,12 +179,12 @@ export default function StockInwardItems({
         );
         if (startIndex === -1) startIndex = updated.length;
 
-        // Fill in sizeRows starting at first empty slot
-        sizeRows.forEach((row, i) => {
+        styleItems.forEach((row, i) => {
+          const cloned = structuredClone(row);
           if (startIndex + i < updated.length) {
-            updated[startIndex + i] = row;
+            updated[startIndex + i] = cloned;
           } else {
-            updated.push(row); // append if no empty slot
+            updated.push(cloned); // append if no empty slot
           }
         });
 
@@ -163,6 +197,9 @@ export default function StockInwardItems({
             sizeId: "",
             qty: "",
             remarks: "",
+            styleItemId: "",
+            colorId: "",
+            selected: false,
           });
         }
 
@@ -171,60 +208,108 @@ export default function StockInwardItems({
     } catch (error) {
       console.error("Error adding row:", error);
     }
+    setStyleId(newValue);
   };
+
+  function imageFormatter(styleId) {
+    const fileName = findFromList(styleId, styleList?.data, "img");
+    if (!fileName) return "/no-image.png"; // fallback image if missing
+    return `${IMAGE_UPLOAD_URL}${fileName}`;
+  }
 
   return (
     <>
-      <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[350px] overflow-auto">
-        <div className="flex items-center gap-4">
-          <ReusableInput
-            label="Style No"
-            value={styleNo}
-            setValue={setStyleNo}
-            type={"text"}
+      <div className="border border-slate-200  bg-white rounded-md shadow-sm max-h-[450px] px-2 overflow-auto">
+        <div className="flex items-center gap-4 w-40 sticky top-0 bg-white z-30 mt-2">
+          <DropdownNew
+            name="Style No"
+            dataList={
+              id
+                ? styleList?.data
+                : styleList?.data?.filter((item) => item.active)
+            }
+            value={styleId}
+            setValue={handleStyleChange}
             required={true}
             readOnly={readOnly}
-          />
-          <button
-            className="hover:bg-green-700 h-6 mt-3 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-xs"
-            onClick={() => {
-              handleAddRow();
+            placeholder={"Select Style"}
+            otherField={"sku"}
+            disabled={id}
+            clear={true}
+            onKeyDown={(e) => {
+              // if (e.key === "Enter") {
+              //   e.preventDefault();
+              // }
             }}
-          >
-            <FaPlus /> Add
-          </button>
+          />
         </div>
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
         </div>
-        <div className={`w-full overflow-y-auto py-1 relative`}>
-          <table className="w-auto border-collapse table-fixed">
-            <thead className="bg-gray-200 text-gray-800">
+        <div className={`w-full max-h-[300px]  overflow-y-auto  my-1`}>
+          <table className="w-full border-collapse table-fixed">
+            <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
+                <th className="w-12 px-1 py-1 justify-center font-medium text-[13px]">
+                  {/* <tr className="flex items-center justify-center">Select</tr> */}
+                  <tr className="flex items-center justify-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={
+                        stockInwardItems.length > 0 &&
+                        stockInwardItems.every((row) => row.selected)
+                      }
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setStockInwardItems((prev) =>
+                          prev.map((row) => ({ ...row, selected: checked }))
+                        );
+                      }}
+                      onContextMenu={(e) => {
+                        if (!readOnly) {
+                          handleRightClick(e, "notes");
+                        }
+                      }}
+                      tabIndex={-1}
+                      disabled={readOnly}
+                      onFocus={(e) => e.target.blur()}
+                    />
+                  </tr>
+                </th>
                 <th
                   className={`w-12 px-4 py-2 text-center font-medium text-[13px]`}
                 >
                   S.No
                 </th>
                 <th
-                  className={`w-20 px-4 py-2 text-center font-medium text-[13px]`}
+                  className={`w-24 px-4 py-2 text-center font-medium text-[13px]`}
                 >
-                  Style.No
+                  Style No
                 </th>{" "}
-                <th
-                  className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
-                >
-                  Fabric
-                </th>
                 <th
                   className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style
                 </th>
                 <th
+                  className={`w-12 px-4 py-2 text-center  font-medium text-[13px]`}
+                >
+                  Img
+                </th>
+                <th
+                  className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
+                >
+                  Fabric
+                </th>
+                <th
                   className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Size
+                </th>
+                <th
+                  className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Color
                 </th>
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
@@ -247,57 +332,24 @@ export default function StockInwardItems({
                   className="border border-blue-gray-200 cursor-pointer "
                   key={index}
                 >
-                  <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
-                    {index + 1}
-                  </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                  <td className="border-blue-gray-200 text-[11px]  border border-gray-300 py-0.5 text-right">
                     <input
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "styleNo");
+                      type="checkbox"
+                      checked={row.selected || false}
+                      disabled={readOnly}
+                      onChange={(e) =>
+                        handleInputChange(e.target.checked, index, "selected")
+                      }
+                      className="justify-center flex items-center mx-auto w-full"
+                      onContextMenu={(e) => {
+                        if (!readOnly) {
+                          handleRightClick(e, index, "notes");
                         }
                       }}
-                      type="string"
-                      className="text-left rounded py-1 px-1 w-full table-data-input"
-                      onFocus={(e) => e.target.select()}
-                      value={row?.styleNo}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "styleNo")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "styleNo");
-                      }}
-                      disabled={true}
                     />
                   </td>
-                  <td className="py-0.5 border border-gray-300 text-[11px] ">
-                    <select
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "fabricId");
-                        }
-                      }}
-                      tabIndex={"0"}
-                      disabled={true}
-                      className="text-left w-full rounded py-1 table-data-input"
-                      value={row.fabricId}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "fabricId")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "fabricId");
-                      }}
-                    >
-                      <option></option>
-                      {(id
-                        ? fabricList?.data
-                        : fabricList?.data?.filter((item) => item.active)
-                      )?.map((blend) => (
-                        <option value={blend.id} key={blend.id}>
-                          {blend?.name}
-                        </option>
-                      ))}
-                    </select>
+                  <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
+                    {index + 1}
                   </td>
                   <td className="py-0.5 border border-gray-300 text-[11px] ">
                     <select
@@ -321,6 +373,78 @@ export default function StockInwardItems({
                       {(id
                         ? styleList?.data
                         : styleList?.data?.filter((item) => item.active)
+                      )?.map((blend) => (
+                        <option value={blend.id} key={blend.id}>
+                          {blend?.sku}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="py-0.5 border border-gray-300 text-[11px] ">
+                    <select
+                      onKeyDown={(e) => {
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "styleItemId");
+                        }
+                      }}
+                      tabIndex={"0"}
+                      disabled={true}
+                      className="text-left w-full rounded py-1 table-data-input"
+                      value={row.styleItemId}
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "styleItemId")
+                      }
+                      onBlur={(e) => {
+                        handleInputChange(e.target.value, index, "styleItemId");
+                      }}
+                    >
+                      <option></option>
+                      {(id
+                        ? styleItemList?.data
+                        : styleItemList?.data?.filter((item) => item.active)
+                      )?.map((blend) => (
+                        <option value={blend.id} key={blend.id}>
+                          {blend?.name}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="border border-gray-300 py-0.5 text-center">
+                    {row?.styleId ? (
+                      <button
+                        className="text-xs"
+                        onClick={() => {
+                          setPreviewImage(imageFormatter(row?.styleId));
+                        }}
+                      >
+                        {VIEW}
+                      </button>
+                    ) : (
+                      <span className="text-xs pl-1"></span>
+                    )}
+                  </td>
+                  <td className="py-0.5 border border-gray-300 text-[11px] ">
+                    <select
+                      onKeyDown={(e) => {
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "fabricId");
+                        }
+                      }}
+                      tabIndex={"0"}
+                      disabled={true}
+                      className="text-left w-full rounded py-1 table-data-input"
+                      value={row.fabricId}
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "fabricId")
+                      }
+                      onBlur={(e) => {
+                        handleInputChange(e.target.value, index, "fabricId");
+                      }}
+                    >
+                      <option></option>
+                      {(id
+                        ? fabricList?.data
+                        : fabricList?.data?.filter((item) => item.active)
                       )?.map((blend) => (
                         <option value={blend.id} key={blend.id}>
                           {blend?.name}
@@ -357,6 +481,36 @@ export default function StockInwardItems({
                       ))}
                     </select>
                   </td>
+                  <td className="py-0.5 border border-gray-300 text-[11px]">
+                    <select
+                      id={`qty-input-${index}`}
+                      onKeyDown={(e) => {
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "colorId");
+                        }
+                      }}
+                      tabIndex={"0"}
+                      disabled={readOnly}
+                      className="text-left w-full rounded py-1 table-data-input"
+                      value={row.colorId}
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "colorId")
+                      }
+                      onBlur={(e) => {
+                        handleInputChange(e.target.value, index, "colorId");
+                      }}
+                    >
+                      <option></option>
+                      {(id
+                        ? colorList?.data
+                        : colorList?.data?.filter((item) => item.active)
+                      )?.map((blend) => (
+                        <option value={blend.id} key={blend.id}>
+                          {blend?.name}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                     <input
                       onKeyDown={(e) => {
@@ -383,6 +537,16 @@ export default function StockInwardItems({
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                     <input
                       onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault(); // prevent form submit or line break
+                          e.stopPropagation();
+                          const nextQtyInput = document.querySelector(
+                            `#qty-input-${index + 1}`
+                          );
+                          if (nextQtyInput) {
+                            nextQtyInput.focus();
+                          }
+                        }
                         if (e.key === "Delete") {
                           handleInputChange("", index, "remarks");
                         }
@@ -400,13 +564,14 @@ export default function StockInwardItems({
                       disabled={readOnly}
                     />
                   </td>
+
                   <td className="w-2 border border-gray-300">
                     <input
-                      onContextMenu={(e) => {
-                        if (!readOnly) {
-                          handleRightClick(e, index, "notes");
-                        }
-                      }}
+                      // onContextMenu={(e) => {
+                      //   if (!readOnly) {
+                      //     handleRightClick(e, index, "notes");
+                      //   }
+                      // }}
                       className="w-full "
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
@@ -421,10 +586,10 @@ export default function StockInwardItems({
               ))}
             </tbody>
             <tfoot>
-              <tr className="bg-gray-50 font-medium text-gray-800">
+              <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={5}
+                  colSpan={8}
                 >
                   Total Qty
                 </td>
@@ -438,13 +603,35 @@ export default function StockInwardItems({
               </tr>
             </tfoot>
           </table>
+          {previewImage && (
+            <div
+              className="fixed inset-0 flex items-center justify-center z-50 bg-black/40 backdrop-blur-sm"
+              onMouseEnter={() => setPreviewImage(previewImage)}
+              onMouseLeave={() => setPreviewImage(null)}
+            >
+              <div className="relative z-50 ">
+                <button
+                  className="absolute top-[-10px] right-[-10px] bg-red-600 rounded-full w-6 h-6 flex items-center justify-center text-white shadow-md hover:bg-red-700 transition"
+                  onClick={() => setPreviewImage(null)}
+                >
+                  ×
+                </button>
+
+                <img
+                  src={previewImage}
+                  alt="No Image...."
+                  className="max-h-[80vh] max-w-[80vw] rounded-lg shadow-lg"
+                />
+              </div>
+            </div>
+          )}
         </div>
         {contextMenu && (
           <div
             style={{
               position: "absolute",
-              top: `${contextMenu.mouseY - 50}px`,
-              left: `${contextMenu.mouseX + 20}px`,
+              top: `${contextMenu.mouseY}px`,
+              left: `${contextMenu.mouseX}px`,
               boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
               padding: "8px",
               borderRadius: "4px",
@@ -457,20 +644,12 @@ export default function StockInwardItems({
               <button
                 className=" text-black text-[12px] text-left rounded px-1"
                 onClick={() => {
-                  deleteRow(contextMenu.rowId);
+                  // deleteRow(contextMenu.rowId);
+                  deleteSelectedRows();
                   handleCloseContextMenu();
                 }}
               >
                 Delete
-              </button>
-              <button
-                className=" text-black text-[12px] text-left rounded px-1"
-                onClick={() => {
-                  handleDeleteAllRows();
-                  handleCloseContextMenu();
-                }}
-              >
-                Delete All
               </button>
             </div>
           </div>

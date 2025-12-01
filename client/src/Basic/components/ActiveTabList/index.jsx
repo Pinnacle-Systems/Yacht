@@ -158,7 +158,7 @@ const ActiveTabList = () => {
     "STOCK ADJUSTMENT": <StockAdjustment />,
     "SALES DELIVERY": <SalesEntry />,
     "SIZE TEMPLATE MASTER": <SizeTemplateMaster />,
-    "STOCK INWARD": <StockInward />,
+    "FINISHED GOODS INWARD": <StockInward />,
     "STOCK REPORT": <MaterialStockReport />,
     "FINISHED GOODS STOCK": <StockReport />,
     "STYLE ITEM MASTER": <StyleItemMaster />,

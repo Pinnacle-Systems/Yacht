@@ -16,6 +16,7 @@ import {
   useDeleteProcessMasterMutation,
   useGetProcessMasterByIdQuery,
   useGetProcessMasterQuery,
+  useLazyGetProcessMasterByIdQuery,
   useUpdateProcessMasterMutation,
 } from "../../../redux/uniformService/ProcessMasterService";
 const MODEL = "Process Master";
@@ -30,7 +31,7 @@ export default function Form() {
   const [isCutting, setIsCutting] = useState(false);
   const [isStiching, setIsStiching] = useState(false);
   const [isPacking, setIsPacking] = useState(false);
-
+  const [isIroning, setIsIroning] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
 
@@ -53,6 +54,8 @@ export default function Form() {
   const [addData] = useAddProcessMasterMutation();
   const [updateData] = useUpdateProcessMasterMutation();
   const [removeData] = useDeleteProcessMasterMutation();
+  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
+    useLazyGetProcessMasterByIdQuery();
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -63,12 +66,14 @@ export default function Form() {
         setIsCutting(false);
         setIsPacking(false);
         setIsStiching(false);
+        setIsIroning(false);
       } else {
         setName(data?.name || "");
         setActive(id ? data?.active ?? false : true);
         setIsPacking(data?.isPacking ? data?.isPacking : false);
-        setIsStiching(data?.isStiching ? data?.isStiching :false);
-        setIsCutting(data?.isCutting ? data?.isCutting :false);
+        setIsStiching(data?.isStiching ? data?.isStiching : false);
+        setIsCutting(data?.isCutting ? data?.isCutting : false);
+        setIsIroning(data?.isIroning ? data?.isIroning : false);
       }
     },
     [id]
@@ -85,6 +90,7 @@ export default function Form() {
     isCutting,
     isStiching,
     isPacking,
+    isIroning,
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
     ),
@@ -165,34 +171,44 @@ export default function Form() {
   };
 
   const handleDelete = async (id) => {
+    setId(id);
+    const { data } = await trigger(id);
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-      try {
-        let deldata = await removeData(id).unwrap();
-        if (deldata?.statusCode == 1) {
-          Swal.fire({
-            icon: "error",
-            title: "Child record Exists",
-            text: deldata.data?.message || "Data cannot be deleted!",
-          });
-          return;
-        }
-        setId("");
-        Swal.fire({
-          title: "Deleted Successfully",
-          icon: "success",
-          timer: 1000,
-        });
-        setForm(false);
-      } catch (error) {
+      if (data?.data?.childRecord > 0) {
         Swal.fire({
           icon: "error",
-          title: "Submission error",
-          text: error.data?.message || "Something went wrong!",
+          title: "Child record Exists in Process Group",
+          text: "Data cannot be deleted!",
         });
-        setForm(false);
+      } else {
+        try {
+          let deldata = await removeData(id).unwrap();
+          if (deldata?.statusCode == 1) {
+            Swal.fire({
+              icon: "error",
+              title: "Child record Exists",
+              text: deldata.data?.message || "Data cannot be deleted!",
+            });
+            return;
+          }
+          setId("");
+          Swal.fire({
+            title: "Deleted Successfully",
+            icon: "success",
+            timer: 1000,
+          });
+          setForm(false);
+        } catch (error) {
+          Swal.fire({
+            icon: "error",
+            title: "Submission error",
+            text: error.data?.message || "Something went wrong!",
+          });
+          setForm(false);
+        }
       }
     }
   };
@@ -363,6 +379,12 @@ export default function Form() {
                               name="Stiching"
                               value={isStiching}
                               setValue={setIsStiching}
+                              readOnly={readOnly}
+                            />
+                            <CheckBox
+                              name="Ironing"
+                              value={isIroning}
+                              setValue={setIsIroning}
                               readOnly={readOnly}
                             />
                             <CheckBox

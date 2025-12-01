@@ -56,11 +56,6 @@ export default function StockInwardForm({
   const syncFormWithDb = useCallback(
     (data) => {
       const today = new Date();
-      if (id) {
-        setReadOnly(true);
-      } else {
-        setReadOnly(false);
-      }
       setDocDate(
         data?.docDate
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
@@ -184,8 +179,8 @@ export default function StockInwardForm({
     <>
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800">
-            Stock Inward Details
+          <h1 className="text-xl font-bold text-gray-800">
+            Finished Goods Inward Details
           </h1>
           <button
             onClick={onClose}
@@ -201,9 +196,9 @@ export default function StockInwardForm({
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
             <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
             <div className="grid grid-cols-2 gap-1">
-              <ReusableInput label="Doc.Id" readOnly value={docId} />
+              <ReusableInput label="Goods Inward No" readOnly value={docId} />
               <ReusableInput
-                label="Doc Date"
+                label="Goods Inward Date"
                 value={docDate}
                 type={"date"}
                 required={true}
@@ -238,6 +233,7 @@ export default function StockInwardForm({
                 }}
                 required={true}
                 readOnly={readOnly}
+                autoFocus={true}
               />
               <DropdownInput
                 name="Store"
@@ -266,6 +262,7 @@ export default function StockInwardForm({
             stockInwardItems={stockInwardItems}
             setStockInwardItems={setStockInwardItems}
             readOnly={readOnly}
+            branchId={branchId}
           />
         </fieldset>
         <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">

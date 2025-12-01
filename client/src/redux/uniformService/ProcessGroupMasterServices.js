@@ -80,6 +80,7 @@ const ProcessGroupApi = createApi({
 export const {
     useGetProcessGroupMasterQuery,
     useGetProcessGroupMasterByIdQuery,
+    useLazyGetProcessGroupMasterByIdQuery,
     useAddProcessGroupMasterMutation,
     useUpdateProcessGroupMasterMutation,
     useDeleteProcessGroupMasterMutation,

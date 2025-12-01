@@ -23,9 +23,23 @@ const productionStockApi = createApi({
       },
       providesTags: ["ProductionStock"],
     }),
+    getProductionDetail: builder.query({
+      query: ({ params }) => {
+        return {
+          url: `${PRODUCTION_STOCK_API}/productionStyle`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["ProductionStock"],
+    }),
   }),
 });
 
-export const { useLazyGetStyleDetailQuery } = productionStockApi;
+export const { useLazyGetStyleDetailQuery, useLazyGetProductionDetailQuery } =
+  productionStockApi;
 
 export default productionStockApi;

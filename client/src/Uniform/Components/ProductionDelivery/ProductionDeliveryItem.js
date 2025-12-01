@@ -199,6 +199,7 @@ export default function ProductionDeliveryItem({
               issueQty: "",
               prevProcessId: "",
               styleId: "",
+              stkQty:""
             })),
           ];
         }
@@ -220,6 +221,7 @@ export default function ProductionDeliveryItem({
           issueQty: "",
           prevProcessId: "",
           styleId: "",
+          stkQty:""
         }))
       );
     }

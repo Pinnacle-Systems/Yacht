@@ -17,6 +17,7 @@ import {
   useDeleteProcessGroupMasterMutation,
   useGetProcessGroupMasterByIdQuery,
   useGetProcessGroupMasterQuery,
+  useLazyGetProcessGroupMasterByIdQuery,
   useUpdateProcessGroupMasterMutation,
 } from "../../../redux/uniformService/ProcessGroupMasterServices";
 import {
@@ -59,6 +60,8 @@ export default function Form() {
   const [addData] = useAddProcessGroupMasterMutation();
   const [updateData] = useUpdateProcessGroupMasterMutation();
   const [removeData] = useDeleteProcessGroupMasterMutation();
+  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
+    useLazyGetProcessGroupMasterByIdQuery();
   const { data: seqData } = useGetProcessGroupSeqMasterByIdQuery(
     processGroupSeqsId,
     {
@@ -174,34 +177,44 @@ export default function Form() {
   };
 
   const handleDelete = async (id) => {
+    setId(id);
+    const { data } = await trigger(id);
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-      try {
-        let deldata = await removeData(id).unwrap();
-        if (deldata?.statusCode == 1) {
-          Swal.fire({
-            icon: "error",
-            title: "Child record Exists",
-            text: deldata.data?.message || "Data cannot be deleted!",
-          });
-          return;
-        }
-        setId("");
-        Swal.fire({
-          title: "Deleted Successfully",
-          icon: "success",
-          timer: 1000,
-        });
-        setForm(false);
-      } catch (error) {
+      if (data?.data?.childRecordProduction > 0) {
         Swal.fire({
           icon: "error",
-          title: "Submission error",
-          text: error.data?.message || "Something went wrong!",
+          title: "Child record Exists in Production Entry",
+          text: "Data cannot be deleted!",
         });
-        setForm(false);
+      } else {
+        try {
+          let deldata = await removeData(id).unwrap();
+          if (deldata?.statusCode == 1) {
+            Swal.fire({
+              icon: "error",
+              title: "Child record Exists",
+              text: deldata.data?.message || "Data cannot be deleted!",
+            });
+            return;
+          }
+          setId("");
+          Swal.fire({
+            title: "Deleted Successfully",
+            icon: "success",
+            timer: 1000,
+          });
+          setForm(false);
+        } catch (error) {
+          Swal.fire({
+            icon: "error",
+            title: "Submission error",
+            text: error.data?.message || "Something went wrong!",
+          });
+          setForm(false);
+        }
       }
     }
   };

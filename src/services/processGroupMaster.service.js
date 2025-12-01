@@ -14,7 +14,6 @@ async function get(req) {
 }
 
 async function getOne(id) {
-  const childRecord = 0;
   const data = await prisma.processGroup.findUnique({
     where: {
       id: parseInt(id),
@@ -30,7 +29,17 @@ async function getOne(id) {
     },
   });
   if (!data) return NoRecordFound("processGroup");
-  return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+  const processIds = data.processGroupLists
+    .map((item) => item.processId)
+    .filter(Boolean);
+  const childRecordProduction = await prisma.productionStock.count({
+    where: {
+      prevProcessId: {
+        in: processIds,
+      },
+    },
+  });
+  return { statusCode: 0, data: { ...data, ...{ childRecordProduction } } };
 }
 
 async function getSearch(req) {

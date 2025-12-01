@@ -80,6 +80,7 @@ const ProcessApi = createApi({
 export const {
     useGetProcessMasterQuery,
     useGetProcessMasterByIdQuery,
+    useLazyGetProcessMasterByIdQuery,
     useAddProcessMasterMutation,
     useUpdateProcessMasterMutation,
     useDeleteProcessMasterMutation,

@@ -38,12 +38,12 @@ const OpeningStockFormReport = ({
     serachDocNo,
     searchDocDate,
     searchStore,
-    searchStyleNo
+    searchStyleNo,
   };
 
   useEffect(() => {
     setCurrentPageNumber(1);
-  }, [serachDocNo, searchDocDate, searchStore,searchStyleNo]);
+  }, [serachDocNo, searchDocDate, searchStore, searchStyleNo]);
 
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -176,7 +176,7 @@ const OpeningStockFormReport = ({
     <div className="flex flex-col w-full h-[93%] overflow-auto">
       <>
         <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
-          <div className="w-40 mx-8">
+          <div className="w-40 mx-8 h-[10%]">
             <div className="font-medium text-[13px]  text-gray-900">
               Style No
             </div>

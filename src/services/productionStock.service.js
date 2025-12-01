@@ -58,7 +58,6 @@ async function getStyleDetail(req) {
       "styleId",
       "prevProcessId",
       "sizeId",
-      "qty",
       "orderQty",
     ],
     where: {
@@ -66,9 +65,9 @@ async function getStyleDetail(req) {
       styleId: styleId ? parseInt(styleId) : undefined,
       prevProcessId: prevProcessId ? parseInt(prevProcessId) : undefined,
     },
-    // _sum: {
-    //   qty: true,
-    // },
+    _sum: {
+      qty: true,
+    },
   });
 
   if (!data || data.length === 0) return NoRecordFound("Style not found");
@@ -82,7 +81,7 @@ async function getStyleDetail(req) {
       colorId: d.colorId,
       portionId: d.portionId,
       sizeId: d.sizeId,
-      stkQty: d.qty,
+      stkQty: d._sum.qty,
       styleId: d.styleId,
       prevProcessId: d.prevProcessId,
       orderQty: d.orderQty,
@@ -90,4 +89,57 @@ async function getStyleDetail(req) {
   };
 }
 
-export { getStyleDetail };
+async function getProductionStyle(req) {
+  const { styleId, branchId } = req.query;
+  if (!styleId || styleId === undefined) {
+    return {
+      statusCode: 400,
+      message: "Choose Correct Style No",
+    };
+  }
+  const lostProcess = await prisma.process.findFirst({
+    where: {
+      isIroning: true,
+    },
+  });
+  const lastProcessId = lostProcess?.id;
+  console.log(lastProcessId, "lastProcessId");
+  let data;
+  if (lastProcessId) {
+    data = await prisma.productionStock.groupBy({
+      by: [
+        "styleId",
+        "styleItemId",
+        "fabricId",
+        "colorId",
+        // "portionId",
+        "prevProcessId",
+        "sizeId",
+      ],
+      where: {
+        branchId: branchId ? parseInt(branchId) : undefined,
+        styleId: styleId ? parseInt(styleId) : undefined,
+        prevProcessId: lastProcessId ? parseInt(lastProcessId) : undefined,
+      },
+      _sum: {
+        qty: true,
+      },
+    });
+  }
+  if (!data || data.length === 0) return NoRecordFound("Style");
+  return {
+    statusCode: 0,
+    data: data.map((d) => ({
+      styleItemId: d.styleItemId,
+      styleId: d.styleId,
+      fabricId: d.fabricId,
+      colorId: d.colorId,
+      // portionId: d.portionId,
+      sizeId: d.sizeId,
+      qty: d._sum.qty,
+      prevProcessId: d.prevProcessId,
+    })),
+  };
+}
+
+export { getStyleDetail, getProductionStyle };
