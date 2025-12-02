@@ -123,7 +123,7 @@ const ActiveTabList = () => {
     "COLOR MASTER": <ColorMaster />,
     "PAY TERM MASTER": <PayTermMaster />,
     "SIZE MASTER": <SizeMaster />,
-    "STORE MASTER": <LocationMaster />,
+    "LOCATION MASTER": <LocationMaster />,
     DASHBOARD: <Dashboard />,
     // "ORDER": <Order />,
     // "HOMEPAGE": <MaxHomePage />,

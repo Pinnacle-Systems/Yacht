@@ -13,6 +13,7 @@ import { IMAGE_UPLOAD_URL } from "../../../Constants";
 import { VIEW } from "../../../icons";
 import { useLazyGetProductionDetailQuery } from "../../../redux/uniformService/ProductionStockServices";
 import { DropdownNew } from "../../../Inputs";
+import Swal from "sweetalert2";
 
 export default function StockInwardItems({
   stockInwardItems,
@@ -48,11 +49,25 @@ export default function StockInwardItems({
       styleItemId: "",
       colorId: "",
       selected: false,
+      stkQty: "",
     };
     setStockInwardItems([...stockInwardItems, newRow]);
   };
 
   const handleInputChange = (value, index, field) => {
+    if (field === "qty") {
+      const row = stockInwardItems[index];
+      const stkQty = row.stkQty || 0;
+      if (parseFloat(stkQty) < parseFloat(value)) {
+        Swal.fire({
+          icon: "warning",
+          title: "Invalid Quantity",
+          text: "Inward Qty cannot be more than Stock Qty!",
+          confirmButtonText: "OK",
+        });
+        return;
+      }
+    }
     const newBlend = structuredClone(stockInwardItems);
     newBlend[index][field] = value;
     setStockInwardItems(newBlend);
@@ -112,6 +127,7 @@ export default function StockInwardItems({
               styleItemId: "",
               colorId: "",
               selected: false,
+              stkQty: "",
             })),
           ];
         }
@@ -130,6 +146,7 @@ export default function StockInwardItems({
           styleItemId: "",
           colorId: "",
           selected: false,
+          stkQty: "",
         }))
       );
     }
@@ -200,6 +217,7 @@ export default function StockInwardItems({
             styleItemId: "",
             colorId: "",
             selected: false,
+            stkQty: "",
           });
         }
 
@@ -287,7 +305,7 @@ export default function StockInwardItems({
                   Style No
                 </th>{" "}
                 <th
-                  className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-60 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style
                 </th>
@@ -312,7 +330,12 @@ export default function StockInwardItems({
                   Color
                 </th>
                 <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Stk Qty
+                </th>
+                <th
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Qty
                 </th>
@@ -322,7 +345,7 @@ export default function StockInwardItems({
                   Remarks
                 </th>
                 <th
-                  className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                  className={`w-14 px-3 py-2 text-center font-medium text-[13px] `}
                 ></th>
               </tr>
             </thead>
@@ -517,6 +540,29 @@ export default function StockInwardItems({
                         if (e.code === "Minus" || e.code === "NumpadSubtract")
                           e.preventDefault();
                         if (e.key === "Delete") {
+                          handleInputChange("", index, "stkQty");
+                        }
+                      }}
+                      min={"0"}
+                      type="number"
+                      className="text-right rounded py-1 px-1 w-full table-data-input"
+                      onFocus={(e) => e.target.select()}
+                      value={row?.stkQty}
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "stkQty")
+                      }
+                      onBlur={(e) => {
+                        handleInputChange(e.target.value, index, "stkQty");
+                      }}
+                      disabled={true}
+                    />
+                  </td>
+                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                    <input
+                      onKeyDown={(e) => {
+                        if (e.code === "Minus" || e.code === "NumpadSubtract")
+                          e.preventDefault();
+                        if (e.key === "Delete") {
                           handleInputChange("", index, "qty");
                         }
                       }}
@@ -589,7 +635,7 @@ export default function StockInwardItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={8}
+                  colSpan={9}
                 >
                   Total Qty
                 </td>

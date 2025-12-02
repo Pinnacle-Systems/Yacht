@@ -10,6 +10,7 @@ import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleI
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { VIEW } from "../../../icons";
 import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService";
+import { useGetPurchaseInwardEntryQuery } from "../../../redux/uniformService/PurchaseInwardEntry";
 
 export default function CuttingOrderItems({
   cuttingOrderItems,
@@ -33,6 +34,14 @@ export default function CuttingOrderItems({
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
   );
+  const {
+    data: allData,
+    isFetching,
+    isLoading,
+  } = useGetPurchaseInwardEntryQuery({
+    params,
+  });
+  const [previewImage, setPreviewImage] = useState(null);
 
   const addRow = () => {
     const newRow = {
@@ -271,6 +280,16 @@ export default function CuttingOrderItems({
     });
   }, [sizeColumns]);
 
+  function imageFormatter(styleId) {
+    const fabricItems = allData?.data?.flatMap(
+      (item) => item.fabricInwardItems || []
+    );
+    const item = fabricItems.find((f) => f.styleId === styleId);
+    const fileName = item?.filePath;
+    if (!fileName) return "/no-image.png"; // fallback image if missing
+    return `${IMAGE_UPLOAD_URL}${fileName}`;
+  }
+
   return (
     <>
       <div className="border border-slate-200  bg-white rounded-md shadow-sm max-h-[450px] px-2 overflow-auto overflow-x-auto w-full">
@@ -322,11 +341,11 @@ export default function CuttingOrderItems({
                 >
                   Fabric
                 </th>
-                {/* <th
-                  className={`w-12 px-4 py-2 text-center  font-medium text-[13px]`}
+                <th
+                  className={`w-11 px-2 py-2 text-center  font-medium text-[13px]`}
                 >
                   Img
-                </th>{" "} */}
+                </th>
                 <th
                   className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
                 >
@@ -468,6 +487,21 @@ export default function CuttingOrderItems({
                           </option>
                         ))}
                       </select>
+                    </td>
+                    <td className="border border-gray-300 py-0.5 text-center">
+                      {row?.styleId ? (
+                        <button
+                          className="text-xs"
+                          onClick={() => {
+                            setPreviewImage(imageFormatter(row?.styleId));
+                            console.log("Clicked")
+                          }}
+                        >
+                          {VIEW}
+                        </button>
+                      ) : (
+                        <span className="text-xs pl-1"></span>
+                      )}
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px]">
                       <select
@@ -727,7 +761,7 @@ export default function CuttingOrderItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={7 + sizeColumns.length}
+                  colSpan={8 + sizeColumns.length}
                 >
                   Total
                 </td>
@@ -741,6 +775,28 @@ export default function CuttingOrderItems({
               </tr>
             </tfoot>
           </table>
+          {previewImage && (
+            <div
+              className="fixed inset-0 flex items-center justify-center z-50 bg-black/40 backdrop-blur-sm"
+              onMouseEnter={() => setPreviewImage(previewImage)}
+              onMouseLeave={() => setPreviewImage(null)}
+            >
+              <div className="relative z-50 ">
+                <button
+                  className="absolute top-[-10px] right-[-10px] bg-red-600 rounded-full w-6 h-6 flex items-center justify-center text-white shadow-md hover:bg-red-700 transition"
+                  onClick={() => setPreviewImage(null)}
+                >
+                  ×
+                </button>
+
+                <img
+                  src={previewImage}
+                  alt="Preview"
+                  className="max-h-[80vh] max-w-[80vw] rounded-lg shadow-lg"
+                />
+              </div>
+            </div>
+          )}
           {contextMenu && (
             <div
               style={{

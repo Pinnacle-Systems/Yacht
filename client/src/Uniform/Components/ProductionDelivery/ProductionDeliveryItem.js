@@ -16,6 +16,7 @@ import { VIEW } from "../../../icons";
 import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService";
 import Swal from "sweetalert2";
 import { useGetEmployeeQuery } from "../../../redux/services/EmployeeMasterService";
+import { useGetPurchaseInwardEntryQuery } from "../../../redux/uniformService/PurchaseInwardEntry";
 
 export default function ProductionDeliveryItem({
   productionEntryItems,
@@ -34,8 +35,15 @@ export default function ProductionDeliveryItem({
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const { data: portionList } = useGetPortionMasterQuery({ params });
   const { data: employeeList } = useGetEmployeeQuery({ params });
-
+  const {
+    data: allData,
+    isFetching,
+    isLoading,
+  } = useGetPurchaseInwardEntryQuery({
+    params,
+  });
   const firstLoad = useRef(true);
+  const [previewImage, setPreviewImage] = useState(null);
 
   const addRow = () => {
     const newRow = {
@@ -199,7 +207,7 @@ export default function ProductionDeliveryItem({
               issueQty: "",
               prevProcessId: "",
               styleId: "",
-              stkQty:""
+              stkQty: "",
             })),
           ];
         }
@@ -221,11 +229,21 @@ export default function ProductionDeliveryItem({
           issueQty: "",
           prevProcessId: "",
           styleId: "",
-          stkQty:""
+          stkQty: "",
         }))
       );
     }
   }, [productionEntryItems, setProductionEntryItems]);
+
+  function imageFormatter(styleId) {
+    const fabricItems = allData?.data?.flatMap(
+      (item) => item.fabricInwardItems || []
+    );
+    const item = fabricItems.find((f) => f.styleId === styleId);
+    const fileName = item?.filePath;
+    if (!fileName) return "/no-image.png"; // fallback image if missing
+    return `${IMAGE_UPLOAD_URL}${fileName}`;
+  }
 
   return (
     <>
@@ -276,6 +294,11 @@ export default function ProductionDeliveryItem({
                   className={`w-44 px-4 py-2 text-center font-medium text-[13px]`}
                 >
                   Fabric
+                </th>
+                <th
+                  className={`w-11 px-2 py-2 text-center  font-medium text-[13px]`}
+                >
+                  Img
                 </th>
                 <th
                   className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
@@ -409,6 +432,20 @@ export default function ProductionDeliveryItem({
                           </option>
                         ))}
                       </select>
+                    </td>
+                    <td className="border border-gray-300 py-0.5 text-center">
+                      {row?.styleId ? (
+                        <button
+                          className="text-xs"
+                          onClick={() => {
+                            setPreviewImage(imageFormatter(row?.styleId));
+                          }}
+                        >
+                          {VIEW}
+                        </button>
+                      ) : (
+                        <span className="text-xs pl-1"></span>
+                      )}
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px]">
                       <select
@@ -677,7 +714,7 @@ export default function ProductionDeliveryItem({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={7}
+                  colSpan={8}
                 >
                   Total
                 </td>
@@ -697,6 +734,28 @@ export default function ProductionDeliveryItem({
               </tr>
             </tfoot>
           </table>
+          {previewImage && (
+            <div
+              className="fixed inset-0 flex items-center justify-center z-50 bg-black/40 backdrop-blur-sm"
+              onMouseEnter={() => setPreviewImage(previewImage)}
+              onMouseLeave={() => setPreviewImage(null)}
+            >
+              <div className="relative z-50 ">
+                <button
+                  className="absolute top-[-10px] right-[-10px] bg-red-600 rounded-full w-6 h-6 flex items-center justify-center text-white shadow-md hover:bg-red-700 transition"
+                  onClick={() => setPreviewImage(null)}
+                >
+                  ×
+                </button>
+
+                <img
+                  src={previewImage}
+                  alt="Preview"
+                  className="max-h-[80vh] max-w-[80vw] rounded-lg shadow-lg"
+                />
+              </div>
+            </div>
+          )}
           {contextMenu && (
             <div
               style={{

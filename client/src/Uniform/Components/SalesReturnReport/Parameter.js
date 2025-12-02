@@ -27,12 +27,12 @@ export default function Parameter({
   const [localToDate, setLocalToDate] = useState(toDate);
   function handleDone() {
     if (!localLocationId) {
-      return toast.info("Select Location", {
+      return toast.info("Select Branch", {
         position: "top-center",
       });
     }
     if (!localStoreId)
-      return toast.info("Select Store", {
+      return toast.info("Select Location", {
         position: "top-center",
       });
     if (!localFromDate) {
@@ -71,7 +71,7 @@ export default function Parameter({
     <div className="  items-center p-1 text-center bg-blue-200 rounded-b-md  sticky top-0 ">
       <div className="grid grid-cols-5 gap-5 p-2">
         <DropdownNew
-          name="Location"
+          name="Branch"
           dataList={branchList?.data?.filter((item) => item.active)}
           value={localLocationId}
           setValue={(value) => {
@@ -80,17 +80,17 @@ export default function Parameter({
           }}
           required={true}
           otherField={"branchName"}
-          placeholder={"Select Location"}
+          placeholder={"Select Branch"}
           width={40}
         />
         <DropdownNew
-          name="Store"
+          name="Location"
           dataList={storeOptions?.filter((item) => item.active)}
           value={localStoreId}
           setValue={setLocalStoreId}
           required={true}
           otherField={"storeName"}
-          placeholder={"Select Store"}
+          placeholder={"Select Location"}
         />
         <ReusableInput
           label="From Date"

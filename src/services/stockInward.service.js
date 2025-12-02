@@ -202,7 +202,37 @@ async function getOne(id) {
     },
   });
   if (!data) return NoRecordFound("stockInward");
-  return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+  const lastProcess = await prisma.process.findFirst({
+    where: {
+      isIroning: true,
+    },
+  });
+  const lastProcessId = lastProcess?.id;
+  const productionStockQty = await Promise.all(
+    data.StockInwardItems.map(async (item) => {
+      const stockData = await prisma.productionStock.aggregate({
+        where: {
+          styleItemId: item.styleItemId,
+          fabricId: item.fabricId,
+          colorId: item.colorId,
+          styleId: item.styleId,
+          prevProcessId: lastProcessId,
+          sizeId: item.sizeId,
+        },
+        _sum: {
+          qty: true,
+        },
+      });
+      return {
+        ...item,
+        stkQty: stockData._sum.qty || 0, // Dynamic field for view
+      };
+    })
+  );
+  return {
+    statusCode: 0,
+    data: { ...data, StockInwardItems: productionStockQty, ...{ childRecord } },
+  };
 }
 
 async function getSearch(req) {
@@ -227,52 +257,59 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-  const {
-    userId,
-    branchId,
-    storeId,
-    stockInwardItems,
-    finYearId,
-    docDate,
-    draftSave,
-    locationId,
-  } = body;
-  let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-  const shortCode = finYearDate
-    ? getYearShortCodeForFinYear(
-        finYearDate?.startDateStartTime,
-        finYearDate?.endDateEndTime
-      )
-    : "";
-  let newDocId = await getNextDocId(
-    branchId,
-    shortCode,
-    finYearDate?.startDateStartTime,
-    finYearDate?.endDateEndTime,
-    draftSave
-  );
-  let data;
-  await prisma.$transaction(async (tx) => {
-    data = await tx.stockInward.create({
-      data: {
-        docId: newDocId,
-        branchId: parseInt(branchId),
-        storeId: parseInt(storeId),
-        createdById: parseInt(userId),
-        docDate: docDate ? new Date(docDate) : null,
-        locationId: parseInt(locationId),
-      },
-    });
-    await createStockInwardItems(
-      tx,
-      stockInwardItems,
-      data,
+  try {
+    const {
       userId,
       branchId,
-      storeId
+      storeId,
+      stockInwardItems,
+      finYearId,
+      docDate,
+      draftSave,
+      locationId,
+    } = body;
+    let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+    const shortCode = finYearDate
+      ? getYearShortCodeForFinYear(
+          finYearDate?.startDateStartTime,
+          finYearDate?.endDateEndTime
+        )
+      : "";
+    let newDocId = await getNextDocId(
+      branchId,
+      shortCode,
+      finYearDate?.startDateStartTime,
+      finYearDate?.endDateEndTime,
+      draftSave
     );
-  });
-  return { statusCode: 0, data };
+    let data;
+    await prisma.$transaction(async (tx) => {
+      data = await tx.stockInward.create({
+        data: {
+          docId: newDocId,
+          branchId: parseInt(branchId),
+          storeId: parseInt(storeId),
+          createdById: parseInt(userId),
+          docDate: docDate ? new Date(docDate) : null,
+          locationId: parseInt(locationId),
+        },
+      });
+      await createStockInwardItems(
+        tx,
+        stockInwardItems,
+        data,
+        userId,
+        branchId,
+        storeId
+      );
+    });
+    return { statusCode: 0, data };
+  } catch (err) {
+    return {
+      statusCode: 400,
+      message: err.message,
+    };
+  }
 }
 
 async function update(id, body) {
@@ -495,6 +532,26 @@ async function createStockInwardItems(
   branchId,
   storeId
 ) {
+  const newItems = stockInwardItems || [];
+
+  for (const item of newItems) {
+    if (!item.styleId || !item.sizeId) continue;
+    const exists = await tx.stock.findFirst({
+      where: {
+        styleId: item.styleId,
+        sizeId: item.sizeId,
+      },
+      include: {
+        Style: true,
+        Size: true,
+      },
+    });
+    if (exists) {
+      throw new Error(
+        `Style No - ${exists.Style?.sku}, Size - ${exists.Size?.name} is Already Exists`
+      );
+    }
+  }
   // 1️⃣ Get the highest existing barcode number for this branch
   const lastItem = await tx.stockInwardItems.findFirst({
     orderBy: { id: "desc" }, // or order by createdAt

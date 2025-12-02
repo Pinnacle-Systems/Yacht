@@ -240,7 +240,7 @@ export default function SalesReturnForm({
             </h2>
             <div className="grid grid-cols-2 gap-1">
               <DropdownNew
-                name="Location"
+                name="Branch"
                 dataList={branchList?.data?.filter((item) => item.active)}
                 value={locationId}
                 setValue={(value) => {
@@ -250,11 +250,11 @@ export default function SalesReturnForm({
                 required={true}
                 disabled={readOnly}
                 otherField={"branchName"}
-                placeholder={"Select Location"}
+                placeholder={"Select Branch"}
                 autoFocus={true}
               />
               <DropdownNew
-                name="Store"
+                name="Location"
                 dataList={storeOptions?.filter((item) => item.active)}
                 value={storeId}
                 setValue={setStoreId}

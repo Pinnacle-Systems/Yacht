@@ -269,10 +269,10 @@ export default function Form() {
       search: "",
     },
     {
-      header: "Store Name",
+      header: "Location Name",
       accessor: (item) => item.storeName,
       className: "font-medium text-gray-900  w-[250px]  py-1  px-2",
-      search: "Store Name",
+      search: "Location Name",
     },
     {
       header: "Status",
@@ -298,7 +298,7 @@ export default function Form() {
     <div onKeyDown={handleKeyDown} className="p-1">
       <div className="w-full flex bg-white p-1 justify-between  items-center">
         <h5 className="text-xl font-bold font-segoe text-gray-800 ">
-          Store Master
+          Location Master
         </h5>
         <div className="flex items-center">
           <button
@@ -308,7 +308,7 @@ export default function Form() {
             }}
             className="bg-white border font-segoe border-green-600 text-green-600 hover:bg-green-700 hover:text-white text-sm px-2  rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >
-            + Add New Store
+            + Add New Location
           </button>
         </div>
       </div>
@@ -338,9 +338,9 @@ export default function Form() {
                 <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
                   {id
                     ? !readOnly
-                      ? "Edit Store  "
-                      : "Store Master"
-                    : "Add New  Store "}
+                      ? "Edit Location  "
+                      : "Location Master"
+                    : "Add New  Location "}
                 </h2>
               </div>
               <div className="flex gap-2">
@@ -420,7 +420,7 @@ export default function Form() {
                         <div className="flex-col">
                           <div className="mb-3 w-[48%]">
                             <DropdownInput
-                              name="Location"
+                              name="Branch"
                               options={dropDownListObject(
                                 id
                                   ? branchList?.data
@@ -439,7 +439,7 @@ export default function Form() {
                           </div>
                           <div className="mb-3 w-[48%]">
                             <TextInput
-                              name="Store"
+                              name="Location"
                               type="text"
                               value={storeName}
                               setValue={setStoreName}

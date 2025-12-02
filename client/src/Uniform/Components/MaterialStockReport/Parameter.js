@@ -36,14 +36,19 @@ const Parameter = ({
 
   function handleDone() {
     if (!localLocationId) {
-      return toast.info(" Location", {
+      return toast.info("Choose Branch", {
         position: "top-center",
       });
     }
     if (!localStoreId)
-      return toast.info(" Store", {
+      return toast.info("Choose Location", {
         position: "top-center",
       });
+    if (!itemType) {
+      return toast.info("Choose Type", {
+        position: "top-center",
+      });
+    }
     setStoreId(localStoreId);
     setLocationId(localLocationId);
     onClose();
@@ -74,7 +79,7 @@ const Parameter = ({
     <div className="  items-center p-1 text-center bg-blue-200 rounded-b-md  sticky top-0 ">
       <div className="grid grid-cols-3 gap-5 p-2">
         <DropdownNew
-          name="Location"
+          name="Branch"
           dataList={branchList?.data?.filter((item) => item.active)}
           value={localLocationId}
           setValue={(value) => {
@@ -83,17 +88,17 @@ const Parameter = ({
           }}
           required={true}
           otherField={"branchName"}
-          placeholder={"Select Location"}
+          placeholder={"Select Branch"}
           width={40}
         />
         <DropdownNew
-          name="Store"
+          name="Location"
           dataList={storeOptions?.filter((item) => item.active)}
           value={localStoreId}
           setValue={setLocalStoreId}
           required={true}
           otherField={"storeName"}
-          placeholder={"Select Store"}
+          placeholder={"Select Location"}
         />
         <DropdownInput
           name="Item Type"

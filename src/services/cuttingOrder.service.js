@@ -277,7 +277,17 @@ async function create(body) {
   );
   let data;
   console.log(newDocId);
-
+  const exist = await prisma.cuttingOrder.findFirst({
+    where: {
+      styleId: parseInt(styleId),
+    },
+  });
+  if(exist){
+    return {
+      status:400,
+      message:"This Style Already Exits"
+    }
+  }
   await prisma.$transaction(async (tx) => {
     data = await tx.cuttingOrder.create({
       data: {

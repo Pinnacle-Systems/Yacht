@@ -63,7 +63,10 @@ export default function ProductionDeliveryForm({
   const dispatch = useDispatch();
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
-
+  const params = {
+    branchId,
+    companyId,
+  };
   const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
   const { data: styleItemList } = useGetStyleItemMasterQuery({
     params: { companyId },
@@ -354,7 +357,7 @@ export default function ProductionDeliveryForm({
           styleId: newValue,
           fromProcessId: fromProcessId,
           branchId,
-          toProcessId:toProcessId
+          toProcessId: toProcessId,
         },
       });
       if (styleData?.statusCode === 400) {
@@ -539,6 +542,7 @@ export default function ProductionDeliveryForm({
             // sizeTemplateId={sizeTemplateId}
             uomList={uomList}
             styleTemplateDetail={styleTemplateDetail}
+            params={params}
           />
         </fieldset>
         <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">

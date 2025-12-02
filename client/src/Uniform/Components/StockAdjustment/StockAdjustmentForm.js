@@ -240,7 +240,7 @@ export default function StockAdjustmentForm({
             </h2>
             <div className="grid grid-cols-2 gap-1">
               <DropdownInput
-                name="Location"
+                name="Branch"
                 options={
                   branchList
                     ? dropDownListObject(
@@ -262,7 +262,7 @@ export default function StockAdjustmentForm({
                 autoFocus={true}
               />
               <DropdownInput
-                name="Store"
+                name="Location"
                 options={dropDownListObject(
                   id
                     ? storeOptions

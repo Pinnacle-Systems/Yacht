@@ -74,7 +74,6 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
   const [updateData] = useUpdatePurchaseInwardEntryMutation();
   const [removeData] = useDeletePurchaseInwardEntryMutation();
 
-
   const isFabric = inwardType === "Fabric"
 
   const data = {
@@ -352,7 +351,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
               <h2 className="font-medium text-slate-700 mb-2">Location Details</h2>
               <div className="grid grid-cols-2 gap-1">
                 <DropdownInput
-                  name="Location"
+                  name="Branch"
                   options={
                     branchList
                       ? dropDownListObject(
@@ -373,7 +372,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                   readOnly={readOnly}
                 />
                 <DropdownInput
-                  name="Store"
+                  name="Location"
                   options={dropDownListObject(
                     id
                       ? storeOptions

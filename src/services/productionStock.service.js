@@ -112,7 +112,7 @@ async function getProductionStyle(req) {
         "styleItemId",
         "fabricId",
         "colorId",
-        // "portionId",
+        "portionId",
         "prevProcessId",
         "sizeId",
       ],
@@ -127,6 +127,11 @@ async function getProductionStyle(req) {
     });
   }
   if (!data || data.length === 0) return NoRecordFound("Style");
+  const style = await prisma.style.findUnique({
+    where: {
+      id: parseInt(styleId),
+    },
+  });
   return {
     statusCode: 0,
     data: data.map((d) => ({
@@ -134,10 +139,11 @@ async function getProductionStyle(req) {
       styleId: d.styleId,
       fabricId: d.fabricId,
       colorId: d.colorId,
-      // portionId: d.portionId,
+      portionId: d.portionId,
       sizeId: d.sizeId,
-      qty: d._sum.qty,
+      stkQty: d._sum.qty,
       prevProcessId: d.prevProcessId,
+      styleNo: style?.sku,
     })),
   };
 }

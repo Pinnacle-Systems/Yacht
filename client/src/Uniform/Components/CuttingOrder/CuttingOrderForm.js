@@ -50,7 +50,10 @@ export default function CuttingOrderForm({
   const dispatch = useDispatch();
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
-
+  const params = {
+    branchId,
+    companyId,
+  };
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
   const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({
@@ -146,7 +149,9 @@ export default function CuttingOrderForm({
         });
         dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
       } else {
-        toast.error(returnData?.message);
+        toast.error(returnData?.message, {
+          autoClose: 2000,
+        });
       }
     } catch (error) {
       console.log("handle");
@@ -166,9 +171,8 @@ export default function CuttingOrderForm({
       isGridDatasValid(
         data?.cuttingOrderItems?.filter((item) => item.styleId),
         false,
-        ["fabWidth", "fabMeter", "orderQty","fabricId"]
-      ) 
-      &&
+        ["orderQty", "fabricId"]
+      ) &&
       data?.cuttingOrderItems.length > 0
     );
   };
@@ -291,7 +295,7 @@ export default function CuttingOrderForm({
             selected: false,
             uomId: "",
             sizeDetails: [],
-            invNo:""
+            invNo: "",
           });
         }
         return updated;
@@ -431,6 +435,7 @@ export default function CuttingOrderForm({
             styleTemplateDetail={styleTemplateDetail}
             uomList={uomList}
             id={id}
+            params={params}
           />
         </fieldset>
         <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">

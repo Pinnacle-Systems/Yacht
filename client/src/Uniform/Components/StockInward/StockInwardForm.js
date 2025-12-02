@@ -4,7 +4,7 @@ import { ReusableInput } from "../../../Utils/CommonInput";
 import { DropdownInput } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
-import { getCommonParams } from "../../../Utils/helper";
+import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import Swal from "sweetalert2";
@@ -117,7 +117,9 @@ export default function StockInwardForm({
           },
         });
       } else {
-        toast.error(returnData?.message);
+        toast.error(returnData?.message, {
+          autoClose: 3000,
+        });
       }
     } catch (error) {
       console.log("handle");
@@ -125,7 +127,15 @@ export default function StockInwardForm({
   };
 
   const validateData = (data) => {
-    if (stockInwardItems?.length > 0 && data.storeId) {
+    if (
+      stockInwardItems?.length > 0 &&
+      data.storeId &&
+      isGridDatasValid(
+        data?.stockInwardItems.filter((item) => item.styleId),
+        false,
+        ["qty"]
+      )
+    ) {
       return true;
     }
     return false;
@@ -167,9 +177,7 @@ export default function StockInwardForm({
     docDate,
     branchId,
     storeId,
-    stockInwardItems: stockInwardItems?.filter?.(
-      (item) => item?.styleId && item?.sizeId
-    ),
+    stockInwardItems: stockInwardItems?.filter?.((item) => item?.styleId),
     userId,
     finYearId,
     locationId,
@@ -313,7 +321,7 @@ export default function StockInwardForm({
               disabled={!id}
             >
               <FiPrinter className="w-4 h-4 mr-2" />
-              Print
+              Barcode
             </button>
           </div>
         </div>
@@ -325,7 +333,7 @@ export default function StockInwardForm({
       >
         <BarCodePrintFormat
           data={barcodeItems.filter((i) => i?.styleId)}
-          barCodePerPage={barCodePerPage}
+          // barCodePerPage={barCodePerPage}
         />
       </Modal>
     </>

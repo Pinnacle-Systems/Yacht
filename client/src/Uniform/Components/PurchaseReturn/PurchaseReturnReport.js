@@ -89,7 +89,6 @@ const PurchaseReturnReport = ({
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
 
-
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
@@ -210,7 +209,7 @@ const PurchaseReturnReport = ({
                     <div>Supplier</div>
                   </th>
                   <th className="w-64  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                    <div>Store</div>
+                    <div>Location</div>
                   </th>
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>

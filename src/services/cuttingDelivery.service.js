@@ -301,6 +301,17 @@ async function create(body) {
   );
   let data;
   console.log(newDocId);
+  const exist = await prisma.cuttingDelivery.findFirst({
+    where: {
+      styleId: parseInt(styleId),
+    },
+  });
+  if (exist) {
+    return {
+      status: 400,
+      message: "This Style Already Exits",
+    };
+  }
   if (fromProcessId) {
     const processData = await prisma.process.findUnique({
       where: {

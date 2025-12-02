@@ -11,6 +11,8 @@ import { useGetAccessoryGroupMasterQuery } from "../../../redux/uniformService/A
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import Swal from "sweetalert2";
+import { VIEW } from "../../../icons";
+import { useGetPurchaseInwardEntryQuery } from "../../../redux/uniformService/PurchaseInwardEntry";
 
 const ReturnItems = ({
   id,
@@ -36,7 +38,13 @@ const ReturnItems = ({
     sessionStorage.getItem("sessionId") + "userCompanyId"
   );
   const { data: styleList } = useGetStyleMasterQuery({ params });
-
+  const {
+    data: allData,
+    isFetching,
+    isLoading,
+  } = useGetPurchaseInwardEntryQuery({
+    params,
+  });
   const addRow = () => {
     const newRow = {
       styleNo: "",
@@ -186,6 +194,16 @@ const ReturnItems = ({
     setContextMenu(null);
   };
 
+  function imageFormatter(styleId) {
+    const fabricItems = allData?.data?.flatMap(
+      (item) => item.fabricInwardItems || []
+    );
+    const item = fabricItems.find((f) => f.styleId === styleId);
+    const fileName = item?.filePath;
+    if (!fileName) return "/no-image.png"; // fallback image if missing
+    return `${IMAGE_UPLOAD_URL}${fileName}`;
+  }
+
   return (
     <>
       <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[450px] overflow-auto  w-full">
@@ -251,6 +269,13 @@ const ReturnItems = ({
                     Fabric
                   </th>
                 )}
+                {returnType === "Fabric" && (
+                  <th
+                    className={`w-10 px-2 py-2 text-center  font-medium text-[13px]`}
+                  >
+                    Img
+                  </th>
+                )}
                 {returnType === "Accessory" && (
                   <th
                     className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
@@ -274,7 +299,7 @@ const ReturnItems = ({
                 )}
                 {returnType === "Fabric" && (
                   <th
-                    className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
+                    className={`w-14 px-1 py-2 text-center font-medium text-[13px] `}
                   >
                     Width
                   </th>
@@ -283,7 +308,7 @@ const ReturnItems = ({
                   <th
                     className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
                   >
-                    Stock Meter
+                    Stk Meter
                   </th>
                 )}
                 {returnType === "Fabric" && (
@@ -295,7 +320,7 @@ const ReturnItems = ({
                 )}
                 {returnType === "Fabric" && (
                   <th
-                    className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
+                    className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                   >
                     Return Meter
                   </th>
@@ -494,6 +519,22 @@ const ReturnItems = ({
                             </option>
                           ))}
                         </select>
+                      </td>
+                    )}
+                    {returnType === "Fabric" && (
+                      <td className="border border-gray-300 py-0.5 text-center">
+                        {row?.styleId ? (
+                          <button
+                            className="text-xs"
+                            onClick={() => {
+                              setPreviewImage(imageFormatter(row?.styleId));
+                            }}
+                          >
+                            {VIEW}
+                          </button>
+                        ) : (
+                          <span className="text-xs pl-1"></span>
+                        )}
                       </td>
                     )}
                     {returnType === "Accessory" && (
@@ -908,7 +949,7 @@ const ReturnItems = ({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={returnType === "Fabric" ? 9 : 8}
+                  colSpan={returnType === "Fabric" ? 10 : 8}
                 >
                   Total
                 </td>

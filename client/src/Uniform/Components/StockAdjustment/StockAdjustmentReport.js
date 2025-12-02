@@ -183,7 +183,7 @@ const StockAdjustmentFormReport = ({
                     <div>SA Date</div>
                   </th>
                   <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                    <div>Store</div>
+                    <div>Location</div>
                   </th>
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>

@@ -193,7 +193,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
 
     const handleAddRow = async () => {
         if (!storeId) {
-            toast.info("Please Choose Store...!", {
+            toast.info("Please Choose Location...!", {
                 position: "top-center",
                 autoClose: 2000,
             });
@@ -316,7 +316,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
                             <h2 className="font-medium text-slate-700 mb-2">Location Details</h2>
                             <div className="grid grid-cols-2 gap-1">
                                 <DropdownInput
-                                    name="Location"
+                                    name="Branch"
                                     options={
                                         branchList
                                             ? dropDownListObject(
@@ -337,7 +337,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
                                     readOnly={id}
                                 />
                                 <DropdownInput
-                                    name="Store"
+                                    name="Location"
                                     options={dropDownListObject(
                                         id
                                             ? storeOptions

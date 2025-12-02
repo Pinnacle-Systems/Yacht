@@ -17,6 +17,7 @@ import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionM
 import Swal from "sweetalert2";
 import Modal from "../../../UiComponents/Modal";
 import { useGetEmployeeQuery } from "../../../redux/services/EmployeeMasterService";
+import { useGetPurchaseInwardEntryQuery } from "../../../redux/uniformService/PurchaseInwardEntry";
 
 export default function CuttingDeliveryItem({
     cuttingDeliveryItems,
@@ -38,7 +39,14 @@ export default function CuttingDeliveryItem({
     const { data: fabricList } = useGetFabricMasterQuery({ params });
     const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
     const { data: portionList } = useGetPortionMasterQuery({ params });
-
+    const {
+        data: allData,
+        isFetching,
+        isLoading,
+    } = useGetPurchaseInwardEntryQuery({
+        params,
+    });
+    const [previewImage, setPreviewImage] = useState(null);
     const companyId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "userCompanyId"
     );
@@ -245,7 +253,15 @@ export default function CuttingDeliveryItem({
         }
     }, [cuttingDeliveryItems, setCuttingDeliveryItems]);
 
-
+    function imageFormatter(styleId) {
+        const fabricItems = allData?.data?.flatMap(
+            (item) => item.fabricInwardItems || []
+        );
+        const item = fabricItems.find((f) => f.styleId === styleId);
+        const fileName = item?.filePath;
+        if (!fileName) return "/no-image.png"; // fallback image if missing
+        return `${IMAGE_UPLOAD_URL}${fileName}`;
+    }
 
     return (
         <>
@@ -296,11 +312,11 @@ export default function CuttingDeliveryItem({
                                 >
                                     Fabric
                                 </th>
-                                {/* <th
-                  className={`w-12 px-4 py-2 text-center  font-medium text-[13px]`}
-                >
-                  Img
-                </th>{" "} */}
+                                <th
+                                    className={`w-11 px-2 py-2 text-center  font-medium text-[13px]`}
+                                >
+                                    Img
+                                </th>
                                 <th
                                     className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
@@ -458,6 +474,20 @@ export default function CuttingDeliveryItem({
                                                     </option>
                                                 ))}
                                             </select>
+                                        </td>
+                                        <td className="border border-gray-300 py-0.5 text-center">
+                                            {row?.styleId ? (
+                                                <button
+                                                    className="text-xs"
+                                                    onClick={() => {
+                                                        setPreviewImage(imageFormatter(row?.styleId));
+                                                    }}
+                                                >
+                                                    {VIEW}
+                                                </button>
+                                            ) : (
+                                                <span className="text-xs pl-1"></span>
+                                            )}
                                         </td>
                                         <td className="py-0.5 border border-gray-300 text-[11px]">
                                             <select
@@ -765,7 +795,7 @@ export default function CuttingDeliveryItem({
                             <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                                 <td
                                     className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                                    colSpan={9 + sizeColumns.length}
+                                    colSpan={11 + sizeColumns.length}
                                 >
                                     Total
                                 </td>
@@ -785,6 +815,28 @@ export default function CuttingDeliveryItem({
                             </tr>
                         </tfoot>
                     </table>
+                    {previewImage && (
+                        <div
+                            className="fixed inset-0 flex items-center justify-center z-50 bg-black/40 backdrop-blur-sm"
+                            onMouseEnter={() => setPreviewImage(previewImage)}
+                            onMouseLeave={() => setPreviewImage(null)}
+                        >
+                            <div className="relative z-50 ">
+                                <button
+                                    className="absolute top-[-10px] right-[-10px] bg-red-600 rounded-full w-6 h-6 flex items-center justify-center text-white shadow-md hover:bg-red-700 transition"
+                                    onClick={() => setPreviewImage(null)}
+                                >
+                                    ×
+                                </button>
+
+                                <img
+                                    src={previewImage}
+                                    alt="Preview"
+                                    className="max-h-[80vh] max-w-[80vw] rounded-lg shadow-lg"
+                                />
+                            </div>
+                        </div>
+                    )}
                     {contextMenu && (
                         <div
                             style={{

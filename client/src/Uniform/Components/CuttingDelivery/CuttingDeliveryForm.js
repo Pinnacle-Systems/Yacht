@@ -63,7 +63,10 @@ export default function CuttingDeliveryForm({
   const dispatch = useDispatch();
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
-
+  const params = {
+    branchId,
+    companyId,
+  };
   const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
   const { data: processList } = useGetProcessMasterQuery({
     params: { companyId },
@@ -489,6 +492,7 @@ export default function CuttingDeliveryForm({
             uomList={uomList}
             styleTemplateDetail={styleTemplateDetail}
             companyId={companyId}
+            params={params}
           />
         </fieldset>
         <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">

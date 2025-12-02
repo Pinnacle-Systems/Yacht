@@ -295,7 +295,7 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
             </h2>
             <div className="grid grid-cols-2 gap-1">
               <DropdownInput
-                name="Location"
+                name="Branch"
                 options={
                   branchList
                     ? dropDownListObject(
@@ -316,7 +316,7 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
                 readOnly={readOnly}
               />
               <DropdownInput
-                name="Store"
+                name="Location"
                 options={dropDownListObject(
                   id
                     ? storeOptions

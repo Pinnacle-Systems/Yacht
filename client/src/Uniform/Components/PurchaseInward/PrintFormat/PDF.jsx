@@ -188,7 +188,7 @@ const PDF = ({ singleData, branchList }) => {
                                         { fontWeight: 900, fontFamily: "Times-Bold" },
                                     ]}
                                 >
-                                    Location
+                                    Branch
                                 </Text>
                                 <Text
                                     style={[
@@ -196,7 +196,7 @@ const PDF = ({ singleData, branchList }) => {
                                         {
                                             fontWeight: 900,
                                             fontFamily: "Times-Bold",
-                                            marginLeft: 15,
+                                            marginLeft: 20,
                                         },
                                     ]}
                                 >
@@ -214,7 +214,7 @@ const PDF = ({ singleData, branchList }) => {
                                         { fontWeight: 900, fontFamily: "Times-Bold" },
                                     ]}
                                 >
-                                    Store
+                                    Location
                                 </Text>
                                 <Text
                                     style={[
@@ -222,7 +222,7 @@ const PDF = ({ singleData, branchList }) => {
                                         {
                                             fontWeight: 900,
                                             fontFamily: "Times-Bold",
-                                            marginLeft: 29,
+                                            marginLeft: 15,
                                         },
                                     ]}
                                 >

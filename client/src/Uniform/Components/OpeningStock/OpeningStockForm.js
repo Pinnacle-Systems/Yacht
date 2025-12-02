@@ -300,7 +300,7 @@ export default function OpeningStockForm({
             </h2>
             <div className="grid grid-cols-2 gap-1">
               <DropdownInput
-                name="Location"
+                name="Branch"
                 options={
                   branchList
                     ? dropDownListObject(
@@ -322,7 +322,7 @@ export default function OpeningStockForm({
                 autoFocus={true}
               />
               <DropdownInput
-                name="Store"
+                name="Location"
                 options={dropDownListObject(
                   id
                     ? storeOptions
@@ -401,7 +401,7 @@ export default function OpeningStockForm({
               disabled={!id}
             >
               <FiPrinter className="w-4 h-4 mr-2" />
-              Print
+              Barcode
             </button>
           </div>
         </div>

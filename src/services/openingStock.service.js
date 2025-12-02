@@ -277,57 +277,64 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-  const {
-    userId,
-    branchId,
-    storeId,
-    openingStockItems,
-    finYearId,
-    term,
-    notes,
-    docDate,
-    draftSave,
-    locationId,
-  } = await body;
-  let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-  const shortCode = finYearDate
-    ? getYearShortCodeForFinYear(
-        finYearDate?.startDateStartTime,
-        finYearDate?.endDateEndTime
-      )
-    : "";
-  let newDocId = await getNextDocId(
-    branchId,
-    shortCode,
-    finYearDate?.startDateStartTime,
-    finYearDate?.endDateEndTime,
-    draftSave
-  );
-  let data;
-  console.log(newDocId);
-  await prisma.$transaction(async (tx) => {
-    data = await tx.openingStock.create({
-      data: {
-        docId: newDocId,
-        branchId: parseInt(branchId),
-        storeId: parseInt(storeId),
-        createdById: parseInt(userId),
-        notes,
-        term,
-        docDate: docDate ? new Date(docDate) : null,
-        locationId: parseInt(locationId),
-      },
-    });
-    await createOpeningStockItems(
-      tx,
-      openingStockItems,
-      data,
+  try {
+    const {
       userId,
       branchId,
-      storeId
+      storeId,
+      openingStockItems,
+      finYearId,
+      term,
+      notes,
+      docDate,
+      draftSave,
+      locationId,
+    } = await body;
+    let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+    const shortCode = finYearDate
+      ? getYearShortCodeForFinYear(
+          finYearDate?.startDateStartTime,
+          finYearDate?.endDateEndTime
+        )
+      : "";
+    let newDocId = await getNextDocId(
+      branchId,
+      shortCode,
+      finYearDate?.startDateStartTime,
+      finYearDate?.endDateEndTime,
+      draftSave
     );
-  });
-  return { statusCode: 0, data };
+    let data;
+    console.log(newDocId);
+    await prisma.$transaction(async (tx) => {
+      data = await tx.openingStock.create({
+        data: {
+          docId: newDocId,
+          branchId: parseInt(branchId),
+          storeId: parseInt(storeId),
+          createdById: parseInt(userId),
+          notes,
+          term,
+          docDate: docDate ? new Date(docDate) : null,
+          locationId: parseInt(locationId),
+        },
+      });
+      await createOpeningStockItems(
+        tx,
+        openingStockItems,
+        data,
+        userId,
+        branchId,
+        storeId
+      );
+    });
+    return { statusCode: 0, data };
+  } catch (err) {
+    return {
+      statusCode: 400,
+      message: err.message,
+    };
+  }
 }
 
 async function update(id, body) {
@@ -733,6 +740,25 @@ async function createOpeningStockItems(
   branchId,
   storeId
 ) {
+  const newItems = openingStockItems || [];
+  for (const item of newItems) {
+    if (!item.styleId || !item.sizeId) continue;
+    const exists = await tx.stock.findFirst({
+      where: {
+        styleId: item.styleId,
+        sizeId: item.sizeId,
+      },
+      include: {
+        Style: true,
+        Size: true,
+      },
+    });
+    if (exists) {
+      throw new Error(
+        `Style No - ${exists.Style?.sku}, Size - ${exists.Size?.name} is Already Exists`
+      );
+    }
+  }
   // 1️⃣ Get the highest existing barcode number for this branch
   const lastItem = await tx.openingStockItems.findFirst({
     orderBy: { id: "desc" }, // or order by createdAt
