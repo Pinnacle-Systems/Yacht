@@ -190,7 +190,7 @@ const OpeningStockFormReport = ({
               }}
             />
           </div>
-          <div className="h-[78%]">
+          <div className="h-[360px]">
             <table className="mt-2">
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">
@@ -358,7 +358,7 @@ const OpeningStockFormReport = ({
               )}
             </table>
           </div>
-          <div className="h-[10%]">
+          <div className="">
             <Pagination />
           </div>
         </div>

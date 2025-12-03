@@ -518,16 +518,7 @@ export default function Form() {
   };
   console.log(employeeCategoryList?.data, "employeeCategoryList?.data");
   const validateData = (data) => {
-    console.log(data, "data--");
-
-    if (
-      data?.firstName &&
-      data?.departmentId &&
-      data?.desiginationId &&
-      data?.dob &&
-      data?.joiningDate &&
-      data?.shiftTemplateId
-    ) {
+    if (data?.firstName && data?.departmentId) {
       return true;
     }
     return false;
@@ -548,9 +539,7 @@ export default function Form() {
       handleSubmitCustom(addData, data, "Added");
     }
     setId("");
-    setForm(true)
-    
-    
+    setForm(true);
   };
   const saveDataandExit = async (exitAfterSave = false) => {
     if (!validateData(data)) {
@@ -561,15 +550,14 @@ export default function Form() {
       });
       return;
     }
-   
-      if (id) {
-        await handleSubmitCustom(updateData, data, "Updated");
-      } else {
-        await handleSubmitCustom(addData, data, "Added");
-      }
-      setId('')
-     setForm(false)
-   
+
+    if (id) {
+      await handleSubmitCustom(updateData, data, "Updated");
+    } else {
+      await handleSubmitCustom(addData, data, "Added");
+    }
+    setId("");
+    setForm(false);
   };
 
   const deleteData = async (id) => {
@@ -963,24 +951,24 @@ export default function Form() {
       //   cellClass: () => " text-gray-900",
       className: "text-gray-900 text-left pl-2 uppercase w-72",
     },
-    {
-      header: "ID Number",
-      accessor: (item) => item?.idNumber,
-      //   cellClass: () => " text-gray-900",
-      className: "text-gray-900  text-left pl-2 uppercase w-72",
-    },
+    // {
+    //   header: "ID Number",
+    //   accessor: (item) => item?.idNumber,
+    //   //   cellClass: () => " text-gray-900",
+    //   className: "text-gray-900  text-left pl-2 uppercase w-72",
+    // },
     {
       header: "Department",
       accessor: (item) => item?.department?.name,
       //   cellClass: () => " text-gray-900",
       className: "text-gray-900  text-left pl-2 uppercase w-72",
     },
-    {
-      header: "Designation",
-      accessor: (item) => item?.designation?.name,
-      //   cellClass: () => " text-gray-900",
-      className: "text-gray-900  text-left pl-2 uppercase w-72",
-    },
+    // {
+    //   header: "Designation",
+    //   accessor: (item) => item?.designation?.name,
+    //   //   cellClass: () => " text-gray-900",
+    //   className: "text-gray-900  text-left pl-2 uppercase w-72",
+    // },
     {
       header: "Mobile",
       accessor: (item) => item?.permanentMobile,
@@ -1323,7 +1311,6 @@ export default function Form() {
                           name="Date of Birth"
                           value={dob}
                           setValue={setDob}
-                          required={true}
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
                           onKeyDown={(e) => handleKeyNext(e, input2Ref)}
@@ -1358,7 +1345,6 @@ export default function Form() {
                           name="Disability"
                           value={disability}
                           setValue={setDisability}
-                          required={true}
                           readOnly={readOnly}
                           options={common}
                           disabled={childRecord.current > 0}
@@ -1472,7 +1458,6 @@ export default function Form() {
                             name="Joining Date"
                             value={joiningDate}
                             setValue={setJoiningDate}
-                            required={true}
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
                           />
@@ -1493,7 +1478,7 @@ export default function Form() {
                               "name",
                               "id"
                             )}
-                            // required={true}
+                            required={true}
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
                             onKeyDown={(e) => handleKeyNext(e, input2Ref)}
@@ -1533,7 +1518,6 @@ export default function Form() {
                             name="Pay Category"
                             value={payCategory}
                             setValue={setPayCategory}
-                            required={true}
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
                             onKeyDown={(e) => handleKeyNext(e, input2Ref)}
@@ -1550,7 +1534,6 @@ export default function Form() {
                             name="Id Card Number"
                             value={idNumber}
                             setValue={setIdNumber}
-                            required={true}
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
                             onKeyDown={(e) => handleKeyNext(e, input2Ref)}
@@ -1573,7 +1556,6 @@ export default function Form() {
                               "name",
                               "id"
                             )}
-                            // required={true}
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
                             onKeyDown={(e) => handleKeyNext(e, input2Ref)}
@@ -1596,7 +1578,6 @@ export default function Form() {
                               "docId",
                               "id"
                             )}
-                            // required={true}
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
                             onKeyDown={(e) => handleKeyNext(e, input2Ref)}
@@ -1613,7 +1594,6 @@ export default function Form() {
                             name="PF (Y/N)"
                             value={pf}
                             setValue={setPf}
-                            required={true}
                             options={common}
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
@@ -1632,7 +1612,6 @@ export default function Form() {
                             name="ESI (Y/N)"
                             value={esi}
                             setValue={setEsi}
-                            required={true}
                             options={common}
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
@@ -1651,7 +1630,6 @@ export default function Form() {
                             name="Salary"
                             value={salary}
                             setValue={setSalary}
-                            required={true}
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
                             onKeyDown={(e) => handleKeyNext(e, input2Ref)}
@@ -1669,7 +1647,6 @@ export default function Form() {
                             value={salaryMethod}
                             setValue={setSalaryMethod}
                             options={SalaryMethod}
-                            required={true}
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
                             onKeyDown={(e) => handleKeyNext(e, input2Ref)}
@@ -1695,7 +1672,6 @@ export default function Form() {
                           name="Religion"
                           value={religion}
                           setValue={setReligion}
-                          required
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
                         />
@@ -1711,7 +1687,6 @@ export default function Form() {
                           name="Adhaar No"
                           value={aadharNo}
                           setValue={setAadharNo}
-                          required={true}
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
                           onKeyDown={(e) => handleKeyNext(e, input2Ref)}
@@ -1727,7 +1702,6 @@ export default function Form() {
                           name="Pan No"
                           value={panNo}
                           setValue={setPanNo}
-                          required
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
                         />
@@ -1742,7 +1716,6 @@ export default function Form() {
                           name="ESI No"
                           value={esiNo}
                           setValue={setEsiNo}
-                          required
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
                         />
@@ -1757,7 +1730,6 @@ export default function Form() {
                           name="PF No"
                           value={pfNo}
                           setValue={setPfNo}
-                          required
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
                         />
@@ -1772,7 +1744,6 @@ export default function Form() {
                           name="UAN No (PF)"
                           value={uanNo}
                           setValue={setUanNo}
-                          required
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
                         />
@@ -1787,7 +1758,6 @@ export default function Form() {
                           name="Email"
                           value={email}
                           setValue={setEmail}
-                          required
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
                         />
@@ -1816,7 +1786,6 @@ export default function Form() {
                               setValue={(val) =>
                                 handlePresentChange("address", val)
                               }
-                              required
                               readOnly={readOnly}
                               disabled={childRecord.current > 0}
                             />
@@ -1833,7 +1802,6 @@ export default function Form() {
                               setValue={(val) =>
                                 handlePresentChange("village", val)
                               }
-                              required
                               readOnly={readOnly}
                               disabled={childRecord.current > 0}
                             />
@@ -1920,7 +1888,6 @@ export default function Form() {
                               setValue={(val) =>
                                 handlePresentChange("pincode", val)
                               }
-                              required
                               readOnly={readOnly}
                               disabled={childRecord.current > 0}
                             />
@@ -1932,7 +1899,6 @@ export default function Form() {
                               setValue={(val) =>
                                 handlePresentChange("mobile", val)
                               }
-                              required
                               readOnly={readOnly}
                               disabled={childRecord.current > 0}
                             />
@@ -1964,7 +1930,6 @@ export default function Form() {
                               setValue={(val) =>
                                 handlePermanentChange("address", val)
                               }
-                              required
                               readOnly={readOnly}
                               disabled={
                                 childRecord.current > 0 || sameAsPresent
@@ -1978,7 +1943,6 @@ export default function Form() {
                               setValue={(val) =>
                                 handlePermanentChange("village", val)
                               }
-                              required
                               readOnly={readOnly}
                               disabled={
                                 childRecord.current > 0 || sameAsPresent
@@ -2047,7 +2011,6 @@ export default function Form() {
                               setValue={(val) =>
                                 handlePermanentChange("pincode", val)
                               }
-                              required
                               readOnly={readOnly}
                               disabled={
                                 childRecord.current > 0 || sameAsPresent
@@ -2061,7 +2024,6 @@ export default function Form() {
                               setValue={(val) =>
                                 handlePermanentChange("mobile", val)
                               }
-                              required
                               readOnly={readOnly}
                               disabled={
                                 childRecord.current > 0 || sameAsPresent

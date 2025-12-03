@@ -315,6 +315,11 @@ async function create(req) {
     educationDetails,
     familyDetails,
   } = await req.body;
+  const toDateOrNull = (value) => {
+    if (!value) return null; // null, undefined, empty string → null
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? null : d; // invalid date → null
+  };
   const presentAddressObj = presentAddress ? presentAddress : {};
   const permanentAddressObj = permanentAddress ? permanentAddress : {};
 
@@ -331,12 +336,12 @@ async function create(req) {
       gender: gender ? gender : "",
       disability: disability ? disability : "",
       identificationMark: identificationMark ? identificationMark : "",
-      dob: dob ? new Date(dob) : null,
+      dob: toDateOrNull(dob),
       bloodGroup: bloodGroup ? bloodGroup : "",
       height: height ? height : "",
       weight: weight ? weight : "",
       maritalStatus: maritalStatus ? maritalStatus : "",
-      joiningDate: joiningDate ? new Date(joiningDate) : null,
+      joiningDate: toDateOrNull(joiningDate),
       payCategory: payCategory ? payCategory : "",
       idNumber: idNumber ? idNumber : "",
       pf: pf ? pf : "",
