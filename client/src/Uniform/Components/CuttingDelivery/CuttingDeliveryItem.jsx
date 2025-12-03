@@ -638,6 +638,7 @@ export default function CuttingDeliveryItem({
                                                         value={sizeItem.qty}
                                                         onChange={(e) => {
                                                             const qty = e.target.value;
+
                                                             if (!row.usedMeter) {
                                                                 Swal.fire({
                                                                     icon: "warning",
@@ -647,19 +648,43 @@ export default function CuttingDeliveryItem({
                                                                 });
                                                                 return;
                                                             }
+
                                                             setCuttingDeliveryItems((prev) => {
                                                                 const updated = [...prev];
                                                                 const rowData = { ...updated[index] };
 
-                                                                rowData.sizeDetails = rowData.sizeDetails?.map(
-                                                                    (s) =>
-                                                                        s.sizeId === col.sizeId ? { ...s, qty } : s
-                                                                ) || initSizeDetails(rowData);
-                                                                rowData.issueQty = rowData.sizeDetails.reduce(
-                                                                    (total, item) =>
-                                                                        total + Number(item.qty || 0),
+                                                                // 1️⃣ Initialize sizeDetails
+                                                                if (!rowData.sizeDetails || rowData.sizeDetails.length === 0) {
+                                                                    rowData.sizeDetails = initSizeDetails(rowData);
+                                                                } else {
+                                                                    rowData.sizeDetails = [...rowData.sizeDetails];
+                                                                }
+
+                                                                // 2️⃣ Create a temporary updated copy for validation
+                                                                const newSizeDetails = rowData.sizeDetails.map((s) =>
+                                                                    s.sizeId === col.sizeId ? { ...s, qty } : s
+                                                                );
+
+                                                                // 3️⃣ Compute total Qty
+                                                                const totalQty = newSizeDetails.reduce(
+                                                                    (total, item) => total + Number(item.qty || 0),
                                                                     0
                                                                 );
+
+                                                                // 4️⃣ VALIDATION → Prevent excess Qty
+                                                                if (totalQty > rowData.orderQty) {
+                                                                    Swal.fire({
+                                                                        icon: "warning",
+                                                                        title: "Invalid Quantity",
+                                                                        text: "Qty cannot be more than Order Qty!",
+                                                                        confirmButtonText: "OK",
+                                                                    });
+                                                                    return prev; // ❌ don't update state
+                                                                }
+
+                                                                // 5️⃣ If valid → update
+                                                                rowData.sizeDetails = newSizeDetails;
+                                                                rowData.issueQty = totalQty;
 
                                                                 updated[index] = rowData;
                                                                 return updated;

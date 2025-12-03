@@ -1,7 +1,10 @@
 import Swal from "sweetalert2";
 import { FaPlus } from "react-icons/fa";
 import { useState } from "react";
-import { useDeleteStockInwardMutation } from "../../../redux/uniformService/StockInwardService";
+import {
+  useDeleteStockInwardMutation,
+  useLazyGetStockInwardByIdQuery,
+} from "../../../redux/uniformService/StockInwardService";
 import StockInwardForm from "./StockInwardForm";
 import StockInwardReport from "./StockInwardReport";
 
@@ -11,7 +14,8 @@ export default function Form() {
   const [readOnly, setReadOnly] = useState(false);
 
   const [removeData] = useDeleteStockInwardMutation();
-
+  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
+    useLazyGetStockInwardByIdQuery();
   const handleView = (orderId) => {
     setId(orderId);
     setShowForm(true);
@@ -25,34 +29,50 @@ export default function Form() {
   };
 
   const handleDelete = async (id) => {
+    setId(id);
+    const { data } = await trigger(id);
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-      try {
-        let deldata = await removeData(id).unwrap();
-        if (deldata?.statusCode == 1) {
-          Swal.fire({
-            icon: "error",
-            title: "Child record Exists",
-            text: deldata.data?.message || "Data cannot be deleted!",
-          });
-          return;
-        }
-        setId("");
-        Swal.fire({
-          title: "Deleted Successfully",
-          icon: "success",
-          timer: 1000,
-        });
-        setShowForm(false);
-      } catch (error) {
+      if (data?.childRecordSales > 0) {
         Swal.fire({
           icon: "error",
-          title: "Submission error",
-          text: error.data?.message || "Something went wrong!",
+          title: "Child record Exists in Sales",
+          text: "Data cannot be deleted!",
         });
-        setShowForm(false);
+      } else if (data?.childRecordStock > 0) {
+        Swal.fire({
+          icon: "error",
+          title: "Child record Exists is Stock Adjustment",
+          text: "Data cannot be deleted!",
+        });
+      } else {
+        try {
+          let deldata = await removeData(id).unwrap();
+          if (deldata?.statusCode == 1) {
+            Swal.fire({
+              icon: "error",
+              title: "Child record Exists",
+              text: deldata.data?.message || "Data cannot be deleted!",
+            });
+            return;
+          }
+          setId("");
+          Swal.fire({
+            title: "Deleted Successfully",
+            icon: "success",
+            timer: 1000,
+          });
+          setShowForm(false);
+        } catch (error) {
+          Swal.fire({
+            icon: "error",
+            title: "Submission error",
+            text: error.data?.message || "Something went wrong!",
+          });
+          setShowForm(false);
+        }
       }
     }
   };

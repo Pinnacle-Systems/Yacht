@@ -164,6 +164,7 @@ async function get(req) {
       FromProcess: {
         select: {
           name: true,
+          isIroning: true,
         },
       },
     },
@@ -200,6 +201,12 @@ async function getOne(id) {
           pcsSizeDetails: true,
         },
       },
+      FromProcess: {
+        select: {
+          name: true,
+          isIroning: true,
+        },
+      },
     },
   });
 
@@ -209,16 +216,25 @@ async function getOne(id) {
     .filter(Boolean);
   const toProcessId = data.toProcessId;
   const styleId = data.styleId;
-  const childRecordProduction = await prisma.productionEntryItems.count({
-    where: {
-      prevProcessId: {
-        in: toProcessId,
+  let childRecordProduction;
+  if (data?.FromProcess?.isIroning === true) {
+    childRecordProduction = await prisma.stockInwardItems.count({
+      where: {
+        styleId: parseInt(data?.styleId),
       },
-      styleId: {
-        in: styleId,
+    });
+  } else {
+    childRecordProduction = await prisma.productionEntryItems.count({
+      where: {
+        prevProcessId: {
+          in: toProcessId,
+        },
+        styleId: {
+          in: styleId,
+        },
       },
-    },
-  });
+    });
+  }
   let beforeProcessId = null;
   if (data) {
     const currentProcess = await prisma.processGroupList.findFirst({

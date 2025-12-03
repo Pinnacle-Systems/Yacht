@@ -38,10 +38,16 @@ export default function Form() {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-      if (data?.data?.childRecordSales > 0 || data?.data?.childRecordStock > 0) {
+      if (data?.data?.childRecordSales > 0) {
         Swal.fire({
           icon: "error",
-          title: "Child record Exists",
+          title: "Child record Exists in Sales",
+          text: "Data cannot be deleted!",
+        });
+      } else if (data?.data?.childRecordStock > 0) {
+        Swal.fire({
+          icon: "error",
+          title: "Child record Exists is Stock Adjustment",
           text: "Data cannot be deleted!",
         });
       } else {

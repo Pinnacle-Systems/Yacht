@@ -80,6 +80,7 @@ const StockInwardApi = createApi({
 export const {
   useGetStockInwardQuery,
   useGetStockInwardByIdQuery,
+  useLazyGetStockInwardByIdQuery,
   useAddStockInwardMutation,
   useUpdateStockInwardMutation,
   useDeleteStockInwardMutation,

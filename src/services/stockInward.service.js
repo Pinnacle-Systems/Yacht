@@ -202,6 +202,19 @@ async function getOne(id) {
     },
   });
   if (!data) return NoRecordFound("stockInward");
+  const styleIds = data.StockInwardItems.map((item) => item.styleId).filter(
+    Boolean
+  );
+  const childRecordSales = await prisma.salesEntryItems.count({
+    where: {
+      styleId: { in: styleIds },
+    },
+  });
+  const childRecordStock = await prisma.stockAdjustmentItems.count({
+    where: {
+      styleId: { in: styleIds },
+    },
+  });
   const lastProcess = await prisma.process.findFirst({
     where: {
       isIroning: true,
@@ -232,6 +245,8 @@ async function getOne(id) {
   return {
     statusCode: 0,
     data: { ...data, StockInwardItems: productionStockQty, ...{ childRecord } },
+    childRecordSales: childRecordSales,
+    childRecordStock: childRecordStock,
   };
 }
 
