@@ -1805,8 +1805,9 @@ export const DropdownNew = ({
   placeholder,
   width = "full",
   otherField,
+  otherValue,
   onKeyDown,
-  autoFocus
+  autoFocus,
 }) => {
   const options = [
     ...(clear
@@ -1819,7 +1820,7 @@ export const DropdownNew = ({
         ]
       : []),
     ...(dataList?.map((item) => ({
-      value: item?.id,
+      value: otherValue ? item?.[otherValue] : item?.id,
       label: otherField ? item?.[otherField] : item?.name,
     })) || []),
   ];

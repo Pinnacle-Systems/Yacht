@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
     DateInput,
     DropdownInput,
+    DropdownNew,
     ReusableSearchableInput,
     TextInput,
 } from "../../../Inputs";
@@ -25,7 +26,7 @@ import Modal from "../../../UiComponents/Modal";
 import { PDFViewer } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf";
 import { useAddPurchaseReturnMutation, useDeletePurchaseReturnMutation, useGetPurchaseReturnByIdQuery, useUpdatePurchaseReturnMutation } from "../../../redux/services/PurchaseReturnService";
-import { useLazyGetPurchaseDetailQuery } from "../../../redux/uniformService/PurchaseInwardEntry";
+import { useGetPurchaseInwardEntryQuery, useLazyGetPurchaseDetailQuery } from "../../../redux/uniformService/PurchaseInwardEntry";
 import ReturnItems from "./ReturnItems";
 
 const PurchaseReturnForm = ({ onClose, id, setId }) => {
@@ -48,6 +49,8 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
     };
     const { data: partyList } = useGetPartyQuery({ params: { ...params } });
     const { data: branchList } = useGetBranchQuery({ params: { companyId } });
+    const { data: invList } = useGetPurchaseInwardEntryQuery({ params: { branchId } });
+
     const { data: locationData } = useGetLocationMasterQuery({
         params: { branchId },
         searchParams: searchValue,
@@ -145,12 +148,73 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
         }
     };
 
-    const validateData = (data) => {
-        return (
-            data?.storeId && data?.supplierId && data?.invNo && (isFabric ? isGridDatasValid(data?.purchaseReturnItems.filter((item) => item?.styleId), false, ["returnFabMeter"]) : isGridDatasValid(data?.purchaseReturnItems.filter((item) => item?.accessoryId), false, ["returnQty"]))
-            && data?.purchaseReturnItems.length > 0
-        )
+    const hasDuplicates = (items) => {
+        const seen = new Set();
+
+        for (const row of items) {
+            // Create a unique key using all fields you want to check
+            const key = [
+                row.styleId || "",
+                row.styleItemId || "",
+                row.fabricId || "",
+                row.colorId || "",
+                row.accessoryId || "",
+                row.accessoryGroupId || "",
+                row.sizeId || "",
+            ].join("-");
+
+            if (seen.has(key)) return true; // duplicate found
+            seen.add(key);
+        }
+        return false;
     };
+
+    const validateData = (data) => {
+        const items = data?.purchaseReturnItems || [];
+
+        // remove blank rows
+        const filledItems = items.filter(
+            (item) =>
+                item.styleId ||
+                item.styleItemId ||
+                item.fabricId ||
+                item.accessoryId
+        );
+
+        // duplicate check
+        if (hasDuplicates(filledItems)) {
+            toast.info("Duplicate items found!", {
+                position: "top-center",
+                autoClose: 2000,
+            });
+            return false;
+        }
+
+        return (
+            data?.storeId &&
+            data?.supplierId &&
+            data?.invNo &&
+            filledItems.length > 0 &&
+            (isFabric
+                ? isGridDatasValid(
+                    filledItems,
+                    false,
+                    ["returnFabMeter"]
+                )
+                : isGridDatasValid(
+                    filledItems,
+                    false,
+                    ["returnQty"]
+                ))
+        );
+    };
+
+    // const validateData = (data) => {
+    //     return (
+    //         data?.storeId && data?.supplierId && data?.invNo && (isFabric ? isGridDatasValid(data?.purchaseReturnItems.filter((item) => item?.styleId), false, ["returnFabMeter"]) : isGridDatasValid(data?.purchaseReturnItems.filter((item) => item?.accessoryId), false, ["returnQty"]))
+    //         && data?.purchaseReturnItems.length > 0
+    //     )
+    // };
 
     const saveData = (nextProcess) => {
         if (!validateData(data)) {
@@ -191,7 +255,13 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
         }
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-    const handleAddRow = async () => {
+    useEffect(() => {
+        console.log(invList, "invList")
+    }, [invList])
+
+
+    const handleAddRow = async (newValue) => {
+        setInvNo(newValue)
         if (!storeId) {
             toast.info("Please Choose Location...!", {
                 position: "top-center",
@@ -199,17 +269,36 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
             });
             return;
         }
+        const hasUnfilledRequired = purchaseReturnItems.some((row) => {
+            const isFabric = returnType === "Fabric";
+
+            const hasSelected =
+                isFabric ? row.styleId : row.accessoryId;
+
+            const isRequiredMissing =
+                isFabric ? !row.returnFabMeter : !row.returnQty;
+
+            return hasSelected && isRequiredMissing;
+        });
+
+        if (hasUnfilledRequired) {
+            toast.info("Please fill all required fields before adding...!", {
+                position: "top-center",
+            });
+            return;
+        }
         try {
             const { data: purchaseData } = await getPurchaseDetail({
                 params: {
-                    invNo: invNo,
+                    invNo: newValue,
                     storeId,
                     branchId,
                 },
             });
+            setReturnType(purchaseData?.returnType);
+            setSupplierId(purchaseData?.supplierId);
             const purchaseItems = purchaseData?.data;
             if (!purchaseItems) return;
-
             setPurchaseReturnItems((prev) => {
                 const updated = [...prev];
                 // Find first empty slot index
@@ -357,6 +446,34 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
                     <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                         <h2 className="font-medium text-slate-700 mb-2">Return Details</h2>
                         <div className="grid grid-cols-2 gap-1">
+                            {/* <ReusableInput
+                                label="Invoice No"
+                                value={invNo}
+                                setValue={setInvNo}
+                                type={"text"}
+                                required={true}
+                                readOnly={readOnly}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.stopPropagation();
+                                        handleAddRow();
+                                    }
+                                }}
+                            /> */}
+                            <DropdownNew
+                                name="Inv No"
+                                dataList={
+                                    invList?.data
+                                }
+                                value={invNo}
+                                setValue={handleAddRow}
+                                required={true}
+                                readOnly={readOnly}
+                                placeholder={"Select Inv"}
+                                otherField={"invNo"}
+                                otherValue={"invNo"}
+                                disabled={id}
+                            />
                             <DropdownInput
                                 name="Return Type"
                                 options={poTypes}
@@ -401,20 +518,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
                                     }
                                 }}
                             /> */}
-                            <ReusableInput
-                                label="Invoice No"
-                                value={invNo}
-                                setValue={setInvNo}
-                                type={"text"}
-                                required={true}
-                                readOnly={readOnly}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                        e.stopPropagation();
-                                        handleAddRow();
-                                    }
-                                }}
-                            />
+
                         </div>
                     </div>
 

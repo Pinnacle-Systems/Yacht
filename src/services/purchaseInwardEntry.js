@@ -842,6 +842,8 @@ async function getPurchaseDetail(req) {
           filePath: true,
         },
       },
+      supplierId: true,
+      inwardType: true,
     },
   });
 
@@ -857,6 +859,13 @@ async function getPurchaseDetail(req) {
 async function getPurchaseDetailStock(req) {
   const { invNo, storeId, branchId } = req.query;
 
+  let purchaseData = await prisma.purchaseInward.findFirst({
+    where: {
+      invNo: invNo,
+    },
+  });
+  if (!purchaseData || purchaseData.length === 0)
+    return NoRecordFound("Invoice");
   let data = await prisma.materialStock.groupBy({
     by: [
       // "styleNo",
@@ -874,7 +883,7 @@ async function getPurchaseDetailStock(req) {
     ],
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
-      // storeId: storeId ? parseInt(storeId) : undefined,
+      storeId: storeId ? parseInt(storeId) : undefined,
       invNo: invNo,
     },
     _sum: {
@@ -904,6 +913,8 @@ async function getPurchaseDetailStock(req) {
       qty: d._sum.qty,
       styleId: d.styleId,
     })),
+    returnType: purchaseData.inwardType,
+    supplierId: purchaseData.supplierId,
   };
 }
 

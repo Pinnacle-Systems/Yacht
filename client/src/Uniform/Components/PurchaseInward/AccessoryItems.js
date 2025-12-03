@@ -414,7 +414,7 @@ const AccessoryInwardItems = ({
                           }
                         }}
                         type="number"
-                        className="text-left rounded py-1 px-1 w-full table-data-input"
+                        className="text-right rounded py-1 px-1 w-full table-data-input"
                         onFocus={(e) => e.target.select()}
                         value={row?.qty}
                         onChange={(e) =>
