@@ -95,7 +95,7 @@ export default function CuttingOrderForm({
       if (data?.docId) {
         setDocId(data?.docId);
       }
-      setLocationId(data?.locationId ? data?.locationId : "");
+      setLocationId(data?.locationId ? data?.locationId : branchId);
       setStoreId(data?.storeId ? data.storeId : "");
       setStyleId(data?.styleId ? data?.styleId : "");
       setSizeTemplateId(data?.sizeTemplateId ? data?.sizeTemplateId : "");
@@ -153,25 +153,45 @@ export default function CuttingOrderForm({
           autoClose: 2000,
         });
       }
+      dispatch({
+        type: `cuttingDelivery/invalidateTags`,
+        payload: ["CuttingDelivery"],
+      });
     } catch (error) {
       console.log("handle");
     }
   };
+  const hasDuplicates = (items) => {
+    const seen = new Set();
 
-  // const validateData = (data) => {
-  //   if (cuttingOrderItems?.length > 0 && styleId) {
-  //     return true;
-  //   }
-  //   return false;
-  // };
+    for (const row of items) {
+      // Create a unique key using all fields you want to check
+      const key = [row.portionId || ""].join("-");
+
+      if (seen.has(key)) return true; // duplicate found
+      seen.add(key);
+    }
+    return false;
+  };
 
   const validateData = (data) => {
+    const items = data?.cuttingOrderItems || [];
+    const filledItems = items.filter(
+      (item) => item.styleId || item.fabricId || item.portionId
+    );
+    if (hasDuplicates(filledItems)) {
+      toast.info("Duplicate items found!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      return false;
+    }
     return (
       data.styleId &&
       isGridDatasValid(
         data?.cuttingOrderItems?.filter((item) => item.styleId),
         false,
-        ["orderQty", "fabricId"]
+        ["orderQty", "fabricId", "styleItemId"]
       ) &&
       data?.cuttingOrderItems.length > 0
     );
@@ -215,11 +235,11 @@ export default function CuttingOrderForm({
     id,
     docDate,
     branchId,
-    // storeId,
+    storeId,
     cuttingOrderItems: cuttingOrderItems?.filter((item) => item?.styleId),
     userId,
     finYearId,
-    // locationId,
+    locationId,
     styleId,
     sizeTemplateId,
   };
@@ -238,6 +258,13 @@ export default function CuttingOrderForm({
   }, [styleId, id, readOnly]);
 
   const handleAddRow = async () => {
+    if (!storeId) {
+      toast.info("Please Choose Location...!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      return;
+    }
     try {
       const style = styleList?.data.find((item) => item.id === styleId);
       setSizeTemplateId(style?.sizeTemplateId);
@@ -346,6 +373,51 @@ export default function CuttingOrderForm({
             </div>
           </div>
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+            <div className="grid grid-cols-1 gap-1">
+              <h2 className="font-medium text-slate-700 mb-2">
+                Location Details
+              </h2>
+              <div className="grid grid-cols-2 gap-1">
+                <DropdownInput
+                  name="Branch"
+                  options={
+                    branchList
+                      ? dropDownListObject(
+                          id
+                            ? branchList?.data
+                            : branchList?.data?.filter((item) => item.active),
+                          "branchName",
+                          "id"
+                        )
+                      : []
+                  }
+                  value={locationId}
+                  setValue={(value) => {
+                    setLocationId(value);
+                    setStoreId("");
+                  }}
+                  required={true}
+                  readOnly={id}
+                />
+                <DropdownInput
+                  name="Location"
+                  options={dropDownListObject(
+                    id
+                      ? storeOptions
+                      : storeOptions?.filter((item) => item.active),
+                    "storeName",
+                    "id"
+                  )}
+                  value={storeId}
+                  setValue={setStoreId}
+                  required={true}
+                  readOnly={id}
+                  autoFocus={true}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
             <h2 className="font-medium text-slate-700 mb-2">Style Details</h2>
 
             <div className="grid grid-cols-2 gap-1">
@@ -376,53 +448,10 @@ export default function CuttingOrderForm({
                 readOnly={readOnly}
                 placeholder={"Select Style"}
                 otherField={"sku"}
-                autoFocus={true}
                 disabled={id}
                 clear={true}
               />
             </div>
-          </div>
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            {/* <h2 className="font-medium text-slate-700 mb-2">
-              Location Details
-            </h2>
-            <div className="grid grid-cols-2 gap-1">
-              <DropdownInput
-                name="Location"
-                options={
-                  branchList
-                    ? dropDownListObject(
-                        id
-                          ? branchList?.data
-                          : branchList?.data?.filter((item) => item.active),
-                        "branchName",
-                        "id"
-                      )
-                    : []
-                }
-                value={locationId}
-                setValue={(value) => {
-                  setLocationId(value);
-                  setStoreId("");
-                }}
-                required={true}
-                readOnly={readOnly}
-              />
-              <DropdownInput
-                name="Store"
-                options={dropDownListObject(
-                  id
-                    ? storeOptions
-                    : storeOptions?.filter((item) => item.active),
-                  "storeName",
-                  "id"
-                )}
-                value={storeId}
-                setValue={setStoreId}
-                required={true}
-                readOnly={readOnly}
-              />
-            </div> */}
           </div>
         </div>
         <fieldset className="w-full  min-w-[1200px]">

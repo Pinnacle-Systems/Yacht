@@ -258,7 +258,7 @@ export default function Form() {
 
       // Employment Info
       setDepartmentId(data?.departmentId || "");
-      setShiftTemplateId(data?.shiftTemplateId || "");
+      // setShiftTemplateId(data?.shiftTemplateId || "");
       setEmployeeCategoryId(data?.employeeCategoryId || "");
       setPayCategory(data?.payCategory || "");
       setSalary(data?.salary || "");
@@ -412,7 +412,7 @@ export default function Form() {
     payCategory,
     idNumber,
     desiginationId,
-    shiftTemplateId,
+    // shiftTemplateId,
     pf,
     esi,
     salary,
@@ -642,7 +642,7 @@ export default function Form() {
     setBloodGroup("");
 
     // Employment Info
-    setShiftTemplateId("");
+    // setShiftTemplateId("");
     setPf("");
     setEsi("");
     setSalary("");
@@ -1567,7 +1567,7 @@ export default function Form() {
                           )}
                         </div>
 
-                        <div className="col-span-1">
+                        {/* <div className="col-span-1">
                           <DropdownInput
                             ref={input1Ref}
                             name="Shift Template"
@@ -1587,7 +1587,7 @@ export default function Form() {
                               {errors.name}
                             </span>
                           )}
-                        </div>
+                        </div> */}
                         <div className="col-span-1">
                           <DropdownInput
                             ref={input1Ref}

@@ -11,6 +11,7 @@ import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMaste
 import { VIEW } from "../../../icons";
 import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService";
 import { useGetPurchaseInwardEntryQuery } from "../../../redux/uniformService/PurchaseInwardEntry";
+import FxSelect from "../../../Inputs";
 
 export default function CuttingOrderItems({
   cuttingOrderItems,
@@ -331,11 +332,7 @@ export default function CuttingOrderItems({
                 >
                   S.No
                 </th>
-                <th
-                  className={`w-48 px-4 py-2 text-center font-medium text-[13px] `}
-                >
-                  Style
-                </th>
+
                 <th
                   className={`w-40 px-4 py-2 text-center font-medium text-[13px]`}
                 >
@@ -351,7 +348,12 @@ export default function CuttingOrderItems({
                 >
                   Color
                 </th>
-                {/* <th
+                <th
+                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Portion
+                </th>
+                <th
                   className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Width
@@ -360,11 +362,11 @@ export default function CuttingOrderItems({
                   className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Meter
-                </th> */}
+                </th>
                 <th
-                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-48 px-4 py-2 text-center font-medium text-[13px] `}
                 >
-                  Portion
+                  Style
                 </th>
                 <th
                   className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
@@ -424,50 +426,12 @@ export default function CuttingOrderItems({
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                       <select
-                        id={`styleItemId-input-${index}`}
-                        onKeyDown={(e) => {
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "styleItemId");
-                          }
-                        }}
-                        disabled={readOnly}
-                        className="text-left w-full rounded py-1 table-data-input"
-                        value={row.styleItemId}
-                        onChange={(e) =>
-                          handleInputChange(
-                            e.target.value,
-                            index,
-                            "styleItemId"
-                          )
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(
-                            e.target.value,
-                            index,
-                            "styleItemId"
-                          );
-                        }}
-                        onFocus={(e) => e.target.focus()}
-                      >
-                        <option></option>
-                        {(id
-                          ? styleItemList?.data
-                          : styleItemList?.data?.filter((item) => item.active)
-                        )?.map((blend) => (
-                          <option value={blend.id} key={blend.id}>
-                            {blend?.name}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="py-0.5 border border-gray-300 text-[11px] ">
-                      <select
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
                             handleInputChange("", index, "fabricId");
                           }
                         }}
-                        disabled={readOnly}
+                        disabled={true}
                         className="text-left w-full rounded py-1 table-data-input"
                         value={row.fabricId}
                         onChange={(e) =>
@@ -494,7 +458,7 @@ export default function CuttingOrderItems({
                           className="text-xs"
                           onClick={() => {
                             setPreviewImage(imageFormatter(row?.styleId));
-                            console.log("Clicked")
+                            console.log("Clicked");
                           }}
                         >
                           {VIEW}
@@ -510,7 +474,7 @@ export default function CuttingOrderItems({
                             handleInputChange("", index, "colorId");
                           }
                         }}
-                        disabled={readOnly}
+                        disabled={true}
                         className="text-left w-full rounded py-1 table-data-input"
                         value={row.colorId}
                         onChange={(e) =>
@@ -531,7 +495,37 @@ export default function CuttingOrderItems({
                         ))}
                       </select>
                     </td>
-                    {/* <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <select
+                        // id={`portionId-input-${index}`}
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "portionId");
+                          }
+                        }}
+                        disabled={true}
+                        className="text-left w-full rounded py-1 table-data-input"
+                        value={row.portionId}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "portionId")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "portionId");
+                        }}
+                        onFocus={(e) => e.target.focus()}
+                      >
+                        <option></option>
+                        {(id
+                          ? portionList?.data
+                          : portionList?.data?.filter((item) => item.active)
+                        )?.map((blend) => (
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
                         onKeyDown={(e) => {
                           if (e.code === "Minus" || e.code === "NumpadSubtract")
@@ -551,7 +545,7 @@ export default function CuttingOrderItems({
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "fabWidth");
                         }}
-                        disabled={readOnly}
+                        disabled={true}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
@@ -574,67 +568,65 @@ export default function CuttingOrderItems({
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "fabMeter");
                         }}
-                        disabled={readOnly}
+                        disabled={true}
                       />
-                    </td> */}
-                    <td className="py-0.5 border border-gray-300 text-[11px]">
-                      <select
-                        // id={`portionId-input-${index}`}
+                    </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px] ">
+                      <FxSelect
+                        inputId={`styleItemId-input-${index}`}
+                        value={row.styleItemId}
+                        onChange={(val) =>
+                          handleInputChange(val, index, "styleItemId")
+                        }
+                        options={(styleItemList?.data || [])
+                          .filter((item) => item.active)
+                          .map((item) => ({
+                            label: item.name,
+                            value: item.id,
+                          }))}
+                        readOnly={id}
+                        placeholder=""
+                        onBlur={() =>
+                          handleInputChange(
+                            row.styleItemId,
+                            index,
+                            "styleItemId"
+                          )
+                        }
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
-                            handleInputChange("", index, "portionId");
+                            handleInputChange("", index, "styleItemId");
                           }
                         }}
-                        disabled={readOnly}
-                        className="text-left w-full rounded py-1 table-data-input"
-                        value={row.portionId}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "portionId")
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "portionId");
-                        }}
-                        onFocus={(e) => e.target.focus()}
-                      >
-                        <option></option>
-                        {(id
-                          ? portionList?.data
-                          : portionList?.data?.filter((item) => item.active)
-                        )?.map((blend) => (
-                          <option value={blend.id} key={blend.id}>
-                            {blend?.name}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px]">
-                      <select
+                      <FxSelect
+                        value={row.uomId}
+                        onChange={(val) =>
+                          handleInputChange(val, index, "uomId")
+                        }
+                        options={(uomList?.data || [])
+                          .filter((item) => item.active)
+                          .map((item) => ({
+                            label: item.name,
+                            value: item.id,
+                          }))}
+                        readOnly={id}
+                        placeholder=""
+                        onBlur={() =>
+                          handleInputChange(
+                            row.uomId,
+                            index,
+                            "uomId"
+                          )
+                        }
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
                             handleInputChange("", index, "uomId");
                           }
                         }}
-                        disabled={readOnly}
-                        className="text-left w-full rounded py-1 table-data-input"
-                        value={row.uomId}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "uomId")
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "uomId");
-                        }}
-                        onFocus={(e) => e.target.focus()}
-                      >
-                        <option></option>
-                        {(id
-                          ? uomList?.data
-                          : uomList?.data?.filter((item) => item.active)
-                        )?.map((blend) => (
-                          <option value={blend.id} key={blend.id}>
-                            {blend?.name}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </td>
                     {sizeColumns.map((col) => {
                       // find matching size entry
@@ -761,7 +753,7 @@ export default function CuttingOrderItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={8 + sizeColumns.length}
+                  colSpan={10 + sizeColumns.length}
                 >
                   Total
                 </td>

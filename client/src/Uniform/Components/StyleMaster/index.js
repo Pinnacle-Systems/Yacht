@@ -83,11 +83,11 @@ const StyleMaster = () => {
     sizeTemplateId,
     fabricId,
     styleItemId,
-    price
+    price,
   };
 
   const validateData = (data) => {
-    if (data.styleItemId && data.sku && data.sizeTemplateId) {
+    if (data.sku && data.fabricId) {
       return true;
     }
     return false;
@@ -134,7 +134,7 @@ const StyleMaster = () => {
     formData.append("alias", alias);
     formData.append("active", active);
     formData.append("styleItemId", styleItemId);
-    formData.append("price",price);
+    formData.append("price", price);
     formData.append(
       "companyId",
       secureLocalStorage.getItem(
@@ -178,7 +178,7 @@ const StyleMaster = () => {
       setSizeTemplateId(data?.sizeTemplateId ? data?.sizeTemplateId : "");
       setFabricId(data?.fabricId ? data?.fabricId : "");
       setStyleItemId(data?.styleItemId ? data?.styleItemId : "");
-      setPrice(data?.price ? data?.price : "")
+      setPrice(data?.price ? data?.price : "");
     },
     [id]
   );
@@ -441,7 +441,7 @@ const StyleMaster = () => {
                               }
                               value={styleItemId}
                               setValue={setStyleItemId}
-                              required={true}
+                              required={false}
                               readOnly={readOnly}
                             />
                           </div>
@@ -495,7 +495,7 @@ const StyleMaster = () => {
                               }
                               value={sizeTemplateId}
                               setValue={setSizeTemplateId}
-                              required={true}
+                              required={false}
                               readOnly={readOnly}
                             />
                           </div>

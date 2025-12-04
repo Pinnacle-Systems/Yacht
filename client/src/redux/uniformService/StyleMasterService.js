@@ -100,6 +100,7 @@ const StyleMasterApi = createApi({
 export const {
   useGetStyleMasterQuery,
   useGetStyleMasterByIdQuery,
+  useLazyGetStyleMasterByIdQuery,
   useAddStyleMasterMutation,
   useUpdateStyleMasterMutation,
   useDeleteStyleMasterMutation,

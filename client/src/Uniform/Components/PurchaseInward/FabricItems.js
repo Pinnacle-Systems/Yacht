@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
-import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+import {
+  useGetStyleMasterQuery,
+  useLazyGetStyleMasterByIdQuery,
+} from "../../../redux/uniformService/StyleMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
-import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 import secureLocalStorage from "react-secure-storage";
 import { IMAGE_UPLOAD_URL } from "../../../Constants";
 import { findFromList, renameFile } from "../../../Utils/helper";
 import { CLOSE_ICON, VIEW } from "../../../icons";
 import { getImageUrlPath } from "../../../helper";
+import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService";
+import FxSelect from "../../../Inputs";
 
 const FabricInwardItems = ({
   id,
@@ -23,8 +27,9 @@ const FabricInwardItems = ({
   const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: fabricList } = useGetFabricMasterQuery({ params });
-  const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
-
+  const { data: portionList } = useGetPortionMasterQuery({ params });
+  const [triggerGetStyle, { data: styleData }] =
+    useLazyGetStyleMasterByIdQuery();
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
   );
@@ -42,16 +47,40 @@ const FabricInwardItems = ({
       noOfPcs: "",
       filePath: "",
       selected: false,
+      portionId: "",
     };
     setFabricInwardItems([...fabricInwardItems, newRow]);
   };
 
-  const handleInputChange = (value, index, field) => {
-    const newBlend = structuredClone(fabricInwardItems);
-    newBlend[index][field] = value;
-    setFabricInwardItems(newBlend);
-  };
+  const handleInputChange = async (value, index, field) => {
+    // clone first
+    const newRows = structuredClone(fabricInwardItems);
 
+    if (field === "styleId") {
+      // 1️⃣ update immediately
+      newRows[index].styleId = value;
+      setFabricInwardItems([...newRows]); // 🔥 maintain UI instantly
+
+      try {
+        // 2️⃣ fetch style data
+        const response = await triggerGetStyle(value).unwrap();
+
+        // 3️⃣ update fabricId
+        newRows[index].fabricId = response?.data?.fabricId;
+
+        // 4️⃣ update again after API fetch
+        setFabricInwardItems([...newRows]);
+      } catch (e) {
+        console.error("Style fetch failed", e);
+      }
+
+      return; // stop here
+    }
+
+    // normal fields
+    newRows[index][field] = value;
+    setFabricInwardItems([...newRows]);
+  };
   const deleteRow = (id) => {
     setFabricInwardItems((currentRows) => {
       if (currentRows.length > 1) {
@@ -102,6 +131,7 @@ const FabricInwardItems = ({
               noOfPcs: "",
               filePath: "",
               selected: false,
+              portionId: "",
             })),
           ];
         }
@@ -120,6 +150,7 @@ const FabricInwardItems = ({
           noOfPcs: "",
           filePath: "",
           selected: false,
+          portionId: "",
         }))
       );
     }
@@ -177,11 +208,11 @@ const FabricInwardItems = ({
                 >
                   Style No
                 </th>
-                <th
+                {/* <th
                   className={`w-48 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style
-                </th>
+                </th> */}
                 <th
                   className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
                 >
@@ -196,6 +227,11 @@ const FabricInwardItems = ({
                   className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Color
+                </th>
+                <th
+                  className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Portion
                 </th>
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
@@ -243,27 +279,8 @@ const FabricInwardItems = ({
                     <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
                       {index + 1}
                     </td>
-                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                      {/* <input
-                        id={`styleNo-input-${index}`}
-                        onKeyDown={(e) => {
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "styleNo");
-                          }
-                        }}
-                        type="string"
-                        className="text-left rounded py-1 px-1 w-full table-data-input"
-                        onFocus={(e) => e.target.select()}
-                        value={row?.styleNo}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "styleNo")
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "styleNo");
-                        }}
-                        disabled={readOnly}
-                      /> */}
-                      <select
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-left">
+                      {/* <select
                         id={`styleId-input-${index}`}
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
@@ -290,9 +307,33 @@ const FabricInwardItems = ({
                             {blend?.sku}
                           </option>
                         ))}
-                      </select>
+                      </select> */}
+                      <FxSelect
+                        inputId={`styleId-input-${index}`}
+                        value={row.styleId}
+                        onChange={(val) =>
+                          handleInputChange(val, index, "styleId")
+                        }
+                        options={(styleList?.data || [])
+                          .filter((item) => item.active)
+                          .map((item) => ({
+                            label: item.sku,
+                            value: item.id,
+                          }))}
+                        readOnly={id}
+                        placeholder=""
+                        onBlur={() =>
+                          handleInputChange(row.styleId, index, "styleId")
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "styleId");
+                          }
+                        }}
+                      />
                     </td>
-                    <td className="py-0.5 border border-gray-300 text-[11px] ">
+
+                    {/* <td className="py-0.5 border border-gray-300 text-[11px] ">
                       <select
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
@@ -328,35 +369,30 @@ const FabricInwardItems = ({
                           </option>
                         ))}
                       </select>
-                    </td>
+                    </td> */}
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
-                      <select
+                      <FxSelect
+                        value={row.fabricId}
+                        onChange={(val) =>
+                          handleInputChange(val, index, "fabricId")
+                        }
+                        options={(fabricList?.data || [])
+                          .filter((item) => item.active)
+                          .map((item) => ({
+                            label: item.name,
+                            value: item.id,
+                          }))}
+                        readOnly={id}
+                        placeholder=""
+                        onBlur={() =>
+                          handleInputChange(row.fabricId, index, "fabricId")
+                        }
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
                             handleInputChange("", index, "fabricId");
                           }
                         }}
-                        tabIndex={"0"}
-                        disabled={readOnly}
-                        className="text-left w-full rounded py-1 table-data-input"
-                        value={row.fabricId}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "fabricId")
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "fabricId");
-                        }}
-                      >
-                        <option></option>
-                        {(id
-                          ? fabricList?.data
-                          : fabricList?.data?.filter((item) => item.active)
-                        )?.map((blend) => (
-                          <option value={blend.id} key={blend.id}>
-                            {blend?.name}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </td>
                     <td className=" py-0.5 px-3 border border-gray-300 overflow-x-auto">
                       <div className="flex gap-x-4 flex items-center">
@@ -413,37 +449,55 @@ const FabricInwardItems = ({
                         )}
                       </div>
                     </td>
-
-                    <td className="py-0.5 border border-gray-300 text-[11px]">
-                      <select
-                        id={`qty-input-${index}`}
+                    <td className="py-0.5 border border-gray-300 text-[11px] ">
+                      <FxSelect
+                        value={row.colorId}
+                        onChange={(val) =>
+                          handleInputChange(val, index, "colorId")
+                        }
+                        options={(colorList?.data || [])
+                          .filter((item) => item.active)
+                          .map((item) => ({
+                            label: item.name,
+                            value: item.id,
+                          }))}
+                        readOnly={id}
+                        placeholder=""
+                        onBlur={() =>
+                          handleInputChange(row.colorId, index, "colorId")
+                        }
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
                             handleInputChange("", index, "colorId");
                           }
                         }}
-                        tabIndex={"0"}
-                        disabled={readOnly}
-                        className="text-left w-full rounded py-1 table-data-input"
-                        value={row.colorId}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "colorId")
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "colorId");
-                        }}
-                      >
-                        <option></option>
-                        {(id
-                          ? colorList?.data
-                          : colorList?.data?.filter((item) => item.active)
-                        )?.map((blend) => (
-                          <option value={blend.id} key={blend.id}>
-                            {blend?.name}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <FxSelect
+                        value={row.portionId}
+                        onChange={(val) =>
+                          handleInputChange(val, index, "portionId")
+                        }
+                        options={(portionList?.data || [])
+                          .filter((item) => item.active)
+                          .map((item) => ({
+                            label: item.name,
+                            value: item.id,
+                          }))}
+                        readOnly={id}
+                        placeholder=""
+                        onBlur={() =>
+                          handleInputChange(row.portionId, index, "portionId")
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "portionId");
+                          }
+                        }}
+                      />
+                    </td>
+
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
                         onKeyDown={(e) => {

@@ -207,7 +207,7 @@ async function getOne(id) {
           // fabMeter: true,
           portionId: true,
           styleId: true,
-          orderQty: true,
+          // orderQty: true,
           remarks: true,
           issueQty: true,
           sizeDetails: true,
@@ -217,6 +217,7 @@ async function getOne(id) {
     },
   });
   if (!data) return NoRecordFound("CuttingDelivery");
+
   const styleIds = data.cuttingDeliveryItems
     .map((item) => item.styleId)
     .filter(Boolean);
@@ -231,20 +232,34 @@ async function getOne(id) {
     data.cuttingDeliveryItems.map(async (item) => {
       const stockData = await prisma.materialStock.aggregate({
         where: {
-          styleItemId: item.styleItemId,
           fabricId: item.fabricId,
           colorId: item.colorId,
           styleId: item.styleId,
           fabWidth: item.fabWidth,
           invNo: item.invNo,
+          portionId: item.portionId
         },
         _sum: {
           fabMeter: true,
         },
       });
+      const planQty = await prisma.cuttingOrderItems.findFirst({
+        where: {
+          styleItemId: item.styleItemId,
+          fabricId: item.fabricId,
+          colorId: item.colorId,
+          styleId: item.styleId,
+          invNo: item.invNo,
+          portionId: item.portionId,
+        },
+        select: {
+          orderQty: true,
+        },
+      });
       return {
         ...item,
         fabMeter: stockData._sum.fabMeter + item.usedMeter,
+        orderQty: planQty.orderQty,
       };
     })
   );
@@ -283,6 +298,7 @@ async function create(body) {
     fromProcessId,
     supplierId,
     sizeTemplateId,
+    storeId,
   } = await body;
   console.log(branchId, "branchId");
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -327,6 +343,7 @@ async function create(body) {
       data: {
         docId: newDocId,
         branchId: parseInt(branchId),
+        storeId: parseInt(storeId),
         createdById: parseInt(userId),
         styleId: parseInt(styleId),
         docDate: docDate ? new Date(docDate) : null,
@@ -343,6 +360,7 @@ async function create(body) {
       data,
       userId,
       branchId,
+      storeId,
       fromProcessId
     );
   });
@@ -355,8 +373,8 @@ async function createCuttingDeliveryItems(
   cuttingDelivery,
   userId,
   branchId,
+  storeId,
   fromProcessId
-  // storeId
 ) {
   const promises = cuttingDeliveryItems.map(async (deliveryDetail, index) => {
     const orderQty = deliveryDetail?.orderQty
@@ -445,6 +463,7 @@ async function createCuttingDeliveryItems(
           orderQty,
           uomId: deliveryDetail?.uomId ? parseInt(deliveryDetail.uomId) : null,
           prevProcessId: fromProcessId ? parseInt(fromProcessId) : null,
+          storeId: parseInt(storeId),
         },
       });
     }
@@ -481,6 +500,7 @@ async function createCuttingDeliveryItems(
         uomId: deliveryDetail?.uomId ? parseInt(deliveryDetail.uomId) : null,
         itemType: "Fabric",
         invNo: deliveryDetail?.invNo ? deliveryDetail?.invNo : undefined,
+        storeId: parseInt(storeId),
       },
     });
 
@@ -512,6 +532,7 @@ async function update(id, body) {
     fromProcessId,
     supplierId,
     sizeTemplateId,
+    storeId,
   } = await body;
   let data;
   const dataFound = await prisma.cuttingDelivery.findUnique({
@@ -543,6 +564,7 @@ async function update(id, body) {
       data: {
         updatedById: parseInt(userId),
         branchId: parseInt(branchId),
+        storeId: parseInt(storeId),
         styleId: parseInt(styleId),
         docDate: docDate ? new Date(docDate) : null,
         cuttingNo,
@@ -558,7 +580,8 @@ async function update(id, body) {
       data,
       userId,
       branchId,
-      fromProcessId
+      fromProcessId,
+      storeId
     );
   });
   return { statusCode: 0, data };
@@ -570,7 +593,8 @@ async function updateCuttingDeliveryItems(
   cuttingDelivery,
   userId,
   branchId,
-  fromProcessId
+  fromProcessId,
+  storeId
 ) {
   const promises = cuttingDeliveryItems.map(async (deliveryDetail) => {
     const orderQty = deliveryDetail?.orderQty
@@ -712,6 +736,7 @@ async function updateCuttingDeliveryItems(
               qty,
               employeeId: s.employeeId ? parseInt(s.employeeId) : null,
               prevProcessId: fromProcessId ? parseInt(fromProcessId) : null,
+              storeId: parseInt(storeId),
             },
           });
 
@@ -757,6 +782,7 @@ async function updateCuttingDeliveryItems(
               sizeId,
               qty,
               employeeId: s.employeeId ? parseInt(s.employeeId) : null,
+              storeId: parseInt(storeId),
             },
           });
         }
@@ -808,6 +834,7 @@ async function updateCuttingDeliveryItems(
               : null,
             itemType: "Fabric",
             invNo: deliveryDetail?.invNo ? deliveryDetail?.invNo : undefined,
+            storeId: parseInt(storeId),
           },
         });
       } else {
@@ -848,6 +875,7 @@ async function updateCuttingDeliveryItems(
               : null,
             itemType: "Fabric",
             invNo: deliveryDetail?.invNo ? deliveryDetail?.invNo : undefined,
+            storeId: parseInt(storeId),
           },
         });
       }
@@ -945,6 +973,7 @@ async function updateCuttingDeliveryItems(
               : null,
             prevProcessId: fromProcessId ? parseInt(fromProcessId) : null,
             employeeId: s.employeeId ? parseInt(s.employeeId) : null,
+            storeId: parseInt(storeId),
           },
         });
       }
@@ -983,6 +1012,7 @@ async function updateCuttingDeliveryItems(
           remarks: deliveryDetail?.remarks ?? undefined,
           uomId: deliveryDetail?.uomId ? parseInt(deliveryDetail.uomId) : null,
           invNo: deliveryDetail?.invNo ? deliveryDetail?.invNo : undefined,
+          storeId: parseInt(storeId),
         },
       });
 

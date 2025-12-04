@@ -251,14 +251,14 @@ async function create(body) {
   const {
     userId,
     branchId,
-    // storeId,
+    storeId,
     finYearId,
     cuttingOrderItems,
     styleId,
     docDate,
     draftSave,
     sizeTemplateId,
-    // locationId,
+    locationId,
   } = await body;
   console.log(branchId, "branchId");
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -282,18 +282,19 @@ async function create(body) {
       styleId: parseInt(styleId),
     },
   });
-  if(exist){
+  if (exist) {
     return {
-      status:400,
-      message:"This Style Already Exits"
-    }
+      status: 400,
+      message: "This Style Already Exits",
+    };
   }
   await prisma.$transaction(async (tx) => {
     data = await tx.cuttingOrder.create({
       data: {
         docId: newDocId,
         branchId: parseInt(branchId),
-        // storeId: parseInt(storeId),
+        storeId: parseInt(storeId),
+        locationId: parseInt(locationId),
         createdById: parseInt(userId),
         styleId: parseInt(styleId),
         docDate: docDate ? new Date(docDate) : null,
@@ -408,7 +409,8 @@ async function update(id, body) {
     branchId,
     cuttingOrderItems,
     userId,
-    // storeId,
+    storeId,
+    locationId,
     docDate,
     sizeTemplateId,
     styleId,
@@ -441,9 +443,10 @@ async function update(id, body) {
         id: parseInt(id),
       },
       data: {
-        // storeId: parseInt(storeId),
         updatedById: parseInt(userId),
+        storeId: parseInt(storeId),
         branchId: parseInt(branchId),
+        locationId: parseInt(locationId),
         styleId: parseInt(styleId),
         docDate: docDate ? new Date(docDate) : null,
         sizeTemplateId: parseInt(sizeTemplateId),
@@ -833,11 +836,12 @@ async function remove(id) {
 }
 
 async function getStyleDetail(req) {
-  const { styleId, branchId } = req.query;
+  const { styleId, branchId, storeId } = req.query;
   let data = await prisma.cuttingOrder.findFirst({
     where: {
       styleId: parseInt(styleId),
       branchId: parseInt(branchId),
+      storeId: parseInt(storeId),
     },
     include: {
       cuttingOrderItems: {

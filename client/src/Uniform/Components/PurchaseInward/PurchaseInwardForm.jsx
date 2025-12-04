@@ -192,10 +192,40 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
     }
   };
 
+  const hasDuplicates = (items) => {
+    const seen = new Set();
+
+    for (const row of items) {
+      // Create a unique key using all fields you want to check
+      const key = [
+        row.sizeId || "",
+        row.portionId || ""
+      ].join("-");
+
+      if (seen.has(key)) return true; // duplicate found
+      seen.add(key);
+    }
+    return false;
+  };
+
 
   const validateData = (data) => {
+    const items = data?.fabricInwardItems || [];
+    const filledItems = items.filter(
+      (item) =>
+        item.styleId ||
+        item.fabricId ||
+        item.accessoryId
+    );
+    if (hasDuplicates(filledItems)) {
+      toast.info("Duplicate items found!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      return false;
+    }
     return (
-      data?.storeId && data?.supplierId && data?.invNo && (isFabric ? isGridDatasValid(data?.fabricInwardItems.filter((item) => item?.styleId), false, ["fabricId", "fabWidth", "fabMeter"]) : isGridDatasValid(data?.fabricInwardItems.filter((item) => item?.accessoryId), false, ["sizeId", "qty"]))
+      data?.storeId && data?.supplierId && data?.invNo && (isFabric ? isGridDatasValid(data?.fabricInwardItems.filter((item) => item?.styleId), false, ["fabricId", "fabWidth", "fabMeter", "portionId"]) : isGridDatasValid(data?.fabricInwardItems.filter((item) => item?.accessoryId), false, ["sizeId", "qty"]))
       && data?.fabricInwardItems.length > 0
     )
   };
@@ -330,7 +360,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                     ? dropDownListObject(
                       id
                         ? partyList?.data
-                        : partyList?.data?.filter((item) => item.active),
+                        : partyList?.data?.filter((item) => item.isSupplier),
                       "name",
                       "id"
                     )
@@ -341,7 +371,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                   setSupplierId(value);
                 }}
                 required={true}
-                readOnly={readOnly}
+                readOnly={id}
               />
             </div>
           </div>
@@ -451,12 +481,6 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
             </h2>
 
             <div className="space-y-1.5">
-              <div className="flex justify-between  text-sm">
-                <span className="text-slate-600">{inwardType === "Fabric" ? "Total Rolls" : "Total Qty"}</span>
-                <span className="font-medium">
-                  {parseInt(getTotalQty()).toFixed(2)}
-                </span>
-              </div>
               {inwardType === "Fabric" && (
                 <div className="flex justify-between  text-sm">
                   <span className="text-slate-600">Total Meters</span>
@@ -468,6 +492,12 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                   </span>
                 </div>
               )}
+              <div className="flex justify-between  text-sm">
+                <span className="text-slate-600">{inwardType === "Fabric" ? "Total Rolls" : "Total Qty"}</span>
+                <span className="font-medium">
+                  {parseInt(getTotalQty()).toFixed(2)}
+                </span>
+              </div>
             </div>
           </div>
         </div>

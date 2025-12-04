@@ -447,11 +447,7 @@ export default function ProductionDeliveryForm({
             <div className="grid grid-cols-2 gap-1">
               <DropdownNew
                 name="From Process"
-                dataList={
-                  id
-                    ? processList?.data
-                    : processList?.data?.filter((item) => item.active)
-                }
+                dataList={processList?.data?.filter((item) => !item.isCutting)}
                 value={fromProcessId}
                 setValue={setFromProcessId}
                 readOnly={readOnly}
@@ -462,11 +458,7 @@ export default function ProductionDeliveryForm({
               />
               <DropdownNew
                 name="To Process"
-                dataList={
-                  id
-                    ? processList?.data
-                    : processList?.data?.filter((item) => item.active)
-                }
+                dataList={processList?.data?.filter((item) => !item.isCutting)}
                 value={toProcessId}
                 setValue={setToProcessId}
                 readOnly={readOnly}

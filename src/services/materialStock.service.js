@@ -30,11 +30,10 @@ async function get(req) {
   data = await prisma.materialStock.groupBy({
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
-      // storeId: storeId ? parseInt(storeId) : undefined,
+      storeId: storeId ? parseInt(storeId) : undefined,
       styleId: styleId ? parseInt(styleId) : undefined,
       sizeId: sizeId ? parseInt(sizeId) : undefined,
       fabricId: fabricId ? parseInt(fabricId) : undefined,
-      styleItemId: styleItemId ? parseInt(styleItemId) : undefined,
       colorId: colorId ? parseInt(colorId) : undefined,
       AND: finYearDate
         ? [
@@ -63,10 +62,10 @@ async function get(req) {
       "sizeId",
       // "styleNo",
       "fabricId",
-      "styleItemId",
       "colorId",
       "accessoryGroupId",
       "accessoryId",
+      "portionId",
     ],
     _sum: {
       qty: true,
@@ -90,6 +89,7 @@ async function get(req) {
       fabMeter: d._sum.fabMeter,
       accessoryId: d.accessoryId,
       accessoryGroupId: d.accessoryGroupId,
+      portionId: d.portionId,
     })),
     totalCount,
     totalQty,
@@ -105,9 +105,15 @@ async function getStyleDetail(req) {
       message: "styleId is required",
     };
   }
+  if (!storeId || storeId === "0" || storeId === "") {
+    return {
+      statusCode: 400,
+      message: "store is required",
+    };
+  }
   // 1️⃣ First try fetching by styleNo
   let data = await prisma.materialStock.groupBy({
-    by: ["styleItemId", "fabricId", "colorId", "fabWidth", "styleId","invNo"],
+    by: ["fabricId", "colorId", "fabWidth", "styleId", "invNo", "portionId"],
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
       storeId: storeId ? parseInt(storeId) : undefined,
@@ -124,13 +130,14 @@ async function getStyleDetail(req) {
   return {
     statusCode: 0,
     data: data.map((d) => ({
-      styleItemId: d.styleItemId,
+      // styleItemId: d.styleItemId,
       fabricId: d.fabricId,
       colorId: d.colorId,
       fabWidth: d.fabWidth,
       fabMeter: d._sum.fabMeter,
       styleId: d.styleId,
-      invNo:d.invNo
+      invNo: d.invNo,
+      portionId: d.portionId,
     })),
   };
 }

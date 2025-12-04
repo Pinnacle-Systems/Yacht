@@ -18,6 +18,7 @@ import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMaste
 import { useGetMaterialStockQuery } from "../../../redux/services/MaterialStockService";
 import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/AccessoryMasterServices";
 import { useGetAccessoryGroupMasterQuery } from "../../../redux/uniformService/AccessoryGroupMasterServices";
+import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService";
 
 const MaterialStockReport = forwardRef(
   (
@@ -78,7 +79,7 @@ const MaterialStockReport = forwardRef(
     const { data: styleList } = useGetStyleMasterQuery({ params });
     const { data: sizeList } = useGetSizeMasterQuery({ params });
     const { data: fabricList } = useGetFabricMasterQuery({ params });
-    const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
+    const { data: portionList } = useGetPortionMasterQuery({ params });
     const { data: colorList } = useGetColorMasterQuery({ params });
     const { data: accessoryList } = useGetAccessoryMasterQuery({ params });
     const { data: accessoryGroupList } = useGetAccessoryGroupMasterQuery({
@@ -275,18 +276,18 @@ const MaterialStockReport = forwardRef(
                           <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                             <div>Style No</div>
                           </th>
-                          <th className="w-72  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                          {/* <th className="w-72  px-3   font-medium text-[13px] text-gray-900  text-center ">
                             <div>Style</div>
-                          </th>
-                          <th className="w-52  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                          </th> */}
+                          <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
                             <div>Fabric</div>
                           </th>
-                          <th className="w-52  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                          <th className="w-40  px-3   font-medium text-[13px] text-gray-900  text-center ">
                             <div>Color</div>
                           </th>
-                          {/* <th className="w-28  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                            <div>Size</div>
-                          </th> */}
+                          <th className="w-36  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                            <div>Portion</div>
+                          </th>
                           <th className="w-28  px-3   font-medium text-[13px] text-gray-900  text-center ">
                             <div>Meter</div>
                           </th>
@@ -356,14 +357,6 @@ const MaterialStockReport = forwardRef(
 
                                 <td className="py-1.5 text-center">
                                   {findFromList(
-                                    dataObj?.styleItemId,
-                                    styleItemList?.data,
-                                    "name"
-                                  )}
-                                </td>
-
-                                <td className="py-1.5 text-center">
-                                  {findFromList(
                                     dataObj?.fabricId,
                                     fabricList?.data,
                                     "name"
@@ -374,6 +367,14 @@ const MaterialStockReport = forwardRef(
                                   {findFromList(
                                     dataObj?.colorId,
                                     colorList?.data,
+                                    "name"
+                                  )}
+                                </td>
+
+                                <td className="py-1.5 text-center">
+                                  {findFromList(
+                                    dataObj?.portionId,
+                                    portionList?.data,
                                     "name"
                                   )}
                                 </td>

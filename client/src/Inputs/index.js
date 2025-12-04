@@ -22,14 +22,14 @@ import { useModal } from "../Basic/pages/home/context/ModalContext";
 import DynamicRenderer from "../Uniform/Components/common/DynamicComponent";
 import secureLocalStorage from "react-secure-storage";
 import useOutsideClick from "../CustomHooks/handleOutsideClick";
-import zIndex from "@mui/material/styles/zIndex";
 
-export const handleOnChange = (event, setValue,type) => {
+export const handleOnChange = (event, setValue, type) => {
   const inputValue = event.target.value;
   const inputSelectionStart = event.target.selectionStart;
   const inputSelectionEnd = event.target.selectionEnd;
 
-  const upperCaseValue = type === "password" ? inputValue : inputValue.toUpperCase();
+  const upperCaseValue =
+    type === "password" ? inputValue : inputValue.toUpperCase();
 
   const valueBeforeCursor = upperCaseValue.slice(0, inputSelectionStart);
   const valueAfterCursor = upperCaseValue.slice(inputSelectionEnd);
@@ -229,7 +229,7 @@ export const TextInput = forwardRef(
           onChange={(e) =>
             type === "number"
               ? setValue(e.target.value)
-              : handleOnChange(e, setValue,type)
+              : handleOnChange(e, setValue, type)
           }
           onBlur={onBlur}
           placeholder={name}
@@ -1859,3 +1859,231 @@ export const DropdownNew = ({
     </div>
   );
 };
+
+export const MiniSelect = ({
+  name,
+  dataList = [],
+  value,
+  setValue,
+  readonly = false,
+  disabled = false,
+  required = false,
+  clear = false,
+  placeholder = "",
+  otherField,
+  otherValue,
+  onKeyDown,
+  autoFocus,
+  className = "",
+}) => {
+  const options = [
+    ...(clear ? [{ value: "", label: placeholder || `Select ${name}` }] : []),
+    ...dataList.map((item) => ({
+      value: otherValue ? item[otherValue] : item.id,
+      label: otherField ? item[otherField] : item.name,
+    })),
+  ];
+
+  return (
+    <select
+      name={name}
+      value={value ?? ""}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={(e) => setValue(e.target.value)}
+      onKeyDown={onKeyDown}
+      disabled={disabled || readonly}
+      autoFocus={autoFocus}
+      className={`w-full border border-gray-300 text-[11px] px-1 py-[1px]
+        rounded-sm focus:outline-none focus:ring-1 focus:ring-blue-500
+        ${className}`}
+      style={{
+        height: "22px", // 🔥 minimal height
+        lineHeight: "16px",
+      }}
+    >
+      {options.map((opt, i) => (
+        <option key={i} value={opt.value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  );
+};
+
+export const customStyles = {
+  control: (base) => ({
+    ...base,
+    border: "none",
+    boxShadow: "none",
+    backgroundColor: "transparent",
+    minHeight: "unset",
+    height: "20px",
+    fontSize: "12px",
+    cursor: "pointer",
+  }),
+
+  placeholder: (base) => ({
+    ...base,
+    color: "#9ca3af", // Tailwind gray-400
+    fontSize: "12px",
+  }),
+
+  singleValue: (base) => ({
+    ...base,
+    fontSize: "12px",
+    color: "black",
+  }),
+
+  valueContainer: (base) => ({
+    ...base,
+    padding: "0 4px",
+    height: "20px",
+  }),
+
+  dropdownIndicator: (base) => ({
+    ...base,
+    padding: 0,
+    paddingRight: 2,
+    svg: {
+      width: 14,
+      height: 14,
+    },
+    color: "black",
+  }),
+
+  indicatorSeparator: () => ({
+    display: "none",
+  }),
+
+  input: (base) => ({
+    ...base,
+    margin: 0,
+    padding: 0,
+    fontSize: "12px",
+    color: "black",
+  }),
+
+  clearIndicator: () => ({
+    display: "none",
+  }),
+
+  option: (base, state) => ({
+    ...base,
+    fontSize: "12px",
+     padding: "4px 6px",   // reduce inside padding
+    minHeight: "18px",    // reduce height
+    lineHeight: "18px", 
+    backgroundColor: state.isSelected
+      ? "#e5e7eb" // gray-200
+      : state.isFocused
+      ? "#f3f4f6" // gray-100
+      : "white",
+    color: "black",
+  }),
+
+  menu: (base) => ({
+    ...base,
+    zIndex: 9999,
+    fontSize: "12px",
+  }),
+  menuList: (base) => ({
+    ...base,
+    maxHeight: "120px", // 🔥 reduce dropdown height
+    paddingTop: 0,
+    paddingBottom: 0,
+  }),
+};
+
+export const customStylesNew = {
+  control: (base) => ({
+    ...base,
+    border: "none", // remove border
+    boxShadow: "none", // remove focus ring
+    backgroundColor: "transparent",
+    minHeight: "unset",
+    height: "20px", // match table row height
+    color: "black",
+  }),
+  placeholder: (base) => ({
+    ...base,
+    color: "black", // gray placeholder like Tailwind text-gray-400
+  }),
+  singleValue: (base) => ({
+    ...base,
+    // color: readOnly ? "gray" : "black",
+    fontSize: "12px", // optional: adjust font size
+    // textTransform: "uppercase",
+  }),
+
+  dropdownIndicator: (base) => ({
+    ...base,
+    padding: 2, // smaller padding
+    svg: {
+      width: 14, // icon width
+      height: 14, // icon height
+    },
+    color: "black",
+  }),
+
+  indicatorSeparator: () => ({ display: "none" }), // remove line
+  valueContainer: (base) => ({
+    ...base,
+    padding: "0 2px", // tighten padding
+    color: "black",
+    // textTransform: "uppercase",
+  }),
+  input: (base) => ({
+    ...base,
+    margin: 0,
+    padding: 0,
+    color: "black",
+    // textTransform: "uppercase",
+  }),
+  option: (base, state) => ({
+    ...base,
+  }),
+  menu: (base) => ({
+    ...base,
+    zIndex: 9999, // keep menu on top
+  }),
+  clearIndicator: () => ({
+    display: "none",
+  }),
+};
+
+export default function FxSelect({
+  value,
+  onChange,
+  options,
+  placeholder = "",
+  readOnly = false,
+  onBlur,
+  onKeyDown,
+  inputId
+}) {
+  return (
+    <Select
+      styles={customStyles}
+      onInputChange={(value, { action }) => {
+        if (action === "input-change") {
+          return value.toUpperCase(); //  force uppercase typing
+        }
+        return value;
+      }}
+      components={{
+        // DropdownIndicator: () => null,
+        IndicatorSeparator: () => null, // remove separator
+      }}
+      isClearable
+      isDisabled={readOnly}
+      options={options}
+      value={options.find((opt) => opt.value === value) || null}
+      onChange={(selected) => onChange(selected?.value || "")}
+      onBlur={onBlur}
+      onKeyDown={onKeyDown}
+      placeholder={placeholder}
+      menuPortalTarget={document.body}
+      inputId={inputId}
+    />
+  );
+}

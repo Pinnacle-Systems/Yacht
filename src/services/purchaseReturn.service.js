@@ -221,6 +221,7 @@ async function getOne(id) {
           remarks: true,
           returnFabMeter: true,
           returnQty: true,
+          portionId: true,
         },
       },
       Branch: true,
@@ -233,22 +234,22 @@ async function getOne(id) {
     data.purchaseReturnItems.map(async (item) => {
       const stkQty = await prisma.materialStock.aggregate({
         where: {
-          styleItemId: item.styleItemId,
           fabricId: item.fabricId,
           colorId: item.colorId,
           styleId: item.styleId,
           fabWidth: item.fabWidth,
           invNo: item.invNo,
+          portionId: item.portionId,
         },
         _sum: {
           fabMeter: true,
-          qty:true
+          qty: true,
         },
       });
       return {
         ...item,
         fabMeter: stkQty._sum.fabMeter + item.returnFabMeter,
-        qty: stkQty._sum.qty + item.returnQty
+        qty: stkQty._sum.qty + item.returnQty,
       };
     })
   );
@@ -374,6 +375,9 @@ async function createPurchaseReturnItems(
         returnQty: returnDetails?.returnQty
           ? parseFloat(returnDetails.returnQty)
           : 0,
+        portionId: returnDetails?.portionId
+          ? parseInt(returnDetails.portionId)
+          : null,
       },
     });
 
@@ -425,6 +429,9 @@ async function createPurchaseReturnItems(
         price: returnDetails?.price ? parseInt(returnDetails.price) : null,
         invNo: invNo ? invNo : undefined,
         itemType: returnType ? returnType : undefined,
+        portionId: returnDetails?.portionId
+          ? parseInt(returnDetails.portionId)
+          : null,
       },
     });
 
@@ -579,6 +586,9 @@ async function updatepurchaseReturnItems(
           returnQty: returnDetails?.returnQty
             ? parseFloat(returnDetails.returnQty)
             : 0,
+          portionId: returnDetails?.portionId
+            ? parseInt(returnDetails.portionId)
+            : null,
         },
       });
 
@@ -636,6 +646,9 @@ async function updatepurchaseReturnItems(
             inOrOut: returnType + "Return" || "MaterialReturn",
             invNo: invNo ? invNo : undefined,
             itemType: returnType ? returnType : undefined,
+            portionId: returnDetails?.portionId
+              ? parseInt(returnDetails.portionId)
+              : null,
           },
         });
       } else {
@@ -687,6 +700,9 @@ async function updatepurchaseReturnItems(
             price: returnDetails?.price ? parseInt(returnDetails.price) : null,
             invNo: invNo ? invNo : "",
             itemType: returnType ? returnType : undefined,
+            portionId: returnDetails?.portionId
+              ? parseInt(returnDetails.portionId)
+              : null,
           },
         });
       }
@@ -737,6 +753,9 @@ async function updatepurchaseReturnItems(
           returnQty: returnDetails?.returnQty
             ? parseFloat(returnDetails.returnQty)
             : 0,
+          portionId: returnDetails?.portionId
+            ? parseInt(returnDetails.portionId)
+            : null,
         },
       });
 
@@ -787,6 +806,9 @@ async function updatepurchaseReturnItems(
           price: returnDetails?.price ? parseInt(returnDetails.price) : null,
           invNo: invNo ? invNo : "",
           itemType: returnType ? returnType : undefined,
+          portionId: returnDetails?.portionId
+            ? parseInt(returnDetails.portionId)
+            : null,
         },
       });
 

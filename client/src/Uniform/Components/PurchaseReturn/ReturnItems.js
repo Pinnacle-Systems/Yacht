@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
-import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
+import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService";
 import secureLocalStorage from "react-secure-storage";
 import { IMAGE_UPLOAD_URL } from "../../../Constants";
 import { findFromList } from "../../../Utils/helper";
@@ -33,7 +33,7 @@ const ReturnItems = ({
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
   const { data: fabricList } = useGetFabricMasterQuery({ params });
-  const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
+  const { data: portionList } = useGetPortionMasterQuery({ params });
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
   );
@@ -64,6 +64,7 @@ const ReturnItems = ({
       selected: false,
       returnFabMeter: "",
       returnQty: "",
+      portionId: "",
     };
     setPurchaseReturnItems([...purchaseReturnItems, newRow]);
   };
@@ -159,6 +160,7 @@ const ReturnItems = ({
               selected: false,
               returnFabMeter: "",
               returnQty: "",
+              portionId: "",
             })),
           ];
         }
@@ -184,6 +186,7 @@ const ReturnItems = ({
           selected: false,
           returnFabMeter: "",
           returnQty: "",
+          portionId: "",
         }))
       );
     }
@@ -255,13 +258,13 @@ const ReturnItems = ({
                     Style No
                   </th>
                 )}
-                {returnType === "Fabric" && (
+                {/* {returnType === "Fabric" && (
                   <th
                     className={`w-44 px-4 py-2 text-center font-medium text-[13px] `}
                   >
                     Style
                   </th>
-                )}
+                )} */}
                 {returnType === "Fabric" && (
                   <th
                     className={`w-44 px-4 py-2 text-center font-medium text-[13px]`}
@@ -295,6 +298,13 @@ const ReturnItems = ({
                     className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
                   >
                     Color
+                  </th>
+                )}
+                {returnType === "Fabric" && (
+                  <th
+                    className={`w-14 px-1 py-2 text-center font-medium text-[13px] `}
+                  >
+                    Portion
                   </th>
                 )}
                 {returnType === "Fabric" && (
@@ -447,7 +457,7 @@ const ReturnItems = ({
                         </select>
                       </td>
                     )}
-                    {returnType === "Fabric" && (
+                    {/* {returnType === "Fabric" && (
                       <td className="py-0.5 border border-gray-300 text-[11px] ">
                         <select
                           onKeyDown={(e) => {
@@ -485,7 +495,7 @@ const ReturnItems = ({
                           ))}
                         </select>
                       </td>
-                    )}
+                    )} */}
                     {returnType === "Fabric" && (
                       <td className="py-0.5 border border-gray-300 text-[11px] ">
                         <select
@@ -619,8 +629,7 @@ const ReturnItems = ({
                         </select>
                       </td>
                     )}
-                    {(returnType === "Fabric" ||
-                      returnType === "Accessory") && (
+                    {returnType === "Fabric"  && (
                       <td className="py-0.5 border border-gray-300 text-[11px]">
                         <select
                           id={`qty-input-${index}`}
@@ -644,6 +653,47 @@ const ReturnItems = ({
                           {(id
                             ? colorList?.data
                             : colorList?.data?.filter((item) => item.active)
+                          )?.map((blend) => (
+                            <option value={blend.id} key={blend.id}>
+                              {blend?.name}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    )}
+                    {(returnType === "Fabric" ||
+                      returnType === "Accessory") && (
+                      <td className="py-0.5 border border-gray-300 text-[11px]">
+                        <select
+                          id={`qty-input-${index}`}
+                          onKeyDown={(e) => {
+                            if (e.key === "Delete") {
+                              handleInputChange("", index, "portionId");
+                            }
+                          }}
+                          tabIndex={"0"}
+                          disabled={true}
+                          className="text-left w-full rounded py-1 table-data-input"
+                          value={row.portionId}
+                          onChange={(e) =>
+                            handleInputChange(
+                              e.target.value,
+                              index,
+                              "portionId"
+                            )
+                          }
+                          onBlur={(e) => {
+                            handleInputChange(
+                              e.target.value,
+                              index,
+                              "portionId"
+                            );
+                          }}
+                        >
+                          <option></option>
+                          {(id
+                            ? portionList?.data
+                            : portionList?.data?.filter((item) => item.active)
                           )?.map((blend) => (
                             <option value={blend.id} key={blend.id}>
                               {blend?.name}
@@ -740,7 +790,7 @@ const ReturnItems = ({
                           onBlur={(e) => {
                             handleInputChange(e.target.value, index, "noOfPcs");
                           }}
-                          disabled={id}
+                          disabled={readOnly}
                         />
                       </td>
                     )}

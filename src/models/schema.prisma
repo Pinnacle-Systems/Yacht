@@ -695,31 +695,32 @@ model TaxTemplateDetails {
 }
 
 model Location {
-  id                Int               @id @default(autoincrement())
-  storeName         String
-  isFabric          Boolean           @default(true)
-  isYarn            Boolean           @default(true)
-  isAccessory       Boolean           @default(true)
-  isGarments        Boolean           @default(true)
-  active            Boolean           @default(true)
-  Company           Company           @relation(fields: [companyId], references: [id])
-  companyId         Int
-  Location          Branch            @relation(fields: [locationId], references: [id])
-  BillEntry         BillEntry[]
-  locationId        Int
-  Stock             Stock[]
-  OpeningStock      OpeningStock[]
-  StockAdjustment   StockAdjustment[]
-  SalesEntry        SalesEntry[]
-  StockInward       StockInward[]
-  salesReturns      SalesReturn[]
-  purchaseInwards   PurchaseInward[]
-  materialStocks    MaterialStock[]
-  purchaseReturns   PurchaseReturn[]
-  cuttingOrders     CuttingOrder[]
-  cuttingDeliveries CuttingDelivery[]
-  productionStocks  ProductionStock[]
-  productionEntries ProductionEntry[]
+  id                       Int               @id @default(autoincrement())
+  storeName                String
+  isFabric                 Boolean           @default(true)
+  isYarn                   Boolean           @default(true)
+  isAccessory              Boolean           @default(true)
+  isGarments               Boolean           @default(true)
+  active                   Boolean           @default(true)
+  Company                  Company           @relation(fields: [companyId], references: [id])
+  companyId                Int
+  Location                 Branch            @relation(fields: [locationId], references: [id])
+  BillEntry                BillEntry[]
+  locationId               Int
+  Stock                    Stock[]
+  OpeningStock             OpeningStock[]
+  StockAdjustment          StockAdjustment[]
+  SalesEntry               SalesEntry[]
+  StockInward              StockInward[]
+  salesReturns             SalesReturn[]
+  purchaseInwards          PurchaseInward[]
+  materialStocks           MaterialStock[]
+  purchaseReturns          PurchaseReturn[]
+  cuttingOrders            CuttingOrder[]
+  cuttingDeliveries        CuttingDelivery[]
+  productionStocksStore    ProductionStock[] @relation(name: "store")
+  productionEntries        ProductionEntry[]
+  productionStocksLocation ProductionStock[] @relation(name: "location")
 }
 
 model TermsAndConditions {
@@ -2057,6 +2058,8 @@ model FabricInwardItems {
   materialStocks   MaterialStock[]
   filePath         String?
   invNo            String?
+  Portion          Portion?           @relation(fields: [portionId], references: [id])
+  portionId        Int?
 }
 
 model MaterialStock {
@@ -2171,6 +2174,8 @@ model PurchaseReturnItems {
   invNo            String?
   returnFabMeter   Float?
   returnQty        Float?
+  Portion          Portion?           @relation(fields: [portionId], references: [id])
+  portionId        Int?
 }
 
 model Portion {
@@ -2185,6 +2190,8 @@ model Portion {
   cuttingDeliveryItems CuttingDeliveryItems[]
   productionStocks     ProductionStock[]
   productionEntryItems ProductionEntryItems[]
+  fabricInwardItems    FabricInwardItems[]
+  purchaseReturnItems  PurchaseReturnItems[]
 }
 
 model CuttingOrder {
@@ -2331,8 +2338,10 @@ model ProductionStock {
   updatedById            Int?
   Branch                 Branch?               @relation(fields: [branchId], references: [id])
   branchId               Int?
-  Store                  Location?             @relation(fields: [storeId], references: [id])
+  Store                  Location?             @relation("store", fields: [storeId], references: [id])
   storeId                Int?
+  Location               Location?             @relation("location", fields: [locationId], references: [id])
+  locationId             Int?
   Color                  Color?                @relation(fields: [colorId], references: [id])
   colorId                Int?
   Uom                    UnitOfMeasurement?    @relation(fields: [uomId], references: [id])

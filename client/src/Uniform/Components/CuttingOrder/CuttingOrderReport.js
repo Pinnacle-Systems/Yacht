@@ -176,7 +176,7 @@ const CuttingOrderReport = ({
     <div className="flex flex-col w-full h-[93%] overflow-auto">
       <>
         <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
-          <div className="h-[88%]">
+          <div className="h-[420px]">
             <table className="mt-2">
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">
@@ -362,7 +362,7 @@ const CuttingOrderReport = ({
               )}
             </table>
           </div>
-          <div className="h-[10%]">
+          <div className="">
             <Pagination />
           </div>
         </div>

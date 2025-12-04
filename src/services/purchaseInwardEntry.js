@@ -227,6 +227,7 @@ async function getOne(id) {
           Uom: true,
           Size: true,
           filePath: true,
+          portionId: true,
         },
       },
     },
@@ -376,6 +377,9 @@ async function createPurchaseInwardItems(
             ? inwardDetails?.filePath
             : undefined,
           invNo: invNo ? invNo : undefined,
+          portionId: inwardDetails?.portionId
+            ? parseInt(inwardDetails.portionId)
+            : null,
         },
       });
 
@@ -424,6 +428,9 @@ async function createPurchaseInwardItems(
             : undefined,
           invNo: invNo ? invNo : undefined,
           itemType: inwardType ? inwardType : undefined,
+          portionId: inwardDetails?.portionId
+            ? parseInt(inwardDetails.portionId)
+            : null,
         },
       });
 
@@ -583,6 +590,9 @@ async function updateFabricInwardItems(
             ? inwardDetails?.filePath
             : undefined,
           invNo: invNo ? invNo : undefined,
+          portionId: inwardDetails?.portionId
+            ? parseInt(inwardDetails.portionId)
+            : null,
         },
       });
 
@@ -638,6 +648,9 @@ async function updateFabricInwardItems(
               : undefined,
             invNo: invNo ? invNo : undefined,
             itemType: inwardType ? inwardType : undefined,
+            portionId: inwardDetails?.portionId
+              ? parseInt(inwardDetails.portionId)
+              : null,
           },
         });
       } else {
@@ -687,6 +700,9 @@ async function updateFabricInwardItems(
               : undefined,
             invNo: invNo ? invNo : undefined,
             itemType: inwardType ? inwardType : undefined,
+            portionId: inwardDetails?.portionId
+              ? parseInt(inwardDetails.portionId)
+              : null,
           },
         });
       }
@@ -733,6 +749,9 @@ async function updateFabricInwardItems(
             ? inwardDetails?.filePath
             : undefined,
           invNo: invNo ? invNo : undefined,
+          portionId: inwardDetails?.portionId
+            ? parseInt(inwardDetails.portionId)
+            : null,
         },
       });
 
@@ -781,6 +800,9 @@ async function updateFabricInwardItems(
             : undefined,
           invNo: invNo ? invNo : undefined,
           itemType: inwardType ? inwardType : undefined,
+          portionId: inwardDetails?.portionId
+            ? parseInt(inwardDetails.portionId)
+            : null,
         },
       });
 
@@ -869,7 +891,6 @@ async function getPurchaseDetailStock(req) {
   let data = await prisma.materialStock.groupBy({
     by: [
       // "styleNo",
-      "styleItemId",
       "fabricId",
       "colorId",
       "fabWidth",
@@ -880,6 +901,7 @@ async function getPurchaseDetailStock(req) {
       "uomId",
       "styleId",
       "invNo",
+      "portionId",
     ],
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
@@ -912,6 +934,7 @@ async function getPurchaseDetailStock(req) {
       uomId: d.uomId,
       qty: d._sum.qty,
       styleId: d.styleId,
+      portionId: d.portionId,
     })),
     returnType: purchaseData.inwardType,
     supplierId: purchaseData.supplierId,

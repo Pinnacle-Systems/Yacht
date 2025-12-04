@@ -161,6 +161,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
                 row.accessoryId || "",
                 row.accessoryGroupId || "",
                 row.sizeId || "",
+                row.portionId || ""
             ].join("-");
 
             if (seen.has(key)) return true; // duplicate found
