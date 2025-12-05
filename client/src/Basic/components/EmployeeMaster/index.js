@@ -122,7 +122,7 @@ export default function Form() {
   const [weight, setWeight] = useState("");
   const [payCategory, setPayCategory] = useState("");
   const [idNumber, setIdNumber] = useState("");
-  const [desiginationId, setDesignationId] = useState("");
+  // const [desiginationId, setDesignationId] = useState("");
   const [shiftTemplateId, setShiftTemplateId] = useState("");
   const [salaryMethod, setSalaryMethod] = useState("");
   const [pf, setPf] = useState("");
@@ -254,7 +254,7 @@ export default function Form() {
       setRegNo(data?.regNo || "");
       setReligion(data?.religion);
 
-      setEmail(data?.email || "");
+      setEmail(data?.emailNew || "");
 
       // Employment Info
       setDepartmentId(data?.departmentId || "");
@@ -268,7 +268,7 @@ export default function Form() {
           ? moment.utc(data?.joiningDate).format("YYYY-MM-DD")
           : ""
       );
-      setDesignationId(data?.designationId);
+      // setDesignationId(data?.designationId);
       setLeavingDate(
         data?.leavingDate
           ? moment.utc(data?.leavingDate).format("YYYY-MM-DD")
@@ -411,7 +411,7 @@ export default function Form() {
     employeeCategoryId,
     payCategory,
     idNumber,
-    desiginationId,
+    // desiginationId,
     // shiftTemplateId,
     pf,
     esi,
@@ -524,6 +524,29 @@ export default function Form() {
     return false;
   };
   const saveData = () => {
+    let foundItem;
+    if (id) {
+      foundItem = allData?.data
+        ?.filter((i) => i.id !== id)
+        ?.some(
+          (item) =>
+            item.firstName?.trim().toLowerCase() === firstName?.trim().toLowerCase()
+        );
+    } else {
+      foundItem = allData?.data?.some(
+        (item) => item.firstName?.trim().toLowerCase() === firstName?.trim().toLowerCase()
+      );
+    }
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The Employee Name already exists.",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return false;
+    }
     if (!validateData(data)) {
       Swal.fire({
         icon: "error",
@@ -657,7 +680,7 @@ export default function Form() {
     setLeavingReason("");
     setCanRejoin(false);
     setRejoinReason("");
-    setDesignationId("");
+    // setDesignationId("");
     setEmployeeCategoryId("");
 
     setPayCategory("");
@@ -949,7 +972,7 @@ export default function Form() {
       header: "Employee Name",
       accessor: (item) => item?.firstName || "",
       //   cellClass: () => " text-gray-900",
-      className: "text-gray-900 text-left pl-2 uppercase w-72",
+      className: "text-gray-900 text-left pl-2 uppercase w-64",
     },
     // {
     //   header: "ID Number",
@@ -961,7 +984,7 @@ export default function Form() {
       header: "Department",
       accessor: (item) => item?.department?.name,
       //   cellClass: () => " text-gray-900",
-      className: "text-gray-900  text-left pl-2 uppercase w-72",
+      className: "text-gray-900  text-left pl-2 uppercase w-48",
     },
     // {
     //   header: "Designation",
@@ -973,15 +996,8 @@ export default function Form() {
       header: "Mobile",
       accessor: (item) => item?.permanentMobile,
       //   cellClass: () => " text-gray-900",
-      className: "text-gray-900 pr-2 text-right uppercase w-36",
+      className: "text-gray-900 pr-2 text-right uppercase w-48",
     },
-    {
-      header: "Email",
-      accessor: (item) => item?.email,
-      //   cellClass: () => " text-gray-900",
-      className: "text-gray-900 text-center uppercase w-80",
-    },
-
     // {
     //   header: "",
     //   accessor: (item) => "",
@@ -1545,8 +1561,8 @@ export default function Form() {
                           )}
                         </div>
 
-                        <div className="col-span-1">
-                          <DropdownInput
+                        {/* <div className="col-span-1"> */}
+                        {/* <DropdownInput
                             ref={input1Ref}
                             name=" Designation"
                             value={desiginationId}
@@ -1559,13 +1575,13 @@ export default function Form() {
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
                             onKeyDown={(e) => handleKeyNext(e, input2Ref)}
-                          />
-                          {errors.name && (
-                            <span className="text-red-500 text-xs ml-1">
-                              {errors.name}
-                            </span>
-                          )}
-                        </div>
+                          /> */}
+                        {errors.name && (
+                          <span className="text-red-500 text-xs ml-1">
+                            {errors.name}
+                          </span>
+                        )}
+                        {/* </div> */}
 
                         {/* <div className="col-span-1">
                           <DropdownInput

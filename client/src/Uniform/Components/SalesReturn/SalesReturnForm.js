@@ -22,6 +22,10 @@ import Modal from "../../../UiComponents/Modal";
 import { PDFViewer } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf";
 import PDF from "./PrintFormat/PDF";
+import {
+  useGetSalesEntryQuery,
+  useLazyGetSalesInvDetailQuery,
+} from "../../../redux/uniformService/SalesEntryService";
 export default function SalesReturnForm({
   onClose,
   id,
@@ -37,6 +41,8 @@ export default function SalesReturnForm({
   const [salesReturnItems, setSalesReturnItems] = useState([]);
   const [customerId, setCustomerId] = useState("");
   const [pdfOpen, setPdfOpen] = useState("");
+  const [invNo, setInvNo] = useState("");
+  const [getSalesInvDetail] = useLazyGetSalesInvDetailQuery();
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
@@ -48,6 +54,9 @@ export default function SalesReturnForm({
   });
 
   const { data: partyList } = useGetPartyQuery({ params: { companyId } });
+  const { data: salesList } = useGetSalesEntryQuery({
+    params: { companyId, branchId },
+  });
 
   const storeOptions = locationData
     ? locationData.data.filter(
@@ -55,7 +64,36 @@ export default function SalesReturnForm({
       )
     : [];
 
+  const hasDuplicates = (items) => {
+    const seen = new Set();
+
+    for (const row of items) {
+      // Create a unique key using all fields you want to check
+      const key = [row.styleId || "", row.sizeId || ""].join("-");
+
+      if (seen.has(key)) return true; // duplicate found
+      seen.add(key);
+    }
+    return false;
+  };
+
   const validateData = (data) => {
+    const items = data?.salesReturnItems || [];
+
+    // remove blank rows
+    const filledItems = items.filter(
+      (item) => item.styleId || item.styleItemId || item.fabricId
+    );
+
+    // duplicate check
+    if (hasDuplicates(filledItems)) {
+      toast.info("Duplicate items found!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      return false;
+    }
+
     return (
       data?.storeId &&
       data?.customerId &&
@@ -84,16 +122,12 @@ export default function SalesReturnForm({
     finYearId,
     locationId,
     customerId,
+    invNo,
   };
 
   const syncFormWithDb = useCallback(
     (data) => {
       const today = new Date();
-      if (id) {
-        setReadOnly(true);
-      } else {
-        setReadOnly(false);
-      }
       setDocDate(
         data?.docDate
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
@@ -106,6 +140,7 @@ export default function SalesReturnForm({
       setLocationId(data?.locationId ? data?.locationId : "");
       setStoreId(data?.storeId ? data.storeId : "");
       setCustomerId(data?.customerId ? data?.customerId : "");
+      setInvNo(data?.invNo ? data?.invNo : "");
     },
     [id]
   );
@@ -194,6 +229,73 @@ export default function SalesReturnForm({
     }
   };
 
+  const handleAddRow = async (newValue) => {
+    setInvNo(newValue);
+    if (!storeId) {
+      toast.info("Please Choose Location...!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      return;
+    }
+
+    try {
+      const { data: salesData } = await getSalesInvDetail({
+        params: {
+          invNo: newValue,
+          storeId,
+          branchId,
+        },
+      });
+      setCustomerId(salesData?.data?.customerId);
+      const salesItems = salesData?.data?.SalesEntryItems;
+      if (!salesItems) return;
+      setSalesReturnItems((prev) => {
+        const updated = [...prev];
+        // Find first empty slot index
+        let startIndex = updated.findIndex(
+          (row) =>
+            !row.styleId &&
+            !row.sizeId &&
+            !row.styleNo &&
+            !row.fabricId &&
+            !row.barcode
+        );
+        if (startIndex === -1) startIndex = updated.length;
+
+        // Fill in sizeRows starting at first empty slot
+        salesItems.forEach((row, i) => {
+          if (startIndex + i < updated.length) {
+            updated[startIndex + i] = row;
+          } else {
+            updated.push(row); // append if no empty slot
+          }
+        });
+
+        // Ensure at least 6 rows
+        while (updated.length < 6) {
+          updated.push({
+            styleNo: "",
+            fabricId: "",
+            styleId: "",
+            sizeId: "",
+            qty: "",
+            remarks: "",
+            stkQty: "",
+            barcode: "",
+            styleItemId: "",
+            colorId: "",
+            selected: false,
+          });
+        }
+
+        return updated;
+      });
+    } catch (error) {
+      console.error("Error adding row:", error);
+    }
+  };
+
   return (
     <div className="" onKeyDown={handleKeyDown}>
       <Modal
@@ -267,9 +369,21 @@ export default function SalesReturnForm({
           </div>
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
             <h2 className="font-medium text-slate-700 mb-2">
-              Customer Details
+              Sales Delivery Details
             </h2>
             <div className="grid grid-cols-2 gap-1">
+              <DropdownNew
+                name="Sales Delivery No"
+                dataList={salesList?.data}
+                value={invNo}
+                setValue={handleAddRow}
+                required={true}
+                readOnly={readOnly}
+                placeholder={"Select Sales"}
+                otherField={"docId"}
+                otherValue={"docId"}
+                disabled={id}
+              />
               <DropdownNew
                 name="Customer"
                 dataList={partyList?.data?.filter((item) => item.active)}
@@ -278,7 +392,7 @@ export default function SalesReturnForm({
                   setCustomerId(value);
                 }}
                 required={true}
-                disabled={readOnly}
+                disabled={id}
                 placeholder={"Select Customer"}
                 clear={true}
               />

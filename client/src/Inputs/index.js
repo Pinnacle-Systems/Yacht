@@ -1860,56 +1860,6 @@ export const DropdownNew = ({
   );
 };
 
-export const MiniSelect = ({
-  name,
-  dataList = [],
-  value,
-  setValue,
-  readonly = false,
-  disabled = false,
-  required = false,
-  clear = false,
-  placeholder = "",
-  otherField,
-  otherValue,
-  onKeyDown,
-  autoFocus,
-  className = "",
-}) => {
-  const options = [
-    ...(clear ? [{ value: "", label: placeholder || `Select ${name}` }] : []),
-    ...dataList.map((item) => ({
-      value: otherValue ? item[otherValue] : item.id,
-      label: otherField ? item[otherField] : item.name,
-    })),
-  ];
-
-  return (
-    <select
-      name={name}
-      value={value ?? ""}
-      onChange={(e) => setValue(e.target.value)}
-      onBlur={(e) => setValue(e.target.value)}
-      onKeyDown={onKeyDown}
-      disabled={disabled || readonly}
-      autoFocus={autoFocus}
-      className={`w-full border border-gray-300 text-[11px] px-1 py-[1px]
-        rounded-sm focus:outline-none focus:ring-1 focus:ring-blue-500
-        ${className}`}
-      style={{
-        height: "22px", // 🔥 minimal height
-        lineHeight: "16px",
-      }}
-    >
-      {options.map((opt, i) => (
-        <option key={i} value={opt.value}>
-          {opt.label}
-        </option>
-      ))}
-    </select>
-  );
-};
-
 export const customStyles = {
   control: (base) => ({
     ...base,
@@ -1970,9 +1920,9 @@ export const customStyles = {
   option: (base, state) => ({
     ...base,
     fontSize: "12px",
-     padding: "4px 6px",   // reduce inside padding
-    minHeight: "18px",    // reduce height
-    lineHeight: "18px", 
+    padding: "4px 6px", // reduce inside padding
+    minHeight: "18px", // reduce height
+    lineHeight: "18px",
     backgroundColor: state.isSelected
       ? "#e5e7eb" // gray-200
       : state.isFocused
@@ -1994,63 +1944,6 @@ export const customStyles = {
   }),
 };
 
-export const customStylesNew = {
-  control: (base) => ({
-    ...base,
-    border: "none", // remove border
-    boxShadow: "none", // remove focus ring
-    backgroundColor: "transparent",
-    minHeight: "unset",
-    height: "20px", // match table row height
-    color: "black",
-  }),
-  placeholder: (base) => ({
-    ...base,
-    color: "black", // gray placeholder like Tailwind text-gray-400
-  }),
-  singleValue: (base) => ({
-    ...base,
-    // color: readOnly ? "gray" : "black",
-    fontSize: "12px", // optional: adjust font size
-    // textTransform: "uppercase",
-  }),
-
-  dropdownIndicator: (base) => ({
-    ...base,
-    padding: 2, // smaller padding
-    svg: {
-      width: 14, // icon width
-      height: 14, // icon height
-    },
-    color: "black",
-  }),
-
-  indicatorSeparator: () => ({ display: "none" }), // remove line
-  valueContainer: (base) => ({
-    ...base,
-    padding: "0 2px", // tighten padding
-    color: "black",
-    // textTransform: "uppercase",
-  }),
-  input: (base) => ({
-    ...base,
-    margin: 0,
-    padding: 0,
-    color: "black",
-    // textTransform: "uppercase",
-  }),
-  option: (base, state) => ({
-    ...base,
-  }),
-  menu: (base) => ({
-    ...base,
-    zIndex: 9999, // keep menu on top
-  }),
-  clearIndicator: () => ({
-    display: "none",
-  }),
-};
-
 export default function FxSelect({
   value,
   onChange,
@@ -2059,7 +1952,7 @@ export default function FxSelect({
   readOnly = false,
   onBlur,
   onKeyDown,
-  inputId
+  inputId,
 }) {
   return (
     <Select
@@ -2087,3 +1980,53 @@ export default function FxSelect({
     />
   );
 }
+
+export const CustomDropdown = ({
+  name,
+  value,
+  onChange,
+  options = [],
+  readOnly = false,
+  disabled = false,
+  required = false,
+  placeholder,
+  width = "full",
+  onKeyDown,
+  autoFocus,
+}) => {
+  const selectedOption = options.find((opt) => opt.value === value) || null;
+
+  return (
+    <div className={`mb-2 w-${width}`}>
+      {name && (
+        <label className="block text-xs font-bold text-slate-700 mb-1">
+          {required ? (
+            <>
+              {name} <span className="text-red-500">*</span>
+            </>
+          ) : (
+            name
+          )}
+        </label>
+      )}
+
+      <Select
+        options={options}
+        value={selectedOption}
+        onChange={(selected) => onChange(selected?.value || "")}
+        isDisabled={disabled || readOnly}
+        isSearchable
+        isClearable={false}
+        menuShouldScrollIntoView={false}
+        maxMenuHeight={170}
+        placeholder={placeholder}
+        className="w-full px-1 -ml-1 text-xs rounded-lg
+           focus:outline-none focus:ring-1 focus:ring-blue-500
+           transition-all duration-150 shadow-sm"
+        styles={customSelectStyles}
+        onKeyDown={onKeyDown}
+        autoFocus={autoFocus}
+      />
+    </div>
+  );
+};

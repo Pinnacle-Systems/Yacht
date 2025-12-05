@@ -344,6 +344,7 @@ model Employee {
   productionEntryItems     ProductionEntryItems[]
   sizeDetails              sizeDetails[]
   productionStocks         ProductionStock[]
+  emailNew                 String?
 }
 
 model EmployeeBankDetails {
@@ -1977,6 +1978,7 @@ model SalesReturn {
   Customer         Party?             @relation(fields: [customerId], references: [id])
   customerId       Int?
   salesReturnItems SalesReturnItems[]
+  invNo            String?
 }
 
 model SalesReturnItems {
@@ -1999,6 +2001,7 @@ model SalesReturnItems {
   Color         Color?       @relation(fields: [colorId], references: [id])
   colorId       Int?
   stocks        Stock[]
+  qty           Int?
 }
 
 model PurchaseInward {
@@ -2216,6 +2219,8 @@ model CuttingOrder {
   cuttingOrderItems CuttingOrderItems[]
   SizeTemplate      SizeTemplate?       @relation(fields: [sizeTemplateId], references: [id])
   sizeTemplateId    Int?
+  ProcessGroup      ProcessGroup?       @relation(fields: [processGroupId], references: [id])
+  processGroupId    Int?
 }
 
 model CuttingOrderItems {
@@ -2479,6 +2484,7 @@ model ProcessGroup {
   Company            Company?           @relation(fields: [companyId], references: [id])
   companyId          Int?
   processGroupLists  ProcessGroupList[]
+  cuttingOrders      CuttingOrder[]
 }
 
 model ProcessGroupList {

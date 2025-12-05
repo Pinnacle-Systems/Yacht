@@ -316,6 +316,7 @@ async function create(body) {
     supplierId,
     fromProcessId,
     toProcessId,
+    storeId,
   } = await body;
   console.log(branchId, "branchId");
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -345,22 +346,62 @@ async function create(body) {
       CustomError("Process Already Exist");
     }
   }
-  const currentProcess = await prisma.processGroupList.findFirst({
+  // const currentProcess = await prisma.processGroupList.findFirst({
+  //   where: {
+  //     processId: parseInt(fromProcessId),
+  //   },
+  //   select: {
+  //     seqNo: true,
+  //   },
+  // });
+  let processGroupId;
+  const processGroup = await prisma.cuttingOrder.findFirst({
     where: {
-      processId: parseInt(fromProcessId),
-    },
-    select: {
-      seqNo: true,
+      styleId: parseInt(styleId),
     },
   });
-  let nextProcessId;
-  if (currentProcess) {
-    const nextProcess = await prisma.processGroupList.findFirst({
+  processGroupId = processGroup.processGroupId;
+  let processGroupList;
+  if (processGroupId) {
+    processGroupList = await prisma.processGroupList.findMany({
       where: {
-        seqNo: currentProcess?.seqNo + 1,
+        processGroupId: processGroupId,
       },
     });
+  }
+  const currentProcess = processGroupList.find(
+    (item) => item.processId === parseInt(fromProcessId)
+  );
+  let nextProcessId;
+  let prevProcessId;
+  if (currentProcess) {
+    // const nextProcess = await prisma.processGroupList.findFirst({
+    //   where: {
+    //     seqNo: currentProcess?.seqNo + 1,
+    //   },
+    // });
+    // nextProcessId = nextProcess?.processId;
+    const nextProcess = processGroupList.find(
+      (item) => item.seqNo === currentProcess.seqNo + 1
+    );
     nextProcessId = nextProcess?.processId;
+    const prevProcess = processGroupList.find(
+      (item) => item.seqNo === currentProcess.seqNo - 1
+    );
+    prevProcessId = prevProcess?.processId;
+  }
+  console.log(prevProcessId, "prevProcees");
+  const NoStock = await prisma.productionStock.findFirst({
+    where: {
+      styleId: parseInt(styleId),
+      prevProcessId: prevProcessId,
+    },
+  });
+  if (!NoStock) {
+    return {
+      statusCode: 400,
+      message: "No previous Process Record",
+    };
   }
   if (nextProcessId !== parseInt(toProcessId)) {
     return {
@@ -381,6 +422,7 @@ async function create(body) {
         // sizeTemplateId: parseInt(sizeTemplateId),
         fromProcessId: parseInt(fromProcessId),
         toProcessId: parseInt(toProcessId),
+        storeId: parseInt(storeId),
       },
     });
     await createProductionEntryItems(
@@ -388,7 +430,10 @@ async function create(body) {
       productionEntryItems,
       data,
       userId,
-      branchId
+      branchId,
+      storeId,
+      processGroupList,
+      currentProcess
     );
   });
   return { statusCode: 0, data };
@@ -399,7 +444,10 @@ async function createProductionEntryItems(
   productionEntryItems,
   productionEntry,
   userId,
-  branchId
+  branchId,
+  storeId,
+  processGroupList,
+  currentProcess
 ) {
   const promises = productionEntryItems.map(async (entryDetail, index) => {
     const prevProcessId = productionEntry?.fromProcessId
@@ -409,27 +457,34 @@ async function createProductionEntryItems(
       ? Math.round(parseFloat(entryDetail.orderQty))
       : null;
     let beforeProcessId = null;
-    if (prevProcessId) {
-      const currentProcess = await tx.processGroupList.findFirst({
-        where: {
-          processId: prevProcessId,
-        },
-        select: {
-          seqNo: true,
-        },
-      });
-      if (currentProcess?.seqNo) {
-        const beforeProcess = await tx.processGroupList.findFirst({
-          where: {
-            seqNo: currentProcess.seqNo - 1,
-          },
-          select: {
-            processId: true,
-          },
-        });
-        beforeProcessId = beforeProcess?.processId || null;
-      }
+    // if (prevProcessId) {
+    //   const currentProcess = await tx.processGroupList.findFirst({
+    //     where: {
+    //       processId: prevProcessId,
+    //     },
+    //     select: {
+    //       seqNo: true,
+    //     },
+    //   });
+    //   if (currentProcess?.seqNo) {
+    //     const beforeProcess = await tx.processGroupList.findFirst({
+    //       where: {
+    //         seqNo: currentProcess.seqNo - 1,
+    //       },
+    //       select: {
+    //         processId: true,
+    //       },
+    //     });
+    //     beforeProcessId = beforeProcess?.processId || null;
+    //   }
+    // }
+    if (currentProcess) {
+      const previousProcess = processGroupList.find(
+        (item) => item.seqNo === currentProcess.seqNo - 1
+      );
+      beforeProcessId = previousProcess.processId || null;
     }
+    console.log(beforeProcessId, "beforeProcessId");
     const createdItem = await tx.productionEntryItems.create({
       data: {
         productionEntryId: parseInt(productionEntry.id),
@@ -455,18 +510,7 @@ async function createProductionEntryItems(
           : null,
       },
     });
-    // const sizes = entryDetail.pcsSizeDetails || [];
-    // for (const s of sizes) {
-    //   await tx.pcsSizeDetails.create({
-    //     data: {
-    //       sizeId: s.sizeId ? parseInt(s.sizeId) : null,
-    //       qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
-    //       productionEntryItemsId: createdItem.id,
-    //     },
-    //   });
-    // }
-    // Create corresponding Stock row
-    // for (const s of sizes) {
+
     await tx.productionStock.create({
       data: {
         inOrOut: "productionAdd",
@@ -494,6 +538,7 @@ async function createProductionEntryItems(
         employeeId: entryDetail?.employeeId
           ? parseInt(entryDetail?.employeeId)
           : null,
+        storeId: parseInt(storeId),
       },
     });
     await tx.productionStock.create({
@@ -523,12 +568,11 @@ async function createProductionEntryItems(
         employeeId: entryDetail?.employeeId
           ? parseInt(entryDetail?.employeeId)
           : null,
+        storeId: parseInt(storeId),
       },
     });
-
     return createdItem;
   });
-
   return Promise.all(promises);
 }
 
@@ -554,6 +598,7 @@ async function update(id, body) {
     // sizeTemplateId,
     fromProcessId,
     toProcessId,
+    storeId,
   } = await body;
   let data;
   const dataFound = await prisma.productionEntry.findUnique({
@@ -592,6 +637,7 @@ async function update(id, body) {
         // sizeTemplateId: parseInt(sizeTemplateId),
         fromProcessId: parseInt(fromProcessId),
         toProcessId: parseInt(toProcessId),
+        storeId: parseInt(storeId),
       },
     });
     await updateProductionEntryItems(
@@ -599,7 +645,10 @@ async function update(id, body) {
       productionEntryItems,
       data,
       userId,
-      branchId
+      branchId,
+      storeId,
+      styleId,
+      fromProcessId
     );
   });
   return { statusCode: 0, data };
@@ -863,7 +912,10 @@ async function updateProductionEntryItems(
   productionEntryItems,
   productionEntry,
   userId,
-  branchId
+  branchId,
+  storeId,
+  styleId,
+  fromProcessId
 ) {
   const promises = productionEntryItems.map(async (entryDetail) => {
     const prevProcessId = productionEntry?.fromProcessId
@@ -872,27 +924,51 @@ async function updateProductionEntryItems(
     const orderQty = entryDetail?.orderQty
       ? Math.round(parseFloat(entryDetail.orderQty))
       : null;
-    let beforeProcessId = null;
-    if (prevProcessId) {
-      const currentProcess = await tx.processGroupList.findFirst({
+    // if (prevProcessId) {
+    //   const currentProcess = await tx.processGroupList.findFirst({
+    //     where: {
+    //       processId: prevProcessId,
+    //     },
+    //     select: {
+    //       seqNo: true,
+    //     },
+    //   });
+    //   if (currentProcess?.seqNo) {
+    //     const beforeProcess = await tx.processGroupList.findFirst({
+    //       where: {
+    //         seqNo: currentProcess.seqNo - 1,
+    //       },
+    //       select: {
+    //         processId: true,
+    //       },
+    //     });
+    //     beforeProcessId = beforeProcess?.processId || null;
+    //   }
+    // }
+    let processGroupId;
+    const processGroup = await prisma.cuttingOrder.findFirst({
+      where: {
+        styleId: parseInt(styleId),
+      },
+    });
+    processGroupId = processGroup.processGroupId;
+    let processGroupList;
+    if (processGroupId) {
+      processGroupList = await prisma.processGroupList.findMany({
         where: {
-          processId: prevProcessId,
-        },
-        select: {
-          seqNo: true,
+          processGroupId: processGroupId,
         },
       });
-      if (currentProcess?.seqNo) {
-        const beforeProcess = await tx.processGroupList.findFirst({
-          where: {
-            seqNo: currentProcess.seqNo - 1,
-          },
-          select: {
-            processId: true,
-          },
-        });
-        beforeProcessId = beforeProcess?.processId || null;
-      }
+    }
+    const currentProcess = processGroupList.find(
+      (item) => item.processId === parseInt(fromProcessId)
+    );
+    let beforeProcessId;
+    if (currentProcess) {
+      const prevProcess = processGroupList.find(
+        (item) => item.seqNo === currentProcess.seqNo - 1
+      );
+      beforeProcessId = prevProcess?.processId;
     }
     const commonStockData = {
       fabricId: entryDetail?.fabricId ? parseInt(entryDetail.fabricId) : null,
@@ -911,6 +987,7 @@ async function updateProductionEntryItems(
       employeeId: entryDetail?.employeeId
         ? parseInt(entryDetail?.employeeId)
         : null,
+      storeId: parseInt(storeId),
     };
     if (entryDetail.id) {
       // Update existing productionEntryItem

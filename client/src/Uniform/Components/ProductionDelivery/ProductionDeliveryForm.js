@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../../../Utils/CommonInput";
-import { DropdownInput, DropdownNew } from "../../../Inputs";
+import FxSelect, {
+  CustomDropdown,
+  DropdownInput,
+  DropdownNew,
+} from "../../../Inputs";
 import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
@@ -34,6 +38,8 @@ import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleI
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService.js";
 import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService.js";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService.js";
+import { dropDownListObject } from "../../../Utils/contructObject.js";
+import { useGetBranchQuery } from "../../../redux/services/BranchMasterService.js";
 
 export default function ProductionDeliveryForm({
   onClose,
@@ -54,7 +60,6 @@ export default function ProductionDeliveryForm({
   const [supplierId, setSupplierId] = useState("");
   const [fromProcessId, setFromProcessId] = useState("");
   const [toProcessId, setToProcessId] = useState("");
-  const [stockDetailsFillGrid, setStockDetailsFillGrid] = useState(false);
 
   const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
   const firstUpdate = useRef(true);
@@ -89,12 +94,23 @@ export default function ProductionDeliveryForm({
   const { data: processList } = useGetProcessMasterQuery({
     params: { companyId },
   });
-
+  const { data: branchList } = useGetBranchQuery({ params: { companyId } });
   const {
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetProductionDeliveryByIdQuery(id, { skip: !id });
+
+  const { data: locationData } = useGetLocationMasterQuery({
+    params: { branchId },
+    searchParams: searchValue,
+  });
+
+  const storeOptions = locationData
+    ? locationData.data.filter(
+        (item) => parseInt(item.locationId) === parseInt(locationId)
+      )
+    : [];
 
   const {
     data: allData,
@@ -130,6 +146,8 @@ export default function ProductionDeliveryForm({
       setProductionEntryItems(
         data?.productionEntryItems ? data?.productionEntryItems : []
       );
+      setLocationId(data?.locationId ? data?.locationId : branchId);
+      setStoreId(data?.storeId ? data.storeId : "");
     },
     [id]
   );
@@ -185,7 +203,38 @@ export default function ProductionDeliveryForm({
 
   const isOutside = productionType === "OUTSIDE";
 
+  const hasDuplicates = (items) => {
+    const seen = new Set();
+
+    for (const row of items) {
+      const key = [
+        row.styleId || "",
+        row.portionId || "",
+        row.sizeId || "",
+      ].join("-");
+
+      if (seen.has(key)) {
+        return true; // duplicate found
+      }
+
+      seen.add(key);
+    }
+
+    return false;
+  };
+
   const validateData = (data) => {
+    const items = data?.productionEntryItems || [];
+    const filledItems = items.filter(
+      (item) => item.styleId || item.fabricId || item.portionID
+    );
+    if (hasDuplicates(filledItems)) {
+      toast.info("Duplicate items found!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      return false;
+    }
     return (
       (isOutside ? data?.supplierId : true) &&
       data.styleId &&
@@ -245,6 +294,8 @@ export default function ProductionDeliveryForm({
     supplierId,
     fromProcessId,
     toProcessId,
+    locationId,
+    storeId,
   };
 
   useEffect(() => {
@@ -342,7 +393,13 @@ export default function ProductionDeliveryForm({
   // };
 
   const handleStyleChange = async (newValue) => {
-    console.log(newValue, "newValue");
+    if (!storeId) {
+      toast.info("Please Choose Location...!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      return;
+    }
     if (!newValue) return;
     try {
       if (!fromProcessId || !toProcessId) {
@@ -358,6 +415,7 @@ export default function ProductionDeliveryForm({
           fromProcessId: fromProcessId,
           branchId,
           toProcessId: toProcessId,
+          storeId: storeId,
         },
       });
       if (styleData?.statusCode === 400) {
@@ -442,38 +500,46 @@ export default function ProductionDeliveryForm({
           </div>
 
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">Process Details</h2>
-
-            <div className="grid grid-cols-2 gap-1">
-              <DropdownNew
-                name="From Process"
-                dataList={processList?.data?.filter((item) => !item.isCutting)}
-                value={fromProcessId}
-                setValue={setFromProcessId}
-                readOnly={readOnly}
-                placeholder={"Select Process"}
-                disabled={id}
-                required={true}
-                autoFocus={true}
-              />
-              <DropdownNew
-                name="To Process"
-                dataList={processList?.data?.filter((item) => !item.isCutting)}
-                value={toProcessId}
-                setValue={setToProcessId}
-                readOnly={readOnly}
-                placeholder={"Select Process"}
-                disabled={id}
-                required={true}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-1"></div>
-          </div>
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
             <h2 className="font-medium text-slate-700 mb-2">
-              Production Details
+              Location Details
             </h2>
             <div className="grid grid-cols-2 gap-1">
+              <DropdownInput
+                name="Branch"
+                options={
+                  branchList
+                    ? dropDownListObject(
+                        id
+                          ? branchList?.data
+                          : branchList?.data?.filter((item) => item.active),
+                        "branchName",
+                        "id"
+                      )
+                    : []
+                }
+                value={locationId}
+                setValue={(value) => {
+                  setLocationId(value);
+                  setStoreId("");
+                }}
+                required={true}
+                readOnly={id}
+              />
+              <DropdownInput
+                name="Location"
+                options={dropDownListObject(
+                  id
+                    ? storeOptions
+                    : storeOptions?.filter((item) => item.active),
+                  "storeName",
+                  "id"
+                )}
+                value={storeId}
+                setValue={setStoreId}
+                required={true}
+                readOnly={id}
+                autoFocus={true}
+              />
               <DropdownInput
                 name="Production Type"
                 options={inHouseOutsideTypes}
@@ -498,6 +564,33 @@ export default function ProductionDeliveryForm({
                   clear={true}
                 />
               )}
+            </div>
+          </div>
+
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+            <h2 className="font-medium text-slate-700 mb-2">Process Details</h2>
+
+            <div className="grid grid-cols-2 gap-1">
+              <DropdownNew
+                name="From Process"
+                dataList={processList?.data?.filter((item) => !item.isCutting)}
+                value={fromProcessId}
+                setValue={setFromProcessId}
+                readOnly={readOnly}
+                placeholder={"Select Process"}
+                disabled={id}
+                required={true}
+              />
+              <DropdownNew
+                name="To Process"
+                dataList={processList?.data?.filter((item) => !item.isCutting)}
+                value={toProcessId}
+                setValue={setToProcessId}
+                readOnly={readOnly}
+                placeholder={"Select Process"}
+                disabled={id}
+                required={true}
+              />
               <DropdownNew
                 name="Style No"
                 dataList={

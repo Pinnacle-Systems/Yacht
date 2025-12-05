@@ -9,6 +9,13 @@ async function get(req) {
       companyId: companyId ? parseInt(companyId) : undefined,
       active: active ? Boolean(active) : undefined,
     },
+    include: {
+      ProcessGroupSeq: {
+        select: {
+          name: true,
+        },
+      },
+    },
   });
   return { statusCode: 0, data };
 }

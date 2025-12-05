@@ -11,6 +11,7 @@ import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleI
 import { toast } from "react-toastify";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { VIEW } from "../../../icons";
+import Swal from "sweetalert2";
 
 export default function SalesItems({
   salesReturnItems,
@@ -109,6 +110,7 @@ export default function SalesItems({
               styleItemId: "",
               colorId: "",
               selected: false,
+              qty:""
             })),
           ];
         }
@@ -129,12 +131,27 @@ export default function SalesItems({
           styleItemId: "",
           colorId: "",
           selected: false,
+          qty:""
         }))
       );
     }
   }, [salesReturnItems, setSalesReturnItems]);
 
   const handleInputChange = async (value, index, field) => {
+    if (field === "returnQty") {
+      const row = salesReturnItems[index];
+      const balanceQty = row?.qty || 0;
+
+      if (parseFloat(balanceQty) < parseFloat(value)) {
+        Swal.fire({
+          icon: "warning",
+          title: "Invalid Quantity",
+          text: "Return Qty cannot be more than Sales Qty!",
+          confirmButtonText: "OK",
+        });
+        return;
+      }
+    }
     setSalesReturnItems((prev) => {
       const newItems = structuredClone(prev);
       newItems[index][field] = value;
@@ -188,6 +205,7 @@ export default function SalesItems({
                       styleItemId: "",
                       colorId: "",
                       selected: false,
+                      qty:""
                     }
                   : r
               )
@@ -301,7 +319,7 @@ export default function SalesItems({
   return (
     <>
       <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[450px] overflow-auto">
-        <div className="flex items-center gap-4 sticky top-0 bg-white z-30 mt-2">
+        {/* <div className="flex items-center gap-4 sticky top-0 bg-white z-30 mt-2">
           <ReusableInput
             label="Style No"
             value={styleNo}
@@ -316,7 +334,7 @@ export default function SalesItems({
               }
             }}
           />
-        </div>
+        </div> */}
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">Return Details</h2>
         </div>
@@ -386,7 +404,7 @@ export default function SalesItems({
                 <th
                   className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Stock Qty
+                  Sales Qty
                 </th>
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
@@ -583,21 +601,21 @@ export default function SalesItems({
                     <input
                       type="number"
                       className="text-right rounded py-1 px-1 w-full table-data-input"
-                      value={row?.stkQty}
+                      value={row?.qty}
                       disabled={true}
                       onKeyDown={(e) => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract")
                           e.preventDefault();
                         if (e.key === "Delete") {
-                          handleInputChange("", index, "stkQty");
+                          handleInputChange("", index, "qty");
                         }
                       }}
                       onFocus={(e) => e.target.select()}
                       onChange={(e) =>
-                        handleInputChange(e.target.value, index, "stkQty")
+                        handleInputChange(e.target.value, index, "qty")
                       }
                       onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "stkQty");
+                        handleInputChange(e.target.value, index, "qty");
                       }}
                     />
                   </td>
@@ -733,7 +751,7 @@ export default function SalesItems({
           <div
             style={{
               position: "absolute",
-               top: `${contextMenu.mouseY}px`,
+              top: `${contextMenu.mouseY}px`,
               left: `${contextMenu.mouseX}px`,
               boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
               padding: "8px",

@@ -313,7 +313,7 @@ export default function ProductionDeliveryItem({
                   Portion
                 </th>
                 <th
-                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Size
                 </th>
@@ -333,13 +333,13 @@ export default function ProductionDeliveryItem({
                   Employee
                 </th>
                 <th
-                  className={`w-48 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-40 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Remarks
                 </th>
 
                 <th
-                  className={`w-12 px-3 py-2 text-center font-medium text-[13px] `}
+                  className={`w-10 px-3 py-2 text-center font-medium text-[13px] `}
                 ></th>
               </tr>
             </thead>
@@ -377,7 +377,7 @@ export default function ProductionDeliveryItem({
                           }
                         }}
                         tabIndex={"0"}
-                        disabled={true}
+                        disabled={id}
                         className="text-left w-full rounded py-1 table-data-input"
                         value={row.styleItemId}
                         onChange={(e) =>
@@ -414,7 +414,7 @@ export default function ProductionDeliveryItem({
                           }
                         }}
                         tabIndex={"0"}
-                        disabled={true}
+                        disabled={id}
                         className="text-left w-full rounded py-1 table-data-input"
                         value={row.fabricId}
                         onChange={(e) =>
@@ -459,7 +459,7 @@ export default function ProductionDeliveryItem({
                           }
                         }}
                         tabIndex={"0"}
-                        disabled={true}
+                        disabled={id}
                         className="text-left w-full rounded py-1 table-data-input"
                         value={row.colorId}
                         onChange={(e) =>
@@ -488,7 +488,7 @@ export default function ProductionDeliveryItem({
                           }
                         }}
                         tabIndex={"0"}
-                        disabled={true}
+                        disabled={id}
                         className="text-left w-full rounded py-1 table-data-input"
                         value={row.portionId}
                         onChange={(e) =>
@@ -517,7 +517,7 @@ export default function ProductionDeliveryItem({
                           }
                         }}
                         tabIndex={"0"}
-                        disabled={true}
+                        disabled={id}
                         className="text-left w-full rounded py-1 table-data-input"
                         value={row.sizeId}
                         onChange={(e) =>

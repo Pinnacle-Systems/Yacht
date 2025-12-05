@@ -294,7 +294,7 @@ async function create(req) {
     employeeCategoryId,
     payCategory,
     idNumber,
-    desiginationId,
+    // desiginationId,
     shiftTemplateId,
     pf,
     esi,
@@ -353,7 +353,7 @@ async function create(req) {
       panNo: panNo ? panNo : "",
       esiNo: esiNo ? esiNo : "",
       pfNo: pfNo ? pfNo : "",
-      email: email ? email : "",
+      emailNew: email ? email : "",
       uanNo: uanNo ? uanNo : "",
 
       presentAddress: presentAddressObj.address
@@ -387,9 +387,9 @@ async function create(req) {
       shiftTemplate: shiftTemplateId
         ? { connect: { id: parseInt(shiftTemplateId) } }
         : undefined,
-      designation: desiginationId
-        ? { connect: { id: parseInt(desiginationId) } }
-        : undefined,
+      // designation: desiginationId
+      //   ? { connect: { id: parseInt(desiginationId) } }
+      //   : undefined,
       department: departmentId
         ? { connect: { id: parseInt(departmentId) } }
         : undefined,
@@ -482,7 +482,7 @@ async function update(id, req) {
     employeeCategoryId,
     payCategory,
     idNumber,
-    desiginationId,
+    // desiginationId,
     shiftTemplateId,
     pf,
     esi,
@@ -548,7 +548,7 @@ async function update(id, req) {
       panNo: panNo ? panNo : "",
       esiNo: esiNo ? esiNo : "",
       pfNo: pfNo ? pfNo : "",
-      email: email ? email : "",
+      emailNew: email ? email : "",
       uanNo: uanNo ? uanNo : "",
 
       presentAddress: presentAddressObj.address
@@ -582,9 +582,9 @@ async function update(id, req) {
       shiftTemplate: shiftTemplateId
         ? { connect: { id: parseInt(shiftTemplateId) } }
         : undefined,
-      designation: desiginationId
-        ? { connect: { id: parseInt(desiginationId) } }
-        : undefined,
+      // designation: desiginationId
+      //   ? { connect: { id: parseInt(desiginationId) } }
+      //   : undefined,
       department: departmentId
         ? { connect: { id: parseInt(departmentId) } }
         : undefined,

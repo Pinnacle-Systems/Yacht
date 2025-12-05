@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../../../Utils/CommonInput";
-import { DropdownInput, DropdownNew } from "../../../Inputs";
+import FxSelect, {
+  CustomDropdown,
+  DropdownInput,
+  DropdownNew,
+} from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import {
@@ -29,6 +33,7 @@ import {
 import { event } from "jquery";
 import { useLazyGetSizeTemplateByIdQuery } from "../../../redux/uniformService/SizeTemplateMasterServices.js";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices.js";
+import { useGetProcessGroupMasterQuery } from "../../../redux/uniformService/ProcessGroupMasterServices.js";
 export default function CuttingOrderForm({
   onClose,
   id,
@@ -48,6 +53,7 @@ export default function CuttingOrderForm({
   const firstUpdate = useRef(true);
   const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
   const dispatch = useDispatch();
+  const [processGroupId, setProcessGroupId] = useState("");
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
   const params = {
@@ -80,6 +86,9 @@ export default function CuttingOrderForm({
       branchId,
     },
   });
+  const { data: processGroupList } = useGetProcessGroupMasterQuery({
+    params: { companyId },
+  });
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -99,6 +108,7 @@ export default function CuttingOrderForm({
       setStoreId(data?.storeId ? data.storeId : "");
       setStyleId(data?.styleId ? data?.styleId : "");
       setSizeTemplateId(data?.sizeTemplateId ? data?.sizeTemplateId : "");
+      setProcessGroupId(data?.processGroupId ? data?.processGroupId : "");
     },
     [id]
   );
@@ -187,7 +197,7 @@ export default function CuttingOrderForm({
       return false;
     }
     return (
-      data.styleId &&
+      data.styleId && data.processGroupId &&
       isGridDatasValid(
         data?.cuttingOrderItems?.filter((item) => item.styleId),
         false,
@@ -242,6 +252,7 @@ export default function CuttingOrderForm({
     locationId,
     styleId,
     sizeTemplateId,
+    processGroupId,
   };
 
   useEffect(() => {
@@ -450,6 +461,23 @@ export default function CuttingOrderForm({
                 otherField={"sku"}
                 disabled={id}
                 clear={true}
+              />
+              <CustomDropdown
+                name="Process Group"
+                value={processGroupId}
+                onChange={(val) => setProcessGroupId(val)}
+                options={(processGroupList?.data || [])
+                  .filter((item) => item.active)
+                  .map((item) => ({
+                    label: item?.ProcessGroupSeq?.name,
+                    value: item.id,
+                  }))}
+                readOnly={readOnly}
+                required={true}
+                placeholder="Select Group"
+                onKeyDown={(e) => {
+                  if (e.key === "Delete") setProcessGroupId("");
+                }}
               />
             </div>
           </div>

@@ -183,7 +183,7 @@ async function getOne(id) {
           styleId: true,
           sizeId: true,
           Size: true,
-          stkQty: true,
+          qty: true,
           returnQty: true,
           remarks: true,
           fabricId: true,
@@ -215,6 +215,7 @@ async function create(body) {
     draftSave,
     locationId,
     customerId,
+    invNo
   } = await body;
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate
@@ -242,6 +243,7 @@ async function create(body) {
         docDate: docDate ? new Date(docDate) : null,
         locationId: parseInt(locationId),
         customerId: parseInt(customerId),
+        invNo
       },
     });
     await createSalesReturnItems(
@@ -272,9 +274,9 @@ async function createSalesReturnItems(
         styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
         colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-        stkQty:
-          stockDetail?.stkQty && !isNaN(parseFloat(stockDetail.stkQty))
-            ? Math.round(parseFloat(stockDetail.stkQty))
+        qty:
+          stockDetail?.qty && !isNaN(parseFloat(stockDetail.qty))
+            ? Math.round(parseFloat(stockDetail.qty))
             : null,
         returnQty:
           stockDetail?.returnQty && !isNaN(parseFloat(stockDetail.returnQty))
@@ -325,6 +327,7 @@ async function update(id, body) {
     docDate,
     locationId,
     customerId,
+    invNo
   } = await body;
   let data;
   const dataFound = await prisma.salesReturn.findUnique({
@@ -360,6 +363,7 @@ async function update(id, body) {
         docDate: docDate ? new Date(docDate) : null,
         locationId: parseInt(locationId),
         customerId: parseInt(customerId),
+        invNo
       },
     });
     await updateSalesReturnItems(
@@ -393,9 +397,9 @@ async function updateSalesReturnItems(
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
           colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-          stkQty:
-            stockDetail?.stkQty && !isNaN(parseFloat(stockDetail.stkQty))
-              ? Math.round(parseFloat(stockDetail.stkQty))
+          qty:
+            stockDetail?.qty && !isNaN(parseFloat(stockDetail.qty))
+              ? Math.round(parseFloat(stockDetail.qty))
               : null,
           returnQty:
             stockDetail?.returnQty && !isNaN(parseFloat(stockDetail.returnQty))
@@ -444,9 +448,9 @@ async function updateSalesReturnItems(
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
           colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-          stkQty:
-            stockDetail?.stkQty && !isNaN(parseFloat(stockDetail.stkQty))
-              ? Math.round(parseFloat(stockDetail.stkQty))
+          qty:
+            stockDetail?.qty && !isNaN(parseFloat(stockDetail.qty))
+              ? Math.round(parseFloat(stockDetail.qty))
               : null,
           returnQty:
             stockDetail?.returnQty && !isNaN(parseFloat(stockDetail.returnQty))

@@ -7,7 +7,8 @@ import {
   create as _create,
   update as _update,
   remove as _remove,
-  getSalesReport as _getReport
+  getSalesReport as _getReport,
+  getSalesInvDetail as _getSalesInvDetail,
 } from "../services/salesEntry.service.js";
 
 async function get(req, res, next) {
@@ -126,4 +127,22 @@ async function remove(req, res, next) {
   }
 }
 
-export { get, getOne, getSearch, create, update, remove,getReport };
+async function getSalesInvDetail(req, res, next) {
+  try {
+    res.json(await _getSalesInvDetail(req));
+    console.log(res.statusCode);
+  } catch (err) {
+    console.error(`Error`, err.message);
+  }
+}
+
+export {
+  get,
+  getOne,
+  getSearch,
+  create,
+  update,
+  remove,
+  getReport,
+  getSalesInvDetail,
+};

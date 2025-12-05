@@ -374,7 +374,7 @@ async function update(id, body) {
     contactNumber,
     taxTemplateId,
     destinationId,
-    salesType
+    salesType,
   } = await body;
   let data;
   const dataFound = await prisma.salesEntry.findUnique({
@@ -711,4 +711,48 @@ async function remove(id) {
   return { statusCode: 0, data };
 }
 
-export { get, getOne, getSearch, create, update, remove, getSalesReport };
+async function getSalesInvDetail(req) {
+  const { invNo, storeId, branchId } = req.query;
+  if (!invNo || !storeId || !branchId) {
+    return {
+      statusCode: 400,
+      message: "Please Choose Required Fields",
+    };
+  }
+
+  // 1️⃣ First try fetching by styleNo
+  let data = await prisma.salesEntry.findFirst({
+    where: {
+      docId: invNo,
+      storeId: parseInt(storeId),
+      branchId: parseInt(branchId),
+    },
+    include: {
+      SalesEntryItems: {
+        select: {
+          id: true,
+          salesEntryId: true,
+          barcode: true,
+          styleId: true,
+          sizeId: true,
+          qty: true,
+          remarks: true,
+          styleNo: true,
+          fabricId: true,
+          styleItemId: true,
+          colorId: true,
+        },
+      },
+    },
+  });
+
+  if (!data) return NoRecordFound("Sales Entry");
+  return {
+    statusCode: 0,
+    data: {
+      ...data,
+    },
+  };
+}
+
+export { get, getOne, getSearch, create, update, remove, getSalesReport ,getSalesInvDetail};
