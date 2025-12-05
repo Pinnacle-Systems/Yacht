@@ -197,11 +197,13 @@ const ReturnItems = ({
     setContextMenu(null);
   };
 
-  function imageFormatter(styleId) {
+  function imageFormatter(styleId, portionId) {
     const fabricItems = allData?.data?.flatMap(
       (item) => item.fabricInwardItems || []
     );
-    const item = fabricItems.find((f) => f.styleId === styleId);
+    const item = fabricItems.find(
+      (f) => f.styleId === styleId && f.portionId === portionId
+    );
     const fileName = item?.filePath;
     if (!fileName) return "/no-image.png"; // fallback image if missing
     return `${IMAGE_UPLOAD_URL}${fileName}`;
@@ -537,7 +539,9 @@ const ReturnItems = ({
                           <button
                             className="text-xs"
                             onClick={() => {
-                              setPreviewImage(imageFormatter(row?.styleId));
+                              setPreviewImage(
+                                imageFormatter(row?.styleId, row.portionId)
+                              );
                             }}
                           >
                             {VIEW}
@@ -629,7 +633,7 @@ const ReturnItems = ({
                         </select>
                       </td>
                     )}
-                    {returnType === "Fabric"  && (
+                    {returnType === "Fabric" && (
                       <td className="py-0.5 border border-gray-300 text-[11px]">
                         <select
                           id={`qty-input-${index}`}

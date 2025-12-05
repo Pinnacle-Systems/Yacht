@@ -196,15 +196,20 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
     const seen = new Set();
 
     for (const row of items) {
-      // Create a unique key using all fields you want to check
       const key = [
-        row.sizeId || "",
-        row.portionId || ""
+        row.styleId || "",
+        row.portionId || "",
+        row.accessoryId || "",
+        row.sizeId || ""
       ].join("-");
 
-      if (seen.has(key)) return true; // duplicate found
+      if (seen.has(key)) {
+        return true; // duplicate found
+      }
+
       seen.add(key);
     }
+
     return false;
   };
 

@@ -155,11 +155,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
             // Create a unique key using all fields you want to check
             const key = [
                 row.styleId || "",
-                row.styleItemId || "",
-                row.fabricId || "",
-                row.colorId || "",
                 row.accessoryId || "",
-                row.accessoryGroupId || "",
                 row.sizeId || "",
                 row.portionId || ""
             ].join("-");

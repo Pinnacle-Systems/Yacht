@@ -235,11 +235,13 @@ export default function ProductionDeliveryItem({
     }
   }, [productionEntryItems, setProductionEntryItems]);
 
-  function imageFormatter(styleId) {
+  function imageFormatter(styleId, portionId) {
     const fabricItems = allData?.data?.flatMap(
       (item) => item.fabricInwardItems || []
     );
-    const item = fabricItems.find((f) => f.styleId === styleId);
+    const item = fabricItems.find(
+      (f) => f.styleId === styleId && f.portionId === portionId
+    );
     const fileName = item?.filePath;
     if (!fileName) return "/no-image.png"; // fallback image if missing
     return `${IMAGE_UPLOAD_URL}${fileName}`;
@@ -438,7 +440,9 @@ export default function ProductionDeliveryItem({
                         <button
                           className="text-xs"
                           onClick={() => {
-                            setPreviewImage(imageFormatter(row?.styleId));
+                            setPreviewImage(
+                              imageFormatter(row?.styleId, row.portionId)
+                            );
                           }}
                         >
                           {VIEW}

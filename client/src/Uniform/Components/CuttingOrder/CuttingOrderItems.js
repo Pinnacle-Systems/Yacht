@@ -281,11 +281,13 @@ export default function CuttingOrderItems({
     });
   }, [sizeColumns]);
 
-  function imageFormatter(styleId) {
+  function imageFormatter(styleId, portionId) {
     const fabricItems = allData?.data?.flatMap(
       (item) => item.fabricInwardItems || []
     );
-    const item = fabricItems.find((f) => f.styleId === styleId);
+    const item = fabricItems.find(
+      (f) => f.styleId === styleId && f.portionId === portionId
+    );
     const fileName = item?.filePath;
     if (!fileName) return "/no-image.png"; // fallback image if missing
     return `${IMAGE_UPLOAD_URL}${fileName}`;
@@ -457,7 +459,9 @@ export default function CuttingOrderItems({
                         <button
                           className="text-xs"
                           onClick={() => {
-                            setPreviewImage(imageFormatter(row?.styleId));
+                            setPreviewImage(
+                              imageFormatter(row?.styleId, row.portionId)
+                            );
                             console.log("Clicked");
                           }}
                         >
@@ -615,11 +619,7 @@ export default function CuttingOrderItems({
                         readOnly={id}
                         placeholder=""
                         onBlur={() =>
-                          handleInputChange(
-                            row.uomId,
-                            index,
-                            "uomId"
-                          )
+                          handleInputChange(row.uomId, index, "uomId")
                         }
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
