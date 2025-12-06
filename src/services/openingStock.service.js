@@ -742,20 +742,22 @@ async function createOpeningStockItems(
 ) {
   const newItems = openingStockItems || [];
   for (const item of newItems) {
-    if (!item.styleId || !item.sizeId) continue;
+    if (!item.styleId || !item.sizeId || !item.colorId) continue;
     const exists = await tx.stock.findFirst({
       where: {
         styleId: item.styleId,
         sizeId: item.sizeId,
+        colorId: parseInt(item.colorId),
       },
       include: {
         Style: true,
         Size: true,
+        Color: true,
       },
     });
     if (exists) {
       throw new Error(
-        `Style No - ${exists.Style?.sku}, Size - ${exists.Size?.name} is Already Exists`
+        `Style No - ${exists.Style?.sku}, Size - ${exists.Size?.name},Color - ${exists.Color?.name} is Already Exists`
       );
     }
   }

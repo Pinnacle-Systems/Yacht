@@ -223,7 +223,7 @@ export default function BillItems({
 
   const handleAddRow = async () => {
     if (!validateData()) {
-      toast.info("Please Choose Store...!", {
+      toast.info("Please Choose Location...!", {
         position: "top-center",
       });
     } else {
@@ -362,7 +362,7 @@ export default function BillItems({
             type={"text"}
             required={true}
             readOnly={readOnly}
-            autoFocus={true}
+            // autoFocus={true}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.stopPropagation();

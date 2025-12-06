@@ -82,11 +82,6 @@ export default function OpeningStockForm({
   const syncFormWithDb = useCallback(
     (data) => {
       const today = new Date();
-      if (id) {
-        setReadOnly(true);
-      } else {
-        setReadOnly(false);
-      }
       setDocDate(
         data?.docDate
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
@@ -154,14 +149,47 @@ export default function OpeningStockForm({
         });
         dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
       } else {
-        toast.error(returnData?.message);
+        toast.error(returnData?.message, {
+          autoClose: 2000,
+        });
       }
     } catch (error) {
       console.log("handle");
     }
   };
 
+  const hasDuplicates = (items) => {
+    const seen = new Set();
+
+    for (const row of items) {
+      // Create a unique key using all fields you want to check
+      const key = [row.styleId || "", row.sizeId || "", row.colorId || ""].join(
+        "-"
+      );
+
+      if (seen.has(key)) return true; // duplicate found
+      seen.add(key);
+    }
+    return false;
+  };
+
   const validateData = (data) => {
+    const items = data?.openingStockItems || [];
+
+    // remove blank rows
+    const filledItems = items.filter(
+      (item) => item.styleId || item.styleItemId || item.fabricId
+    );
+
+    // duplicate check
+    if (hasDuplicates(filledItems)) {
+      toast.info("Duplicate items found!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      return false;
+    }
+
     return (
       data?.openingStockItems.length > 0 &&
       data.storeId &&
@@ -191,7 +219,8 @@ export default function OpeningStockForm({
         existingItems.some(
           (existing) =>
             existing.styleNo === newItem.styleNo &&
-            existing.sizeId === newItem.sizeId
+            existing.sizeId === newItem.sizeId &&
+            existing.colorId === newItem.colorId
         )
       );
       if (duplicate) {
@@ -225,7 +254,8 @@ export default function OpeningStockForm({
         existingItems.some(
           (existing) =>
             existing.styleNo === newItem.styleNo &&
-            existing.sizeId === newItem.sizeId
+            existing.sizeId === newItem.sizeId &&
+            existing.colorId === newItem.colorId
         )
       );
       if (duplicate) {

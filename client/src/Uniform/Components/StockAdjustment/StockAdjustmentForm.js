@@ -51,7 +51,38 @@ export default function StockAdjustmentForm({
       )
     : [];
 
+  const hasDuplicates = (items) => {
+    const seen = new Set();
+
+    for (const row of items) {
+      // Create a unique key using all fields you want to check
+      const key = [row.styleId || "", row.sizeId || "", row.colorId || ""].join(
+        "-"
+      );
+
+      if (seen.has(key)) return true; // duplicate found
+      seen.add(key);
+    }
+    return false;
+  };
+
   const validateData = (data) => {
+    const items = data?.stockAdjustmentItems || [];
+
+    // remove blank rows
+    const filledItems = items.filter(
+      (item) => item.styleId || item.styleItemId || item.fabricId
+    );
+
+    // duplicate check
+    if (hasDuplicates(filledItems)) {
+      toast.info("Duplicate items found!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      return false;
+    }
+
     return (
       data?.stockAdjustmentItems.length > 0 &&
       data?.storeId &&
@@ -83,11 +114,6 @@ export default function StockAdjustmentForm({
   const syncFormWithDb = useCallback(
     (data) => {
       const today = new Date();
-      if (id) {
-        setReadOnly(true);
-      } else {
-        setReadOnly(false);
-      }
       setDocDate(
         data?.docDate
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
@@ -99,7 +125,7 @@ export default function StockAdjustmentForm({
       if (data?.docId) {
         setDocId(data?.docId);
       }
-      setLocationId(data?.locationId ? data?.locationId : "");
+      setLocationId(data?.locationId ? data?.locationId : branchId);
       setStoreId(data?.storeId ? data.storeId : "");
     },
     [id]
@@ -259,7 +285,6 @@ export default function StockAdjustmentForm({
                 }}
                 required={true}
                 readOnly={readOnly}
-                autoFocus={true}
               />
               <DropdownInput
                 name="Location"
@@ -274,6 +299,7 @@ export default function StockAdjustmentForm({
                 setValue={setStoreId}
                 required={true}
                 readOnly={readOnly}
+                autoFocus={true}
               />
             </div>
           </div>

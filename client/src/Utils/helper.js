@@ -311,7 +311,7 @@ export function isGridDatasValid(datas, isRequiredAllData, mandatoryFields = [])
   }
   else {
     let gridDatasValid = datas.every(obj =>
-      mandatoryFields.every(field => (obj[field]) && (obj[field] !== "") && (obj[field] !== null) && (parseFloat(obj[field]) !== 0)
+      mandatoryFields.every(field => (obj[field]) && (obj[field] !== "") && (obj[field] !== null)
       ))
     return gridDatasValid;
   }

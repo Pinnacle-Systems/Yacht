@@ -987,7 +987,6 @@ async function updateProductionEntryItems(
       employeeId: entryDetail?.employeeId
         ? parseInt(entryDetail?.employeeId)
         : null,
-      storeId: parseInt(storeId),
     };
     if (entryDetail.id) {
       // Update existing productionEntryItem
@@ -1020,6 +1019,7 @@ async function updateProductionEntryItems(
               : null,
             prevProcessId: prevProcessId,
             updatedById: parseInt(userId),
+            storeId: parseInt(storeId),
           },
         });
       } else {
@@ -1034,6 +1034,7 @@ async function updateProductionEntryItems(
               ? Math.round(parseFloat(entryDetail.issueQty))
               : null,
             prevProcessId: prevProcessId,
+            storeId: parseInt(storeId),
           },
         });
       }
@@ -1047,6 +1048,7 @@ async function updateProductionEntryItems(
               : null,
             prevProcessId: beforeProcessId,
             updatedById: parseInt(userId),
+            storeId: parseInt(storeId),
           },
         });
       } else {
@@ -1061,6 +1063,7 @@ async function updateProductionEntryItems(
               ? -Math.round(parseFloat(entryDetail.issueQty))
               : null,
             prevProcessId: beforeProcessId,
+            storeId: parseInt(storeId),
           },
         });
       }
@@ -1089,6 +1092,7 @@ async function updateProductionEntryItems(
             ? Math.round(parseFloat(entryDetail.issueQty))
             : null,
           prevProcessId: prevProcessId,
+          storeId: parseInt(storeId),
         },
       });
 
@@ -1103,6 +1107,7 @@ async function updateProductionEntryItems(
             ? -Math.round(parseFloat(entryDetail.issueQty))
             : null,
           prevProcessId: beforeProcessId,
+          storeId: parseInt(storeId),
         },
       });
 

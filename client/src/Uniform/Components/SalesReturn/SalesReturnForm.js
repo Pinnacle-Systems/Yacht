@@ -69,7 +69,7 @@ export default function SalesReturnForm({
 
     for (const row of items) {
       // Create a unique key using all fields you want to check
-      const key = [row.styleId || "", row.sizeId || ""].join("-");
+      const key = [row.styleId || "", row.sizeId || "",row.colorId || ""].join("-");
 
       if (seen.has(key)) return true; // duplicate found
       seen.add(key);
@@ -137,7 +137,7 @@ export default function SalesReturnForm({
       if (data?.docId) {
         setDocId(data?.docId);
       }
-      setLocationId(data?.locationId ? data?.locationId : "");
+      setLocationId(data?.locationId ? data?.locationId : branchId);
       setStoreId(data?.storeId ? data.storeId : "");
       setCustomerId(data?.customerId ? data?.customerId : "");
       setInvNo(data?.invNo ? data?.invNo : "");
@@ -353,7 +353,6 @@ export default function SalesReturnForm({
                 disabled={readOnly}
                 otherField={"branchName"}
                 placeholder={"Select Branch"}
-                autoFocus={true}
               />
               <DropdownNew
                 name="Location"
@@ -361,9 +360,10 @@ export default function SalesReturnForm({
                 value={storeId}
                 setValue={setStoreId}
                 required={true}
-                disabled={readOnly}
+                disabled={id}
                 otherField={"storeName"}
                 placeholder={"Select Location"}
+                autoFocus={true}
               />
             </div>
           </div>
