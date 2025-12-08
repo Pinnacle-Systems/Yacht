@@ -196,23 +196,28 @@ export default function CuttingOrderForm({
       });
       return false;
     }
-    return (
-      data.styleId &&
-      data.processGroupId &&
-      isGridDatasValid(
-        data?.cuttingOrderItems?.filter((item) => item.styleId),
-        false,
-        ["orderQty", "fabricId", "styleItemId"]
-      ) &&
-      data?.cuttingOrderItems.length > 0
-    );
+    if (
+      !(
+        data.styleId &&
+        data.processGroupId &&
+        isGridDatasValid(
+          data?.cuttingOrderItems?.filter((item) => item.styleId),
+          false,
+          ["orderQty", "fabricId", "styleItemId"]
+        ) &&
+        data?.cuttingOrderItems.length > 0
+      )
+    ) {
+      toast.info("Please fill all required fields...!", {
+        position: "top-center",
+      });
+      return false;
+    }
+    return true;
   };
 
   const saveData = (nextProcess) => {
     if (!validateData(data)) {
-      toast.info("Please fill all required fields...!", {
-        position: "top-center",
-      });
       return;
     }
     if (!window.confirm("Are you sure save the details ...?")) {
@@ -256,20 +261,20 @@ export default function CuttingOrderForm({
     processGroupId,
   };
 
-  useEffect(() => {
-    if (firstUpdate.current) {
-      firstUpdate.current = false;
-      return; // skip on first render
-    }
-    // Call the function whenever styleId changes
-    if (id) return;
+  // useEffect(() => {
+  //   if (firstUpdate.current) {
+  //     firstUpdate.current = false;
+  //     return; // skip on first render
+  //   }
+  //   // Call the function whenever styleId changes
+  //   if (id) return;
 
-    // 🚫 block when readOnly mode
-    if (readOnly) return;
-    handleAddRow();
-  }, [styleId, id, readOnly]);
+  //   // 🚫 block when readOnly mode
+  //   if (readOnly) return;
+  //   handleAddRow();
+  // }, [styleId, id, readOnly]);
 
-  const handleAddRow = async () => {
+  const handleAddRow = async (newValue) => {
     if (!storeId) {
       toast.info("Please Choose Location...!", {
         position: "top-center",
@@ -277,12 +282,14 @@ export default function CuttingOrderForm({
       });
       return;
     }
+    if (!newValue) return;
+    setStyleId(newValue);
     try {
-      const style = styleList?.data.find((item) => item.id === styleId);
+      const style = styleList?.data.find((item) => item.id === newValue);
       setSizeTemplateId(style?.sizeTemplateId);
       const { data: fabricData } = await getFabricDetail({
         params: {
-          styleId: styleId,
+          styleId: newValue,
           storeId,
           branchId,
         },
@@ -455,7 +462,7 @@ export default function CuttingOrderForm({
                     : styleList?.data?.filter((item) => item.active)
                 }
                 value={styleId}
-                setValue={setStyleId}
+                setValue={handleAddRow}
                 required={true}
                 readOnly={readOnly}
                 placeholder={"Select Style"}

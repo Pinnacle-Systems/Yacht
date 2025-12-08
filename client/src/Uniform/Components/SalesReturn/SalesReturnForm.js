@@ -69,7 +69,9 @@ export default function SalesReturnForm({
 
     for (const row of items) {
       // Create a unique key using all fields you want to check
-      const key = [row.styleId || "", row.sizeId || "",row.colorId || ""].join("-");
+      const key = [row.styleId || "", row.sizeId || "", row.colorId || ""].join(
+        "-"
+      );
 
       if (seen.has(key)) return true; // duplicate found
       seen.add(key);
@@ -93,17 +95,25 @@ export default function SalesReturnForm({
       });
       return false;
     }
-
-    return (
-      data?.storeId &&
-      data?.customerId &&
-      data?.salesReturnItems.length > 0 &&
-      isGridDatasValid(
-        data?.salesReturnItems.filter((item) => item?.styleId),
-        false,
-        ["returnQty"]
+    if (
+      !(
+        data?.storeId &&
+        data?.customerId &&
+        data?.salesReturnItems.length > 0 &&
+        isGridDatasValid(
+          data?.salesReturnItems.filter((item) => item?.styleId),
+          false,
+          ["returnQty"]
+        )
       )
-    );
+    ) {
+      toast.info("Please fill all required fields...!", {
+        position: "top-center",
+      });
+      return false;
+    }
+
+    return true;
   };
 
   const {
@@ -192,9 +202,6 @@ export default function SalesReturnForm({
 
   const saveData = (nextProcess) => {
     if (!validateData(data)) {
-      toast.info("Please fill all required fields...!", {
-        position: "top-center",
-      });
       return;
     }
     if (!window.confirm("Are you sure save the details ...?")) {

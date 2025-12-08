@@ -237,7 +237,7 @@ async function getOne(id) {
           styleId: item.styleId,
           fabWidth: item.fabWidth,
           invNo: item.invNo,
-          portionId: item.portionId
+          portionId: item.portionId,
         },
         _sum: {
           fabMeter: true,
@@ -299,6 +299,7 @@ async function create(body) {
     supplierId,
     sizeTemplateId,
     storeId,
+    employeeId,
   } = await body;
   console.log(branchId, "branchId");
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -352,6 +353,7 @@ async function create(body) {
         supplierId: supplierId ? parseInt(supplierId) : null,
         fromProcessId: fromProcessId ? parseInt(fromProcessId) : null,
         sizeTemplateId: parseInt(sizeTemplateId),
+        employeeId: employeeId ? parseInt(employeeId) : null,
       },
     });
     await createCuttingDeliveryItems(
@@ -422,7 +424,7 @@ async function createCuttingDeliveryItems(
           sizeId: s.sizeId ? parseInt(s.sizeId) : null,
           qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
           cuttingDeliveryItemsId: createdItem.id,
-          employeeId: s.employeeId ? parseInt(s.employeeId) : null,
+          // employeeId: s.employeeId ? parseInt(s.employeeId) : null,
         },
       });
     }
@@ -459,7 +461,7 @@ async function createCuttingDeliveryItems(
           remarks: deliveryDetail?.remarks ?? undefined,
           sizeId: s?.sizeId ? parseInt(s.sizeId) : null,
           qty: s?.qty ? Math.round(parseFloat(s.qty)) : null,
-          employeeId: s.employeeId ? parseInt(s.employeeId) : null,
+          // employeeId: s.employeeId ? parseInt(s.employeeId) : null,
           orderQty,
           uomId: deliveryDetail?.uomId ? parseInt(deliveryDetail.uomId) : null,
           prevProcessId: fromProcessId ? parseInt(fromProcessId) : null,
@@ -533,6 +535,7 @@ async function update(id, body) {
     supplierId,
     sizeTemplateId,
     storeId,
+    employeeId,
   } = await body;
   let data;
   const dataFound = await prisma.cuttingDelivery.findUnique({
@@ -572,6 +575,7 @@ async function update(id, body) {
         supplierId: supplierId ? parseInt(supplierId) : null,
         fromProcessId: fromProcessId ? parseInt(fromProcessId) : null,
         sizeTemplateId: parseInt(sizeTemplateId),
+        employeeId: employeeId ? parseInt(employeeId) : null,
       },
     });
     await updateCuttingDeliveryItems(
@@ -658,7 +662,7 @@ async function updateCuttingDeliveryItems(
             where: { id: existingMap.get(s.sizeId).id },
             data: {
               qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
-              employeeId: s.employeeId ? parseInt(s.employeeId) : null,
+              // employeeId: s.employeeId ? parseInt(s.employeeId) : null,
             },
           });
 
@@ -670,7 +674,7 @@ async function updateCuttingDeliveryItems(
               sizeId: parseInt(s.sizeId),
               qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
               cuttingDeliveryItemsId: updatedItem.id,
-              employeeId: s.employeeId ? parseInt(s.employeeId) : null,
+              // employeeId: s.employeeId ? parseInt(s.employeeId) : null,
             },
           });
         }
@@ -734,7 +738,7 @@ async function updateCuttingDeliveryItems(
               // size-level fields
               sizeId,
               qty,
-              employeeId: s.employeeId ? parseInt(s.employeeId) : null,
+              // employeeId: s.employeeId ? parseInt(s.employeeId) : null,
               prevProcessId: fromProcessId ? parseInt(fromProcessId) : null,
               storeId: parseInt(storeId),
             },
@@ -781,7 +785,7 @@ async function updateCuttingDeliveryItems(
               // size-level
               sizeId,
               qty,
-              employeeId: s.employeeId ? parseInt(s.employeeId) : null,
+              // employeeId: s.employeeId ? parseInt(s.employeeId) : null,
               storeId: parseInt(storeId),
             },
           });
@@ -930,7 +934,7 @@ async function updateCuttingDeliveryItems(
             sizeId: parseInt(s.sizeId),
             qty: s.qty ? Math.round(parseFloat(s.qty)) : null,
             cuttingDeliveryItems: createdItem.id,
-            employeeId: s.employeeId ? parseInt(s.employeeId) : null,
+            // employeeId: s.employeeId ? parseInt(s.employeeId) : null,
           },
         });
       }
@@ -972,7 +976,7 @@ async function updateCuttingDeliveryItems(
               ? parseInt(deliveryDetail.uomId)
               : null,
             prevProcessId: fromProcessId ? parseInt(fromProcessId) : null,
-            employeeId: s.employeeId ? parseInt(s.employeeId) : null,
+            // employeeId: s.employeeId ? parseInt(s.employeeId) : null,
             storeId: parseInt(storeId),
           },
         });

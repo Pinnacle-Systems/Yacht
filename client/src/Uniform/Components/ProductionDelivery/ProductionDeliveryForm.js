@@ -235,22 +235,27 @@ export default function ProductionDeliveryForm({
       });
       return false;
     }
-    return (
-      (isOutside ? data?.supplierId : true) &&
-      data.styleId &&
-      data?.productionType &&
-      data?.fromProcessId &&
-      data?.toProcessId &&
-      isGridDatasValid(data?.productionEntryItems, false, ["issueQty"]) &&
-      data?.productionEntryItems?.length > 0
-    );
+    if (
+      !(
+        (isOutside ? data?.supplierId : true) &&
+        data.styleId &&
+        data?.productionType &&
+        data?.fromProcessId &&
+        data?.toProcessId &&
+        isGridDatasValid(data?.productionEntryItems, false, ["issueQty"]) &&
+        data?.productionEntryItems?.length > 0
+      )
+    ) {
+      toast.info("Please fill all required fields...!", {
+        position: "top-center",
+      });
+      return false;
+    }
+    return true;
   };
 
   const saveData = (nextProcess) => {
     if (!validateData(data)) {
-      toast.info("Please fill all required fields...!", {
-        position: "top-center",
-      });
       return;
     }
     if (!window.confirm("Are you sure save the details ...?")) {

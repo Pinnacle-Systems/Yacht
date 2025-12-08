@@ -110,7 +110,7 @@ export default function SalesItems({
               styleItemId: "",
               colorId: "",
               selected: false,
-              qty:""
+              qty: "",
             })),
           ];
         }
@@ -131,7 +131,7 @@ export default function SalesItems({
           styleItemId: "",
           colorId: "",
           selected: false,
-          qty:""
+          qty: "",
         }))
       );
     }
@@ -205,7 +205,7 @@ export default function SalesItems({
                       styleItemId: "",
                       colorId: "",
                       selected: false,
-                      qty:""
+                      qty: "",
                     }
                   : r
               )
@@ -576,7 +576,7 @@ export default function SalesItems({
                         }
                       }}
                       tabIndex={"0"}
-                      disabled={readOnly}
+                      disabled={true}
                       className="text-left w-full rounded py-1 table-data-input"
                       value={row.colorId}
                       onChange={(e) =>

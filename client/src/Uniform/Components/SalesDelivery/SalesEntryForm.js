@@ -69,7 +69,9 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
 
     for (const row of items) {
       // Create a unique key using all fields you want to check
-      const key = [row.styleId || "", row.sizeId || "",row.colorId || ""].join("-");
+      const key = [row.styleId || "", row.sizeId || "", row.colorId || ""].join(
+        "-"
+      );
 
       if (seen.has(key)) return true; // duplicate found
       seen.add(key);
@@ -93,18 +95,26 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
       });
       return false;
     }
-    return (
-      data?.storeId &&
-      data?.customerId &&
-      data?.destinationId &&
-      data?.salesType &&
-      data?.salesEntryItems.length > 0 &&
-      isGridDatasValid(
-        data?.salesEntryItems.filter((item) => item?.styleId),
-        false,
-        ["qty"]
+    if (
+      !(
+        data?.storeId &&
+        data?.customerId &&
+        data?.destinationId &&
+        data?.salesType &&
+        data?.salesEntryItems.length > 0 &&
+        isGridDatasValid(
+          data?.salesEntryItems.filter((item) => item?.styleId),
+          false,
+          ["qty"]
+        )
       )
-    );
+    ) {
+      toast.info("Please fill all required fields...!", {
+        position: "top-center",
+      });
+      return false;
+    }
+    return true;
   };
 
   const {
@@ -209,9 +219,6 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
 
   const saveData = (nextProcess) => {
     if (!validateData(data)) {
-      toast.info("Please fill all required fields...!", {
-        position: "top-center",
-      });
       return;
     }
     if (!window.confirm("Are you sure save the details ...?")) {

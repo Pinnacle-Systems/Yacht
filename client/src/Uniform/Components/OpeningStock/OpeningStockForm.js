@@ -93,7 +93,7 @@ export default function OpeningStockForm({
       if (data?.docId) {
         setDocId(data?.docId);
       }
-      setLocationId(data?.locationId ? data?.locationId : "");
+      setLocationId(data?.locationId ? data?.locationId : branchId);
       setStoreId(data?.storeId ? data.storeId : "");
       setNotes(data?.notes ? data?.notes : "");
       setTerm(data?.term ? data?.term : "");
@@ -190,22 +190,27 @@ export default function OpeningStockForm({
       return false;
     }
 
-    return (
-      data?.openingStockItems.length > 0 &&
-      data.storeId &&
-      isGridDatasValid(
-        data?.openingStockItems.filter((item) => item.styleId),
-        false,
-        ["qty"]
+    if (
+      !(
+        data?.openingStockItems.length > 0 &&
+        data.storeId &&
+        isGridDatasValid(
+          data?.openingStockItems.filter((item) => item.styleId),
+          false,
+          ["qty"]
+        )
       )
-    );
+    ) {
+      toast.info("Please fill all required fields...!", {
+        position: "top-center",
+      });
+      return false;
+    }
+    return true;
   };
 
   const saveData = (nextProcess) => {
     if (!validateData(data)) {
-      toast.info("Please fill all required fields...!", {
-        position: "top-center",
-      });
       return;
     }
     if (!window.confirm("Are you sure save the details ...?")) {
@@ -349,7 +354,6 @@ export default function OpeningStockForm({
                 }}
                 required={true}
                 readOnly={readOnly}
-                autoFocus={true}
               />
               <DropdownInput
                 name="Location"
@@ -364,6 +368,7 @@ export default function OpeningStockForm({
                 setValue={setStoreId}
                 required={true}
                 readOnly={readOnly}
+                autoFocus={true}
               />
             </div>
           </div>

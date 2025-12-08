@@ -34,6 +34,12 @@ import { useGetPartyQuery } from "../../../redux/services/PartyMasterService.js"
 import { useLazyGetFabricDetailQuery } from "../../../redux/services/MaterialStockService.js";
 import { useLazyGetSizeTemplateByIdQuery } from "../../../redux/uniformService/SizeTemplateMasterServices.js";
 import { useGetProcessMasterQuery } from "../../../redux/uniformService/ProcessMasterService.js";
+import { useGetEmployeeQuery } from "../../../redux/services/EmployeeMasterService.js";
+import PDF from "./PrintFormat-CD/PDF.jsx";
+import Modal from "../../../UiComponents/Modal/index.js";
+import { PDFViewer } from "@react-pdf/renderer";
+import tw from "../../../Utils/tailwind-react-pdf.js";
+
 export default function CuttingDeliveryForm({
   onClose,
   id,
@@ -53,10 +59,11 @@ export default function CuttingDeliveryForm({
   const [productionType, setProductionType] = useState("");
   const [fromProcessId, setFromProcessId] = useState("");
   const [supplierId, setSupplierId] = useState("");
-
+  const [employeeId, setEmployeeId] = useState("");
   const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
   const firstUpdate = useRef(true);
   const [sizeTemplateId, setSizeTemplateId] = useState("");
+  const [pdfOpen, setPdfOpen] = useState("");
 
   const dispatch = useDispatch();
 
@@ -81,6 +88,11 @@ export default function CuttingDeliveryForm({
     searchParams: searchValue,
   });
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
+  const { data: employeeList } = useGetEmployeeQuery({
+    params: {
+      companyId,
+    },
+  });
 
   const {
     data: singleData,
@@ -124,6 +136,7 @@ export default function CuttingDeliveryForm({
       setSupplierId(data?.supplierId ? data?.supplierId : "");
       setFromProcessId(data?.fromProcessId ? data?.fromProcessId : "");
       setSizeTemplateId(data?.sizeTemplateId ? data?.sizeTemplateId : "");
+      setEmployeeId(data?.employeeId ? data?.employeeId : "");
     },
     [id]
   );
@@ -214,6 +227,7 @@ export default function CuttingDeliveryForm({
     sizeTemplateId,
     storeId,
     locationId,
+    employeeId,
   };
 
   const hasDuplicates = (items) => {
@@ -241,26 +255,32 @@ export default function CuttingDeliveryForm({
       });
       return false;
     }
-    return (
-      (isOutside ? data?.supplierId : true) &&
-      data.styleId &&
-      data?.cuttingNo &&
-      data?.productionType &&
-      data?.fromProcessId &&
-      isGridDatasValid(
-        data?.cuttingDeliveryItems?.filter((item) => item.styleId),
-        false,
-        ["issueQty", "usedMeter", "styleId"]
-      ) &&
-      data?.cuttingDeliveryItems.length > 0
-    );
+    if (
+      !(
+        (isOutside ? data?.supplierId : true) &&
+        data.styleId &&
+        data?.cuttingNo &&
+        data?.productionType &&
+        data?.employeeId &&
+        data?.fromProcessId &&
+        isGridDatasValid(
+          data?.cuttingDeliveryItems?.filter((item) => item.styleId),
+          false,
+          ["issueQty", "usedMeter", "styleId"]
+        ) &&
+        data?.cuttingDeliveryItems.length > 0
+      )
+    ) {
+      toast.info("Please fill all required fields...!", {
+        position: "top-center",
+      });
+      return false;
+    }
+    return true;
   };
 
   const saveData = (nextProcess) => {
     if (!validateData(data)) {
-      toast.info("Please fill all required fields...!", {
-        position: "top-center",
-      });
       return;
     }
     if (!window.confirm("Are you sure save the details ...?")) {
@@ -290,20 +310,20 @@ export default function CuttingDeliveryForm({
     }
   };
 
-  useEffect(() => {
-    if (firstUpdate.current) {
-      firstUpdate.current = false;
-      return; // skip on first render
-    }
-    // Call the function whenever styleId changes
-    if (id) return;
+  // useEffect(() => {
+  //   if (firstUpdate.current) {
+  //     firstUpdate.current = false;
+  //     return; // skip on first render
+  //   }
+  //   // Call the function whenever styleId changes
+  //   if (id) return;
 
-    // 🚫 block when readOnly mode
-    if (readOnly) return;
-    handleAddRow();
-  }, [styleId, id, readOnly]);
+  //   // 🚫 block when readOnly mode
+  //   if (readOnly) return;
+  //   handleAddRow();
+  // }, [styleId, id, readOnly]);
 
-  const handleAddRow = async () => {
+  const handleAddRow = async (newValue) => {
     if (!storeId) {
       toast.info("Please Choose Location...!", {
         position: "top-center",
@@ -311,12 +331,14 @@ export default function CuttingDeliveryForm({
       });
       return;
     }
+    if (!newValue) return;
+    setStyleId(newValue);
     try {
-      const style = styleList?.data.find((item) => item.id === styleId);
+      const style = styleList?.data.find((item) => item.id === newValue);
       setSizeTemplateId(style?.sizeTemplateId);
       const { data: orderData } = await getOrderDetail({
         params: {
-          styleId: styleId,
+          styleId: newValue,
           branchId,
           storeId: storeId,
         },
@@ -324,7 +346,7 @@ export default function CuttingDeliveryForm({
       const fabricItems = orderData?.data?.cuttingOrderItems;
       const { data: fabricData } = await getFabricDetail({
         params: {
-          styleId: styleId,
+          styleId: newValue,
           branchId,
           storeId: storeId,
         },
@@ -405,7 +427,7 @@ export default function CuttingDeliveryForm({
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
           <h1 className="text-xl font-bold text-gray-800">
-            Cutting Production Details
+            Cutting Production Entry
           </h1>
           <button
             onClick={onClose}
@@ -527,7 +549,7 @@ export default function CuttingDeliveryForm({
                     : styleList?.data?.filter((item) => item.active)
                 }
                 value={styleId}
-                setValue={setStyleId}
+                setValue={handleAddRow}
                 required={true}
                 readOnly={readOnly}
                 placeholder={"Select Style"}
@@ -542,6 +564,17 @@ export default function CuttingDeliveryForm({
                 type={"text"}
                 required={true}
                 readOnly={true}
+              />
+              <DropdownNew
+                name="Employee"
+                dataList={employeeList?.data}
+                value={employeeId}
+                setValue={setEmployeeId}
+                readOnly={readOnly}
+                placeholder={"Select Employee"}
+                disabled={readOnly}
+                required={true}
+                otherField={"firstName"}
               />
             </div>
             <div className="grid grid-cols-2 gap-1"></div>
@@ -600,6 +633,9 @@ export default function CuttingDeliveryForm({
             <button
               className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
               disabled={!id}
+              onClick={() => {
+                setPdfOpen(true);
+              }}
             >
               <FiPrinter className="w-4 h-4 mr-2" />
               Print
@@ -607,6 +643,15 @@ export default function CuttingDeliveryForm({
           </div>
         </div>
       </div>
+      <Modal
+        isOpen={pdfOpen}
+        onClose={() => setPdfOpen(false)}
+        widthClass={"w-[90%] h-[90%]"}
+      >
+        <PDFViewer style={tw("w-full h-full")}>
+          <PDF singleData={singleData?.data} />
+        </PDFViewer>
+      </Modal>
     </div>
   );
 }

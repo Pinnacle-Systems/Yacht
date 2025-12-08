@@ -83,15 +83,24 @@ export default function StockAdjustmentForm({
       return false;
     }
 
-    return (
-      data?.stockAdjustmentItems.length > 0 &&
-      data?.storeId &&
-      isGridDatasValid(
-        data?.stockAdjustmentItems.filter((item) => item.styleId),
-        false,
-        ["adjType", "adjQty"]
+    if (
+      !(
+        data?.stockAdjustmentItems.length > 0 &&
+        data?.storeId &&
+        isGridDatasValid(
+          data?.stockAdjustmentItems.filter((item) => item.styleId),
+          false,
+          ["adjType", "adjQty"]
+        )
       )
-    );
+    ) {
+      toast.info("Please fill all required fields...!", {
+        position: "top-center",
+      });
+      return false;
+    }
+
+    return true;
   };
 
   const {
@@ -178,9 +187,6 @@ export default function StockAdjustmentForm({
 
   const saveData = (nextProcess) => {
     if (!validateData(data)) {
-      toast.info("Please fill all required fields...!", {
-        position: "top-center",
-      });
       return;
     }
     if (!window.confirm("Are you sure save the details ...?")) {

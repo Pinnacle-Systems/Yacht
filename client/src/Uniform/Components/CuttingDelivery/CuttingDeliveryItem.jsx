@@ -146,7 +146,7 @@ export default function CuttingDeliveryItem({
         const columns = sizeData.data.SizeTemplateList.map((s) => ({
             sizeId: s.sizeId,
             sizeName: s.Size?.name,
-            employeeId: ""
+            // employeeId: ""
         }));
 
         // if (id) {
@@ -175,7 +175,7 @@ export default function CuttingDeliveryItem({
         return sizeColumns.map((col) => ({
             sizeId: col.sizeId,
             qty: "",
-            employeeId: ""
+            // employeeId: ""
         }));
     };
 
@@ -367,11 +367,11 @@ export default function CuttingDeliveryItem({
                                 >
                                     Consumtion
                                 </th>
-                                <th
+                                {/* <th
                                     className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Employee
-                                </th>
+                                </th> */}
                                 <th
                                     className={`w-48 px-1 py-2 text-center font-medium text-[13px] `}
                                 >
@@ -757,7 +757,7 @@ export default function CuttingDeliveryItem({
                                                 ? (row.usedMeter / row.issueQty).toFixed(2)
                                                 : ""}
                                         </td>
-                                        <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 px-1 text-center">
+                                        {/* <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 px-1 text-center">
                                             <button
                                                 className="text-xs"
                                                 onClick={() => {
@@ -769,7 +769,7 @@ export default function CuttingDeliveryItem({
                                             >
                                                 {VIEW}
                                             </button>
-                                        </td>
+                                        </td> */}
                                         <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                                             <input
                                                 onKeyDown={(e) => {
@@ -822,7 +822,7 @@ export default function CuttingDeliveryItem({
                             <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                                 <td
                                     className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                                    colSpan={11 + sizeColumns.length}
+                                    colSpan={10 + sizeColumns.length}
                                 >
                                     Total
                                 </td>

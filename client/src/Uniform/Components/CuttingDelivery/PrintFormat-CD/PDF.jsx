@@ -1,5 +1,5 @@
-import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
-import React, { useEffect } from "react";
+import { Document, StyleSheet, Text, View } from "@react-pdf/renderer";
+import  { useEffect } from "react";
 import PageWrapper from "../../../../Utils/PageWrapper";
 import tw from "../../../../Utils/tailwind-react-pdf";
 import { findFromList } from "../../../../Utils/helper";
@@ -113,7 +113,7 @@ const PDF = ({ singleData }) => {
                     <Header styles={styles} />
                 </View>
                 <View style={styles.container}>
-                    <Text style={tw("mx-auto   text-base text-black mt-1")}>Sales Return</Text>
+                    <Text style={tw("mx-auto   text-base text-black mt-1")}>Cutting Production</Text>
 
                     {/* non grid  */}
 
@@ -337,7 +337,7 @@ const PDF = ({ singleData }) => {
                             {[
                                 { label: "S.No", flex: 0.5 },
                                 { label: "Style No", flex: 1 },
-                                // { label: "Barcode ", flex: 1 },
+                                { label: "Barcode ", flex: 1 },
                                 { label: "Style", flex: 2 },
                                 { label: "Fabric", flex: 2 },
                                 { label: "Size", flex: 0.8 },
@@ -389,9 +389,9 @@ const PDF = ({ singleData }) => {
                                     <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
                                         {item?.styleNo || ""}
                                     </Text>
-                                    {/* <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
+                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
                                         {item?.barcode || ""}
-                                    </Text> */}
+                                    </Text>
                                     <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
                                         {item?.StyleItem?.name || ""}
                                     </Text>
@@ -425,7 +425,7 @@ const PDF = ({ singleData }) => {
                                 style={[
                                     styles.headerCell,
                                     {
-                                        flex: 6.0,
+                                        flex: 6.8,
                                         fontSize: 9,
                                         textAlign: "right",
                                     },

@@ -186,9 +186,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
             });
             return false;
         }
-
-        return (
-            data?.storeId &&
+        if (!(data?.storeId &&
             data?.supplierId &&
             data?.invNo &&
             filledItems.length > 0 &&
@@ -202,8 +200,14 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
                     filledItems,
                     false,
                     ["returnQty"]
-                ))
-        );
+                )))) {
+
+            toast.info("Please fill all required fields...!", {
+                position: "top-center",
+            });
+            return false;
+        }
+        return true;
     };
 
     // const validateData = (data) => {
@@ -215,9 +219,6 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
 
     const saveData = (nextProcess) => {
         if (!validateData(data)) {
-            toast.info("Please fill all required fields...!", {
-                position: "top-center",
-            });
             return;
         }
         if (!window.confirm("Are you sure save the details ...?")) {

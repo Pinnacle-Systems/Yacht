@@ -229,17 +229,18 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
       });
       return false;
     }
-    return (
-      data?.storeId && data?.supplierId && data?.invNo && (isFabric ? isGridDatasValid(data?.fabricInwardItems.filter((item) => item?.styleId), false, ["fabricId", "fabWidth", "fabMeter", "portionId"]) : isGridDatasValid(data?.fabricInwardItems.filter((item) => item?.accessoryId), false, ["sizeId", "qty"]))
-      && data?.fabricInwardItems.length > 0
-    )
+    if (!(data?.storeId && data?.supplierId && data?.invNo && (isFabric ? isGridDatasValid(data?.fabricInwardItems.filter((item) => item?.styleId), false, ["fabricId", "fabWidth", "fabMeter", "portionId"]) : isGridDatasValid(data?.fabricInwardItems.filter((item) => item?.accessoryId), false, ["sizeId", "qty"]))
+      && data?.fabricInwardItems.length > 0)) {
+      toast.info("Please fill all required fields...!", {
+        position: "top-center",
+      });
+      return false
+    }
+    return true;
   };
 
   const saveData = (nextProcess) => {
     if (!validateData(data)) {
-      toast.info("Please fill all required fields...!", {
-        position: "top-center",
-      });
       return;
     }
     if (!window.confirm("Are you sure save the details ...?")) {
