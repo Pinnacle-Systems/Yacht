@@ -197,6 +197,7 @@ async function getOne(id) {
           fabricId: true,
           styleItemId: true,
           colorId: true,
+          portionId: true,
         },
       },
     },
@@ -282,6 +283,7 @@ async function create(body) {
       docDate,
       draftSave,
       locationId,
+      styleId,
     } = body;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate
@@ -307,6 +309,7 @@ async function create(body) {
           createdById: parseInt(userId),
           docDate: docDate ? new Date(docDate) : null,
           locationId: parseInt(locationId),
+          styleId: parseInt(styleId),
         },
       });
       await createStockInwardItems(
@@ -328,7 +331,7 @@ async function create(body) {
 }
 
 async function update(id, body) {
-  const { branchId, stockInwardItems, userId, storeId, docDate, locationId } =
+  const { branchId, stockInwardItems, userId, storeId, docDate, locationId,styleId } =
     await body;
   let data;
   const dataFound = await prisma.stockInward.findUnique({
@@ -362,6 +365,7 @@ async function update(id, body) {
         branchId: parseInt(branchId),
         docDate: docDate ? new Date(docDate) : null,
         locationId: parseInt(locationId),
+        styleId: parseInt(styleId),
       },
     });
     await updateStockInwardItems(
@@ -376,6 +380,150 @@ async function update(id, body) {
   return { statusCode: 0, data };
 }
 
+// async function updateStockInwardItems(
+//   tx,
+//   stockInwardItems,
+//   stockInward,
+//   userId,
+//   branchId,
+//   storeId
+// ) {
+//   const newItems = stockInwardItems || [];
+//   const createdOrUpdatedRows = [];
+//   const promises = stockInwardItems.map(async (stockDetail) => {
+//     const qty = stockDetail?.qty
+//       ? Math.round(parseFloat(stockDetail.qty))
+//       : null;
+
+//     if (stockDetail.id) {
+//       const updatedItem = await tx.stockInwardItems.update({
+//         where: { id: parseInt(stockDetail.id) },
+//         data: {
+//           stockInwardId: parseInt(stockInward.id),
+//           styleNo: stockDetail?.styleNo ?? undefined,
+//           fabricId: stockDetail?.fabricId
+//             ? parseInt(stockDetail.fabricId)
+//             : null,
+//           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+//           styleItemId: stockDetail?.styleItemId
+//             ? parseInt(stockDetail.styleItemId)
+//             : null,
+//           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+//           colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+//           qty,
+//           remarks: stockDetail?.remarks ?? undefined,
+//           portionId: stockDetail?.portionId
+//             ? parseInt(stockDetail.portionId)
+//             : null,
+//         },
+//       });
+
+//       // Update or create Stock row
+//       const existingStock = await tx.stock.findFirst({
+//         where: { stockInwardItemsId: updatedItem.id },
+//       });
+
+//       if (existingStock) {
+//         await tx.stock.update({
+//           where: { id: existingStock.id },
+//           data: {
+//             styleId: stockDetail?.styleId
+//               ? parseInt(stockDetail.styleId)
+//               : null,
+//             styleItemId: stockDetail?.styleItemId
+//               ? parseInt(stockDetail.styleItemId)
+//               : null,
+//             sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+//             colorId: stockDetail?.colorId
+//               ? parseInt(stockDetail.colorId)
+//               : null,
+//             qty,
+//             updatedById: parseInt(userId),
+//             fabricId: stockDetail?.fabricId
+//               ? parseInt(stockDetail.fabricId)
+//               : null,
+//             styleNo: stockDetail?.styleNo ?? undefined,
+//           },
+//         });
+//       } else {
+//         await tx.stock.create({
+//           data: {
+//             inOrOut: "ReadyGoodsInward",
+//             createdById: parseInt(userId),
+//             branchId: parseInt(branchId),
+//             storeId: parseInt(storeId),
+//             styleId: stockDetail?.styleId
+//               ? parseInt(stockDetail.styleId)
+//               : null,
+//             sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+//             colorId: stockDetail?.colorId
+//               ? parseInt(stockDetail.colorId)
+//               : null,
+//             qty,
+//             stockInwardItemsId: updatedItem.id,
+//             fabricId: stockDetail?.fabricId
+//               ? parseInt(stockDetail.fabricId)
+//               : null,
+//             styleItemId: stockDetail?.styleItemId
+//               ? parseInt(stockDetail.styleItemId)
+//               : null,
+//             styleNo: stockDetail?.styleNo ?? undefined,
+//           },
+//         });
+//       }
+
+//       return updatedItem;
+//     } else {
+//       const createdItem = await tx.stockInwardItems.create({
+//         data: {
+//           stockInwardId: parseInt(stockInward.id),
+//           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+//           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+//           colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+//           qty,
+//           remarks: stockDetail?.remarks ?? undefined,
+//           fabricId: stockDetail?.fabricId
+//             ? parseInt(stockDetail.fabricId)
+//             : null,
+//           styleNo: stockDetail?.styleNo ?? undefined,
+//           styleItemId: stockDetail?.styleItemId
+//             ? parseInt(stockDetail.styleItemId)
+//             : null,
+//           portionId: stockDetail?.portionId
+//             ? parseInt(stockDetail.portionId)
+//             : null,
+//         },
+//       });
+
+//       // Create Stock row
+//       await tx.stock.create({
+//         data: {
+//           inOrOut: "ReadyGoodsInward",
+//           createdById: parseInt(userId),
+//           branchId: parseInt(branchId),
+//           storeId: parseInt(storeId),
+//           fabricId: stockDetail?.fabricId
+//             ? parseInt(stockDetail.fabricId)
+//             : null,
+//           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+//           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+//           colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+//           qty,
+//           stockInwardItemsId: createdItem.id,
+//           styleNo: stockDetail?.styleNo ?? undefined,
+//           styleItemId: stockDetail?.styleItemId
+//             ? parseInt(stockDetail.styleItemId)
+//             : null,
+//         },
+//       });
+
+//       return createdItem;
+//     }
+//   });
+
+//   return Promise.all(promises);
+// }
+
 async function updateStockInwardItems(
   tx,
   stockInwardItems,
@@ -384,160 +532,223 @@ async function updateStockInwardItems(
   branchId,
   storeId
 ) {
-  // 1️⃣ Get the last barcode number in this branch
-  const lastItem = await tx.stockInwardItems.findFirst({
-    orderBy: { id: "desc" }, // or order by createdAt
-  });
+  const newItems = stockInwardItems || [];
+  const processedRows = [];
 
-  let lastNumber = 0;
-  if (lastItem?.barcode) {
-    lastNumber = parseInt(lastItem.barcode.replace(/^YS0*/, "")) || 0;
-  }
+  // 1️⃣ UPDATE/CREATE stockInwardItems rows
+  for (const item of newItems) {
+    const qty = item?.qty ? Math.round(parseFloat(item.qty)) : 0;
 
-  let newIndex = 0; // Counter for new rows in this update
+    let saved;
 
-  const promises = stockInwardItems.map(async (stockDetail) => {
-    const qty = stockDetail?.qty
-      ? Math.round(parseFloat(stockDetail.qty))
-      : null;
-
-    let barcode;
-    if (stockDetail.id) {
-      // Keep existing barcode for existing items
-      barcode = stockDetail.barcode;
+    if (item.id) {
+      // update
+      saved = await tx.stockInwardItems.update({
+        where: { id: parseInt(item.id) },
+        data: {
+          stockInwardId: parseInt(stockInward.id),
+          styleNo: item.styleNo || null,
+          fabricId: item.fabricId ? parseInt(item.fabricId) : null,
+          styleId: item.styleId ? parseInt(item.styleId) : null,
+          styleItemId: item.styleItemId ? parseInt(item.styleItemId) : null,
+          sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+          colorId: item.colorId ? parseInt(item.colorId) : null,
+          qty,
+          remarks: item?.remarks || null,
+          portionId: item.portionId ? parseInt(item.portionId) : null,
+        },
+      });
     } else {
-      // Generate new barcode sequentially for new items
-      newIndex++;
-      barcode = `YS${String(lastNumber + newIndex).padStart(4, "0")}`;
+      // create
+      saved = await tx.stockInwardItems.create({
+        data: {
+          stockInwardId: parseInt(stockInward.id),
+          styleNo: item.styleNo || null,
+          fabricId: item.fabricId ? parseInt(item.fabricId) : null,
+          styleId: item.styleId ? parseInt(item.styleId) : null,
+          styleItemId: item.styleItemId ? parseInt(item.styleItemId) : null,
+          sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+          colorId: item.colorId ? parseInt(item.colorId) : null,
+          qty,
+          remarks: item?.remarks || null,
+          portionId: item.portionId ? parseInt(item.portionId) : null,
+        },
+      });
     }
 
-    if (stockDetail.id) {
-      const updatedItem = await tx.stockInwardItems.update({
-        where: { id: parseInt(stockDetail.id) },
-        data: {
-          stockInwardId: parseInt(stockInward.id),
-          styleNo: stockDetail?.styleNo ?? undefined,
-          fabricId: stockDetail?.fabricId
-            ? parseInt(stockDetail.fabricId)
-            : null,
-          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
-          styleItemId: stockDetail?.styleItemId
-            ? parseInt(stockDetail.styleItemId)
-            : null,
-          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-          qty,
-          remarks: stockDetail?.remarks ?? undefined,
-          barcode,
-        },
-      });
+    processedRows.push(saved);
+  }
 
-      // Update or create Stock row
-      const existingStock = await tx.stock.findFirst({
-        where: { stockInwardItemsId: updatedItem.id },
-      });
+  // 2️⃣ GROUP BY styleId + sizeId + colorId
+  const grouped = {};
+  for (const row of processedRows) {
+    if (!row.styleId || !row.sizeId || !row.colorId) continue;
 
-      if (existingStock) {
-        await tx.stock.update({
-          where: { id: existingStock.id },
-          data: {
-            styleId: stockDetail?.styleId
-              ? parseInt(stockDetail.styleId)
-              : null,
-            styleItemId: stockDetail?.styleItemId
-              ? parseInt(stockDetail.styleItemId)
-              : null,
-            sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-            colorId: stockDetail?.colorId
-              ? parseInt(stockDetail.colorId)
-              : null,
-            qty,
-            barCode: barcode,
-            updatedById: parseInt(userId),
-            fabricId: stockDetail?.fabricId
-              ? parseInt(stockDetail.fabricId)
-              : null,
-            styleNo: stockDetail?.styleNo ?? undefined,
-          },
-        });
-      } else {
-        await tx.stock.create({
-          data: {
-            inOrOut: "ReadyGoodsInward",
-            createdById: parseInt(userId),
-            branchId: parseInt(branchId),
-            storeId: parseInt(storeId),
-            styleId: stockDetail?.styleId
-              ? parseInt(stockDetail.styleId)
-              : null,
-            sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-            colorId: stockDetail?.colorId
-              ? parseInt(stockDetail.colorId)
-              : null,
-            qty,
-            stockInwardItemsId: updatedItem.id,
-            barCode: barcode,
-            fabricId: stockDetail?.fabricId
-              ? parseInt(stockDetail.fabricId)
-              : null,
-            styleItemId: stockDetail?.styleItemId
-              ? parseInt(stockDetail.styleItemId)
-              : null,
-            styleNo: stockDetail?.styleNo ?? undefined,
-          },
-        });
-      }
+    const key = `${row.styleId}-${row.sizeId}-${row.colorId}`;
+    if (!grouped[key]) grouped[key] = [];
 
-      return updatedItem;
+    grouped[key].push(row);
+  }
+
+  // 3️⃣ STOCK UPDATE OR CREATE
+  for (const key of Object.keys(grouped)) {
+    const rows = grouped[key];
+    const [styleId, sizeId, colorId] = key.split("-").map(Number);
+
+    // qty logic
+    let finalQty = 0;
+
+    if (rows.length === 2) {
+      const total = rows.reduce((a, b) => a + Number(b.qty), 0);
+      finalQty = total / 2; // TOP + BOTTOM logic
     } else {
-      const createdItem = await tx.stockInwardItems.create({
+      finalQty = Number(rows[0].qty);
+    }
+
+    // pick any one row to link with stock
+    const linked = rows[0];
+
+    // Check existing stock
+    const existingStock = await tx.stock.findFirst({
+      where: {
+        styleId,
+        sizeId,
+        colorId,
+        stockInwardItemsId: linked.id,
+      },
+    });
+
+    if (existingStock) {
+      // 4️⃣ UPDATE stock
+      await tx.stock.update({
+        where: { id: existingStock.id },
         data: {
-          stockInwardId: parseInt(stockInward.id),
-          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
-          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-          qty,
-          remarks: stockDetail?.remarks ?? undefined,
-          barcode,
-          fabricId: stockDetail?.fabricId
-            ? parseInt(stockDetail.fabricId)
-            : null,
-          styleNo: stockDetail?.styleNo ?? undefined,
-          styleItemId: stockDetail?.styleItemId
-            ? parseInt(stockDetail.styleItemId)
-            : null,
+          qty: finalQty,
+          updatedById: parseInt(userId),
+          fabricId: linked.fabricId,
+          styleItemId: linked.styleItemId,
+          styleNo: linked.styleNo,
         },
       });
-
-      // Create Stock row
+    } else {
+      // 5️⃣ CREATE stock
       await tx.stock.create({
         data: {
           inOrOut: "ReadyGoodsInward",
           createdById: parseInt(userId),
           branchId: parseInt(branchId),
           storeId: parseInt(storeId),
-          fabricId: stockDetail?.fabricId
-            ? parseInt(stockDetail.fabricId)
-            : null,
-          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
-          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-          qty,
-          stockInwardItemsId: createdItem.id,
-          barCode: barcode,
-          styleNo: stockDetail?.styleNo ?? undefined,
-          styleItemId: stockDetail?.styleItemId
-            ? parseInt(stockDetail.styleItemId)
-            : null,
+          styleId,
+          sizeId,
+          colorId,
+          qty: finalQty,
+          stockInwardItemsId: linked.id,
+          fabricId: linked.fabricId,
+          styleItemId: linked.styleItemId,
+          styleNo: linked.styleNo,
         },
       });
-
-      return createdItem;
     }
-  });
+  }
 
-  return Promise.all(promises);
+  return processedRows;
 }
+
+// async function createStockInwardItems(
+//   tx,
+//   stockInwardItems,
+//   stockInward,
+//   userId,
+//   branchId,
+//   storeId
+// ) {
+//   const newItems = stockInwardItems || [];
+
+//   for (const item of newItems) {
+//     if (!item.styleId || !item.sizeId) continue;
+//     const exists = await tx.stock.findFirst({
+//       where: {
+//         styleId: item.styleId,
+//         sizeId: item.sizeId,
+//       },
+//       include: {
+//         Style: true,
+//         Size: true,
+//       },
+//     });
+//     if (exists) {
+//       throw new Error(
+//         `Style No - ${exists.Style?.sku}, Size - ${exists.Size?.name} is Already Exists`
+//       );
+//     }
+//   }
+//   // 1️⃣ Get the highest existing barcode number for this branch
+//   const lastItem = await tx.stockInwardItems.findFirst({
+//     orderBy: { id: "desc" }, // or order by createdAt
+//   });
+
+//   let lastNumber = 0;
+//   if (lastItem?.barcode) {
+//     // Extract the numeric part from barcode like 'YS0005' -> 5
+//     lastNumber = parseInt(lastItem.barcode.replace(/^YS0*/, "")) || 0;
+//   }
+//   // 2️⃣ Map through all items and create them with sequential barcodes
+//   const promises = stockInwardItems.map(async (stockDetail, index) => {
+//     const qty = stockDetail?.qty
+//       ? Math.round(parseFloat(stockDetail.qty))
+//       : null;
+
+//     // Generate sequential barcode
+//     const barcode = stockDetail?.barcode
+//       ? stockDetail.barcode
+//       : `YS${String(lastNumber + index + 1).padStart(4, "0")}`;
+
+//     const createdItem = await tx.stockInwardItems.create({
+//       data: {
+//         stockInwardId: parseInt(stockInward.id),
+//         styleNo: stockDetail?.styleNo ?? undefined,
+//         fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
+//         styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+//         styleItemId: stockDetail?.styleItemId
+//           ? parseInt(stockDetail.styleItemId)
+//           : null,
+//         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+//         colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+//         qty,
+//         remarks: stockDetail?.remarks ?? undefined,
+//         barcode,
+//         portionId: stockDetail?.portionId
+//           ? parseInt(stockDetail.portionId)
+//           : null,
+//       },
+//     });
+
+//     // Create corresponding Stock row
+//     await tx.stock.create({
+//       data: {
+//         inOrOut: "ReadyGoodsInward",
+//         createdById: parseInt(userId),
+//         branchId: parseInt(branchId),
+//         storeId: parseInt(storeId),
+//         styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+//         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+//         colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+//         fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
+//         qty,
+//         stockInwardItemsId: createdItem.id,
+//         barCode: barcode,
+//         styleNo: stockDetail?.styleNo ?? undefined,
+//         styleItemId: stockDetail?.styleItemId
+//           ? parseInt(stockDetail.styleItemId)
+//           : null,
+//       },
+//     });
+
+//     return createdItem;
+//   });
+
+//   return Promise.all(promises);
+// }
 
 async function createStockInwardItems(
   tx,
@@ -549,87 +760,100 @@ async function createStockInwardItems(
 ) {
   const newItems = stockInwardItems || [];
 
+  // Group by styleId + sizeId
+  const grouped = {};
   for (const item of newItems) {
-    if (!item.styleId || !item.sizeId) continue;
+    if (!item.styleId || !item.sizeId || !item.colorId) continue;
+
+    const key = `${item.styleId}-${item.sizeId}-${item.colorId}`;
+
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(item);
+  }
+
+  // 1️⃣ PRE-CHECK if stock exists already
+  for (const key of Object.keys(grouped)) {
+    const [styleId, sizeId, colorId] = key.split("-").map(Number);
+
     const exists = await tx.stock.findFirst({
-      where: {
-        styleId: item.styleId,
-        sizeId: item.sizeId,
-      },
-      include: {
-        Style: true,
-        Size: true,
-      },
+      where: { styleId, sizeId, colorId },
+      include: { Style: true, Size: true },
     });
     if (exists) {
       throw new Error(
-        `Style No - ${exists.Style?.sku}, Size - ${exists.Size?.name} is Already Exists`
+        `Style No - ${exists.Style?.sku}, Size - ${exists.Size?.name} already exists`
       );
     }
   }
-  // 1️⃣ Get the highest existing barcode number for this branch
-  const lastItem = await tx.stockInwardItems.findFirst({
-    orderBy: { id: "desc" }, // or order by createdAt
-  });
 
-  let lastNumber = 0;
-  if (lastItem?.barcode) {
-    // Extract the numeric part from barcode like 'YS0005' -> 5
-    lastNumber = parseInt(lastItem.barcode.replace(/^YS0*/, "")) || 0;
-  }
-  // 2️⃣ Map through all items and create them with sequential barcodes
-  const promises = stockInwardItems.map(async (stockDetail, index) => {
-    const qty = stockDetail?.qty
-      ? Math.round(parseFloat(stockDetail.qty))
-      : null;
+  const createdStockInwardItems = [];
 
-    // Generate sequential barcode
-    const barcode = stockDetail?.barcode
-      ? stockDetail.barcode
-      : `YS${String(lastNumber + index + 1).padStart(4, "0")}`;
+  // 2️⃣ CREATE all stockInwardItems rows
+  for (const item of newItems) {
+    const qty = item?.qty ? Math.round(parseFloat(item.qty)) : 0;
 
-    const createdItem = await tx.stockInwardItems.create({
+    const created = await tx.stockInwardItems.create({
       data: {
         stockInwardId: parseInt(stockInward.id),
-        styleNo: stockDetail?.styleNo ?? undefined,
-        fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
-        styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
-        styleItemId: stockDetail?.styleItemId
-          ? parseInt(stockDetail.styleItemId)
-          : null,
-        sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-        colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+        styleNo: item?.styleNo || null,
+        fabricId: item?.fabricId ? parseInt(item.fabricId) : null,
+        styleId: parseInt(item.styleId),
+        styleItemId: parseInt(item.styleItemId),
+        sizeId: parseInt(item.sizeId),
+        colorId: parseInt(item.colorId),
         qty,
-        remarks: stockDetail?.remarks ?? undefined,
-        barcode,
+        remarks: item?.remarks || null,
+        portionId: item?.portionId ? parseInt(item.portionId) : null,
       },
     });
 
-    // Create corresponding Stock row
+    createdStockInwardItems.push(created);
+  }
+
+  // 3️⃣ CREATE STOCK rows — ONE per styleId + sizeId
+  for (const key of Object.keys(grouped)) {
+    const rows = grouped[key];
+    const [styleId, sizeId, colorId] = key.split("-").map(Number);
+
+    const matchedCreated = createdStockInwardItems.filter(
+      (x) =>
+        x.styleId === styleId && x.sizeId === sizeId && x.colorId === colorId
+    );
+
+    if (matchedCreated.length === 0) {
+      throw new Error("Related stockInwardItems not found for stock creation");
+    }
+
+    let finalQty = 0;
+
+    if (rows.length === 2) {
+      // TOP + BOTTOM (portionId 1 & 2)
+      const total = rows.reduce((a, b) => a + Number(b.qty), 0);
+      finalQty = total / 2; // divide by 2
+    } else {
+      // single row case
+      finalQty = Number(rows[0].qty);
+    }
+
+    // Insert stock row
     await tx.stock.create({
       data: {
         inOrOut: "ReadyGoodsInward",
         createdById: parseInt(userId),
         branchId: parseInt(branchId),
         storeId: parseInt(storeId),
-        styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
-        sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-        colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-        fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
-        qty,
-        stockInwardItemsId: createdItem.id,
-        barCode: barcode,
-        styleNo: stockDetail?.styleNo ?? undefined,
-        styleItemId: stockDetail?.styleItemId
-          ? parseInt(stockDetail.styleItemId)
-          : null,
+        styleId,
+        sizeId,
+        colorId: parseInt(rows[0].colorId),
+        fabricId: parseInt(rows[0].fabricId),
+        qty: finalQty,
+        styleNo: rows[0].styleNo,
+        styleItemId: parseInt(rows[0].styleItemId),
+        stockInwardItemsId: matchedCreated ? matchedCreated[0].id : null,
       },
     });
-
-    return createdItem;
-  });
-
-  return Promise.all(promises);
+  }
+  return createdStockInwardItems;
 }
 
 function findRemovedItems(dataFound, stockInwardItems) {

@@ -197,7 +197,8 @@ export default function CuttingOrderForm({
       return false;
     }
     return (
-      data.styleId && data.processGroupId &&
+      data.styleId &&
+      data.processGroupId &&
       isGridDatasValid(
         data?.cuttingOrderItems?.filter((item) => item.styleId),
         false,

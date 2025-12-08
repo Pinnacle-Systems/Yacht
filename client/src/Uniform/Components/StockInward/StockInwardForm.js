@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../../../Utils/CommonInput";
-import { DropdownInput } from "../../../Inputs";
+import { DropdownInput, DropdownNew } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
@@ -19,6 +19,8 @@ import {
 } from "../../../redux/uniformService/StockInwardService.js";
 import BarCodePrintFormat from "../OpeningStock/BarcodePrintFormat.jsx";
 import StockInwardItems from "./StockInwardItems.js";
+import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService.js";
+import { useLazyGetProductionDetailQuery } from "../../../redux/uniformService/ProductionStockServices.js";
 
 export default function StockInwardForm({
   onClose,
@@ -37,10 +39,16 @@ export default function StockInwardForm({
   const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
   const [barCodePerPage, setBarCodePerPage] = useState(10);
   const [barcodeItems, setBarcodeItems] = useState([]);
+  const [styleId, setStyleId] = useState("");
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
-
+  const params = {
+    branchId,
+    companyId,
+  };
+  const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
+  const [getProductionStyleDetail] = useLazyGetProductionDetailQuery();
 
   const { data: locationData } = useGetLocationMasterQuery({
     params: { branchId },
@@ -65,8 +73,9 @@ export default function StockInwardForm({
       if (data?.docId) {
         setDocId(data?.docId);
       }
-      setLocationId(data?.locationId ? data?.locationId : "");
+      setLocationId(data?.locationId ? data?.locationId : branchId);
       setStoreId(data?.storeId ? data.storeId : "");
+      setStyleId(data?.styleId ? data?.styleId : "");
     },
     [id]
   );
@@ -126,26 +135,106 @@ export default function StockInwardForm({
     }
   };
 
-  const validateData = (data) => {
-    if (
-      stockInwardItems?.length > 0 &&
-      data.storeId &&
-      isGridDatasValid(
-        data?.stockInwardItems.filter((item) => item.styleId),
-        false,
-        ["qty"]
-      )
-    ) {
-      return true;
+  // const validateData = (data) => {
+  //   if (
+  //     stockInwardItems?.length > 0 &&
+  //     data.storeId &&
+  //     isGridDatasValid(
+  //       data?.stockInwardItems.filter((item) => item.styleId),
+  //       false,
+  //       ["qty"]
+  //     )
+  //   ) {
+  //     return true;
+  //   }
+  //   return false;
+  // };
+
+  const hasMismatchQty = (items) => {
+    // group by styleId + sizeId
+    const map = {};
+
+    items.forEach((item) => {
+      const key = `${item.styleId}-${item.sizeId}`;
+
+      if (!map[key]) {
+        map[key] = [];
+      }
+      map[key].push(item);
+    });
+
+    // check mismatch inside each group
+    for (const key in map) {
+      const group = map[key];
+
+      if (group.length > 1) {
+        const qtySet = new Set(group.map((i) => Number(i.qty)));
+
+        if (qtySet.size > 1) {
+          return true; // mismatch found
+        }
+      }
     }
+
     return false;
+  };
+
+  const hasDuplicates = (items) => {
+    const seen = new Set();
+
+    for (const row of items) {
+      const key = [
+        row.styleId || "",
+        row.portionId || "",
+        row.sizeId || "",
+      ].join("-");
+
+      if (seen.has(key)) {
+        return true; // duplicate found
+      }
+
+      seen.add(key);
+    }
+
+    return false;
+  };
+
+  const validateData = (data) => {
+    const items = data?.stockInwardItems?.filter((item) => item.styleId) || [];
+
+    if (items.length === 0) return false;
+
+    // 🔥 new qty mismatch validation
+    if (hasMismatchQty(items)) {
+      toast.info("Please enter same Qty for Top and Bottom!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      return false;
+    }
+    const filledItems = items.filter(
+      (item) => item.styleId || item.fabricId || item.portionID
+    );
+    if (hasDuplicates(filledItems)) {
+      toast.info("Duplicate items found!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      return false;
+    }
+    // normal validations
+    if (!(data.storeId && isGridDatasValid(items, false, ["qty"]))) {
+      toast.info("Please fill all required fields...!", {
+        position: "top-center",
+      });
+      return false;
+    }
+
+    return true;
   };
 
   const saveData = (nextProcess) => {
     if (!validateData(data)) {
-      toast.info("Please fill all required fields...!", {
-        position: "top-center",
-      });
       return;
     }
     if (!window.confirm("Are you sure save the details ...?")) {
@@ -181,10 +270,102 @@ export default function StockInwardForm({
     userId,
     finYearId,
     locationId,
+    styleId,
+  };
+
+  const handleStyleChange = async (newValue) => {
+    if (!storeId) {
+      toast.info("Please select Location and Store...!", {
+        position: "top-center",
+      });
+      return;
+    }
+    if (!newValue) return;
+    const isFirstTime = stockInwardItems.every((row) => !row.qty);
+    if (!isFirstTime) {
+      // const hasEmpty = stockInwardItems.some((row) => !row.qty);
+      const hasEmpty = stockInwardItems.some((row) => {
+        const hasStyle =
+          row.styleId !== "" &&
+          row.styleId !== null &&
+          row.styleId !== undefined;
+
+        return hasStyle && !row.qty;
+      });
+      if (hasEmpty) {
+        toast.info("Please fill all required fields...!", {
+          position: "top-center",
+        });
+        return;
+      }
+    }
+    try {
+      const { data: styleData } = await getProductionStyleDetail({
+        params: {
+          styleId: newValue,
+          branchId: branchId,
+        },
+      });
+      const styleItems = styleData.data || [];
+      if (!styleItems) return;
+      if (styleData.statusCode === 1) {
+        toast.info(styleData?.message, {
+          position: "top-center",
+          autoClose: 2000,
+        });
+      }
+      setStockInwardItems((prev) => {
+        const updated = [...prev];
+
+        // Find first empty slot index
+        let startIndex = updated.findIndex(
+          (row) => !row.styleId && !row.sizeId && !row.styleNo && !row.fabricId
+        );
+        if (startIndex === -1) startIndex = updated.length;
+
+        styleItems.forEach((row, i) => {
+          const cloned = structuredClone(row);
+          if (startIndex + i < updated.length) {
+            updated[startIndex + i] = cloned;
+          } else {
+            updated.push(cloned); // append if no empty slot
+          }
+        });
+
+        // Ensure at least 6 rows
+        while (updated.length < 6) {
+          updated.push({
+            styleNo: "",
+            fabricId: "",
+            styleId: "",
+            sizeId: "",
+            qty: "",
+            remarks: "",
+            styleItemId: "",
+            colorId: "",
+            selected: false,
+            stkQty: "",
+          });
+        }
+
+        return updated;
+      });
+    } catch (error) {
+      console.error("Error adding row:", error);
+    }
+    setStyleId(newValue);
+  };
+
+  const handleKeyDown = (event) => {
+    let charCode = String.fromCharCode(event.which).toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && charCode === "s") {
+      event.preventDefault();
+      saveData();
+    }
   };
 
   return (
-    <>
+    <div onKeyDown={handleKeyDown}>
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
           <h1 className="text-xl font-bold text-gray-800">
@@ -241,7 +422,6 @@ export default function StockInwardForm({
                 }}
                 required={true}
                 readOnly={readOnly}
-                autoFocus={true}
               />
               <DropdownInput
                 name="Location"
@@ -255,14 +435,37 @@ export default function StockInwardForm({
                 value={storeId}
                 setValue={setStoreId}
                 required={true}
-                readOnly={readOnly}
+                readOnly={id}
+                autoFocus={true}
               />
             </div>
           </div>
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2"></h2>
+            <h2 className="font-medium text-slate-700 mb-2">Style Details</h2>
 
-            <div className="grid grid-cols-2 gap-1"></div>
+            <div className="grid grid-cols-2 gap-1">
+              <DropdownNew
+                name="Style No"
+                dataList={
+                  id
+                    ? styleList?.data
+                    : styleList?.data?.filter((item) => item.active)
+                }
+                value={styleId}
+                setValue={handleStyleChange}
+                required={true}
+                readOnly={readOnly}
+                placeholder={"Select Style"}
+                otherField={"sku"}
+                disabled={readOnly}
+                clear={true}
+                onKeyDown={(e) => {
+                  // if (e.key === "Enter") {
+                  //   e.preventDefault();
+                  // }
+                }}
+              />
+            </div>
           </div>
         </div>
         <fieldset>
@@ -271,6 +474,8 @@ export default function StockInwardForm({
             setStockInwardItems={setStockInwardItems}
             readOnly={readOnly}
             branchId={branchId}
+            params={params}
+            styleList={styleList}
           />
         </fieldset>
         <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">
@@ -336,6 +541,6 @@ export default function StockInwardForm({
           // barCodePerPage={barCodePerPage}
         />
       </Modal>
-    </>
+    </div>
   );
 }

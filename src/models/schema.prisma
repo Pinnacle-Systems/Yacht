@@ -345,6 +345,7 @@ model Employee {
   sizeDetails              sizeDetails[]
   productionStocks         ProductionStock[]
   emailNew                 String?
+  cuttingDeliveries        CuttingDelivery[]
 }
 
 model EmployeeBankDetails {
@@ -1587,6 +1588,7 @@ model Style {
   productionStocks     ProductionStock[]
   productionEntries    ProductionEntry[]
   productionEntryItems ProductionEntryItems[]
+  stockInwards         StockInward[]
 }
 
 model Size {
@@ -1915,6 +1917,8 @@ model StockInward {
   Store            Location?          @relation(fields: [storeId], references: [id])
   storeId          Int?
   StockInwardItems StockInwardItems[]
+  Style            Style?             @relation(fields: [styleId], references: [id])
+  styleId          Int?
 }
 
 model StockInwardItems {
@@ -1936,6 +1940,8 @@ model StockInwardItems {
   styleItemId   Int?
   Color         Color?       @relation(fields: [colorId], references: [id])
   colorId       Int?
+  Portion       Portion?     @relation(fields: [portionId], references: [id])
+  portionId     Int?
 }
 
 model StyleItem {
@@ -2195,6 +2201,7 @@ model Portion {
   productionEntryItems ProductionEntryItems[]
   fabricInwardItems    FabricInwardItems[]
   purchaseReturnItems  PurchaseReturnItems[]
+  stockInwardItems     StockInwardItems[]
 }
 
 model CuttingOrder {
@@ -2291,6 +2298,8 @@ model CuttingDelivery {
   sizeTemplateId       Int?
   FromProcess          Process?               @relation(fields: [fromProcessId], references: [id])
   fromProcessId        Int?
+  Employee             Employee?              @relation(fields: [employeeId], references: [id])
+  employeeId           Int?
 }
 
 model CuttingDeliveryItems {

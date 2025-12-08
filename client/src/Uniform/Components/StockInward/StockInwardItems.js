@@ -14,6 +14,8 @@ import { VIEW } from "../../../icons";
 import { useLazyGetProductionDetailQuery } from "../../../redux/uniformService/ProductionStockServices";
 import { DropdownNew } from "../../../Inputs";
 import Swal from "sweetalert2";
+import { useGetPurchaseInwardEntryQuery } from "../../../redux/uniformService/PurchaseInwardEntry";
+import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService";
 
 export default function StockInwardItems({
   stockInwardItems,
@@ -22,17 +24,24 @@ export default function StockInwardItems({
   readOnly,
   id,
   branchId,
+  styleList
 }) {
   const [contextMenu, setContextMenu] = useState(null);
-  const [styleId, setStyleId] = useState("");
   const [previewImage, setPreviewImage] = useState(null);
-  const [getProductionStyleDetail] = useLazyGetProductionDetailQuery();
   const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
-  const { data: styleList } = useGetStyleMasterQuery({ params });
+
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: fabricList } = useGetFabricMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
+  const {
+    data: allData,
+    isFetching,
+    isLoading,
+  } = useGetPurchaseInwardEntryQuery({
+    params,
+  });
+  const { data: portionList } = useGetPortionMasterQuery({ params });
 
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -152,85 +161,22 @@ export default function StockInwardItems({
     }
   }, [stockInwardItems, setStockInwardItems]);
 
-  const handleStyleChange = async (newValue) => {
-    if (!newValue) return;
-    const isFirstTime = stockInwardItems.every((row) => !row.qty);
-    if (!isFirstTime) {
-      // const hasEmpty = stockInwardItems.some((row) => !row.qty);
-      const hasEmpty = stockInwardItems.some((row) => {
-        const hasStyle =
-          row.styleId !== "" &&
-          row.styleId !== null &&
-          row.styleId !== undefined;
 
-        return hasStyle && !row.qty;
-      });
-      if (hasEmpty) {
-        toast.info("Please fill all required fields...!", {
-          position: "top-center",
-        });
-        return;
-      }
-    }
-    try {
-      const { data: styleData } = await getProductionStyleDetail({
-        params: {
-          styleId: newValue,
-          branchId: branchId,
-        },
-      });
-      const styleItems = styleData.data || [];
-      if (!styleItems) return;
-      if (styleData.statusCode === 1) {
-        toast.info(styleData?.message, {
-          position: "top-center",
-          autoClose: 2000,
-        });
-      }
-      setStockInwardItems((prev) => {
-        const updated = [...prev];
 
-        // Find first empty slot index
-        let startIndex = updated.findIndex(
-          (row) => !row.styleId && !row.sizeId && !row.styleNo && !row.fabricId
-        );
-        if (startIndex === -1) startIndex = updated.length;
+  // function imageFormatter(styleId) {
+  //   const fileName = findFromList(styleId, styleList?.data, "img");
+  //   if (!fileName) return "/no-image.png"; // fallback image if missing
+  //   return `${IMAGE_UPLOAD_URL}${fileName}`;
+  // }
 
-        styleItems.forEach((row, i) => {
-          const cloned = structuredClone(row);
-          if (startIndex + i < updated.length) {
-            updated[startIndex + i] = cloned;
-          } else {
-            updated.push(cloned); // append if no empty slot
-          }
-        });
-
-        // Ensure at least 6 rows
-        while (updated.length < 6) {
-          updated.push({
-            styleNo: "",
-            fabricId: "",
-            styleId: "",
-            sizeId: "",
-            qty: "",
-            remarks: "",
-            styleItemId: "",
-            colorId: "",
-            selected: false,
-            stkQty: "",
-          });
-        }
-
-        return updated;
-      });
-    } catch (error) {
-      console.error("Error adding row:", error);
-    }
-    setStyleId(newValue);
-  };
-
-  function imageFormatter(styleId) {
-    const fileName = findFromList(styleId, styleList?.data, "img");
+  function imageFormatter(styleId, portionId) {
+    const fabricItems = allData?.data?.flatMap(
+      (item) => item.fabricInwardItems || []
+    );
+    const item = fabricItems.find(
+      (f) => f.styleId === styleId && f.portionId === portionId
+    );
+    const fileName = item?.filePath;
     if (!fileName) return "/no-image.png"; // fallback image if missing
     return `${IMAGE_UPLOAD_URL}${fileName}`;
   }
@@ -239,27 +185,7 @@ export default function StockInwardItems({
     <>
       <div className="border border-slate-200  bg-white rounded-md shadow-sm max-h-[450px] px-2 overflow-auto">
         <div className="flex items-center gap-4 w-40 sticky top-0 bg-white z-30 mt-2">
-          <DropdownNew
-            name="Style No"
-            dataList={
-              id
-                ? styleList?.data
-                : styleList?.data?.filter((item) => item.active)
-            }
-            value={styleId}
-            setValue={handleStyleChange}
-            required={true}
-            readOnly={readOnly}
-            placeholder={"Select Style"}
-            otherField={"sku"}
-            disabled={id}
-            clear={true}
-            onKeyDown={(e) => {
-              // if (e.key === "Enter") {
-              //   e.preventDefault();
-              // }
-            }}
-          />
+        
         </div>
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
@@ -299,15 +225,20 @@ export default function StockInwardItems({
                 >
                   S.No
                 </th>
-                <th
-                  className={`w-24 px-4 py-2 text-center font-medium text-[13px]`}
+                {/* <th
+                  className={`w-20 px-4 py-2 text-center font-medium text-[13px]`}
                 >
                   Style No
-                </th>{" "}
+                </th>{" "} */}
                 <th
-                  className={`w-60 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-48 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style
+                </th>
+                <th
+                  className={`w-40 px-4 py-2 text-center font-medium text-[13px]`}
+                >
+                  Fabric
                 </th>
                 <th
                   className={`w-12 px-4 py-2 text-center  font-medium text-[13px]`}
@@ -315,27 +246,27 @@ export default function StockInwardItems({
                   Img
                 </th>
                 <th
-                  className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
-                >
-                  Fabric
-                </th>
-                <th
-                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
-                >
-                  Size
-                </th>
-                <th
                   className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Color
                 </th>
                 <th
-                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Portion
+                </th>
+                <th
+                  className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Size
+                </th>
+                <th
+                  className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Stk Qty
                 </th>
                 <th
-                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Qty
                 </th>
@@ -374,7 +305,7 @@ export default function StockInwardItems({
                   <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
                     {index + 1}
                   </td>
-                  <td className="py-0.5 border border-gray-300 text-[11px] ">
+                  {/* <td className="py-0.5 border border-gray-300 text-[11px] ">
                     <select
                       onKeyDown={(e) => {
                         if (e.key === "Delete") {
@@ -402,7 +333,7 @@ export default function StockInwardItems({
                         </option>
                       ))}
                     </select>
-                  </td>
+                  </td> */}
                   <td className="py-0.5 border border-gray-300 text-[11px] ">
                     <select
                       onKeyDown={(e) => {
@@ -432,20 +363,6 @@ export default function StockInwardItems({
                       ))}
                     </select>
                   </td>
-                  <td className="border border-gray-300 py-0.5 text-center">
-                    {row?.styleId ? (
-                      <button
-                        className="text-xs"
-                        onClick={() => {
-                          setPreviewImage(imageFormatter(row?.styleId));
-                        }}
-                      >
-                        {VIEW}
-                      </button>
-                    ) : (
-                      <span className="text-xs pl-1"></span>
-                    )}
-                  </td>
                   <td className="py-0.5 border border-gray-300 text-[11px] ">
                     <select
                       onKeyDown={(e) => {
@@ -468,6 +385,80 @@ export default function StockInwardItems({
                       {(id
                         ? fabricList?.data
                         : fabricList?.data?.filter((item) => item.active)
+                      )?.map((blend) => (
+                        <option value={blend.id} key={blend.id}>
+                          {blend?.name}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="border border-gray-300 py-0.5 text-center">
+                    {row?.styleId ? (
+                      <button
+                        className="text-xs"
+                        onClick={() => {
+                          setPreviewImage(
+                            imageFormatter(row?.styleId, row.portionId)
+                          );
+                        }}
+                      >
+                        {VIEW}
+                      </button>
+                    ) : (
+                      <span className="text-xs pl-1"></span>
+                    )}
+                  </td>
+                  <td className="py-0.5 border border-gray-300 text-[11px]">
+                    <select
+                      onKeyDown={(e) => {
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "colorId");
+                        }
+                      }}
+                      tabIndex={"0"}
+                      disabled={true}
+                      className="text-left w-full rounded py-1 table-data-input"
+                      value={row.colorId}
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "colorId")
+                      }
+                      onBlur={(e) => {
+                        handleInputChange(e.target.value, index, "colorId");
+                      }}
+                    >
+                      <option></option>
+                      {(id
+                        ? colorList?.data
+                        : colorList?.data?.filter((item) => item.active)
+                      )?.map((blend) => (
+                        <option value={blend.id} key={blend.id}>
+                          {blend?.name}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="py-0.5 border border-gray-300 text-[11px]">
+                    <select
+                      onKeyDown={(e) => {
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "portionId");
+                        }
+                      }}
+                      tabIndex={"0"}
+                      disabled={true}
+                      className="text-left w-full rounded py-1 table-data-input"
+                      value={row.portionId}
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "portionId")
+                      }
+                      onBlur={(e) => {
+                        handleInputChange(e.target.value, index, "portionId");
+                      }}
+                    >
+                      <option></option>
+                      {(id
+                        ? portionList?.data
+                        : portionList?.data?.filter((item) => item.active)
                       )?.map((blend) => (
                         <option value={blend.id} key={blend.id}>
                           {blend?.name}
@@ -504,36 +495,7 @@ export default function StockInwardItems({
                       ))}
                     </select>
                   </td>
-                  <td className="py-0.5 border border-gray-300 text-[11px]">
-                    <select
-                      id={`qty-input-${index}`}
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "colorId");
-                        }
-                      }}
-                      tabIndex={"0"}
-                      disabled={readOnly}
-                      className="text-left w-full rounded py-1 table-data-input"
-                      value={row.colorId}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "colorId")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "colorId");
-                      }}
-                    >
-                      <option></option>
-                      {(id
-                        ? colorList?.data
-                        : colorList?.data?.filter((item) => item.active)
-                      )?.map((blend) => (
-                        <option value={blend.id} key={blend.id}>
-                          {blend?.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
+
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                     <input
                       onKeyDown={(e) => {
@@ -559,6 +521,7 @@ export default function StockInwardItems({
                   </td>
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                     <input
+                      id={`qty-input-${index}`}
                       onKeyDown={(e) => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract")
                           e.preventDefault();
@@ -665,7 +628,7 @@ export default function StockInwardItems({
 
                 <img
                   src={previewImage}
-                  alt="No Image...."
+                  alt="Preview"
                   className="max-h-[80vh] max-w-[80vw] rounded-lg shadow-lg"
                 />
               </div>
