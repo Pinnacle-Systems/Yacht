@@ -244,6 +244,16 @@ async function getOne(id) {
           sku: true,
         },
       },
+      Branch: {
+        select: {
+          branchName: true,
+        },
+      },
+      Store: {
+        select: {
+          storeName: true,
+        },
+      },
     },
   });
   if (!data) return NoRecordFound("CuttingDelivery");

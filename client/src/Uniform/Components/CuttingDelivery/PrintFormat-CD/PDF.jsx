@@ -155,7 +155,7 @@ const PDF = ({ singleData, sizeColumns }) => {
                                         {singleData?.docId || ""}
                                     </Text>
                                 </View>
-                                <View style={tw("flex flex-row gap-x-2 ")}>
+                                <View style={tw("flex flex-row gap-x-2 mr-11")}>
 
                                     <Text
                                         style={[
@@ -179,6 +179,32 @@ const PDF = ({ singleData, sizeColumns }) => {
                                     </Text>
                                     <Text style={tw("text-xs ml-2")}>
                                         {singleData?.Style?.sku || ""}
+                                    </Text>
+                                </View>
+                                <View style={tw("flex flex-row gap-x-2 ")}>
+
+                                    <Text
+                                        style={[
+                                            tw("text-xs font-bold"),
+                                            { fontWeight: 900, fontFamily: "Times-Bold" },
+                                        ]}
+                                    >
+                                        Branch
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            tw("text-xs font-bold "),
+                                            {
+                                                fontWeight: 900,
+                                                fontFamily: "Times-Bold",
+                                                marginLeft: 5,
+                                            },
+                                        ]}
+                                    >
+                                        :
+                                    </Text>
+                                    <Text style={tw("text-xs ml-2")}>
+                                        {singleData?.Branch?.branchName || ""}
                                     </Text>
                                 </View>
 
@@ -213,7 +239,7 @@ const PDF = ({ singleData, sizeColumns }) => {
                                 </View>
 
 
-                                <View style={tw("flex flex-row gap-x-2")}>
+                                <View style={tw("flex flex-row gap-x-2 mr-9")}>
                                     <Text
                                         style={[
                                             tw("text-xs font-bold"),
@@ -238,6 +264,32 @@ const PDF = ({ singleData, sizeColumns }) => {
                                         {singleData?.Employee
                                             ? singleData.Employee.firstName
                                             : ""}
+                                    </Text>
+                                </View>
+                                <View style={tw("flex flex-row gap-x-2 ")}>
+
+                                    <Text
+                                        style={[
+                                            tw("text-xs font-bold"),
+                                            { fontWeight: 900, fontFamily: "Times-Bold" },
+                                        ]}
+                                    >
+                                        Location
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            tw("text-xs font-bold "),
+                                            {
+                                                fontWeight: 900,
+                                                fontFamily: "Times-Bold",
+                                                marginLeft: 5,
+                                            },
+                                        ]}
+                                    >
+                                        :
+                                    </Text>
+                                    <Text style={tw("text-xs ml-2")}>
+                                        {singleData?.Store?.storeName || ""}
                                     </Text>
                                 </View>
                             </View>

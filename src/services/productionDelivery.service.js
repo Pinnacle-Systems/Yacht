@@ -199,6 +199,12 @@ async function getOne(id) {
       productionEntryItems: {
         include: {
           pcsSizeDetails: true,
+          StyleItem: true,
+          Fabric: true,
+          Color: true,
+          Size: true,
+          Portion: true,
+          Employee: true,
         },
       },
       FromProcess: {
@@ -207,6 +213,26 @@ async function getOne(id) {
           isIroning: true,
         },
       },
+      ToProcess: {
+        select: {
+          name: true,
+        }
+      },
+      Branch:{
+        select:{
+          branchName:true
+        }
+      },
+      Store:{
+        select:{
+          storeName:true
+        }
+      },
+      Style: {
+        select: {
+          sku: true,
+        }
+      }
     },
   });
 

@@ -193,6 +193,25 @@ export default function AdjustItems({
   }, [stockAdjustmentItems, setStockAdjustmentItems]);
 
   const handleInputChange = async (value, index, field) => {
+    if (field === "adjQty") {
+      if (!stockAdjustmentItems[index].adjType) {
+        toast.info("Please select Adjustment Type first...!", {
+          position: "top-center",
+        });
+        return false;
+      }
+      if (stockAdjustmentItems[index]?.adjType === "MINUS") {
+        if (Number(value) > Number(stockAdjustmentItems[index]?.stkQty)) {
+          toast.info(
+            "Adjustment Quantity cannot be greater than Stock Quantity...!",
+            {
+              position: "top-center",
+            }
+          );
+          return false;
+        }
+      }
+    }
     setStockAdjustmentItems((prev) => {
       const newItems = structuredClone(prev);
       newItems[index][field] = value;

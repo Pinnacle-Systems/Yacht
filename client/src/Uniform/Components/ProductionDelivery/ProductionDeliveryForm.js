@@ -17,6 +17,7 @@ import { useDispatch } from "react-redux";
 import StyleMasterApi, {
   useGetStyleMasterQuery,
 } from "../../../redux/uniformService/StyleMasterService.js";
+import PDF from "./PrintFormat-PD/PDF.jsx";
 
 import { inHouseOutsideTypes } from "../../../Utils/DropdownData.js";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices.js";
@@ -40,6 +41,8 @@ import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionM
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService.js";
 import { dropDownListObject } from "../../../Utils/contructObject.js";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService.js";
+import { PDFViewer } from "@react-pdf/renderer";
+import tw from "../../../Utils/tailwind-react-pdf.js";
 
 export default function ProductionDeliveryForm({
   onClose,
@@ -60,6 +63,7 @@ export default function ProductionDeliveryForm({
   const [supplierId, setSupplierId] = useState("");
   const [fromProcessId, setFromProcessId] = useState("");
   const [toProcessId, setToProcessId] = useState("");
+  const [pdfOpen, setPdfOpen] = useState(false);
 
   const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
   const firstUpdate = useRef(true);
@@ -674,6 +678,9 @@ export default function ProductionDeliveryForm({
             <button
               className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
               disabled={!id}
+              onClick={() => {
+                setPdfOpen(true);
+              }}
             >
               <FiPrinter className="w-4 h-4 mr-2" />
               Print
@@ -681,6 +688,15 @@ export default function ProductionDeliveryForm({
           </div>
         </div>
       </div>
+      <Modal
+        isOpen={pdfOpen}
+        onClose={() => setPdfOpen(false)}
+        widthClass={"w-[90%] h-[90%]"}
+      >
+        <PDFViewer style={tw("w-full h-full")}>
+          <PDF singleData={singleData?.data} />
+        </PDFViewer>
+      </Modal>
       {/* <Modal
         isOpen={stockDetailsFillGrid}
         onClose={() => {

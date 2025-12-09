@@ -320,7 +320,7 @@ const FabricInwardItems = ({
                             label: item.sku,
                             value: item.id,
                           }))}
-                        readOnly={id}
+                        readOnly={readOnly}
                         placeholder=""
                         onBlur={() =>
                           handleInputChange(row.styleId, index, "styleId")
@@ -382,7 +382,7 @@ const FabricInwardItems = ({
                             label: item.name,
                             value: item.id,
                           }))}
-                        readOnly={id}
+                        readOnly={readOnly}
                         placeholder=""
                         onBlur={() =>
                           handleInputChange(row.fabricId, index, "fabricId")
@@ -461,7 +461,7 @@ const FabricInwardItems = ({
                             label: item.name,
                             value: item.id,
                           }))}
-                        readOnly={id}
+                        readOnly={readOnly}
                         placeholder=""
                         onBlur={() =>
                           handleInputChange(row.colorId, index, "colorId")
@@ -485,7 +485,7 @@ const FabricInwardItems = ({
                             label: item.name,
                             value: item.id,
                           }))}
-                        readOnly={id}
+                        readOnly={readOnly}
                         placeholder=""
                         onBlur={() =>
                           handleInputChange(row.portionId, index, "portionId")
