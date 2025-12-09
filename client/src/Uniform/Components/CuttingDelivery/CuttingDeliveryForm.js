@@ -509,7 +509,7 @@ export default function CuttingDeliveryForm({
                     label: item?.ProcessGroupSeq?.name,
                     value: item.id,
                   }))}
-                readOnly={id}
+                readOnly={readOnly}
                 required={true}
                 placeholder="Select Group"
                 onKeyDown={(e) => {
