@@ -2300,6 +2300,8 @@ model CuttingDelivery {
   fromProcessId        Int?
   Employee             Employee?              @relation(fields: [employeeId], references: [id])
   employeeId           Int?
+  ProcessGroup         ProcessGroup?          @relation(fields: [processGroupId], references: [id])
+  processGroupId       Int?
 }
 
 model CuttingDeliveryItems {
@@ -2494,6 +2496,7 @@ model ProcessGroup {
   companyId          Int?
   processGroupLists  ProcessGroupList[]
   cuttingOrders      CuttingOrder[]
+  cuttingDeliveries  CuttingDelivery[]
 }
 
 model ProcessGroupList {

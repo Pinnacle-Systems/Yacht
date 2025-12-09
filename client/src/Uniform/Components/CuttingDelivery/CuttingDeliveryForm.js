@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../../../Utils/CommonInput";
-import { DropdownInput, DropdownNew } from "../../../Inputs";
+import { CustomDropdown, DropdownInput, DropdownNew } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import {
@@ -39,6 +39,7 @@ import PDF from "./PrintFormat-CD/PDF.jsx";
 import Modal from "../../../UiComponents/Modal/index.js";
 import { PDFViewer } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf.js";
+import { useGetProcessGroupMasterQuery } from "../../../redux/uniformService/ProcessGroupMasterServices.js";
 
 export default function CuttingDeliveryForm({
   onClose,
@@ -64,6 +65,8 @@ export default function CuttingDeliveryForm({
   const firstUpdate = useRef(true);
   const [sizeTemplateId, setSizeTemplateId] = useState("");
   const [pdfOpen, setPdfOpen] = useState("");
+  const [sizeColumns, setSizeColumns] = useState([]);
+  const [processGroupId, setProcessGroupId] = useState("");
 
   const dispatch = useDispatch();
 
@@ -92,6 +95,9 @@ export default function CuttingDeliveryForm({
     params: {
       companyId,
     },
+  });
+  const { data: processGroupList } = useGetProcessGroupMasterQuery({
+    params: { companyId },
   });
 
   const {
@@ -137,6 +143,7 @@ export default function CuttingDeliveryForm({
       setFromProcessId(data?.fromProcessId ? data?.fromProcessId : "");
       setSizeTemplateId(data?.sizeTemplateId ? data?.sizeTemplateId : "");
       setEmployeeId(data?.employeeId ? data?.employeeId : "");
+      setProcessGroupId(data?.processGroupId ? data?.processGroupId : "");
     },
     [id]
   );
@@ -228,6 +235,7 @@ export default function CuttingDeliveryForm({
     storeId,
     locationId,
     employeeId,
+    processGroupId,
   };
 
   const hasDuplicates = (items) => {
@@ -259,14 +267,14 @@ export default function CuttingDeliveryForm({
       !(
         (isOutside ? data?.supplierId : true) &&
         data.styleId &&
-        data?.cuttingNo &&
+        data.processGroupId &&
         data?.productionType &&
         data?.employeeId &&
         data?.fromProcessId &&
         isGridDatasValid(
           data?.cuttingDeliveryItems?.filter((item) => item.styleId),
           false,
-          ["issueQty", "usedMeter", "styleId"]
+          ["issueQty", "usedMeter", "styleId", "styleItemId"]
         ) &&
         data?.cuttingDeliveryItems.length > 0
       )
@@ -343,6 +351,16 @@ export default function CuttingDeliveryForm({
           storeId: storeId,
         },
       });
+      let docId = "";
+      if (orderData.statusCode === 1) {
+        setCuttingNo("");
+        docId = "";
+      } else {
+        docId = orderData?.data?.docId;
+      }
+      setCuttingNo(docId);
+      const isCuttingNull = !docId;
+      console.log(isCuttingNull, "isCuttingNull");
       const fabricItems = orderData?.data?.cuttingOrderItems;
       const { data: fabricData } = await getFabricDetail({
         params: {
@@ -352,9 +370,8 @@ export default function CuttingDeliveryForm({
         },
       });
       const fabricDetails = fabricData?.data;
-      if (!fabricDetails || !fabricItems) return;
+      if (!fabricDetails) return;
 
-      setCuttingNo(orderData?.data?.docId);
       setCuttingDeliveryItems((prev) => {
         const updated = [...prev];
         // Find first empty slot index
@@ -373,21 +390,33 @@ export default function CuttingDeliveryForm({
         );
         if (startIndex === -1) startIndex = updated.length;
 
-        fabricItems.forEach((item, i) => {
-          const detail = fabricDetails.find(
-            (f) => f.styleId === item.styleId && f.colorId === item.colorId
-          );
-          const newRow = {
-            ...item,
-            fabWidth: detail?.fabWidth || "",
-            fabMeter: detail?.fabMeter || "",
-          };
-          if (startIndex + i < updated.length) {
-            updated[startIndex + i] = newRow;
-          } else {
-            updated.push(newRow);
-          }
-        });
+        if (isCuttingNull) {
+          fabricDetails?.forEach((item, i) => {
+            const cloned = structuredClone(item);
+
+            if (startIndex + i < updated.length) {
+              updated[startIndex + i] = cloned;
+            } else {
+              updated.push(cloned);
+            }
+          });
+        } else {
+          fabricItems.forEach((item, i) => {
+            const detail = fabricDetails.find(
+              (f) => f.styleId === item.styleId && f.colorId === item.colorId
+            );
+            const newRow = {
+              ...item,
+              fabWidth: detail?.fabWidth || "",
+              fabMeter: detail?.fabMeter || "",
+            };
+            if (startIndex + i < updated.length) {
+              updated[startIndex + i] = newRow;
+            } else {
+              updated.push(newRow);
+            }
+          });
+        }
 
         // Ensure at least 6 rows
         while (updated.length < 5) {
@@ -420,6 +449,20 @@ export default function CuttingDeliveryForm({
       event.preventDefault();
       saveData();
     }
+  };
+
+  const getSizeTemplate = async () => {
+    if (!sizeTemplateId) return;
+
+    const { data: sizeData } = await styleTemplateDetail(sizeTemplateId);
+
+    if (!sizeData?.data?.SizeTemplateList?.length) return;
+
+    const columns = sizeData.data.SizeTemplateList.map((s) => ({
+      sizeId: s.sizeId,
+      sizeName: s.Size?.name,
+    }));
+    setSizeColumns(columns);
   };
 
   return (
@@ -455,6 +498,24 @@ export default function CuttingDeliveryForm({
                 required={true}
                 readOnly={true}
                 disabled
+              />
+              <CustomDropdown
+                name="Process Group"
+                value={processGroupId}
+                onChange={(val) => setProcessGroupId(val)}
+                options={(processGroupList?.data || [])
+                  .filter((item) => item.active)
+                  .map((item) => ({
+                    label: item?.ProcessGroupSeq?.name,
+                    value: item.id,
+                  }))}
+                readOnly={id}
+                required={true}
+                placeholder="Select Group"
+                onKeyDown={(e) => {
+                  if (e.key === "Delete") setProcessGroupId("");
+                }}
+                autoFocus={true}
               />
             </div>
           </div>
@@ -497,7 +558,6 @@ export default function CuttingDeliveryForm({
                 setValue={setStoreId}
                 required={true}
                 readOnly={id}
-                autoFocus={true}
               />
               <DropdownInput
                 name="Production Type"
@@ -592,6 +652,7 @@ export default function CuttingDeliveryForm({
             styleTemplateDetail={styleTemplateDetail}
             companyId={companyId}
             params={params}
+            cuttingNo={cuttingNo}
           />
         </fieldset>
         <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">
@@ -634,6 +695,7 @@ export default function CuttingDeliveryForm({
               className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
               disabled={!id}
               onClick={() => {
+                getSizeTemplate();
                 setPdfOpen(true);
               }}
             >
@@ -649,7 +711,7 @@ export default function CuttingDeliveryForm({
         widthClass={"w-[90%] h-[90%]"}
       >
         <PDFViewer style={tw("w-full h-full")}>
-          <PDF singleData={singleData?.data} />
+          <PDF singleData={singleData?.data} sizeColumns={sizeColumns} />
         </PDFViewer>
       </Modal>
     </div>

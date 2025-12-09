@@ -355,7 +355,7 @@ async function create(body) {
   //   },
   // });
   let processGroupId;
-  const processGroup = await prisma.cuttingOrder.findFirst({
+  const processGroup = await prisma.cuttingDelivery.findFirst({
     where: {
       styleId: parseInt(styleId),
     },
@@ -946,7 +946,7 @@ async function updateProductionEntryItems(
     //   }
     // }
     let processGroupId;
-    const processGroup = await prisma.cuttingOrder.findFirst({
+    const processGroup = await prisma.cuttingDelivery.findFirst({
       where: {
         styleId: parseInt(styleId),
       },

@@ -626,7 +626,7 @@ export default function ProductionDeliveryItem({
                         min={"0"}
                         type="number"
                         className="text-right rounded py-1 px-1 w-full table-data-input"
-                        onFocus={(e) => e.target.select()}
+                        onFocus={(e) => e.target.focus()}
                         value={row?.issueQty}
                         onChange={(e) =>
                           handleInputChange(e.target.value, index, "issueQty")

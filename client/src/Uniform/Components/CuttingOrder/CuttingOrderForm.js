@@ -199,7 +199,6 @@ export default function CuttingOrderForm({
     if (
       !(
         data.styleId &&
-        data.processGroupId &&
         isGridDatasValid(
           data?.cuttingOrderItems?.filter((item) => item.styleId),
           false,
@@ -470,7 +469,7 @@ export default function CuttingOrderForm({
                 disabled={id}
                 clear={true}
               />
-              <CustomDropdown
+              {/* <CustomDropdown
                 name="Process Group"
                 value={processGroupId}
                 onChange={(val) => setProcessGroupId(val)}
@@ -486,7 +485,7 @@ export default function CuttingOrderForm({
                 onKeyDown={(e) => {
                   if (e.key === "Delete") setProcessGroupId("");
                 }}
-              />
+              /> */}
             </div>
           </div>
         </div>

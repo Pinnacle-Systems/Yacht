@@ -14,7 +14,7 @@ async function getStyleDetail(req) {
   //   },
   // });
   let processGroupId;
-  const processGroup = await prisma.cuttingOrder.findFirst({
+  const processGroup = await prisma.cuttingDelivery.findFirst({
     where: {
       styleId: parseInt(styleId),
     },

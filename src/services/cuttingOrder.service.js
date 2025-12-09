@@ -259,7 +259,7 @@ async function create(body) {
     draftSave,
     sizeTemplateId,
     locationId,
-    processGroupId
+    // processGroupId
   } = await body;
   console.log(branchId, "branchId");
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -300,7 +300,7 @@ async function create(body) {
         styleId: parseInt(styleId),
         docDate: docDate ? new Date(docDate) : null,
         sizeTemplateId: parseInt(sizeTemplateId),
-        processGroupId: parseInt(processGroupId)
+        // processGroupId: parseInt(processGroupId)
       },
     });
     await createCuttingOrderItems(
@@ -416,7 +416,7 @@ async function update(id, body) {
     docDate,
     sizeTemplateId,
     styleId,
-    processGroupId
+    // processGroupId
   } = await body;
   let data;
   const dataFound = await prisma.cuttingOrder.findUnique({
@@ -453,7 +453,7 @@ async function update(id, body) {
         styleId: parseInt(styleId),
         docDate: docDate ? new Date(docDate) : null,
         sizeTemplateId: parseInt(sizeTemplateId),
-        processGroupId: parseInt(processGroupId)
+        // processGroupId: parseInt(processGroupId)
       },
     });
     await updateCuttingOrderItems(

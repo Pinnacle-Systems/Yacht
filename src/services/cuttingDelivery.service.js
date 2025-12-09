@@ -212,6 +212,36 @@ async function getOne(id) {
           issueQty: true,
           sizeDetails: true,
           usedMeter: true,
+          StyleItem: {
+            select: {
+              name: true,
+            },
+          },
+          Fabric: {
+            select: {
+              name: true,
+            },
+          },
+          Portion: {
+            select: {
+              name: true,
+            },
+          },
+          Color: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+      Employee: {
+        select: {
+          firstName: true,
+        },
+      },
+      Style: {
+        select: {
+          sku: true,
         },
       },
     },
@@ -243,23 +273,22 @@ async function getOne(id) {
           fabMeter: true,
         },
       });
-      const planQty = await prisma.cuttingOrderItems.findFirst({
-        where: {
-          styleItemId: item.styleItemId,
-          fabricId: item.fabricId,
-          colorId: item.colorId,
-          styleId: item.styleId,
-          invNo: item.invNo,
-          portionId: item.portionId,
-        },
-        select: {
-          orderQty: true,
-        },
-      });
+      // const planQty = await prisma.cuttingOrderItems.findFirst({
+      //   where: {
+      //     styleItemId: item.styleItemId,
+      //     fabricId: item.fabricId,
+      //     colorId: item.colorId,
+      //     styleId: item.styleId,
+      //     invNo: item.invNo,
+      //     portionId: item.portionId,
+      //   },
+      //   select: {
+      //     orderQty: true,
+      //   },
+      // });
       return {
         ...item,
         fabMeter: stockData._sum.fabMeter + item.usedMeter,
-        orderQty: planQty.orderQty,
       };
     })
   );
@@ -300,6 +329,7 @@ async function create(body) {
     sizeTemplateId,
     storeId,
     employeeId,
+    processGroupId,
   } = await body;
   console.log(branchId, "branchId");
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -354,6 +384,7 @@ async function create(body) {
         fromProcessId: fromProcessId ? parseInt(fromProcessId) : null,
         sizeTemplateId: parseInt(sizeTemplateId),
         employeeId: employeeId ? parseInt(employeeId) : null,
+        processGroupId: processGroupId ? parseInt(processGroupId) : null,
       },
     });
     await createCuttingDeliveryItems(
@@ -536,6 +567,7 @@ async function update(id, body) {
     sizeTemplateId,
     storeId,
     employeeId,
+    processGroupId,
   } = await body;
   let data;
   const dataFound = await prisma.cuttingDelivery.findUnique({
@@ -576,6 +608,7 @@ async function update(id, body) {
         fromProcessId: fromProcessId ? parseInt(fromProcessId) : null,
         sizeTemplateId: parseInt(sizeTemplateId),
         employeeId: employeeId ? parseInt(employeeId) : null,
+        processGroupId: processGroupId ? parseInt(processGroupId) : null,
       },
     });
     await updateCuttingDeliveryItems(

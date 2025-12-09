@@ -1924,9 +1924,9 @@ export const customStyles = {
     minHeight: "18px", // reduce height
     lineHeight: "18px",
     backgroundColor: state.isSelected
-      ? "#e5e7eb" // gray-200
+      ? "#d1d5db" // gray-200
       : state.isFocused
-      ? "#f3f4f6" // gray-100
+      ?  "#e5e7eb" // gray-100
       : "white",
     color: "black",
   }),

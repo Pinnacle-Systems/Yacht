@@ -1,11 +1,11 @@
 import { Document, StyleSheet, Text, View } from "@react-pdf/renderer";
-import  { useEffect } from "react";
+import { useEffect } from "react";
 import PageWrapper from "../../../../Utils/PageWrapper";
 import tw from "../../../../Utils/tailwind-react-pdf";
 import { findFromList } from "../../../../Utils/helper";
 import Header from "../../../../Utils/Header";
 
-const PDF = ({ singleData }) => {
+const PDF = ({ singleData, sizeColumns }) => {
     const styles = StyleSheet.create({
         page: { padding: 5 },
 
@@ -119,7 +119,7 @@ const PDF = ({ singleData }) => {
 
                     <View style={[tw("flex flex-row justify-between w-full  p-2")]}>
                         {/* left column */}
-                        <View style={tw("flex flex-col w-1/2 gap-y-2")}>
+                        <View style={tw("flex flex-col  gap-y-2")}>
                             <Text
                                 style={[
                                     tw("font-bold"),
@@ -129,202 +129,117 @@ const PDF = ({ singleData }) => {
                                 Basic Details
                             </Text>
                             <View style={tw("flex flex-row gap-x-2")}>
-                                <Text
-                                    style={[
-                                        tw("text-xs font-bold"),
-                                        { fontWeight: 900, fontFamily: "Times-Bold" },
-                                    ]}
-                                >
-                                    Sales Return No
-                                </Text>
-                                <Text
-                                    style={[
-                                        tw("text-xs font-bold "),
-                                        {
-                                            fontWeight: 900,
-                                            fontFamily: "Times-Bold",
-                                            marginLeft: 4,
-                                        },
-                                    ]}
-                                >
-                                    :
-                                </Text>
-                                <Text style={tw("text-xs ml-2")}>
-                                    {singleData?.docId || ""}
-                                </Text>
-                            </View>
-                            <View style={tw("flex flex-row gap-x-2")}>
-                                <Text
-                                    style={[
-                                        tw("text-xs font-bold"),
-                                        { fontWeight: 900, fontFamily: "Times-Bold" },
-                                    ]}
-                                >
-                                    Date
-                                </Text>
-                                <Text
-                                    style={[
-                                        tw("text-xs font-bold"),
-                                        {
-                                            fontWeight: 900,
-                                            fontFamily: "Times-Bold",
-                                            marginLeft: 49,
-                                        },
-                                    ]}
-                                >
-                                    :
-                                </Text>
-                                <Text style={tw("text-xs ml-2")}>
-                                    {singleData?.docDate
-                                        ? new Date(singleData.docDate).toLocaleDateString()
-                                        : ""}
-                                </Text>
-                            </View>
-                            <View style={tw("flex flex-row gap-x-2")}>
-                                <Text
-                                    style={[
-                                        tw("text-xs font-bold"),
-                                        { fontWeight: 900, fontFamily: "Times-Bold" },
-                                    ]}
-                                >
-                                    Branch
-                                </Text>
-                                <Text
-                                    style={[
-                                        tw("text-xs font-bold "),
-                                        {
-                                            fontWeight: 900,
-                                            fontFamily: "Times-Bold",
-                                            marginLeft: 38,
-                                        },
-                                    ]}
-                                >
-                                    :
-                                </Text>
-                                <Text style={tw("text-xs ml-2")}>
-                                    {singleData?.Branch?.branchName || ""}
-                                </Text>
-                            </View>
-                            <View style={tw("flex flex-row gap-x-2")}>
-                                <Text
-                                    style={[
-                                        tw("text-xs font-bold"),
-                                        { fontWeight: 900, fontFamily: "Times-Bold" },
-                                    ]}
-                                >
-                                    Location
-                                </Text>
-                                <Text
-                                    style={[
-                                        tw("text-xs font-bold"),
-                                        {
-                                            fontWeight: 900,
-                                            fontFamily: "Times-Bold",
-                                            marginLeft: 33,
-                                        },
-                                    ]}
-                                >
-                                    :
-                                </Text>
-                                <Text style={tw("text-xs ml-2")}>
-                                    {singleData?.Store?.storeName || ""}
-                                </Text>
-                            </View>
-                        </View>
 
-                        {/* Right Column */}
+                                <View style={tw("flex flex-row gap-x-2 mr-11")}>
+                                    <Text
+                                        style={[
+                                            tw("text-xs font-bold"),
+                                            { fontWeight: 900, fontFamily: "Times-Bold" },
+                                        ]}
+                                    >
+                                        Cutting Production No
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            tw("text-xs font-bold "),
+                                            {
+                                                fontWeight: 900,
+                                                fontFamily: "Times-Bold",
+                                                marginLeft: 10,
+                                            },
+                                        ]}
+                                    >
+                                        :
+                                    </Text>
+                                    <Text style={tw("text-xs ml-2")}>
+                                        {singleData?.docId || ""}
+                                    </Text>
+                                </View>
+                                <View style={tw("flex flex-row gap-x-2 ")}>
 
-                        <View style={tw("flex flex-col w-1/2 gap-y-2")}>
-                            <Text
-                                style={[
-                                    tw("font-bold"),
-                                    { fontWeight: 900, fontFamily: "Times-Bold" },
-                                ]}
-                            >
-                                Customer Details
-                            </Text>
-                            {/* Customer Name */}
-                            <View style={tw("flex flex-row gap-x-2")}>
-                                <Text
-                                    style={[
-                                        tw("text-xs font-bold"),
-                                        { fontWeight: 900, fontFamily: "Times-Bold" },
-                                    ]}
-                                >
-                                    Customer Name
-                                </Text>
-                                <Text
-                                    style={[
-                                        tw("text-xs font-bold"),
-                                        {
-                                            fontWeight: 900,
-                                            fontFamily: "Times-Bold",
-                                            marginLeft: 3,
-                                        },
-                                    ]}
-                                >
-                                    :
-                                </Text>
-                                <Text style={tw("text-xs ml-1")}>
-                                    {" "}
-                                    {singleData?.Customer?.name
-                                        ? singleData.Customer.name
-                                            .toLowerCase()
-                                            .replace(/\b\w/g, (char) => char.toUpperCase())
-                                        : ""}
-                                </Text>
+                                    <Text
+                                        style={[
+                                            tw("text-xs font-bold"),
+                                            { fontWeight: 900, fontFamily: "Times-Bold" },
+                                        ]}
+                                    >
+                                        Style No
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            tw("text-xs font-bold "),
+                                            {
+                                                fontWeight: 900,
+                                                fontFamily: "Times-Bold",
+                                                marginLeft: 5,
+                                            },
+                                        ]}
+                                    >
+                                        :
+                                    </Text>
+                                    <Text style={tw("text-xs ml-2")}>
+                                        {singleData?.Style?.sku || ""}
+                                    </Text>
+                                </View>
+
                             </View>
-                            {/*Customer Phone No */}
                             <View style={tw("flex flex-row gap-x-2")}>
-                                <Text
-                                    style={[
-                                        tw("text-xs font-bold"),
-                                        { fontWeight: 900, fontFamily: "Times-Bold" },
-                                    ]}
-                                >
-                                    Contact Number
-                                </Text>
-                                <Text
-                                    style={[
-                                        tw("text-xs font-bold"),
-                                        {
-                                            fontWeight: 900,
-                                            fontFamily: "Times-Bold",
-                                            marginLeft: 2,
-                                        },
-                                    ]}
-                                >
-                                    :
-                                </Text>
-                                <Text style={tw("text-xs ml-2")}>
-                                    {singleData?.Customer?.contactNumber || ""}
-                                </Text>
-                            </View>
-                            {/*Customer Address */}
-                            <View style={tw("flex flex-row gap-x-2")}>
-                                <Text
-                                    style={[
-                                        tw("text-xs font-bold"),
-                                        { fontWeight: 900, fontFamily: "Times-Bold" },
-                                    ]}
-                                >
-                                    Contact Address
-                                </Text>
-                                <Text
-                                    style={[
-                                        tw("text-xs font-bold "),
-                                        {
-                                            fontWeight: 900,
-                                            fontFamily: "Times-Bold",
-                                            marginLeft: 4,
-                                        },
-                                    ]}
-                                >
-                                    :
-                                </Text>
-                                <Text style={tw("text-xs ml-2")}>
-                                    {singleData?.Customer?.address}
-                                </Text>
+                                <View style={tw("flex flex-row gap-x-2 mr-16")}>
+                                    <Text
+                                        style={[
+                                            tw("text-xs font-bold"),
+                                            { fontWeight: 900, fontFamily: "Times-Bold" },
+                                        ]}
+                                    >
+                                        Cutting Production Date
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            tw("text-xs font-bold"),
+                                            {
+                                                fontWeight: 900,
+                                                fontFamily: "Times-Bold",
+                                                marginLeft: 4,
+                                            },
+                                        ]}
+                                    >
+                                        :
+                                    </Text>
+                                    <Text style={tw("text-xs ml-2")}>
+                                        {singleData?.docDate
+                                            ? new Date(singleData.docDate).toLocaleDateString()
+                                            : ""}
+                                    </Text>
+                                </View>
+
+
+                                <View style={tw("flex flex-row gap-x-2")}>
+                                    <Text
+                                        style={[
+                                            tw("text-xs font-bold"),
+                                            { fontWeight: 900, fontFamily: "Times-Bold" },
+                                        ]}
+                                    >
+                                        Employee
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            tw("text-xs font-bold"),
+                                            {
+                                                fontWeight: 900,
+                                                fontFamily: "Times-Bold",
+                                                marginLeft: 1,
+                                            },
+                                        ]}
+                                    >
+                                        :
+                                    </Text>
+                                    <Text style={tw("text-xs ml-2")}>
+                                        {singleData?.Employee
+                                            ? singleData.Employee.firstName
+                                            : ""}
+                                    </Text>
+                                </View>
                             </View>
                         </View>
                     </View>
@@ -335,15 +250,13 @@ const PDF = ({ singleData }) => {
                         {/* Table Header */}
                         <View fixed style={styles.tableHeader}>
                             {[
-                                { label: "S.No", flex: 0.5 },
-                                { label: "Style No", flex: 1 },
-                                { label: "Barcode ", flex: 1 },
-                                { label: "Style", flex: 2 },
-                                { label: "Fabric", flex: 2 },
-                                { label: "Size", flex: 0.8 },
+                                { label: "S.No", flex: 0.3 },
+                                { label: "Style", flex: 1 },
+                                { label: "Fabric", flex: 1 },
                                 { label: "Color", flex: 1 },
-                                { label: "Remarks", flex: 1.3 },
-                                { label: "Return Qty", flex: 1.3 },
+                                { label: "Portion", flex: 0.5 },
+                                // { label: "Width", flex: 0.6 },
+                                { label: "Meter", flex: 0.4 },
                             ].map((header, index) => (
                                 <Text
                                     key={index}
@@ -355,8 +268,43 @@ const PDF = ({ singleData }) => {
                                             fontSize: 8,
                                             fontWeight: "bold",
                                         },
-                                        index === header.length - 1 && styles.lastColumn,
                                     ]}
+                                >
+                                    {header.label}
+                                </Text>
+                            ))}
+
+                            {/* 🔥 ADD DYNAMIC SIZE COLUMNS */}
+                            {sizeColumns.map((col) => (
+                                <Text
+                                    key={col.sizeId}
+                                    style={[
+                                        styles.headerCell, {
+                                            flex: 0.3,
+                                            textAlign: "center",
+                                            fontSize: 8,
+                                            fontWeight: "bold",
+                                        }]}
+                                >
+                                    {col.sizeName}
+                                </Text>
+                            ))}
+
+                            {/* Remaining columns */}
+                            {[
+                                { label: "Qty", flex: 0.3 },
+                                { label: "Cons", flex: 0.3 },
+                                // { label: "Remarks", flex: 1 },
+                            ].map((header, i) => (
+                                <Text
+                                    key={`end-${i}`}
+                                    style={[
+                                        styles.headerCell, {
+                                            flex: header.flex,
+                                            textAlign: "center",
+                                            fontSize: 8,
+                                            fontWeight: "bold",
+                                        }]}
                                 >
                                     {header.label}
                                 </Text>
@@ -364,12 +312,7 @@ const PDF = ({ singleData }) => {
                         </View>
                         {/*  Grouped Rows */}
 
-                        {(singleData?.salesReturnItems || []).slice().sort((a, b) =>
-                            String(a?.styleNo ?? "").localeCompare(String(b?.styleNo ?? ""), undefined, {
-                                numeric: true,
-                                sensitivity: "base",
-                            })
-                        ).map((item, index) => {
+                        {(singleData?.cuttingDeliveryItems || []).map((item, index) => {
                             return (
                                 <View
                                     key={index}
@@ -383,37 +326,58 @@ const PDF = ({ singleData }) => {
                                         borderLeftWidth: 1
                                     }}
                                 >
-                                    <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7, textAlign: "center" }]}>
+                                    <Text style={[styles.tableCell, { flex: 0.3, fontSize: 7, textAlign: "center" }]}>
                                         {index + 1}
                                     </Text>
                                     <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
-                                        {item?.styleNo || ""}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
-                                        {item?.barcode || ""}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
                                         {item?.StyleItem?.name || ""}
                                     </Text>
-                                    <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
+                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
                                         {item?.Fabric?.name || ""}
                                     </Text>
-                                    <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7 }]}>
-                                        {item.Size?.name || ""}
-                                    </Text>
                                     <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
-                                        {item.Color?.name || ""}
+                                        {item?.Color?.name || ""}
                                     </Text>
-                                    <Text style={[styles.tableCell, { flex: 1.3, fontSize: 7, textAlign: "right" }]}>
+                                    <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7 }]}>
+                                        {item?.Portion?.name || ""}
+                                    </Text>
+                                    {/* <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7, textAlign: "right" }]}>
+                                        {item.fabWidth || ""}
+                                    </Text> */}
+                                    <Text style={[styles.tableCell, { flex: 0.4, fontSize: 7, textAlign: "right" }]}>
+                                        {item.usedMeter || ""}
+                                    </Text>
+                                    {sizeColumns.map((col) => {
+                                        const sizeItem =
+                                            item.sizeDetails?.find((s) => s.sizeId === col.sizeId) || { qty: "" };
+
+                                        return (
+                                            <Text
+                                                key={col.sizeId}
+                                                style={[
+                                                    styles.tableCell,
+                                                    { flex: 0.3, fontSize: 7, textAlign: "right" }
+                                                ]}
+                                            >
+                                                {sizeItem.qty || ""}
+                                            </Text>
+                                        );
+                                    })}
+                                    <Text style={[styles.tableCell, { flex: 0.3, fontSize: 7, textAlign: "right" }]}>
+                                        {item.issueQty || ""}
+                                    </Text>
+                                    <Text style={[styles.tableCell, { flex: 0.3, fontSize: 7, textAlign: "right" }]}>
+                                        {item.usedMeter && item.issueQty
+                                            ? (item.usedMeter / item.issueQty).toFixed(2)
+                                            : ""}
+                                    </Text>
+                                    {/* <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
                                         {item.remarks || ""}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1.3, fontSize: 7, textAlign: "right" }]}>
-                                        {item.returnQty || 0}
-                                    </Text>
+                                    </Text> */}
                                 </View>
                             );
                         })}
-                        <View style={{
+                        {/* <View style={{
                             flexDirection: "row",
                             width: "100%",
                             borderBottomWidth: 1,
@@ -436,9 +400,7 @@ const PDF = ({ singleData }) => {
                             <Text style={[styles.headerCell, , { flex: 0.8, fontSize: 8, textAlign: "right" }]}>
                                 {singleData?.salesReturnItems?.reduce((sum, row) => sum + row.returnQty, 0)}
                             </Text>
-                        </View>
-
-
+                        </View> */}
                     </View>
 
                 </View>

@@ -18,6 +18,7 @@ import Swal from "sweetalert2";
 import Modal from "../../../UiComponents/Modal";
 import { useGetEmployeeQuery } from "../../../redux/services/EmployeeMasterService";
 import { useGetPurchaseInwardEntryQuery } from "../../../redux/uniformService/PurchaseInwardEntry";
+import FxSelect from "../../../Inputs";
 
 export default function CuttingDeliveryItem({
     cuttingDeliveryItems,
@@ -29,7 +30,9 @@ export default function CuttingDeliveryItem({
     sizeTemplateId,
     uomList,
     styleTemplateDetail,
+    cuttingNo
 }) {
+    const isCuttingNull = cuttingNo === null || cuttingNo === undefined || cuttingNo === "";
     const [sizeColumns, setSizeColumns] = useState([]);
     const [contextMenu, setContextMenu] = useState(null);
     const [selectedRowIndex, setSelectedRowIndex] = useState(null);
@@ -352,11 +355,16 @@ export default function CuttingDeliveryItem({
                                         {col.sizeName}
                                     </th>
                                 ))}
-                                <th
-                                    className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Plan Qty
-                                </th>
+                                {
+                                    !isCuttingNull && (
+                                        <th
+                                            className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                            Plan Qty
+                                        </th>
+                                    )
+                                }
+
                                 <th
                                     className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                                 >
@@ -410,14 +418,24 @@ export default function CuttingDeliveryItem({
                                             {index + 1}
                                         </td>
                                         <td className="py-0.5 border border-gray-300 text-[11px] ">
-                                            <select
+                                            {/* <select
                                                 onKeyDown={(e) => {
                                                     if (e.key === "Delete") {
                                                         handleInputChange("", index, "styleItemId");
                                                     }
+                                                    if (e.key === "Enter") {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        const nextQtyInput = document.querySelector(
+                                                            `#usedMeter-input-${index}`
+                                                        );
+                                                        if (nextQtyInput) {
+                                                            nextQtyInput.focus();
+                                                        }
+                                                    }
                                                 }}
                                                 tabIndex={"0"}
-                                                disabled={true}
+                                                disabled={readOnly}
                                                 className="text-left w-full rounded py-1 table-data-input"
                                                 value={row.styleItemId}
                                                 onChange={(e) =>
@@ -444,7 +462,38 @@ export default function CuttingDeliveryItem({
                                                         {blend?.name}
                                                     </option>
                                                 ))}
-                                            </select>
+                                            </select> */}
+                                            <FxSelect
+                                                value={row.styleItemId}
+                                                onChange={(val) =>
+                                                    handleInputChange(val, index, "styleItemId")
+                                                }
+                                                options={(styleItemList?.data || [])
+                                                    .filter((item) => item.active)
+                                                    .map((item) => ({
+                                                        label: item.name,
+                                                        value: item.id,
+                                                    }))}
+                                                readOnly={readOnly}
+                                                placeholder=""
+                                                onBlur={() =>
+                                                    handleInputChange(row.styleItemId, index, "styleItemId")
+                                                }
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "Delete") {
+                                                        handleInputChange("", index, "styleItemId");
+                                                    }
+                                                    if (e.key === "Enter") {
+
+                                                        const nextQtyInput = document.querySelector(
+                                                            `#usedMeter-input-${index}`
+                                                        );
+                                                        if (nextQtyInput) {
+                                                            nextQtyInput.focus();
+                                                        }
+                                                    }
+                                                }}
+                                            />
                                         </td>
                                         <td className="py-0.5 border border-gray-300 text-[11px] ">
                                             <select
@@ -672,18 +721,19 @@ export default function CuttingDeliveryItem({
                                                                     (total, item) => total + Number(item.qty || 0),
                                                                     0
                                                                 );
+                                                                // if (!isCuttingNull) {
 
-                                                                // 4️⃣ VALIDATION → Prevent excess Qty
-                                                                if (totalQty > rowData.orderQty) {
-                                                                    Swal.fire({
-                                                                        icon: "warning",
-                                                                        title: "Invalid Quantity",
-                                                                        text: "Qty cannot be more than Order Qty!",
-                                                                        confirmButtonText: "OK",
-                                                                    });
-                                                                    return prev; // ❌ don't update state
-                                                                }
-
+                                                                //     // 4️⃣ VALIDATION → Prevent excess Qty
+                                                                //     if (totalQty > rowData.orderQty) {
+                                                                //         Swal.fire({
+                                                                //             icon: "warning",
+                                                                //             title: "Invalid Quantity",
+                                                                //             text: "Qty cannot be more than Order Qty!",
+                                                                //             confirmButtonText: "OK",
+                                                                //         });
+                                                                //         return prev; // ❌ don't update state
+                                                                //     }
+                                                                // }
                                                                 // 5️⃣ If valid → update
                                                                 rowData.sizeDetails = newSizeDetails;
                                                                 rowData.issueQty = totalQty;
@@ -705,29 +755,34 @@ export default function CuttingDeliveryItem({
                                                 </td>
                                             );
                                         })}
-                                        <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                                            <input
-                                                onKeyDown={(e) => {
-                                                    if (e.code === "Minus" || e.code === "NumpadSubtract")
-                                                        e.preventDefault();
-                                                    if (e.key === "Delete") {
-                                                        handleInputChange("", index, "orderQty");
-                                                    }
-                                                }}
-                                                min={"0"}
-                                                type="number"
-                                                className="text-right rounded py-1 px-1 w-full table-data-input"
-                                                onFocus={(e) => e.target.select()}
-                                                value={row?.orderQty}
-                                                onChange={(e) =>
-                                                    handleInputChange(e.target.value, index, "orderQty")
-                                                }
-                                                onBlur={(e) => {
-                                                    handleInputChange(e.target.value, index, "orderQty");
-                                                }}
-                                                disabled={true}
-                                            />
-                                        </td>
+                                        {
+                                            !isCuttingNull && (
+                                                <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                                                    <input
+                                                        onKeyDown={(e) => {
+                                                            if (e.code === "Minus" || e.code === "NumpadSubtract")
+                                                                e.preventDefault();
+                                                            if (e.key === "Delete") {
+                                                                handleInputChange("", index, "orderQty");
+                                                            }
+                                                        }}
+                                                        min={"0"}
+                                                        type="number"
+                                                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                                                        onFocus={(e) => e.target.select()}
+                                                        value={row?.orderQty}
+                                                        onChange={(e) =>
+                                                            handleInputChange(e.target.value, index, "orderQty")
+                                                        }
+                                                        onBlur={(e) => {
+                                                            handleInputChange(e.target.value, index, "orderQty");
+                                                        }}
+                                                        disabled={true}
+                                                    />
+                                                </td>
+                                            )
+                                        }
+
                                         <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                                             <input
                                                 id={`issueQty-input-${index}`}
@@ -773,16 +828,16 @@ export default function CuttingDeliveryItem({
                                         <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                                             <input
                                                 onKeyDown={(e) => {
-                                                    if (e.key === "Enter") {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        const nextQtyInput = document.querySelector(
-                                                            `#usedMeter-input-${index + 1}`
-                                                        );
-                                                        if (nextQtyInput) {
-                                                            nextQtyInput.focus();
-                                                        }
-                                                    }
+                                                    // if (e.key === "Enter") {
+                                                    //     e.preventDefault();
+                                                    //     e.stopPropagation();
+                                                    //     const nextQtyInput = document.querySelector(
+                                                    //         `#usedMeter-input-${index + 1}`
+                                                    //     );
+                                                    //     if (nextQtyInput) {
+                                                    //         nextQtyInput.focus();
+                                                    //     }
+                                                    // }
                                                     if (e.key === "Delete") {
                                                         handleInputChange("", index, "remarks");
                                                     }
@@ -826,12 +881,17 @@ export default function CuttingDeliveryItem({
                                 >
                                     Total
                                 </td>
-                                <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
-                                    {cuttingDeliveryItems.reduce(
-                                        (sum, row) => sum + (Number(row.orderQty) || 0),
-                                        0
-                                    )}
-                                </td>
+                                {
+                                    !isCuttingNull && (
+                                        <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
+                                            {cuttingDeliveryItems.reduce(
+                                                (sum, row) => sum + (Number(row.orderQty) || 0),
+                                                0
+                                            )}
+                                        </td>
+                                    )
+                                }
+
                                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
                                     {cuttingDeliveryItems.reduce(
                                         (sum, row) => sum + (Number(row.issueQty) || 0),
