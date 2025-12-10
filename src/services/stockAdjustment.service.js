@@ -385,35 +385,9 @@ async function getOne(id) {
     },
   });
   if (!data) return NoRecordFound("stockAdjustment");
-  const adjustItemsWithStkQty = await Promise.all(
-    data.StockAdjustmentItems.map(async (item) => {
-      const stockData = await prisma.stock.aggregate({
-        where: {
-          styleId: item.styleId,
-          sizeId: item.sizeId,
-          styleItemId: item.styleItemId,
-          fabricId: item.fabricId,
-          colorId: item.colorId,
-          storeId: data.storeId,
-        },
-        _sum: {
-          qty: true,
-        },
-      });
-
-      return {
-        ...item,
-        stkQty:
-          item.adjType === "PLUS"
-            ? stockData._sum.qty - item.adjQty
-            : stockData._sum.qty + item.adjQty,
-      };
-    })
-  );
-
   return {
     statusCode: 0,
-    data: { ...data, StockAdjustmentItems: adjustItemsWithStkQty },
+    data: { ...data },
   };
 }
 
