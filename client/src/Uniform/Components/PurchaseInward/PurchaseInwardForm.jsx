@@ -28,9 +28,8 @@ import Modal from "../../../UiComponents/Modal";
 import { PDFViewer } from "@react-pdf/renderer";
 import PDF from "./PrintFormat/PDF";
 import tw from "../../../Utils/tailwind-react-pdf";
-const PurchaseInwardForm = ({ onClose, id, setId }) => {
+const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly }) => {
   const [docId, setDocId] = useState("New");
-  const [readOnly, setReadOnly] = useState("");
   const [inwardType, setInwardType] = useState("Fabric");
   const [dcNo, setDcNo] = useState("");
   const [dcDate, setDcDate] = useState("");
@@ -377,7 +376,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                   setSupplierId(value);
                 }}
                 required={true}
-                readOnly={id}
+                readOnly={readOnly}
               />
             </div>
           </div>
@@ -405,7 +404,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                     setStoreId("");
                   }}
                   required={true}
-                  readOnly={readOnly}
+                  readOnly={id}
                 />
                 <DropdownInput
                   name="Location"
@@ -419,7 +418,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                   value={storeId}
                   setValue={setStoreId}
                   required={true}
-                  readOnly={readOnly}
+                  readOnly={id}
                 />
               </div>
             </div>

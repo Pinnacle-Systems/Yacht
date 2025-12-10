@@ -516,7 +516,7 @@ export default function BillItems({
                       <input
                         type="checkbox"
                         checked={row.selected || false}
-                        disabled={readOnly}
+                        disabled={true}
                         onChange={(e) =>
                           handleInputChange(e.target.checked, index, "selected")
                         }
@@ -743,6 +743,13 @@ export default function BillItems({
                             e.preventDefault();
                           if (e.key === "Delete") {
                             handleInputChange("", index, "qty");
+                          }
+                          if (
+                            e.key === "0" ||
+                            e.code === "Digit0" ||
+                            e.code === "Numpad0"
+                          ) {
+                            e.preventDefault();
                           }
                         }}
                         onFocus={(e) => e.target.focus()}

@@ -55,9 +55,13 @@ async function get(req) {
       const childCount = await prisma.openingStockItems.count({
         where: { styleId: style.id },
       });
+      const childRecord = await prisma.fabricInwardItems.count({
+        where: { styleId: style.id },
+      });
       return {
         ...style,
-        childRecord: childCount,
+        childRecordStock: childCount,
+        childRecordPurchase: childRecord,
       };
     })
   );
@@ -66,7 +70,10 @@ async function get(req) {
 }
 
 async function getOne(id) {
-  const childRecord = await prisma.openingStockItems.count({
+  const childRecordStock = await prisma.openingStockItems.count({
+    where: { styleId: parseInt(id) },
+  });
+  const childRecordPurchase = await prisma.fabricInwardItems.count({
     where: { styleId: parseInt(id) },
   });
   const data = await prisma.style.findUnique({
@@ -76,7 +83,14 @@ async function getOne(id) {
   });
 
   if (!data) return NoRecordFound("style");
-  return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+  return {
+    statusCode: 0,
+    data: {
+      ...data,
+      childRecordStock: childRecordStock,
+      childRecordPurchase: childRecordPurchase,
+    },
+  };
 }
 
 async function getSearch(req) {
@@ -153,7 +167,7 @@ async function update(id, body) {
     fabricId,
     sizeTemplateId,
     styleItemId,
-    price
+    price,
   } = await body;
 
   const dataFound = await prisma.style.findUnique({
@@ -174,7 +188,7 @@ async function update(id, body) {
       fabricId: fabricId ? parseInt(fabricId) : undefined,
       sizeTemplateId: sizeTemplateId ? parseInt(sizeTemplateId) : undefined,
       styleItemId: styleItemId ? parseInt(styleItemId) : undefined,
-      price: price ? parseInt(price) : undefined
+      price: price ? parseInt(price) : undefined,
     },
   });
   return { statusCode: 0, data };

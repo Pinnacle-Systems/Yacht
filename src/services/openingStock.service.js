@@ -230,6 +230,30 @@ async function getOne(id) {
     },
   });
   if (!data) return NoRecordFound("openingStock");
+  const itemWithStkQty = await Promise.all(
+    data.OpeningStockItems.map(async (item) => {
+      const childRecordSales = await prisma.salesEntryItems.count({
+        where: {
+          styleId: item.styleId,
+          sizeId: item.sizeId,
+          colorId: item.colorId,
+          styleItemId: item.styleItemId,
+        },
+      });
+      const childRecordAdjust = await prisma.stockAdjustmentItems.count({
+        where: {
+          styleId: item.styleId,
+          sizeId: item.sizeId,
+          colorId: item.colorId,
+          styleItemId: item.styleItemId,
+        },
+      });
+      return {
+        ...item,
+        stockQty: childRecordSales + childRecordAdjust || 0,
+      };
+    })
+  );
   const styleNos = data.OpeningStockItems.map((item) => item.styleNo).filter(
     Boolean
   );
@@ -249,6 +273,7 @@ async function getOne(id) {
     statusCode: 0,
     data: {
       ...data,
+      OpeningStockItems: itemWithStkQty,
       childRecordSales: childRecordSales,
       childRecordStock: childRecordStock,
     },

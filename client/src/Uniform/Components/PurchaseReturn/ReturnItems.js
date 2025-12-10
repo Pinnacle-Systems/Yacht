@@ -794,6 +794,7 @@ const ReturnItems = ({
                           onBlur={(e) => {
                             handleInputChange(e.target.value, index, "noOfPcs");
                           }}
+                          readOnly={readOnly}
                           disabled={readOnly}
                         />
                       </td>
@@ -841,6 +842,7 @@ const ReturnItems = ({
                             );
                           }}
                           disabled={readOnly}
+                          readOnly={readOnly}
                         />
                       </td>
                     )}

@@ -1814,7 +1814,7 @@ export const DropdownNew = ({
       ? [
           {
             value: "",
-            label: `Select ${name || "option"}`,
+            label: `Select ${name ||  placeholder || "Option"}`,
             isDisabled: false,
           },
         ]
@@ -1826,7 +1826,7 @@ export const DropdownNew = ({
   ];
   const selectedOption = options.find((opt) => opt.value === value) || null;
   return (
-    <div className={`mb-2 w-${width}`}>
+    <div className={`${name ? "mb-2" : "mb-0"} w-${width}`}>
       {name && (
         <label className="block text-xs font-bold text-slate-700 mb-1">
           {required ? (
@@ -1926,7 +1926,7 @@ export const customStyles = {
     backgroundColor: state.isSelected
       ? "#d1d5db" // gray-200
       : state.isFocused
-      ?  "#e5e7eb" // gray-100
+      ? "#e5e7eb" // gray-100
       : "white",
     color: "black",
   }),

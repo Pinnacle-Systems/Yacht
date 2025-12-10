@@ -261,10 +261,16 @@ const StyleMaster = () => {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-      if (data?.childRecord > 0) {
+      if (data?.childRecordStock > 0) {
         Swal.fire({
           icon: "error",
           title: "Child record in Opening Stock",
+          text: "Data cannot be deleted!",
+        });
+      } else if (data?.childRecordPurchase > 0) {
+        Swal.fire({
+          icon: "error",
+          title: "Child record in Purchase Inward",
           text: "Data cannot be deleted!",
         });
       } else {

@@ -230,7 +230,6 @@ async function getSalesReport(req) {
 }
 
 async function getOne(id) {
-  const childRecord = 0;
   const data = await prisma.salesEntry.findUnique({
     where: {
       id: parseInt(id),
@@ -274,7 +273,28 @@ async function getOne(id) {
     },
   });
   if (!data) return NoRecordFound("salesEntry");
-  return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+  const salesWithStkQty = await Promise.all(
+    data.SalesEntryItems.map(async (item) => {
+      const totalStkQty = await prisma.stock.aggregate({
+        where: {
+          styleId: item.styleId,
+          sizeId: item.sizeId,
+          colorId: item.colorId,
+          storeId: data.storeId,
+          styleItemId: item.styleItemId,
+          fabricId: item.fabricId,
+        },
+        _sum: {
+          qty: true,
+        },
+      });
+      return {
+        ...item,
+        stkQty: totalStkQty._sum.qty + item.qty,
+      };
+    })
+  );
+  return { statusCode: 0, data: { ...data, SalesEntryItems: salesWithStkQty } };
 }
 
 async function getSearch(req) {
@@ -313,7 +333,7 @@ async function create(body) {
     contactNumber,
     taxTemplateId,
     destinationId,
-    salesType
+    salesType,
   } = await body;
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate
@@ -755,4 +775,13 @@ async function getSalesInvDetail(req) {
   };
 }
 
-export { get, getOne, getSearch, create, update, remove, getSalesReport ,getSalesInvDetail};
+export {
+  get,
+  getOne,
+  getSearch,
+  create,
+  update,
+  remove,
+  getSalesReport,
+  getSalesInvDetail,
+};

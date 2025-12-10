@@ -5,15 +5,22 @@ import { useDeletePurchaseInwardEntryMutation, useLazyGetPurchaseInwardEntryById
 import Swal from "sweetalert2";
 import { FaPlus } from "react-icons/fa";
 import PurchaseInwardFormReport from "./PurchaseInwardFormReport";
+import StyleMasterApi, { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+import { DropdownNew } from "../../../Inputs";
+import { getCommonParams } from "../../../Utils/helper";
 const MODEL = "Purchase Inward / Direct Inward";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
   const [id, setId] = useState("");
   const [readOnly, setReadOnly] = useState(false);
+  const dispatch = useDispatch();
+  const [searchStyleId, setSearchStyleId] = useState("")
+  const { companyId } = getCommonParams();
 
   const [trigger, { data: singleDataLazy, isFetchingLazy }] =
     useLazyGetPurchaseInwardEntryByIdQuery();
+  const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
 
   const [removeData] = useDeletePurchaseInwardEntryMutation();
   const handleView = (orderId) => {
@@ -66,6 +73,7 @@ export default function Form() {
             timer: 1000,
           });
           setShowForm(false);
+          dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
         } catch (error) {
           Swal.fire({
             icon: "error",
@@ -108,15 +116,32 @@ export default function Form() {
                 Purchase Inward Report
               </h1>
             </div>
-            <button
-              className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
-              onClick={() => {
-                setShowForm(true);
-                onNew();
-              }}
-            >
-              <FaPlus /> Create New
-            </button>
+            <div className="flex items-center">
+              <div className="w-40">
+                <DropdownNew
+                  dataList={styleList?.data?.filter((item) => item.active)}
+                  value={searchStyleId}
+                  setValue={(value) => {
+                    setSearchStyleId(value);
+                  }}
+                  required={false}
+                  clear={true}
+                  otherField={"sku"}
+                  placeholder={"Style No"}
+                />
+              </div>
+              <div>
+                <button
+                  className="hover:bg-green-700 w-full bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
+                  onClick={() => {
+                    setShowForm(true);
+                    onNew();
+                  }}
+                >
+                  <FaPlus /> Create New
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm overflow-hidden  ">
@@ -125,6 +150,7 @@ export default function Form() {
               onEdit={handleEdit}
               onDelete={handleDelete}
               itemsPerPage={10}
+              searchStyleId={searchStyleId}
             />
           </div>
         </div>

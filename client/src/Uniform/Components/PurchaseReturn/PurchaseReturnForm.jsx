@@ -29,9 +29,8 @@ import { useAddPurchaseReturnMutation, useDeletePurchaseReturnMutation, useGetPu
 import { useGetPurchaseInwardEntryQuery, useLazyGetPurchaseDetailQuery } from "../../../redux/uniformService/PurchaseInwardEntry";
 import ReturnItems from "./ReturnItems";
 
-const PurchaseReturnForm = ({ onClose, id, setId }) => {
+const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly }) => {
     const [docId, setDocId] = useState("New");
-    const [readOnly, setReadOnly] = useState("");
     const [returnType, setReturnType] = useState("Fabric");
     const [supplierId, setSupplierId] = useState("");
     const [locationId, setLocationId] = useState("");
@@ -470,7 +469,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
                                 placeholder={"Select Inv"}
                                 otherField={"invNo"}
                                 otherValue={"invNo"}
-                                disabled={id}
+                                disabled={readOnly}
                             />
                             <DropdownInput
                                 name="Return Type"
@@ -501,7 +500,7 @@ const PurchaseReturnForm = ({ onClose, id, setId }) => {
                                     setSupplierId(value);
                                 }}
                                 required={true}
-                                readOnly={id}
+                                readOnly={readOnly}
                             />
                             {/* <TextInput
                                 name={"Invoice No"}

@@ -89,6 +89,7 @@ async function get(req) {
     serachDocNo,
     searchDocDate,
     searchStore,
+    searchStyleId,
     searchInwardType,
     searchInvNo,
     finYearId,
@@ -160,6 +161,14 @@ async function get(req) {
   if (searchDocDate) {
     data = data?.filter((item) =>
       String(getDateFromDateTime(item.createdAt)).includes(searchDocDate)
+    );
+  }
+  if (searchStyleId) {
+    const styleIdNumber = Number(searchStyleId);
+    data = data.filter((item) =>
+      item.fabricInwardItems.some(
+        (fabric) => Number(fabric.styleId) === styleIdNumber
+      )
     );
   }
   if (pagination) {

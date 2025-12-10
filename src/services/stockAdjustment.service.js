@@ -354,7 +354,6 @@ async function get(req) {
 
 async function getOne(id) {
   console.log("error is Here", id);
-  const childRecord = 0;
   const data = await prisma.stockAdjustment.findUnique({
     where: {
       id: parseInt(id),
@@ -386,7 +385,33 @@ async function getOne(id) {
     },
   });
   if (!data) return NoRecordFound("stockAdjustment");
-  return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+  const adjustItemsWithStkQty = await Promise.all(
+    data.StockAdjustmentItems.map(async (item) => {
+      const stockData = await prisma.stock.aggregate({
+        where: {
+          styleId: item.styleId,
+          sizeId: item.sizeId,
+          styleItemId: item.styleItemId,
+          fabricId: item.fabricId,
+          colorId: item.colorId,
+          storeId: data.storeId,
+        },
+        _sum: {
+          qty: true,
+        },
+      });
+
+      return {
+        ...item,
+        stkQty: stockData._sum.qty, // Dynamic field for view
+      };
+    })
+  );
+
+  return {
+    statusCode: 0,
+    data: { ...data, StockAdjustmentItems: adjustItemsWithStkQty },
+  };
 }
 
 async function create(body) {

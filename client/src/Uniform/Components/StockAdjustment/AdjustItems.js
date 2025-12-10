@@ -194,21 +194,16 @@ export default function AdjustItems({
 
   const handleInputChange = async (value, index, field) => {
     if (field === "adjQty") {
-      if (!stockAdjustmentItems[index].adjType) {
-        toast.info("Please select Adjustment Type first...!", {
-          position: "top-center",
-        });
-        return false;
-      }
       if (stockAdjustmentItems[index]?.adjType === "MINUS") {
         if (Number(value) > Number(stockAdjustmentItems[index]?.stkQty)) {
           toast.info(
             "Adjustment Quantity cannot be greater than Stock Quantity...!",
             {
               position: "top-center",
+              autoClose: 2000,
             }
           );
-          return false;
+          return;
         }
       }
     }
@@ -736,9 +731,10 @@ export default function AdjustItems({
     ${row.adjType === "MINUS" ? "text-red-600" : ""}
   `}
                         value={row.adjType}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "adjType")
-                        }
+                        onChange={(e) => {
+                          handleInputChange(e.target.value, index, "adjType");
+                          handleInputChange("", index, "adjQty");
+                        }}
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "adjType");
                         }}
@@ -755,8 +751,19 @@ export default function AdjustItems({
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
                         onKeyDown={(e) => {
-                          if (e.code === "Minus" || e.code === "NumpadSubtract")
+                          if (
+                            e.code === "Minus" ||
+                            e.code === "NumpadSubtract" ||
+                            e.code === 0
+                          )
                             e.preventDefault();
+                          if (
+                            e.key === "0" ||
+                            e.code === "Digit0" ||
+                            e.code === "Numpad0"
+                          ) {
+                            e.preventDefault();
+                          }
                           if (e.key === "Delete") {
                             handleInputChange("", index, "adjQty");
                           }
@@ -772,7 +779,7 @@ export default function AdjustItems({
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "adjQty");
                         }}
-                        disabled={readOnly}
+                        disabled={readOnly || !row.adjType}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">

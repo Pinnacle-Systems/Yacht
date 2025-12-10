@@ -15,6 +15,7 @@ const PurchaseInwardFormReport = ({
   onEdit,
   onDelete,
   rowActions = true,
+  searchStyleId,
 }) => {
   const branchId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "currentBranchId"
@@ -42,6 +43,7 @@ const PurchaseInwardFormReport = ({
     searchInwardType,
     searchInvNo,
     searchSupplier,
+    searchStyleId
   };
 
   useEffect(() => {
@@ -53,6 +55,7 @@ const PurchaseInwardFormReport = ({
     searchInwardType,
     searchSupplier,
     searchInvNo,
+    searchStyleId
   ]);
 
   const companyId = secureLocalStorage.getItem(
