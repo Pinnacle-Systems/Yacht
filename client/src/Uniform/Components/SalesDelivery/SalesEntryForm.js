@@ -343,7 +343,7 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
                   setStoreId("");
                 }}
                 required={true}
-                readOnly={readOnly}
+                readOnly={id}
               />
               <DropdownInput
                 name="Location"
@@ -357,7 +357,7 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
                 value={storeId}
                 setValue={setStoreId}
                 required={true}
-                readOnly={readOnly}
+                readOnly={id}
               />
             </div>
           </div>

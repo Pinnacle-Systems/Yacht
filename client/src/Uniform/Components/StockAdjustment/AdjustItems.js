@@ -757,13 +757,6 @@ export default function AdjustItems({
                             e.code === 0
                           )
                             e.preventDefault();
-                          if (
-                            e.key === "0" ||
-                            e.code === "Digit0" ||
-                            e.code === "Numpad0"
-                          ) {
-                            e.preventDefault();
-                          }
                           if (e.key === "Delete") {
                             handleInputChange("", index, "adjQty");
                           }

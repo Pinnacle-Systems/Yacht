@@ -744,13 +744,6 @@ export default function BillItems({
                           if (e.key === "Delete") {
                             handleInputChange("", index, "qty");
                           }
-                          if (
-                            e.key === "0" ||
-                            e.code === "Digit0" ||
-                            e.code === "Numpad0"
-                          ) {
-                            e.preventDefault();
-                          }
                         }}
                         onFocus={(e) => e.target.focus()}
                         onChange={(e) =>

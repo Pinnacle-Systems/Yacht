@@ -353,7 +353,7 @@ export default function OpeningStockForm({
                   setStoreId("");
                 }}
                 required={true}
-                readOnly={readOnly}
+                readOnly={id}
               />
               <DropdownInput
                 name="Location"
@@ -367,7 +367,7 @@ export default function OpeningStockForm({
                 value={storeId}
                 setValue={setStoreId}
                 required={true}
-                readOnly={readOnly}
+                readOnly={id}
                 autoFocus={true}
               />
             </div>

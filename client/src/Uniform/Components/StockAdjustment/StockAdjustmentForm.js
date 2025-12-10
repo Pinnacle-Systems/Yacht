@@ -290,7 +290,7 @@ export default function StockAdjustmentForm({
                   setStoreId("");
                 }}
                 required={true}
-                readOnly={readOnly}
+                readOnly={id}
               />
               <DropdownInput
                 name="Location"
@@ -304,7 +304,7 @@ export default function StockAdjustmentForm({
                 value={storeId}
                 setValue={setStoreId}
                 required={true}
-                readOnly={readOnly}
+                readOnly={id}
                 autoFocus={true}
               />
             </div>

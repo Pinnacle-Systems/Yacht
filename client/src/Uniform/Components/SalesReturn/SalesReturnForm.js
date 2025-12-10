@@ -357,7 +357,7 @@ export default function SalesReturnForm({
                   setStoreId("");
                 }}
                 required={true}
-                disabled={readOnly}
+                disabled={id}
                 otherField={"branchName"}
                 placeholder={"Select Branch"}
               />

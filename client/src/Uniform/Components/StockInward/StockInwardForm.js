@@ -421,7 +421,7 @@ export default function StockInwardForm({
                   setStoreId("");
                 }}
                 required={true}
-                readOnly={readOnly}
+                readOnly={id}
               />
               <DropdownInput
                 name="Location"

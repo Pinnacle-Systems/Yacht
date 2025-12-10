@@ -403,7 +403,10 @@ async function getOne(id) {
 
       return {
         ...item,
-        stkQty: stockData._sum.qty, // Dynamic field for view
+        stkQty:
+          item.adjType === "PLUS"
+            ? stockData._sum.qty - item.adjQty
+            : stockData._sum.qty + item.adjQty,
       };
     })
   );
