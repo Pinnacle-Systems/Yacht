@@ -231,7 +231,7 @@ async function getOne(id) {
     statusCode: 0,
     data: {
       ...data,
-      // childRecordCutting: childRecordCutting,
+      childRecordCutting: childRecordCutting,
     },
   };
 }
