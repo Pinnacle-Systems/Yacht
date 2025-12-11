@@ -80,6 +80,7 @@ import {
   StyleItemMaster,
   StyleMaster,
   TagTypeMater,
+  SummaryReport,
 } from "../../../Uniform/Components";
 import NewOrder from "../../../Uniform/Components/NewOrder";
 import Manufacture from "../../../Uniform/Components/styleesheet/Manufacture";
@@ -174,7 +175,8 @@ const ActiveTabList = () => {
     "PROCESS MASTER": <ProcessMaster />,
     "PRODUCTION ENTRY": <ProductionDelivery />,
     "PROCESS GROUP SEQ": <ProcessGroupSeqMaster />,
-    "PROCESS GROUP MASTER": <ProcessGroupMaster />
+    "PROCESS GROUP MASTER": <ProcessGroupMaster />,
+    "STOCK SUMMARY REPORT": <SummaryReport />,
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

@@ -20,6 +20,9 @@ const OpeningStockFormReport = ({
   const branchId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "currentBranchId"
   );
+  const finyearId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "currentFinYear"
+  );
 
   const [dataPerPage, setDataPerPage] = useState("10");
   const [serachDocNo, setSerachDocNo] = useState("");
@@ -63,6 +66,7 @@ const OpeningStockFormReport = ({
       ...searchFields,
       pagination: true,
       dataPerPage,
+      finyearId,
       pageNumber: currentPageNumber,
     },
   });

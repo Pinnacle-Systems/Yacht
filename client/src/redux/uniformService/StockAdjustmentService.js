@@ -93,6 +93,7 @@ const StockAdjustmentApi = createApi({
 export const {
   useGetStockAdjustmentQuery,
   useGetStockAdjustmentByIdQuery,
+  useLazyGetStockAdjustmentByIdQuery,
   useAddStockAdjustmentMutation,
   useUpdateStockAdjustmentMutation,
   useDeleteStockAdjustmentMutation,

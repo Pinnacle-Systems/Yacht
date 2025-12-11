@@ -19,6 +19,9 @@ const StockAdjustmentFormReport = ({
   const branchId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "currentBranchId"
   );
+  const finyearId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "currentFinYear"
+  );
 
   const [dataPerPage, setDataPerPage] = useState("10");
   const [serachDocNo, setSerachDocNo] = useState("");
@@ -60,6 +63,7 @@ const StockAdjustmentFormReport = ({
       ...searchFields,
       pagination: true,
       dataPerPage,
+      finyearId,
       pageNumber: currentPageNumber,
     },
   });
@@ -167,7 +171,7 @@ const StockAdjustmentFormReport = ({
   return (
     <div className="flex flex-col w-full h-[93%] overflow-auto">
       <>
-        <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">  
+        <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
           <div className="h-[420px]">
             <table className="">
               <thead className="bg-gray-200 text-gray-800 ">

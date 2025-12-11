@@ -385,9 +385,33 @@ async function getOne(id) {
     },
   });
   if (!data) return NoRecordFound("stockAdjustment");
+  const itemWithSalesQty = await Promise.all(
+    data.StockAdjustmentItems.map(async (item) => {
+      const childRecordSales = await prisma.salesEntryItems.count({
+        where: {
+          styleId: item.styleId,
+          sizeId: item.sizeId,
+          colorId: item.colorId,
+          styleItemId: item.styleItemId,
+        },
+      });
+      return {
+        ...item,
+        stockQty: childRecordSales || 0,
+      };
+    })
+  );
+  const styleNos = data.StockAdjustmentItems.map((item) => item.styleNo).filter(
+    Boolean
+  );
+  const childRecordSales = await prisma.salesEntryItems.count({
+    where: {
+      styleNo: { in: styleNos },
+    },
+  });
   return {
     statusCode: 0,
-    data: { ...data },
+    data: { ...data, childRecordSales: childRecordSales },
   };
 }
 

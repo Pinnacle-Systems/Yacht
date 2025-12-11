@@ -45,6 +45,9 @@ const SalesEntryReport = ({
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
   );
+  const finyearId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "currentFinYear"
+  );
   const params = {
     branchId,
     companyId,
@@ -60,6 +63,7 @@ const SalesEntryReport = ({
       ...searchFields,
       pagination: true,
       dataPerPage,
+      finyearId,
       pageNumber: currentPageNumber,
     },
   });
@@ -76,7 +80,6 @@ const SalesEntryReport = ({
   const indexOfLastItem = currentPage * parseInt(10);
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
-
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {

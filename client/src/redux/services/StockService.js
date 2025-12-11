@@ -33,6 +33,29 @@ const stockApi = createApi({
       },
       providesTags: ["Stock"],
     }),
+    getStockSummary: builder.query({
+      query: ({ params, searchParams }) => {
+        if (searchParams) {
+          return {
+            url: STOCK_API + "/search/" + searchParams,
+            method: "GET",
+            headers: {
+              "Content-type": "application/json; charset=UTF-8",
+            },
+            params,
+          };
+        }
+        return {
+          url: `${STOCK_API}/summary`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["Stock"],
+    }),
     getStyleDetail: builder.query({
       query: ({ params }) => {
         return {
@@ -107,6 +130,7 @@ const stockApi = createApi({
 export const {
   useGetStockQuery,
   useGetStockByIdQuery,
+  useGetStockSummaryQuery,
   useAddStockMutation,
   useUpdateStockMutation,
   useDeleteStockMutation,

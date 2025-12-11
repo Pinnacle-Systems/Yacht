@@ -57,6 +57,9 @@ const PurchaseReturnReport = ({
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
   );
+  const finyearId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "currentFinYear"
+  );
   const params = {
     branchId,
     companyId,
@@ -73,6 +76,7 @@ const PurchaseReturnReport = ({
       pagination: true,
       dataPerPage,
       pageNumber: currentPageNumber,
+      finyearId,
     },
   });
 

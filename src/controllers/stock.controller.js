@@ -1,13 +1,21 @@
-import { Prisma } from "@prisma/client";
-
 import {
   get as _get,
   getStyleDetail as _getStyleDetail,
+  getSummary as _getSummary,
 } from "../services/stock.service.js";
 
 async function get(req, res, next) {
   try {
     res.json(await _get(req));
+    console.log(res.statusCode);
+  } catch (err) {
+    console.error(`Error `, err.message);
+  }
+}
+
+async function getSummary(req, res, next) {
+  try {
+    res.json(await _getSummary(req));
     console.log(res.statusCode);
   } catch (err) {
     console.error(`Error `, err.message);
@@ -23,4 +31,4 @@ async function getStyleDetail(req, res, next) {
   }
 }
 
-export { get, getStyleDetail };
+export { get, getStyleDetail, getSummary };

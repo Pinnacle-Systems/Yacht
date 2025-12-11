@@ -93,14 +93,16 @@ export const handleOnChange = (event, setValue) => {
 
 
 export function ReusableInput(
-  { setValue, label, type, value, className = "", placeholder, readOnly, disabled,autoFocus,onKeyDown }
+  { setValue, label, type, value, className = "", placeholder, readOnly, disabled, autoFocus, onKeyDown, required }
 ) {
   return (
     <div className="mb-2">
-      {label && (
-        <label className="block  font-bold text-slate-700 mb-1 text-xs">
-          {label}
-        </label>
+      {required ? (
+        <span className="text-xs text-slate-700 font-bold mb-1   block">
+          {label} <span className="text-red-500">*</span>
+        </span>
+      ) : (
+        label
       )}
       <input
         type={type}
@@ -116,7 +118,7 @@ export function ReusableInput(
           focus:border-indigo-300 focus:outline-none transition-all duration-200
           hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""
           } ${className}`}
-          autoFocus={autoFocus}
+        autoFocus={autoFocus}
       />
     </div>
   );

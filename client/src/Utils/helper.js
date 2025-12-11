@@ -582,6 +582,13 @@ export default function RightClickMenu({ data, setData, rowKey = "id", actions }
   );
 }
 
+export function formatCamelCase(str) {
+      if (!str) return "";
+      return str
+        .replace(/([a-z])([A-Z])/g, "$1 $2") // insert space before capital letters
+        .toUpperCase();
+    }
+
 
 
 

@@ -548,6 +548,78 @@ async function get(req) {
   };
 }
 
+async function getSummary(req) {
+  const {
+    branchId,
+    storeId,
+    searchFabric,
+    searchStore,
+    finYearId,
+    styleId,
+    sizeId,
+    fabricId,
+    styleItemId,
+    colorId,
+    fromDate,
+    toDate,
+  } = req.query;
+
+  let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+  let data;
+  let totalCount;
+  let totalQty;
+  let from = fromDate ? new Date(`${fromDate}T00:00:00.000Z`) : undefined;
+  let to = toDate ? new Date(`${toDate}T23:59:59.999Z`) : undefined;
+
+  // ---------- COMBINE DATE CONDITIONS ----------
+  let dateFilter = {};
+
+  if (from || to) {
+    dateFilter = {
+      gte: from,
+      lte: to,
+    };
+  } else if (finYearDate) {
+    dateFilter = {
+      gte: finYearDate.startTime,
+      lte: finYearDate.endTime,
+    };
+  }
+
+  data = await prisma.stock.findMany({
+    where: {
+      branchId: branchId ? parseInt(branchId) : undefined,
+      storeId: storeId ? parseInt(storeId) : undefined,
+      styleId: styleId ? parseInt(styleId) : undefined,
+      sizeId: sizeId ? parseInt(sizeId) : undefined,
+      fabricId: fabricId ? parseInt(fabricId) : undefined,
+      styleItemId: styleItemId ? parseInt(styleItemId) : undefined,
+      colorId: colorId ? parseInt(colorId) : undefined,
+      createdAt: dateFilter,
+      Fabric: {
+        name: searchFabric ? { contains: searchFabric } : undefined,
+      },
+      Store: {
+        storeName: searchStore ? { contains: searchStore } : undefined,
+      },
+    },
+  });
+  totalCount = data.length;
+  totalQty = data?.reduce((sum, item) => sum + (item.qty || 0), 0);
+  // if (pagination) {
+  //   data = data.slice(
+  //     (pageNumber - 1) * parseInt(dataPerPage),
+  //     pageNumber * dataPerPage
+  //   );
+  // }
+  return {
+    statusCode: 0,
+    data,
+    totalCount,
+    totalQty,
+  };
+}
+
 async function getOne() {
   const {
     branchId,
@@ -790,7 +862,7 @@ async function getStyleDetail(req) {
   const price = await prisma.style.findFirst({
     where: { sku: styleNo },
   });
-  console.log(price,"sku")
+  console.log(price, "sku");
   // 3️⃣ If still no data, return no record message
   if (!data || data.length === 0)
     return NoRecordFound("Style or Barcode not found");
@@ -812,7 +884,16 @@ async function getStyleDetail(req) {
   };
 }
 
-export { get, getOne, getSearch, create, update, remove, getStyleDetail };
+export {
+  get,
+  getOne,
+  getSearch,
+  create,
+  update,
+  remove,
+  getStyleDetail,
+  getSummary,
+};
 
 // import { PrismaClient, Prisma } from '@prisma/client'
 // import { NoRecordFound } from '../configs/Responses.js';
