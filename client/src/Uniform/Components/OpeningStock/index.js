@@ -9,23 +9,36 @@ import { FaPlus } from "react-icons/fa";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import StyleMasterApi from "../../../redux/uniformService/StyleMasterService.js";
+import { getCommonParams } from "../../../Utils/helper.js";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
   const [id, setId] = useState("");
   const [readOnly, setReadOnly] = useState(false);
   const dispatch = useDispatch();
-
+  const { branchId } = getCommonParams();
   const [removeData] = useDeleteOpeningStockMutation();
-  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
-    useLazyGetOpeningStockByIdQuery();
+  const [
+    trigger,
+    {
+      data: singleData,
+      isFetching: isSingleFetching,
+      isLoading: isSingleLoading,
+    },
+  ] = useLazyGetOpeningStockByIdQuery({
+    params: {
+      branchId,
+    },
+  });
   const handleView = (orderId) => {
+    trigger(orderId);
     setId(orderId);
     setShowForm(true);
     setReadOnly(true);
   };
 
   const handleEdit = (orderId) => {
+    trigger(orderId);
     setId(orderId);
     setShowForm(true);
     setReadOnly(false);
@@ -97,6 +110,9 @@ export default function Form() {
             setReadOnly((prev) => !prev);
           }}
           setShowForm={setShowForm}
+          singleData={singleData}
+          isSingleFetching={isSingleFetching}
+          isSingleLoading={isSingleLoading}
         />
       ) : (
         <div className="p-1 bg-[#F1F1F0] h-[85%]">

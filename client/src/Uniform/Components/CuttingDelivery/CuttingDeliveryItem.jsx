@@ -777,7 +777,7 @@ export default function CuttingDeliveryItem({
                                                         onBlur={(e) => {
                                                             handleInputChange(e.target.value, index, "orderQty");
                                                         }}
-                                                        disabled={true}
+                                                        disabled={readOnly}
                                                     />
                                                 </td>
                                             )

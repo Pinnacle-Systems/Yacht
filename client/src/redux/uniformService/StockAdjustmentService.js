@@ -8,7 +8,7 @@ const StockAdjustmentApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: BASE_URL,
   }),
-  tagTypes: ["StockAdjustment"],
+  tagTypes: ["StockAdjustment","OpeningStock"],
   endpoints: (builder) => ({
     getStockAdjustment: builder.query({
       query: ({ params, searchParams }) => {
@@ -54,7 +54,7 @@ const StockAdjustmentApi = createApi({
           "Content-type": "application/json; charset=UTF-8",
         },
       }),
-      invalidatesTags: ["StockAdjustment"],
+      invalidatesTags: ["StockAdjustment","OpeningStock"],
     }),
     updateStockAdjustment: builder.mutation({
       query: (payload) => {

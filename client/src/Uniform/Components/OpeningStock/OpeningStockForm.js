@@ -18,6 +18,7 @@ import {
   useAddOpeningStockMutation,
   useGetOpeningStockByIdQuery,
   useGetOpeningStockQuery,
+  useLazyGetOpeningStockByIdQuery,
   useLazyGetOpeningStockQuery,
   usePrintBarcodeMutation,
   useUpdateOpeningStockMutation,
@@ -36,6 +37,9 @@ export default function OpeningStockForm({
   readOnly,
   setReadOnly,
   setShowForm,
+  isSingleFetching,
+  isSingleLoading,
+  singleData,
 }) {
   const [docId, setDocId] = useState("New");
   const [docDate, setDocDate] = useState("");
@@ -60,11 +64,11 @@ export default function OpeningStockForm({
     searchParams: searchValue,
   });
 
-  const {
-    data: singleData,
-    isFetching: isSingleFetching,
-    isLoading: isSingleLoading,
-  } = useGetOpeningStockByIdQuery(id, { skip: !id });
+  // const {
+  //   data: singleData,
+  //   isFetching: isSingleFetching,
+  //   isLoading: isSingleLoading,
+  // } = useLazyGetOpeningStockByIdQuery(id, { skip: !id });
 
   const [trigger, { data: allDataLazy, isFetchingLazy }] =
     useLazyGetOpeningStockQuery();

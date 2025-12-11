@@ -207,7 +207,7 @@ async function getOne(id) {
           // fabMeter: true,
           portionId: true,
           styleId: true,
-          // orderQty: true,
+          orderQty: true,
           remarks: true,
           issueQty: true,
           sizeDetails: true,

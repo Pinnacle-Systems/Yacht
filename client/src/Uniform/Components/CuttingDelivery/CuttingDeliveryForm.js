@@ -403,7 +403,8 @@ export default function CuttingDeliveryForm({
         } else {
           fabricItems.forEach((item, i) => {
             const detail = fabricDetails.find(
-              (f) => f.styleId === item.styleId && f.colorId === item.colorId
+              (f) =>
+                f.styleId === item.styleId && f.portionId === item.portionId
             );
             const newRow = {
               ...item,
