@@ -82,7 +82,9 @@ export default function CuttingOrderItems({
   };
 
   const deleteSelectedRows = () => {
-    setCuttingOrderItems((rows) => rows.filter((r) => !r.selected));
+    setCuttingOrderItems((rows) =>
+      rows.filter((r) => !(r.selected && (r.stockQty ?? 0) === 0))
+    );
     setContextMenu(null);
   };
 
@@ -310,12 +312,18 @@ export default function CuttingOrderItems({
                       type="checkbox"
                       checked={
                         cuttingOrderItems.length > 0 &&
-                        cuttingOrderItems.every((row) => row.selected)
+                        cuttingOrderItems
+                          .filter((row) => (row.stockQty ?? 0) === 0)
+                          .every((row) => row.selected)
                       }
                       onChange={(e) => {
                         const checked = e.target.checked;
                         setCuttingOrderItems((prev) =>
-                          prev.map((row) => ({ ...row, selected: checked }))
+                          prev.map((row) =>
+                            (row.stockQty ?? 0) > 0
+                              ? row
+                              : { ...row, selected: checked }
+                          )
                         );
                       }}
                       onContextMenu={(e) => {
@@ -411,7 +419,7 @@ export default function CuttingOrderItems({
                       <input
                         type="checkbox"
                         checked={row.selected || false}
-                        disabled={readOnly}
+                        disabled={readOnly || (row.stockQty ?? 0) > 0}
                         onChange={(e) =>
                           handleInputChange(e.target.checked, index, "selected")
                         }

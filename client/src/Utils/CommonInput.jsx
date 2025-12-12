@@ -102,7 +102,8 @@ export function ReusableInput(
           {label} <span className="text-red-500">*</span>
         </span>
       ) : (
-        label
+        <span className="text-xs text-slate-700 font-bold mb-1   block">{label}</span>
+
       )}
       <input
         type={type}

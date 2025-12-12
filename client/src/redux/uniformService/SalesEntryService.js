@@ -116,6 +116,7 @@ const SalesEntryApi = createApi({
 export const {
   useGetSalesEntryQuery,
   useGetSalesEntryByIdQuery,
+  useLazyGetSalesEntryByIdQuery,
   useGetSalesReportQuery,
   useLazyGetSalesInvDetailQuery,
   useAddSalesEntryMutation,

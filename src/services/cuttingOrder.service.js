@@ -217,6 +217,22 @@ async function getOne(id) {
     },
   });
   if (!data) return NoRecordFound("CuttingOrder");
+  const itemWithStkQty = await Promise.all(
+    data.cuttingOrderItems.map(async (item) => {
+      const usedQty = await prisma.cuttingDeliveryItems.count({
+        where: {
+          styleId: item.styleId,
+          sizeId: item.sizeId,
+          colorId: item.colorId,
+          portionId: item.portionId,
+        },
+      });
+      return {
+        ...item,
+        stockQty: usedQty,
+      };
+    })
+  );
   const styleIds = data.cuttingOrderItems
     .map((item) => item.styleId)
     .filter(Boolean);
@@ -231,6 +247,7 @@ async function getOne(id) {
     statusCode: 0,
     data: {
       ...data,
+      cuttingOrderItems: itemWithStkQty,
       childRecordCutting: childRecordCutting,
     },
   };

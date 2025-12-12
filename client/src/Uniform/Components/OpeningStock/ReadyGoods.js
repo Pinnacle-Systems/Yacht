@@ -179,7 +179,7 @@ export default function ReadyGoods({
   //   }
   // };
   const handleAddRow = async () => {
-    const isFirstTime = openingStockItems.every((row) => !row.qty);
+    const isFirstTime = openingStockItems.every((row) => !row.styleNo);
 
     if (!isFirstTime) {
       // const hasEmpty = openingStockItems.some((row) => !row.qty);
@@ -573,7 +573,7 @@ export default function ReadyGoods({
                           }
                         }}
                         tabIndex={"0"}
-                        disabled={readOnly}
+                        disabled={readOnly || (row.stockQty ?? 0) > 0}
                         className="text-left w-full rounded py-1 table-data-input"
                         value={row.colorId}
                         onChange={(e) =>
@@ -614,7 +614,7 @@ export default function ReadyGoods({
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "qty");
                         }}
-                        disabled={readOnly}
+                        disabled={readOnly || (row.stockQty ?? 0) > 0}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">

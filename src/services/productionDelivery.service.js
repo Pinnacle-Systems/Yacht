@@ -216,23 +216,23 @@ async function getOne(id) {
       ToProcess: {
         select: {
           name: true,
-        }
+        },
       },
-      Branch:{
-        select:{
-          branchName:true
-        }
+      Branch: {
+        select: {
+          branchName: true,
+        },
       },
-      Store:{
-        select:{
-          storeName:true
-        }
+      Store: {
+        select: {
+          storeName: true,
+        },
       },
       Style: {
         select: {
           sku: true,
-        }
-      }
+        },
+      },
     },
   });
 
@@ -300,10 +300,36 @@ async function getOne(id) {
           qty: true,
         },
       });
+      let usedQty;
+      if (data?.FromProcess?.isIroning === true) {
+        usedQty = await prisma.stockInwardItems.count({
+          where: {
+            styleItemId: item.styleItemId,
+            fabricId: item.fabricId,
+            colorId: item.colorId,
+            portionId: item.portionId,
+            styleId: item.styleId,
+            sizeId: item.sizeId,
+          },
+        });
+      } else {
+        usedQty = await prisma.productionEntryItems.count({
+          where: {
+            prevProcessId: data.toProcessId,
+            styleItemId: item.styleItemId,
+            fabricId: item.fabricId,
+            colorId: item.colorId,
+            portionId: item.portionId,
+            styleId: item.styleId,
+            sizeId: item.sizeId,
+          },
+        });
+      }
 
       return {
         ...item,
         stkQty: stockData._sum.qty + item.issueQty || 0, // Dynamic field for view
+        usedQty: usedQty,
       };
     })
   );

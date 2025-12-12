@@ -41,6 +41,9 @@ export default function CuttingOrderForm({
   readOnly,
   setReadOnly,
   setShowForm,
+  isSingleFetching,
+  isSingleLoading,
+  singleData,
 }) {
   const [docId, setDocId] = useState("New");
   const [docDate, setDocDate] = useState("");
@@ -71,11 +74,11 @@ export default function CuttingOrderForm({
     searchParams: searchValue,
   });
 
-  const {
-    data: singleData,
-    isFetching: isSingleFetching,
-    isLoading: isSingleLoading,
-  } = useGetCuttingOrderByIdQuery(id, { skip: !id });
+  // const {
+  //   data: singleData,
+  //   isFetching: isSingleFetching,
+  //   isLoading: isSingleLoading,
+  // } = useGetCuttingOrderByIdQuery(id, { skip: !id });
 
   const {
     data: allData,

@@ -95,7 +95,9 @@ export default function ProductionDeliveryItem({
   };
 
   const deleteSelectedRows = () => {
-    setProductionEntryItems((rows) => rows.filter((r) => !r.selected));
+    setProductionEntryItems((rows) =>
+      rows.filter((r) => !(r.selected && (r.usedQty ?? 0) === 0))
+    );
     setContextMenu(null);
   };
 
@@ -263,12 +265,18 @@ export default function ProductionDeliveryItem({
                       type="checkbox"
                       checked={
                         productionEntryItems.length > 0 &&
-                        productionEntryItems.every((row) => row.selected)
+                        productionEntryItems
+                          .filter((row) => (row.usedQty ?? 0) === 0)
+                          .every((row) => row.selected)
                       }
                       onChange={(e) => {
                         const checked = e.target.checked;
                         setProductionEntryItems((prev) =>
-                          prev.map((row) => ({ ...row, selected: checked }))
+                          prev.map((row) =>
+                            (row.usedQty ?? 0) > 0
+                              ? row
+                              : { ...row, selected: checked }
+                          )
                         );
                       }}
                       onContextMenu={(e) => {
@@ -354,7 +362,7 @@ export default function ProductionDeliveryItem({
                       <input
                         type="checkbox"
                         checked={row.selected || false}
-                        disabled={readOnly}
+                        disabled={readOnly || (row.usedQty ?? 0) > 0}
                         onChange={(e) =>
                           handleInputChange(e.target.checked, index, "selected")
                         }

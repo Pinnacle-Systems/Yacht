@@ -43,7 +43,7 @@ const PurchaseInwardFormReport = ({
     searchInwardType,
     searchInvNo,
     searchSupplier,
-    searchStyleId
+    searchStyleId,
   };
 
   useEffect(() => {
@@ -55,15 +55,15 @@ const PurchaseInwardFormReport = ({
     searchInwardType,
     searchSupplier,
     searchInvNo,
-    searchStyleId
+    searchStyleId,
   ]);
 
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
   );
-    const finyearId = secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "currentFinYear"
-    );
+  const finyearId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "currentFinYear"
+  );
   const params = {
     branchId,
     companyId,
@@ -96,7 +96,6 @@ const PurchaseInwardFormReport = ({
   const indexOfLastItem = currentPage * parseInt(10);
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
-
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -310,17 +309,11 @@ const PurchaseInwardFormReport = ({
                   {(allData?.data ? allData?.data : []).map(
                     (dataObj, index) => (
                       <tr
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            onClick(dataObj.id);
-                          }
-                        }}
                         tabIndex={0}
                         key={dataObj.id}
                         className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${
                           index % 2 === 0 ? "bg-white" : "bg-gray-100"
                         }`}
-                        onClick={() => onClick(dataObj.id)}
                       >
                         <td className="text-center ">{index + 1}</td>
 

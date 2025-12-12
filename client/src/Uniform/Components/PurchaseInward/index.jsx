@@ -16,20 +16,24 @@ export default function Form() {
   const [readOnly, setReadOnly] = useState(false);
   const dispatch = useDispatch();
   const [searchStyleId, setSearchStyleId] = useState("")
-  const { companyId } = getCommonParams();
+  const { companyId, branchId } = getCommonParams();
 
-  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
+  const [trigger, { data: singleData,
+    isFetching: isSingleFetching,
+    isLoading: isSingleLoading, }] =
     useLazyGetPurchaseInwardEntryByIdQuery();
   const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
 
   const [removeData] = useDeletePurchaseInwardEntryMutation();
   const handleView = (orderId) => {
+    trigger(orderId);
     setId(orderId);
     setShowForm(true);
     setReadOnly(true);
   };
 
   const handleEdit = (orderId) => {
+    trigger(orderId);
     setId(orderId);
     setShowForm(true);
     setReadOnly(false);
@@ -45,7 +49,7 @@ export default function Form() {
       if (data?.data?.childRecordCutting > 0) {
         Swal.fire({
           icon: "error",
-          title: "Child record Exists in Cutting Plan",
+          title: "Child record Exists in Cutting",
           text: "Data cannot be deleted!",
         });
       } else if (data?.data?.childRecordReturn > 0) {
@@ -106,6 +110,9 @@ export default function Form() {
             setReadOnly((prev) => !prev);
           }}
           setShowForm={setShowForm}
+          singleData={singleData}
+          isSingleFetching={isSingleFetching}
+          isSingleLoading={isSingleLoading}
         />
       ) : (
         <div className="p-1 bg-[#F1F1F0] h-[85%]">

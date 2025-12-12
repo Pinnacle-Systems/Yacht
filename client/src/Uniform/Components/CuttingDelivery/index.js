@@ -9,6 +9,7 @@ import {
   useDeleteCuttingDeliveryMutation,
   useLazyGetCuttingDeliveryByIdQuery,
 } from "../../../redux/uniformService/CuttingDeliveryServices.js";
+import { getCommonParams } from "../../../Utils/helper.js";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -16,18 +17,31 @@ export default function Form() {
   const [readOnly, setReadOnly] = useState(false);
   const dispatch = useDispatch();
 
-  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
-    useLazyGetCuttingDeliveryByIdQuery();
+  const { branchId } = getCommonParams();
+  const [
+    trigger,
+    {
+      data: singleData,
+      isFetching: isSingleFetching,
+      isLoading: isSingleLoading,
+    },
+  ] = useLazyGetCuttingDeliveryByIdQuery({
+    params: {
+      branchId,
+    },
+  });
 
   const [removeData] = useDeleteCuttingDeliveryMutation();
 
   const handleView = (orderId) => {
+    trigger(orderId);
     setId(orderId);
     setShowForm(true);
     setReadOnly(true);
   };
 
   const handleEdit = (orderId) => {
+    trigger(orderId);
     setId(orderId);
     setShowForm(true);
     setReadOnly(false);
@@ -93,6 +107,9 @@ export default function Form() {
             setReadOnly((prev) => !prev);
           }}
           setShowForm={setShowForm}
+          singleData={singleData}
+          isSingleFetching={isSingleFetching}
+          isSingleLoading={isSingleLoading}
         />
       ) : (
         <div className="p-1 bg-[#F1F1F0] h-[85%]">

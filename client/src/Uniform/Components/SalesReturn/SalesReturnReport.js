@@ -24,6 +24,7 @@ const SalesReturnReport = ({
   const [serachDocNo, setSerachDocNo] = useState("");
   const [searchDocDate, setSearchDocDate] = useState("");
   const [searchStore, setSearchStore] = useState("");
+  const [searchSales, setSearchSales] = useState("");
   const [totalCount, setTotalCount] = useState(0);
   const [currentPageNumber, setCurrentPageNumber] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,11 +37,12 @@ const SalesReturnReport = ({
     serachDocNo,
     searchDocDate,
     searchStore,
+    searchSales,
   };
 
   useEffect(() => {
     setCurrentPageNumber(1);
-  }, [serachDocNo, searchDocDate, searchStore]);
+  }, [serachDocNo, searchDocDate, searchStore, searchSales]);
 
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -181,13 +183,16 @@ const SalesReturnReport = ({
                   </th>
 
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <div>Return No</div>
+                    <div>Sales Return No</div>
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <div>Return Date</div>
+                    <div>Sales Return Date</div>
                   </th>
                   <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Location</div>
+                  </th>
+                  <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                    <div>Sales Delivery No</div>
                   </th>
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
@@ -230,6 +235,17 @@ const SalesReturnReport = ({
                       }}
                     />
                   </th>
+                  <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                    <input
+                      type="text"
+                      className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                      placeholder="Search"
+                      value={searchSales}
+                      onChange={(e) => {
+                        setSearchSales(e.target.value);
+                      }}
+                    />
+                  </th>
                   <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center "></th>
                 </tr>
               </thead>
@@ -246,17 +262,11 @@ const SalesReturnReport = ({
                   {(allData?.data ? allData?.data : []).map(
                     (dataObj, index) => (
                       <tr
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            onClick(dataObj.id);
-                          }
-                        }}
                         tabIndex={0}
                         key={dataObj.id}
                         className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${
                           index % 2 === 0 ? "bg-white" : "bg-gray-100"
                         }`}
-                        onClick={() => onClick(dataObj.id)}
                       >
                         <td className="text-center ">{index + 1}</td>
 
@@ -272,6 +282,10 @@ const SalesReturnReport = ({
                         <td className="py-1.5 text-left px-4">
                           {" "}
                           {dataObj?.Store?.storeName}
+                        </td>
+                        <td className="py-1.5 text-left px-4">
+                          {" "}
+                          {dataObj?.invNo}
                         </td>
                         {rowActions && (
                           <td className=" w-[30px] border-gray-200 gap-1 px-2 justify-end">

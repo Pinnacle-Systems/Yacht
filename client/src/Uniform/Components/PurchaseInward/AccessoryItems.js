@@ -121,7 +121,9 @@ const AccessoryInwardItems = ({
   }, [fabricInwardItems, setFabricInwardItems]);
 
   const deleteSelectedRows = () => {
-    setFabricInwardItems((rows) => rows.filter((r) => !r.selected));
+    setFabricInwardItems((rows) =>
+      rows.filter((r) => !(r.selected && (r.stockQty ?? 0) === 0))
+    );
     setContextMenu(null);
   };
 
@@ -144,12 +146,18 @@ const AccessoryInwardItems = ({
                       type="checkbox"
                       checked={
                         fabricInwardItems.length > 0 &&
-                        fabricInwardItems.every((row) => row.selected)
+                        fabricInwardItems
+                          .filter((row) => (row.stockQty ?? 0) === 0)
+                          .every((row) => row.selected)
                       }
                       onChange={(e) => {
                         const checked = e.target.checked;
                         setFabricInwardItems((prev) =>
-                          prev.map((row) => ({ ...row, selected: checked }))
+                          prev.map((row) =>
+                            (row.stockQty ?? 0) > 0
+                              ? row
+                              : { ...row, selected: checked }
+                          )
                         );
                       }}
                       onContextMenu={(e) => {
@@ -213,7 +221,7 @@ const AccessoryInwardItems = ({
                       <input
                         type="checkbox"
                         checked={row.selected || false}
-                        disabled={readOnly}
+                        disabled={readOnly || (row.stockQty ?? 0) > 0}
                         onChange={(e) =>
                           handleInputChange(e.target.checked, index, "selected")
                         }

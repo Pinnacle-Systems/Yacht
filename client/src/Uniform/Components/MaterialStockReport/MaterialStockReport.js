@@ -389,17 +389,11 @@ const MaterialStockReport = forwardRef(
                           if (itemType === "Accessory") {
                             return (
                               <tr
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") {
-                                    onClick(dataObj.id);
-                                  }
-                                }}
                                 tabIndex={0}
                                 key={dataObj.id}
                                 className={`hover:bg-gray-50 transition-colors border-b border-gray-200 text-[12px] ${
                                   index % 2 === 0 ? "bg-white" : "bg-gray-100"
                                 }`}
-                                onClick={() => onClick(dataObj.id)}
                               >
                                 <td className="text-center h-8">{index + 1}</td>
 

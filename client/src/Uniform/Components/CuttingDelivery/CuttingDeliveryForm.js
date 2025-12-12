@@ -48,6 +48,9 @@ export default function CuttingDeliveryForm({
   readOnly,
   setReadOnly,
   setShowForm,
+  isSingleFetching,
+  isSingleLoading,
+  singleData,
 }) {
   const [docId, setDocId] = useState("New");
   const [docDate, setDocDate] = useState("");
@@ -100,11 +103,11 @@ export default function CuttingDeliveryForm({
     params: { companyId },
   });
 
-  const {
-    data: singleData,
-    isFetching: isSingleFetching,
-    isLoading: isSingleLoading,
-  } = useGetCuttingDeliveryByIdQuery(id, { skip: !id });
+  // const {
+  //   data: singleData,
+  //   isFetching: isSingleFetching,
+  //   isLoading: isSingleLoading,
+  // } = useGetCuttingDeliveryByIdQuery(id, { skip: !id });
 
   const {
     data: allData,
@@ -623,7 +626,6 @@ export default function CuttingDeliveryForm({
                 value={cuttingNo}
                 setValue={setCuttingNo}
                 type={"text"}
-                required={true}
                 readOnly={true}
               />
               <DropdownNew

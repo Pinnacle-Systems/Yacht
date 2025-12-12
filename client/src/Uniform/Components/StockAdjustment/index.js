@@ -29,6 +29,7 @@ export default function Form() {
   });
 
   const handleView = (orderId) => {
+    trigger(orderId);
     setId(orderId);
     setShowForm(true);
     setReadOnly(true);

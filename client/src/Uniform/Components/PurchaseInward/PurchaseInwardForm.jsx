@@ -28,7 +28,11 @@ import Modal from "../../../UiComponents/Modal";
 import { PDFViewer } from "@react-pdf/renderer";
 import PDF from "./PrintFormat/PDF";
 import tw from "../../../Utils/tailwind-react-pdf";
-const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly }) => {
+const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
+  , isSingleFetching,
+  isSingleLoading,
+  singleData,
+}) => {
   const [docId, setDocId] = useState("New");
   const [inwardType, setInwardType] = useState("Fabric");
   const [dcNo, setDcNo] = useState("");
@@ -63,11 +67,11 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly }) => {
     )
     : [];
 
-  const {
-    data: singleData,
-    isFetching: isSingleFetching,
-    isLoading: isSingleLoading,
-  } = useGetPurchaseInwardEntryByIdQuery(id, { skip: !id });
+  // const {
+  //   data: singleData,
+  //   isFetching: isSingleFetching,
+  //   isLoading: isSingleLoading,
+  // } = useGetPurchaseInwardEntryByIdQuery(id, { skip: !id });
 
   const [addData] = useAddPurchaseInwardEntryMutation();
   const [updateData] = useUpdatePurchaseInwardEntryMutation();

@@ -9,6 +9,7 @@ import {
   useLazyGetCuttingOrderByIdQuery,
 } from "../../../redux/uniformService/CuttingOrderService.js";
 import CuttingOrderReport from "./CuttingOrderReport.js";
+import { getCommonParams } from "../../../Utils/helper.js";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -18,16 +19,29 @@ export default function Form() {
 
   const [removeData] = useDeleteCuttingOrderMutation();
 
-  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
-    useLazyGetCuttingOrderByIdQuery();
+  const { branchId } = getCommonParams();
+  const [
+    trigger,
+    {
+      data: singleData,
+      isFetching: isSingleFetching,
+      isLoading: isSingleLoading,
+    },
+  ] = useLazyGetCuttingOrderByIdQuery({
+    params: {
+      branchId,
+    },
+  });
 
   const handleView = (orderId) => {
+    trigger(orderId);
     setId(orderId);
     setShowForm(true);
     setReadOnly(true);
   };
 
   const handleEdit = (orderId) => {
+    trigger(orderId);
     setId(orderId);
     setShowForm(true);
     setReadOnly(false);
@@ -93,6 +107,9 @@ export default function Form() {
             setReadOnly((prev) => !prev);
           }}
           setShowForm={setShowForm}
+          singleData={singleData}
+          isSingleFetching={isSingleFetching}
+          isSingleLoading={isSingleLoading}
         />
       ) : (
         <div className="p-1 bg-[#F1F1F0] h-[85%]">

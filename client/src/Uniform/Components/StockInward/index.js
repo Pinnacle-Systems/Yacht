@@ -7,6 +7,7 @@ import {
 } from "../../../redux/uniformService/StockInwardService";
 import StockInwardForm from "./StockInwardForm";
 import StockInwardReport from "./StockInwardReport";
+import { getCommonParams } from "../../../Utils/helper";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -14,15 +15,28 @@ export default function Form() {
   const [readOnly, setReadOnly] = useState(false);
 
   const [removeData] = useDeleteStockInwardMutation();
-  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
-    useLazyGetStockInwardByIdQuery();
+  const { branchId } = getCommonParams();
+  const [
+    trigger,
+    {
+      data: singleData,
+      isFetching: isSingleFetching,
+      isLoading: isSingleLoading,
+    },
+  ] = useLazyGetStockInwardByIdQuery({
+    params: {
+      branchId,
+    },
+  });
   const handleView = (orderId) => {
+    trigger(orderId);
     setId(orderId);
     setShowForm(true);
     setReadOnly(true);
   };
 
   const handleEdit = (orderId) => {
+    trigger(orderId);
     setId(orderId);
     setShowForm(true);
     setReadOnly(false);
@@ -93,6 +107,9 @@ export default function Form() {
             setReadOnly((prev) => !prev);
           }}
           setShowForm={setShowForm}
+          singleData={singleData}
+          isSingleFetching={isSingleFetching}
+          isSingleLoading={isSingleLoading}
         />
       ) : (
         <div className="p-1 bg-[#F1F1F0] h-[85%]">

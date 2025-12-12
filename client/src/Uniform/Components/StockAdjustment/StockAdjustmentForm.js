@@ -26,6 +26,9 @@ export default function StockAdjustmentForm({
   setId,
   readOnly,
   setReadOnly,
+  isSingleFetching,
+  isSingleLoading,
+  singleData,
 }) {
   const [searchValue, setSearchValue] = useState("");
   const [docId, setDocId] = useState("New");
@@ -103,11 +106,11 @@ export default function StockAdjustmentForm({
     return true;
   };
 
-  const {
-    data: singleData,
-    isFetching: isSingleFetching,
-    isLoading: isSingleLoading,
-  } = useGetStockAdjustmentByIdQuery(id, { skip: !id });
+  // const {
+  //   data: singleData,
+  //   isFetching: isSingleFetching,
+  //   isLoading: isSingleLoading,
+  // } = useGetStockAdjustmentByIdQuery(id, { skip: !id });
 
   const data = {
     id,

@@ -51,6 +51,9 @@ export default function ProductionDeliveryForm({
   readOnly,
   setReadOnly,
   setShowForm,
+  isSingleFetching,
+  isSingleLoading,
+  singleData,
 }) {
   const [docId, setDocId] = useState("New");
   const [docDate, setDocDate] = useState("");
@@ -99,11 +102,11 @@ export default function ProductionDeliveryForm({
     params: { companyId },
   });
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
-  const {
-    data: singleData,
-    isFetching: isSingleFetching,
-    isLoading: isSingleLoading,
-  } = useGetProductionDeliveryByIdQuery(id, { skip: !id });
+  // const {
+  //   data: singleData,
+  //   isFetching: isSingleFetching,
+  //   isLoading: isSingleLoading,
+  // } = useGetProductionDeliveryByIdQuery(id, { skip: !id });
 
   const { data: locationData } = useGetLocationMasterQuery({
     params: { branchId },

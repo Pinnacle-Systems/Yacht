@@ -74,7 +74,9 @@ export default function AdjustItems({
   };
 
   const deleteSelectedRows = () => {
-    setStockAdjustmentItems((rows) => rows.filter((r) => !r.selected));
+    setStockAdjustmentItems((rows) =>
+      rows.filter((r) => !(r.selected && (r.salesQty ?? 0) === 0))
+    );
     setContextMenu(null);
   };
 
@@ -436,12 +438,18 @@ export default function AdjustItems({
                       type="checkbox"
                       checked={
                         stockAdjustmentItems.length > 0 &&
-                        stockAdjustmentItems.every((row) => row.selected)
+                        stockAdjustmentItems
+                          .filter((row) => (row.salesQty ?? 0) === 0)
+                          .every((row) => row.selected)
                       }
                       onChange={(e) => {
                         const checked = e.target.checked;
                         setStockAdjustmentItems((prev) =>
-                          prev.map((row) => ({ ...row, selected: checked }))
+                          prev.map((row) =>
+                            (row.salesQty ?? 0) > 0
+                              ? row
+                              : { ...row, selected: checked }
+                          )
                         );
                       }}
                       onContextMenu={(e) => {
@@ -525,7 +533,7 @@ export default function AdjustItems({
                       <input
                         type="checkbox"
                         checked={row.selected || false}
-                        disabled={readOnly}
+                        disabled={readOnly || (row.salesQty ?? 0) > 0}
                         onChange={(e) =>
                           handleInputChange(e.target.checked, index, "selected")
                         }
@@ -725,7 +733,7 @@ export default function AdjustItems({
                       <select
                         id={`adjType-${index}`}
                         tabIndex={0}
-                        disabled={readOnly}
+                        disabled={readOnly || (row.salesQty ?? 0) > 0}
                         className={`text-left w-full rounded py-1 table-data-input 
     ${row.adjType === "PLUS" ? "text-green-600" : ""}
     ${row.adjType === "MINUS" ? "text-red-600" : ""}
@@ -772,7 +780,7 @@ export default function AdjustItems({
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "adjQty");
                         }}
-                        disabled={readOnly || !row.adjType}
+                        disabled={readOnly || !row.adjType || (row.salesQty ?? 0) > 0}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">

@@ -84,7 +84,9 @@ export default function BillItems({
   };
 
   const deleteSelectedRows = () => {
-    setSalesEntryItems((rows) => rows.filter((r) => !r.selected));
+    setSalesEntryItems((rows) =>
+      rows.filter((r) => !(r.selected && (r.returnQty ?? 0) === 0))
+    );
     setContextMenu(null);
   };
 
@@ -397,12 +399,18 @@ export default function BillItems({
                       type="checkbox"
                       checked={
                         salesEntryItems.length > 0 &&
-                        salesEntryItems.every((row) => row.selected)
+                        salesEntryItems
+                          .filter((row) => (row.returnQty ?? 0) === 0)
+                          .every((row) => row.selected)
                       }
                       onChange={(e) => {
                         const checked = e.target.checked;
                         setSalesEntryItems((prev) =>
-                          prev.map((row) => ({ ...row, selected: checked }))
+                          prev.map((row) =>
+                            (row.returnQty ?? 0) > 0
+                              ? row
+                              : { ...row, selected: checked }
+                          )
                         );
                       }}
                       onContextMenu={(e) => {
@@ -516,7 +524,7 @@ export default function BillItems({
                       <input
                         type="checkbox"
                         checked={row.selected || false}
-                        disabled={true}
+                        disabled={readOnly || (row.returnQty ?? 0) > 0}
                         onChange={(e) =>
                           handleInputChange(e.target.checked, index, "selected")
                         }
@@ -737,7 +745,7 @@ export default function BillItems({
                         id={`salesqty-input-${index}`}
                         className="text-right rounded py-1 px-1 w-full table-data-input"
                         value={row?.qty}
-                        disabled={readOnly}
+                        disabled={readOnly || (row.returnQty ?? 0) > 0}
                         onKeyDown={(e) => {
                           if (e.code === "Minus" || e.code === "NumpadSubtract")
                             e.preventDefault();

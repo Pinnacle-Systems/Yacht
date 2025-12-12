@@ -242,10 +242,56 @@ async function getOne(id) {
     },
   });
   if (!data) return NoRecordFound("Purchase Inward");
+  const itemWithStkQty = await Promise.all(
+    data.fabricInwardItems.map(async (item) => {
+      const childRecordPlan = await prisma.cuttingOrderItems.count({
+        where: {
+          styleId: item.styleId,
+          sizeId: item.sizeId,
+          colorId: item.colorId,
+          fabricId: item.fabricId,
+          portionId: item.portionId,
+        },
+      });
+      const childRecordDelivery = await prisma.cuttingDeliveryItems.count({
+        where: {
+          styleId: item.styleId,
+          sizeId: item.sizeId,
+          colorId: item.colorId,
+          fabricId: item.fabricId,
+          portionId: item.portionId,
+        },
+      });
+      const childRecordReturn = await prisma.purchaseReturnItems.count({
+        where: {
+          styleId: item.styleId,
+          sizeId: item.sizeId,
+          colorId: item.colorId,
+          styleItemId: item.styleItemId,
+          fabricId: item.fabricId,
+          portionId: item.portionId,
+          accessoryGroupId: item.accessoryGroupId,
+          accessoryId: item.accessoryId,
+        },
+      });
+      return {
+        ...item,
+        stockQty:
+          childRecordPlan + childRecordDelivery + childRecordReturn || 0,
+      };
+    })
+  );
   const styleIds = data.fabricInwardItems
     .map((item) => item.styleId)
     .filter(Boolean);
-  const childRecordCutting = await prisma.cuttingOrderItems.count({
+  const childRecordCutPlan = await prisma.cuttingOrderItems.count({
+    where: {
+      styleId: {
+        in: styleIds,
+      },
+    },
+  });
+  const childRecordCutDelivery = await prisma.cuttingDeliveryItems.count({
     where: {
       styleId: {
         in: styleIds,
@@ -263,7 +309,8 @@ async function getOne(id) {
     statusCode: 0,
     data: {
       ...data,
-      childRecordCutting: childRecordCutting,
+      fabricInwardItems: itemWithStkQty,
+      childRecordCutting: childRecordCutDelivery + childRecordCutPlan,
       childRecordReturn: childRecordReturn,
     },
   };

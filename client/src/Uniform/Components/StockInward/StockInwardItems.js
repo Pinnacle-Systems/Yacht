@@ -24,7 +24,7 @@ export default function StockInwardItems({
   readOnly,
   id,
   branchId,
-  styleList
+  styleList,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
@@ -92,7 +92,9 @@ export default function StockInwardItems({
   };
 
   const deleteSelectedRows = () => {
-    setStockInwardItems((rows) => rows.filter((r) => !r.selected));
+    setStockInwardItems((rows) =>
+      rows.filter((r) => !(r.selected && (r.usedQty ?? 0) === 0))
+    );
     setContextMenu(null);
   };
 
@@ -161,8 +163,6 @@ export default function StockInwardItems({
     }
   }, [stockInwardItems, setStockInwardItems]);
 
-
-
   // function imageFormatter(styleId) {
   //   const fileName = findFromList(styleId, styleList?.data, "img");
   //   if (!fileName) return "/no-image.png"; // fallback image if missing
@@ -184,9 +184,7 @@ export default function StockInwardItems({
   return (
     <>
       <div className="border border-slate-200  bg-white rounded-md shadow-sm max-h-[450px] px-2 overflow-auto">
-        <div className="flex items-center gap-4 w-40 sticky top-0 bg-white z-30 mt-2">
-        
-        </div>
+        <div className="flex items-center gap-4 w-40 sticky top-0 bg-white z-30 mt-2"></div>
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
         </div>
@@ -201,12 +199,18 @@ export default function StockInwardItems({
                       type="checkbox"
                       checked={
                         stockInwardItems.length > 0 &&
-                        stockInwardItems.every((row) => row.selected)
+                        stockInwardItems
+                          .filter((row) => (row.usedQty ?? 0) === 0)
+                          .every((row) => row.selected)
                       }
                       onChange={(e) => {
                         const checked = e.target.checked;
                         setStockInwardItems((prev) =>
-                          prev.map((row) => ({ ...row, selected: checked }))
+                          prev.map((row) =>
+                            (row.usedQty ?? 0) > 0
+                              ? row
+                              : { ...row, selected: checked }
+                          )
                         );
                       }}
                       onContextMenu={(e) => {
@@ -290,7 +294,7 @@ export default function StockInwardItems({
                     <input
                       type="checkbox"
                       checked={row.selected || false}
-                      disabled={readOnly}
+                      disabled={readOnly || (row.usedQty ?? 0) > 0}
                       onChange={(e) =>
                         handleInputChange(e.target.checked, index, "selected")
                       }

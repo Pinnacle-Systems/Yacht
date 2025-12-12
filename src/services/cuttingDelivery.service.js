@@ -296,9 +296,20 @@ async function getOne(id) {
       //     orderQty: true,
       //   },
       // });
+      const usedQty = await prisma.productionEntryItems.count({
+        where: {
+          styleId: item.styleId,
+          // sizeId: item.sizeId,
+          colorId: item.colorId,
+          portionId: item.portionId,
+          styleItemId: item.styleItemId,
+          fabricId: item.fabricId,
+        },
+      });
       return {
         ...item,
         fabMeter: stockData._sum.fabMeter + item.usedMeter,
+        stockQty: usedQty,
       };
     })
   );

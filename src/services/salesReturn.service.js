@@ -91,6 +91,7 @@ async function get(req) {
     searchDocDate,
     searchStore,
     finYearId,
+    searchSales,
   } = req.query;
 
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -130,6 +131,7 @@ async function get(req) {
       Store: {
         storeName: searchStore ? { contains: searchStore } : undefined,
       },
+      invNo: Boolean(searchSales) ? { contains: searchSales } : undefined,
     },
     include: {
       Store: {
@@ -215,7 +217,7 @@ async function create(body) {
     draftSave,
     locationId,
     customerId,
-    invNo
+    invNo,
   } = await body;
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate
@@ -243,7 +245,7 @@ async function create(body) {
         docDate: docDate ? new Date(docDate) : null,
         locationId: parseInt(locationId),
         customerId: parseInt(customerId),
-        invNo
+        invNo,
       },
     });
     await createSalesReturnItems(
@@ -327,7 +329,7 @@ async function update(id, body) {
     docDate,
     locationId,
     customerId,
-    invNo
+    invNo,
   } = await body;
   let data;
   const dataFound = await prisma.salesReturn.findUnique({
@@ -363,7 +365,7 @@ async function update(id, body) {
         docDate: docDate ? new Date(docDate) : null,
         locationId: parseInt(locationId),
         customerId: parseInt(customerId),
-        invNo
+        invNo,
       },
     });
     await updateSalesReturnItems(

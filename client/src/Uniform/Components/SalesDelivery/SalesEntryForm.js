@@ -27,7 +27,16 @@ import PDF from "./PrintFormat/PDF";
 import { salesTypes } from "../../../Utils/DropdownData";
 import { useGetCityQuery } from "../../../redux/services/CityMasterService";
 
-export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
+export function SalesBillForm({
+  onClose,
+  id,
+  setId,
+  readOnly,
+  setReadOnly,
+  isSingleFetching,
+  isSingleLoading,
+  singleData,
+}) {
   const [pdfOpen, setPdfOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [docId, setDocId] = useState("New");
@@ -117,11 +126,11 @@ export function SalesBillForm({ onClose, id, setId, readOnly, setReadOnly }) {
     return true;
   };
 
-  const {
-    data: singleData,
-    isFetching: isSingleFetching,
-    isLoading: isSingleLoading,
-  } = useGetSalesEntryByIdQuery(id, { skip: !id });
+  // const {
+  //   data: singleData,
+  //   isFetching: isSingleFetching,
+  //   isLoading: isSingleLoading,
+  // } = useGetSalesEntryByIdQuery(id, { skip: !id });
 
   const {
     data: allData,

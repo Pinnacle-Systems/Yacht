@@ -102,6 +102,8 @@ async function get(req) {
     searchDocDate,
     searchStore,
     finYearId,
+    searchType,
+    searchCustomer,
   } = req.query;
 
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -141,6 +143,10 @@ async function get(req) {
       Store: {
         storeName: searchStore ? { contains: searchStore } : undefined,
       },
+      Customer: {
+        name: searchCustomer ? { contains: searchCustomer } : undefined,
+      },
+      salesType: searchType ? { contains: searchType } : undefined,
     },
     include: {
       Store: {
@@ -150,6 +156,12 @@ async function get(req) {
         },
       },
       SalesEntryItems: true,
+      Customer: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
     },
   });
   totalCount = data.length;
@@ -288,13 +300,44 @@ async function getOne(id) {
           qty: true,
         },
       });
+      const salesReturn = await prisma.salesReturn.findMany({
+        where: {
+          invNo: data.docId,
+        },
+      });
+      const salesReturnIds = salesReturn.map((sr) => sr.id);
+      const totalReturnQty = await prisma.salesReturnItems.count({
+        where: {
+          salesReturnId: { in: salesReturnIds },
+          styleId: item.styleId,
+          sizeId: item.sizeId,
+          colorId: item.colorId,
+          styleItemId: item.styleItemId,
+        },
+      });
       return {
         ...item,
         stkQty: totalStkQty._sum.qty + item.qty,
+        returnQty: totalReturnQty,
       };
     })
   );
-  return { statusCode: 0, data: { ...data, SalesEntryItems: salesWithStkQty } };
+  const styleNos = data.SalesEntryItems.map((item) => item.styleNo).filter(
+    Boolean
+  );
+  const childRecordReturn = await prisma.salesReturn.count({
+    where: {
+      invNo: { in: data.docId },
+    },
+  });
+  return {
+    statusCode: 0,
+    data: {
+      ...data,
+      SalesEntryItems: salesWithStkQty,
+      childRecordReturn: childRecordReturn,
+    },
+  };
 }
 
 async function getSearch(req) {

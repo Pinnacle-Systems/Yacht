@@ -247,9 +247,24 @@ async function getOne(id) {
           qty: true,
         },
       });
+      const childRecordSales = await prisma.salesEntryItems.count({
+        where: {
+          styleId: item.styleId,
+          sizeId: item.sizeId,
+          styleItemId: item.styleItemId,
+        },
+      });
+      const childRecordAdjust = await prisma.stockAdjustmentItems.count({
+        where: {
+          styleId: item.styleId,
+          sizeId: item.sizeId,
+          styleItemId: item.styleItemId,
+        },
+      });
       return {
         ...item,
         stkQty: stockData._sum.qty || 0, // Dynamic field for view
+        usedQty: childRecordSales + childRecordAdjust || 0,
       };
     })
   );

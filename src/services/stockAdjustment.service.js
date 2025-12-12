@@ -397,7 +397,7 @@ async function getOne(id) {
       });
       return {
         ...item,
-        stockQty: childRecordSales || 0,
+        salesQty: childRecordSales || 0,
       };
     })
   );
@@ -411,7 +411,11 @@ async function getOne(id) {
   });
   return {
     statusCode: 0,
-    data: { ...data, childRecordSales: childRecordSales },
+    data: {
+      ...data,
+      StockAdjustmentItems: itemWithSalesQty,
+      childRecordSales: childRecordSales,
+    },
   };
 }
 

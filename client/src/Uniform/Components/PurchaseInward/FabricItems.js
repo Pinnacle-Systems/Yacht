@@ -157,7 +157,9 @@ const FabricInwardItems = ({
   }, [fabricInwardItems, setFabricInwardItems]);
 
   const deleteSelectedRows = () => {
-    setFabricInwardItems((rows) => rows.filter((r) => !r.selected));
+    setFabricInwardItems((rows) =>
+      rows.filter((r) => !(r.selected && (r.stockQty ?? 0) === 0))
+    );
     setContextMenu(null);
   };
 
@@ -180,12 +182,18 @@ const FabricInwardItems = ({
                       type="checkbox"
                       checked={
                         fabricInwardItems.length > 0 &&
-                        fabricInwardItems.every((row) => row.selected)
+                        fabricInwardItems
+                          .filter((row) => (row.stockQty ?? 0) === 0)
+                          .every((row) => row.selected)
                       }
                       onChange={(e) => {
                         const checked = e.target.checked;
                         setFabricInwardItems((prev) =>
-                          prev.map((row) => ({ ...row, selected: checked }))
+                          prev.map((row) =>
+                            (row.stockQty ?? 0) > 0
+                              ? row
+                              : { ...row, selected: checked }
+                          )
                         );
                       }}
                       onContextMenu={(e) => {
@@ -264,7 +272,7 @@ const FabricInwardItems = ({
                       <input
                         type="checkbox"
                         checked={row.selected || false}
-                        disabled={readOnly}
+                        disabled={readOnly || (row.stockQty ?? 0) > 0}
                         onChange={(e) =>
                           handleInputChange(e.target.checked, index, "selected")
                         }
@@ -320,7 +328,7 @@ const FabricInwardItems = ({
                             label: item.sku,
                             value: item.id,
                           }))}
-                        readOnly={readOnly}
+                        readOnly={readOnly || (row.stockQty ?? 0) > 0}
                         placeholder=""
                         onBlur={() =>
                           handleInputChange(row.styleId, index, "styleId")
@@ -382,7 +390,7 @@ const FabricInwardItems = ({
                             label: item.name,
                             value: item.id,
                           }))}
-                        readOnly={readOnly}
+                        readOnly={readOnly || (row.stockQty ?? 0) > 0}
                         placeholder=""
                         onBlur={() =>
                           handleInputChange(row.fabricId, index, "fabricId")
@@ -461,7 +469,7 @@ const FabricInwardItems = ({
                             label: item.name,
                             value: item.id,
                           }))}
-                        readOnly={readOnly}
+                        readOnly={readOnly || (row.stockQty ?? 0) > 0}
                         placeholder=""
                         onBlur={() =>
                           handleInputChange(row.colorId, index, "colorId")
@@ -485,7 +493,7 @@ const FabricInwardItems = ({
                             label: item.name,
                             value: item.id,
                           }))}
-                        readOnly={readOnly}
+                        readOnly={readOnly || (row.stockQty ?? 0) > 0}
                         placeholder=""
                         onBlur={() =>
                           handleInputChange(row.portionId, index, "portionId")
@@ -518,7 +526,7 @@ const FabricInwardItems = ({
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "fabWidth");
                         }}
-                        disabled={readOnly}
+                        disabled={readOnly || (row.stockQty ?? 0) > 0}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
@@ -541,7 +549,7 @@ const FabricInwardItems = ({
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "fabMeter");
                         }}
-                        disabled={readOnly}
+                        disabled={readOnly || (row.stockQty ?? 0) > 0}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">

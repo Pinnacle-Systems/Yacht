@@ -267,17 +267,11 @@ const ProductionDeliveryFormReport = ({
                   {(allData?.data ? allData?.data : []).map(
                     (dataObj, index) => (
                       <tr
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            onClick(dataObj.id);
-                          }
-                        }}
                         tabIndex={0}
                         key={dataObj.id}
                         className={`hover:bg-gray-50 transition-colors border-b  border-gray-200 text-[12px] ${
                           index % 2 === 0 ? "bg-white" : "bg-gray-100"
                         }`}
-                        onClick={() => onClick(dataObj.id)}
                       >
                         <td className="text-center ">{index + 1}</td>
 

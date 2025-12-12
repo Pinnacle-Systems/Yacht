@@ -29,6 +29,9 @@ export default function StockInwardForm({
   readOnly,
   setReadOnly,
   setShowForm,
+  isSingleFetching,
+  isSingleLoading,
+  singleData,
 }) {
   const [docId, setDocId] = useState("New");
   const [docDate, setDocDate] = useState("");
@@ -55,11 +58,11 @@ export default function StockInwardForm({
     searchParams: searchValue,
   });
 
-  const {
-    data: singleData,
-    isFetching: isSingleFetching,
-    isLoading: isSingleLoading,
-  } = useGetStockInwardByIdQuery(id, { skip: !id });
+  // const {
+  //   data: singleData,
+  //   isFetching: isSingleFetching,
+  //   isLoading: isSingleLoading,
+  // } = useGetStockInwardByIdQuery(id, { skip: !id });
 
   const syncFormWithDb = useCallback(
     (data) => {
