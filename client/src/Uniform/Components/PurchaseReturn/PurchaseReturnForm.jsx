@@ -26,10 +26,17 @@ import Modal from "../../../UiComponents/Modal";
 import { PDFViewer } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf";
 import { useAddPurchaseReturnMutation, useDeletePurchaseReturnMutation, useGetPurchaseReturnByIdQuery, useUpdatePurchaseReturnMutation } from "../../../redux/services/PurchaseReturnService";
-import { useGetPurchaseInwardEntryQuery, useLazyGetPurchaseDetailQuery } from "../../../redux/uniformService/PurchaseInwardEntry";
+import purchaseInwardEntryApi, { useGetPurchaseInwardEntryQuery, useLazyGetPurchaseDetailQuery } from "../../../redux/uniformService/PurchaseInwardEntry";
 import ReturnItems from "./ReturnItems";
+import CuttingDeliveryApi from "../../../redux/uniformService/CuttingDeliveryServices";
+import CuttingOrderApi from "../../../redux/uniformService/CuttingOrderService";
+import { useDispatch } from "react-redux";
 
-const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly }) => {
+const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
+    isSingleFetching,
+    isSingleLoading,
+    singleData,
+}) => {
     const [docId, setDocId] = useState("New");
     const [returnType, setReturnType] = useState("Fabric");
     const [supplierId, setSupplierId] = useState("");
@@ -42,6 +49,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly }) => {
     const branchIdFromApi = useRef(branchId);
     const [pdfOpen, setPdfOpen] = useState(false);
     const [invNo, setInvNo] = useState("")
+    const dispatch = useDispatch();
     const params = {
         branchId,
         companyId,
@@ -61,11 +69,11 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly }) => {
         )
         : [];
 
-    const {
-        data: singleData,
-        isFetching: isSingleFetching,
-        isLoading: isSingleLoading,
-    } = useGetPurchaseReturnByIdQuery(id, { skip: !id });
+    // const {
+    //     data: singleData,
+    //     isFetching: isSingleFetching,
+    //     isLoading: isSingleLoading,
+    // } = useGetPurchaseReturnByIdQuery(id, { skip: !id });
 
     const [addData] = useAddPurchaseReturnMutation();
     const [updateData] = useUpdatePurchaseReturnMutation();
@@ -242,6 +250,11 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly }) => {
         } else {
             handleSubmitCustom(addData, data, "Added", nextProcess);
         }
+        dispatch(CuttingDeliveryApi.util.invalidateTags(["CuttingDelivery"]));
+        dispatch(CuttingOrderApi.util.invalidateTags(["CuttingOrder"]));
+        dispatch(
+            purchaseInwardEntryApi.util.invalidateTags(["purchaseInwardEntry"])
+        );
     };
 
     useEffect(() => {

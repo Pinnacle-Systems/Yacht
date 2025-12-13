@@ -99,50 +99,44 @@ export default function Form() {
   };
   return (
     <>
-      {showForm ? (
+      <div
+        className="p-1 bg-[#F1F1F0] h-[85%]"
+        style={{ display: showForm ? "none" : "block" }}
+      >
+        <div className="flex justify-between bg-white py-1 px-2 rounded shadow-sm">
+          <h1 className="text-xl font-bold text-gray-800">
+            Opening Stock Report
+          </h1>
+
+          <button
+            className="bg-white border border-green-700 text-green-700 px-4 py-1 rounded"
+            onClick={onNew}
+          >
+            Create New
+          </button>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm mt-2">
+          <OpeningStockFormReport
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            itemsPerPage={10}
+          />
+        </div>
+      </div>
+
+      {showForm && (
         <OpeningStockForm
           readOnly={readOnly}
           setReadOnly={setReadOnly}
           id={id}
           setId={setId}
-          onClose={() => {
-            setShowForm(false);
-            setReadOnly((prev) => !prev);
-          }}
-          setShowForm={setShowForm}
           singleData={singleData}
           isSingleFetching={isSingleFetching}
           isSingleLoading={isSingleLoading}
+          onClose={() => setShowForm(false)}
         />
-      ) : (
-        <div className="p-1 bg-[#F1F1F0] h-[85%]">
-          <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-1 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-            <div>
-              <h1 className="text-xl font-bold text-gray-800">
-                {" "}
-                Opening Stock Report
-              </h1>
-            </div>
-            <button
-              className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
-              onClick={() => {
-                setShowForm(true);
-                onNew();
-              }}
-            >
-              <FaPlus /> Create New
-            </button>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden  ">
-            <OpeningStockFormReport
-              onView={handleView}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              itemsPerPage={10}
-            />
-          </div>
-        </div>
       )}
     </>
   );

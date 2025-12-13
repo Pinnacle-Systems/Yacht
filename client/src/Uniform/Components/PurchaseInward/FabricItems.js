@@ -12,6 +12,7 @@ import { CLOSE_ICON, VIEW } from "../../../icons";
 import { getImageUrlPath } from "../../../helper";
 import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService";
 import FxSelect from "../../../Inputs";
+import Swal from "sweetalert2";
 
 const FabricInwardItems = ({
   id,
@@ -547,9 +548,20 @@ const FabricInwardItems = ({
                           handleInputChange(e.target.value, index, "fabMeter")
                         }
                         onBlur={(e) => {
+                          const minQty = row.minQty || 0;
+                          if (parseFloat(minQty) > parseFloat(e.target.value)) {
+                            e.target.value = "";
+                            Swal.fire({
+                              icon: "warning",
+                              title: "Invalid Meter",
+                              text: `Inward Meter cannot be Less than Min Meter! - ${minQty}`,
+                              confirmButtonText: "OK",
+                            });
+                            return;
+                          }
                           handleInputChange(e.target.value, index, "fabMeter");
                         }}
-                        disabled={readOnly || (row.stockQty ?? 0) > 0}
+                        disabled={readOnly}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">

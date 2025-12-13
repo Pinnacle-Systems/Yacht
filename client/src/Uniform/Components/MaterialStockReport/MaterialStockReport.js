@@ -447,7 +447,7 @@ const MaterialStockReport = forwardRef(
                             Total
                           </td>
                           <td className="py-1.5 text-center">
-                            {allData?.totalMeter}
+                            {allData?.totalMeter.toFixed(2)}
                           </td>
                         </tr>
                       </tfoot>

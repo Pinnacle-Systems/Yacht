@@ -21,6 +21,9 @@ import BarCodePrintFormat from "../OpeningStock/BarcodePrintFormat.jsx";
 import StockInwardItems from "./StockInwardItems.js";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService.js";
 import { useLazyGetProductionDetailQuery } from "../../../redux/uniformService/ProductionStockServices.js";
+import { useDispatch } from "react-redux";
+import CuttingDeliveryApi from "../../../redux/uniformService/CuttingDeliveryServices.js";
+import SalesEntryApi from "../../../redux/uniformService/SalesEntryService.js";
 
 export default function StockInwardForm({
   onClose,
@@ -52,6 +55,7 @@ export default function StockInwardForm({
   const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
   const [getProductionStyleDetail] = useLazyGetProductionDetailQuery();
+  const dispatch = useDispatch();
 
   const { data: locationData } = useGetLocationMasterQuery({
     params: { branchId },
@@ -262,6 +266,8 @@ export default function StockInwardForm({
     } else {
       handleSubmitCustom(addData, data, "Added", nextProcess);
     }
+    dispatch(CuttingDeliveryApi.util.invalidateTags(["CuttingDelivery"]));
+    dispatch(SalesEntryApi.util.invalidateTags(["SalesEntry"]));
   };
 
   const data = {
@@ -284,7 +290,7 @@ export default function StockInwardForm({
       return;
     }
     if (!newValue) return;
-    const isFirstTime = stockInwardItems.every((row) => !row.qty);
+    const isFirstTime = stockInwardItems.every((row) => !row.styleId);
     if (!isFirstTime) {
       // const hasEmpty = stockInwardItems.some((row) => !row.qty);
       const hasEmpty = stockInwardItems.some((row) => {

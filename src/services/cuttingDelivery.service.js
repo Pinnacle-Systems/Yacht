@@ -232,6 +232,7 @@ async function getOne(id) {
               name: true,
             },
           },
+          invNo: true,
         },
       },
       Employee: {
@@ -306,10 +307,48 @@ async function getOne(id) {
           fabricId: item.fabricId,
         },
       });
+      const processGroupList = await prisma.processGroupList.findMany({
+        where: {
+          processGroupId: data.processGroupId,
+        },
+      });
+      const currentProcess = processGroupList.find(
+        (item) => item.processId === parseInt(data.fromProcessId)
+      );
+      let nextProcessId;
+      if (currentProcess) {
+        const nextProcess = processGroupList.find(
+          (item) => item.seqNo === currentProcess.seqNo + 1
+        );
+        nextProcessId = nextProcess?.processId;
+      }
+      const sizeDetailsWithStkQty = await Promise.all(
+        item.sizeDetails.map(async (sz) => {
+          const usedQty = await prisma.productionEntryItems.aggregate({
+            where: {
+              styleId: item.styleId,
+              colorId: item.colorId,
+              portionId: item.portionId,
+              styleItemId: item.styleItemId,
+              fabricId: item.fabricId,
+              sizeId: sz.sizeId,
+              prevProcessId: nextProcessId,
+            },
+            _sum: {
+              issueQty: true,
+            },
+          });
+          return {
+            ...sz,
+            minQty: usedQty._sum.issueQty,
+          };
+        })
+      );
       return {
         ...item,
         fabMeter: stockData._sum.fabMeter + item.usedMeter,
         stockQty: usedQty,
+        sizeDetails: sizeDetailsWithStkQty,
       };
     })
   );

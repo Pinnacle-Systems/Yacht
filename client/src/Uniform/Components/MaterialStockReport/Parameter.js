@@ -77,7 +77,7 @@ const Parameter = ({
     : [];
   return (
     <div className="  items-center p-1 text-center bg-blue-200 rounded-b-md  sticky top-0 ">
-      <div className="grid grid-cols-3 gap-5 p-2">
+      <div className="grid grid-cols-4 gap-5 p-2">
         <DropdownNew
           name="Branch"
           dataList={branchList?.data?.filter((item) => item.active)}
@@ -106,17 +106,23 @@ const Parameter = ({
           value={itemType}
           setValue={(value) => {
             setItemType(value);
+            setStyleId("");
           }}
           required={true}
         />
-        {/* <DropdownNew
-          name={"Style"}
-          dataList={styleItemList?.data?.filter((item) => item.active)}
-          value={styleItemId}
-          required={false}
-          setValue={setStyleItemId}
-          clear={true}
-        />
+        {itemType === "Fabric" && (
+          <DropdownNew
+            name={"Style"}
+            dataList={styleList?.data?.filter((item) => item.active)}
+            value={styleId}
+            required={false}
+            setValue={setStyleId}
+            clear={true}
+            otherField={"sku"}
+          />
+        )}
+
+        {/* 
         <DropdownNew
           name="Fabric"
           dataList={fabricList?.data?.filter((item) => item.active)}

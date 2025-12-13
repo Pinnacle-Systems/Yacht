@@ -26,6 +26,9 @@ import tw from "../../../Utils/tailwind-react-pdf";
 import PDF from "./PrintFormat/PDF";
 import { salesTypes } from "../../../Utils/DropdownData";
 import { useGetCityQuery } from "../../../redux/services/CityMasterService";
+import { useDispatch } from "react-redux";
+import OpeningStockApi from "../../../redux/uniformService/OpeningStockService";
+import StockAdjustmentApi from "../../../redux/uniformService/StockAdjustmentService";
 
 export function SalesBillForm({
   onClose,
@@ -50,6 +53,7 @@ export function SalesBillForm({
   const [salesType, setSalesType] = useState("");
   const [destinationId, setDestinationId] = useState("");
   const { companyId, userId, finYearId, branchId } = getCommonParams();
+  const dispatch = useDispatch();
 
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
 
@@ -252,6 +256,8 @@ export function SalesBillForm({
     } else {
       handleSubmitCustom(addData, data, "Added", nextProcess);
     }
+    dispatch(OpeningStockApi.util.invalidateTags(["OpeningStock"]));
+    dispatch(StockAdjustmentApi.util.invalidateTags(["StockAdjustment"]));
   };
 
   const handlePartyChange = (selectedId, field) => {
@@ -267,10 +273,10 @@ export function SalesBillForm({
   };
 
   useEffect(() => {
-    if (customerId) {
+    if (customerId && partyList?.data?.length) {
       handlePartyChange(customerId, "customer");
     }
-  }, [customerId, setCustomerId]);
+  }, [customerId, setCustomerId, partyList?.data]);
 
   const handleKeyDown = (event) => {
     let charCode = String.fromCharCode(event.which).toLowerCase();

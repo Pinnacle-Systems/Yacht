@@ -235,7 +235,6 @@ async function getOne(id) {
       const stkQty = await prisma.materialStock.aggregate({
         where: {
           fabricId: item.fabricId,
-          colorId: item.colorId,
           styleId: item.styleId,
           fabWidth: item.fabWidth,
           invNo: item.invNo,

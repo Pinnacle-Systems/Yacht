@@ -274,10 +274,33 @@ async function getOne(id) {
           accessoryId: item.accessoryId,
         },
       });
+      const minDelivery = await prisma.cuttingDeliveryItems.aggregate({
+        where: {
+          styleId: item.styleId,
+          fabricId: item.fabricId,
+          portionId: item.portionId,
+        },
+        _sum: {
+          usedMeter: true,
+        },
+      });
+      const minReturn = await prisma.purchaseReturnItems.aggregate({
+        where: {
+          styleId: item.styleId,
+          fabricId: item.fabricId,
+          portionId: item.portionId,
+        },
+        _sum: {
+          returnFabMeter: true,
+        },
+      });
       return {
         ...item,
         stockQty:
           childRecordPlan + childRecordDelivery + childRecordReturn || 0,
+        minQty:
+          (minDelivery._sum.usedMeter || 0) +
+          (minReturn._sum.returnFabMeter || 0),
       };
     })
   );

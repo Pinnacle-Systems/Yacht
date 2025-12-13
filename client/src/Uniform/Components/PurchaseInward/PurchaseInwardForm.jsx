@@ -26,8 +26,13 @@ import { useAddPurchaseInwardEntryMutation, useDeletePurchaseInwardEntryMutation
 import Swal from "sweetalert2";
 import Modal from "../../../UiComponents/Modal";
 import { PDFViewer } from "@react-pdf/renderer";
+import { useDispatch } from "react-redux";
 import PDF from "./PrintFormat/PDF";
 import tw from "../../../Utils/tailwind-react-pdf";
+import CuttingDeliveryApi from "../../../redux/uniformService/CuttingDeliveryServices";
+import CuttingOrderApi from "../../../redux/uniformService/CuttingOrderService";
+import purchaseReturnApi from "../../../redux/services/PurchaseReturnService";
+
 const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
   , isSingleFetching,
   isSingleLoading,
@@ -76,6 +81,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
   const [addData] = useAddPurchaseInwardEntryMutation();
   const [updateData] = useUpdatePurchaseInwardEntryMutation();
   const [removeData] = useDeletePurchaseInwardEntryMutation();
+  const dispatch = useDispatch();
 
   const isFabric = inwardType === "Fabric"
 
@@ -268,6 +274,9 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
     } else {
       handleSubmitCustom(addData, data, "Added", nextProcess);
     }
+    dispatch(CuttingDeliveryApi.util.invalidateTags(["CuttingDelivery"]));
+    dispatch(CuttingOrderApi.util.invalidateTags(["CuttingOrder"]));
+    dispatch(purchaseReturnApi.util.invalidateTags(["PurchaseReturn"]));
   };
 
   useEffect(() => {

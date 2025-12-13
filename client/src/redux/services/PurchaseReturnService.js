@@ -80,6 +80,7 @@ const purchaseReturnApi = createApi({
 export const {
   useGetPurchaseReturnQuery,
   useGetPurchaseReturnByIdQuery,
+  useLazyGetPurchaseReturnByIdQuery,
   useAddPurchaseReturnMutation,
   useUpdatePurchaseReturnMutation,
   useDeletePurchaseReturnMutation,

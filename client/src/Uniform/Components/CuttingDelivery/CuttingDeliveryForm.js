@@ -40,6 +40,9 @@ import Modal from "../../../UiComponents/Modal/index.js";
 import { PDFViewer } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf.js";
 import { useGetProcessGroupMasterQuery } from "../../../redux/uniformService/ProcessGroupMasterServices.js";
+import purchaseInwardEntryApi from "../../../redux/uniformService/PurchaseInwardEntry.js";
+import purchaseReturnApi from "../../../redux/services/PurchaseReturnService.js";
+import ProductionDeliveryApi from "../../../redux/uniformService/ProductionDeliveryServices.js";
 
 export default function CuttingDeliveryForm({
   onClose,
@@ -196,6 +199,13 @@ export default function CuttingDeliveryForm({
           },
         });
         dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
+        dispatch(
+          purchaseInwardEntryApi.util.invalidateTags(["purchaseInwardEntry"])
+        );
+        dispatch(purchaseReturnApi.util.invalidateTags(["PurchaseReturn"]));
+        dispatch(
+          ProductionDeliveryApi.util.invalidateTags(["ProductionDelivery"])
+        );
       } else {
         toast.error(returnData?.message, {
           autoClose: 2000,
@@ -344,6 +354,16 @@ export default function CuttingDeliveryForm({
     }
     if (!newValue) return;
     setStyleId(newValue);
+    const hasUnfilledRequired = cuttingDeliveryItems.some((row) => {
+      return row.fabricId && !row.usedMeter;
+    });
+
+    if (hasUnfilledRequired) {
+      toast.info("Please fill all required fields before adding...!", {
+        position: "top-center",
+      });
+      return;
+    }
     try {
       const style = styleList?.data.find((item) => item.id === newValue);
       setSizeTemplateId(style?.sizeTemplateId);

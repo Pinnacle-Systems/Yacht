@@ -19,6 +19,9 @@ import {
 } from "../../../redux/uniformService/StockAdjustmentService";
 import Modal from "../../../UiComponents/Modal";
 import BarCodePrintFormat from "../OpeningStock/BarcodePrintFormat";
+import { useDispatch } from "react-redux";
+import OpeningStockApi from "../../../redux/uniformService/OpeningStockService";
+import SalesEntryApi from "../../../redux/uniformService/SalesEntryService";
 
 export default function StockAdjustmentForm({
   onClose,
@@ -38,7 +41,7 @@ export default function StockAdjustmentForm({
   const [stockAdjustmentItems, setStockAdjustmentItems] = useState([]);
   const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
   const [barcodeItems, setBarcodeItems] = useState([]);
-
+  const dispatch = useDispatch();
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
@@ -214,6 +217,8 @@ export default function StockAdjustmentForm({
     } else {
       handleSubmitCustom(addData, data, "Added", nextProcess);
     }
+    dispatch(OpeningStockApi.util.invalidateTags(["OpeningStock"]));
+    dispatch(SalesEntryApi.util.invalidateTags(["SalesEntry"]));
   };
 
   const handleKeyDown = (event) => {

@@ -640,6 +640,17 @@ export default function ProductionDeliveryItem({
                           handleInputChange(e.target.value, index, "issueQty")
                         }
                         onBlur={(e) => {
+                          const minQty = row.minQty || 0;
+                          if (parseFloat(minQty) > parseFloat(e.target.value)) {
+                            e.target.value = "";
+                            Swal.fire({
+                              icon: "warning",
+                              title: "Invalid Qty",
+                              text: `Production Qty cannot be Less than Min Qty! - ${minQty}`,
+                              confirmButtonText: "OK",
+                            });
+                            return;
+                          }
                           handleInputChange(e.target.value, index, "issueQty");
                         }}
                         disabled={readOnly}

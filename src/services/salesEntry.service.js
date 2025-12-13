@@ -315,10 +315,23 @@ async function getOne(id) {
           styleItemId: item.styleItemId,
         },
       });
+      const usedQty = await prisma.salesReturnItems.aggregate({
+        where: {
+          salesReturnId: { in: salesReturnIds },
+          styleId: item.styleId,
+          sizeId: item.sizeId,
+          colorId: item.colorId,
+          styleItemId: item.styleItemId,
+        },
+        _sum: {
+          returnQty: true,
+        },
+      });
       return {
         ...item,
         stkQty: totalStkQty._sum.qty + item.qty,
         returnQty: totalReturnQty,
+        usedQty: usedQty._sum.returnQty,
       };
     })
   );

@@ -751,6 +751,19 @@ export default function CuttingDeliveryItem({
                                                             });
                                                         }}
                                                         onFocus={(e) => e.target.select()}
+                                                        onBlur={(e) => {
+                                                            const minQty = sizeItem.minQty || 0;
+                                                            if (parseFloat(minQty) > parseFloat(e.target.value)) {
+                                                                e.target.value = "";
+                                                                Swal.fire({
+                                                                    icon: "warning",
+                                                                    title: "Invalid Qty",
+                                                                    text: `Cutting Qty cannot be Less than Min Qty! - ${minQty}`,
+                                                                    confirmButtonText: "OK",
+                                                                });
+                                                                return;
+                                                            }
+                                                        }}
                                                         min={"0"}
                                                         onKeyDown={(e) => {
                                                             if (

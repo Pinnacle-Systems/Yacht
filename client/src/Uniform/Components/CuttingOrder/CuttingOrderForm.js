@@ -24,7 +24,7 @@ import StyleMasterApi from "../../../redux/uniformService/StyleMasterService.js"
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import CuttingOrderItems from "./CuttingOrderItems.js";
 import { useLazyGetFabricDetailQuery } from "../../../redux/services/MaterialStockService.js";
-import {
+import CuttingOrderApi, {
   useAddCuttingOrderMutation,
   useGetCuttingOrderByIdQuery,
   useGetCuttingOrderQuery,
@@ -34,6 +34,7 @@ import { event } from "jquery";
 import { useLazyGetSizeTemplateByIdQuery } from "../../../redux/uniformService/SizeTemplateMasterServices.js";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices.js";
 import { useGetProcessGroupMasterQuery } from "../../../redux/uniformService/ProcessGroupMasterServices.js";
+import CuttingDeliveryApi from "../../../redux/uniformService/CuttingDeliveryServices.js";
 export default function CuttingOrderForm({
   onClose,
   id,
@@ -247,6 +248,7 @@ export default function CuttingOrderForm({
     } else {
       handleSubmitCustom(addData, data, "Added", nextProcess);
     }
+    dispatch(CuttingDeliveryApi.util.invalidateTags(["CuttingDelivery"]));
   };
 
   const data = {
@@ -286,6 +288,16 @@ export default function CuttingOrderForm({
     }
     if (!newValue) return;
     setStyleId(newValue);
+    const hasUnfilledRequired = cuttingOrderItems.some((row) => {
+      return row.fabricId && !row.styleItemId;
+    });
+
+    if (hasUnfilledRequired) {
+      toast.info("Please fill all required fields before adding...!", {
+        position: "top-center",
+      });
+      return;
+    }
     try {
       const style = styleList?.data.find((item) => item.id === newValue);
       setSizeTemplateId(style?.sizeTemplateId);

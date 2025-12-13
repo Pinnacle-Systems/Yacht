@@ -230,7 +230,7 @@ export default function BillItems({
       });
     } else {
       const isFirstTime = salesEntryItems.every(
-        (row) => !row.qty && !row.price
+        (row) => !row.qty && !row.price && !row.styleId
       );
 
       if (!isFirstTime) {
@@ -240,7 +240,7 @@ export default function BillItems({
             row.styleNo !== null &&
             row.styleNo !== undefined;
 
-          return hasStyle && (!row.qty || !row.price);
+          return hasStyle && !row.qty;
         });
 
         if (hasEmpty) {
@@ -745,7 +745,7 @@ export default function BillItems({
                         id={`salesqty-input-${index}`}
                         className="text-right rounded py-1 px-1 w-full table-data-input"
                         value={row?.qty}
-                        disabled={readOnly || (row.returnQty ?? 0) > 0}
+                        disabled={readOnly}
                         onKeyDown={(e) => {
                           if (e.code === "Minus" || e.code === "NumpadSubtract")
                             e.preventDefault();
@@ -758,6 +758,27 @@ export default function BillItems({
                           handleInputChange(e.target.value, index, "qty")
                         }
                         onBlur={(e) => {
+                          const minQty = row.usedQty || 0;
+                          if (parseFloat(minQty) > parseFloat(e.target.value)) {
+                            e.target.value = "";
+                            Swal.fire({
+                              icon: "warning",
+                              title: "Invalid Qty",
+                              text: `Sales Qty cannot be Less than Return Qty! - ${minQty}`,
+                              confirmButtonText: "OK",
+                            });
+                            return;
+                          }
+                          if (e.target.value == 0) {
+                            e.target.value = "";
+                            Swal.fire({
+                              icon: "warning",
+                              title: "Invalid Qty",
+                              text: `Minimum Qty is 1`,
+                              confirmButtonText: "OK",
+                            });
+                            return;
+                          }
                           handleInputChange(e.target.value, index, "qty");
                         }}
                       />

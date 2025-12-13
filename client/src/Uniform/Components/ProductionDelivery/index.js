@@ -10,6 +10,7 @@ import {
 import ProductionDeliveryForm from "./ProductionDeliveryForm.js";
 import ProductionDeliveryFormReport from "./ProductionDeliveryFormReport.js";
 import { getCommonParams } from "../../../Utils/helper.js";
+import CuttingDeliveryApi from "../../../redux/uniformService/CuttingDeliveryServices.js";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -78,6 +79,7 @@ export default function Form() {
           });
           setShowForm(false);
           dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
+          dispatch(CuttingDeliveryApi.util.invalidateTags(["CuttingDelivery"]));
         } catch (error) {
           Swal.fire({
             icon: "error",
@@ -95,7 +97,39 @@ export default function Form() {
   };
   return (
     <>
-      {showForm ? (
+      <div
+        className="p-1 bg-[#F1F1F0] h-[85%]"
+        style={{ display: showForm ? "none" : "block" }}
+      >
+        <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-1 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">
+              Production Report
+            </h1>
+          </div>
+
+          <button
+            className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
+            onClick={() => {
+              setShowForm(true);
+              onNew();
+            }}
+          >
+            <FaPlus /> Create New
+          </button>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <ProductionDeliveryFormReport
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            itemsPerPage={10}
+          />
+        </div>
+      </div>
+
+      {showForm && (
         <ProductionDeliveryForm
           readOnly={readOnly}
           setReadOnly={setReadOnly}
@@ -110,35 +144,6 @@ export default function Form() {
           isSingleFetching={isSingleFetching}
           isSingleLoading={isSingleLoading}
         />
-      ) : (
-        <div className="p-1 bg-[#F1F1F0] h-[85%]">
-          <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-1 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-            <div>
-              <h1 className="text-xl font-bold text-gray-800">
-                {" "}
-                Production Report
-              </h1>
-            </div>
-            <button
-              className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
-              onClick={() => {
-                setShowForm(true);
-                onNew();
-              }}
-            >
-              <FaPlus /> Create New
-            </button>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden  ">
-            <ProductionDeliveryFormReport
-              onView={handleView}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              itemsPerPage={10}
-            />
-          </div>
-        </div>
       )}
     </>
   );

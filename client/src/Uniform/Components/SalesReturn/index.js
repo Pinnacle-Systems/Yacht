@@ -4,12 +4,15 @@ import { FaPlus } from "react-icons/fa";
 import SalesReturnForm from "./SalesReturnForm";
 import SalesReturnReport from "./SalesReturnReport";
 import { useDeleteSalesReturnMutation } from "../../../redux/uniformService/SalesReturnService";
+import { useDispatch } from "react-redux";
+import SalesEntryApi from "../../../redux/uniformService/SalesEntryService";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
   const [id, setId] = useState("");
   const [readOnly, setReadOnly] = useState(false);
   const [removeData] = useDeleteSalesReturnMutation();
+  const dispatch = useDispatch();
 
   const handleView = (orderId) => {
     setId(orderId);
@@ -45,6 +48,7 @@ export default function Form() {
           timer: 1000,
         });
         setShowForm(false);
+        dispatch(SalesEntryApi.util.invalidateTags(["SalesEntry"]));
       } catch (error) {
         Swal.fire({
           icon: "error",
@@ -62,7 +66,39 @@ export default function Form() {
   };
   return (
     <>
-      {showForm ? (
+      <div
+        className="p-1 bg-[#F1F1F0] h-[85%]"
+        style={{ display: showForm ? "none" : "block" }}
+      >
+        <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">
+              Sales Return Report
+            </h1>
+          </div>
+
+          <button
+            className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
+            onClick={() => {
+              setShowForm(true);
+              onNew();
+            }}
+          >
+            <FaPlus /> Create New
+          </button>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <SalesReturnReport
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            itemsPerPage={10}
+          />
+        </div>
+      </div>
+
+      {showForm && (
         <SalesReturnForm
           readOnly={readOnly}
           setReadOnly={setReadOnly}
@@ -74,35 +110,6 @@ export default function Form() {
           }}
           setShowForm={setShowForm}
         />
-      ) : (
-        <div className="p-1 bg-[#F1F1F0] h-[85%]">
-          <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-            <div>
-              <h1 className="text-xl font-bold text-gray-800">
-                {" "}
-                Sales Return Report
-              </h1>
-            </div>
-            <button
-              className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
-              onClick={() => {
-                setShowForm(true);
-                onNew();
-              }}
-            >
-              <FaPlus /> Create New
-            </button>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden  ">
-            <SalesReturnReport
-              onView={handleView}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              itemsPerPage={10}
-            />
-          </div>
-        </div>
       )}
     </>
   );

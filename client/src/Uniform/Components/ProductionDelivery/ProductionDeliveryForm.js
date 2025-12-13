@@ -43,6 +43,8 @@ import { dropDownListObject } from "../../../Utils/contructObject.js";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService.js";
 import { PDFViewer } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf.js";
+import CuttingDeliveryApi from "../../../redux/uniformService/CuttingDeliveryServices.js";
+import StockInwardApi from "../../../redux/uniformService/StockInwardService.js";
 
 export default function ProductionDeliveryForm({
   onClose,
@@ -198,6 +200,8 @@ export default function ProductionDeliveryForm({
           },
         });
         dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
+        dispatch(CuttingDeliveryApi.util.invalidateTags(["CuttingDelivery"]));
+        dispatch(StockInwardApi.util.invalidateTags(["StockInward"]));
       } else {
         toast.error(returnData?.message, {
           autoClose: 2000,
@@ -413,6 +417,16 @@ export default function ProductionDeliveryForm({
       return;
     }
     if (!newValue) return;
+    const hasUnfilledRequired = productionEntryItems.some((row) => {
+      return row.styleId && !row.issueQty;
+    });
+
+    if (hasUnfilledRequired) {
+      toast.info("Please fill all required fields before adding...!", {
+        position: "top-center",
+      });
+      return;
+    }
     try {
       if (!fromProcessId || !toProcessId) {
         toast.info("Please Choose From Process and To Process...!", {

@@ -261,10 +261,32 @@ async function getOne(id) {
           styleItemId: item.styleItemId,
         },
       });
+      const minSales = await prisma.salesEntryItems.aggregate({
+        where: {
+          styleId: item.styleId,
+          sizeId: item.sizeId,
+          styleItemId: item.styleItemId,
+        },
+        _sum: {
+          qty: true,
+        },
+      });
+      const minAdjust = await prisma.stockAdjustmentItems.aggregate({
+        where: {
+          styleId: item.styleId,
+          sizeId: item.sizeId,
+          styleItemId: item.styleItemId,
+          adjType: "MINUS",
+        },
+        _sum: {
+          adjQty: true,
+        },
+      });
       return {
         ...item,
         stkQty: stockData._sum.qty || 0, // Dynamic field for view
         usedQty: childRecordSales + childRecordAdjust || 0,
+        minQty: (minSales._sum.qty || 0) + (minAdjust._sum.adjQty || 0),
       };
     })
   );

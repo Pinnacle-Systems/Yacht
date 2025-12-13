@@ -8,6 +8,7 @@ import PurchaseInwardFormReport from "./PurchaseInwardFormReport";
 import StyleMasterApi, { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import { DropdownNew } from "../../../Inputs";
 import { getCommonParams } from "../../../Utils/helper";
+import { remove } from "../../../redux/features/opentabs";
 const MODEL = "Purchase Inward / Direct Inward";
 
 export default function Form() {
@@ -97,9 +98,55 @@ export default function Form() {
   };
 
   return (
-    <> {
-      showForm ? (
+    <>
+      <div
+        className="p-1 bg-[#F1F1F0] h-[85%]"
+        style={{ display: showForm ? "none" : "block" }}
+      >
+        <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">
+              Purchase Inward Report
+            </h1>
+          </div>
 
+          <div className="flex items-center gap-2">
+            <div className="w-40">
+              <DropdownNew
+                dataList={styleList?.data?.filter((item) => item.active)}
+                value={searchStyleId}
+                setValue={(value) => setSearchStyleId(value)}
+                required={false}
+                clear={true}
+                otherField={"sku"}
+                placeholder={"Style No"}
+              />
+            </div>
+
+            <button
+              className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
+              onClick={() => {
+                setShowForm(true);
+                onNew();
+              }}
+            >
+              <FaPlus /> Create New
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <PurchaseInwardFormReport
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            itemsPerPage={10}
+            searchStyleId={searchStyleId}
+          />
+        </div>
+      </div>
+
+      {showForm && (
         <PurchaseInwardForm
           readOnly={readOnly}
           setReadOnly={setReadOnly}
@@ -114,55 +161,8 @@ export default function Form() {
           isSingleFetching={isSingleFetching}
           isSingleLoading={isSingleLoading}
         />
-      ) : (
-        <div className="p-1 bg-[#F1F1F0] h-[85%]">
-          <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-            <div>
-              <h1 className="text-xl font-bold text-gray-800">
-                {" "}
-                Purchase Inward Report
-              </h1>
-            </div>
-            <div className="flex items-center">
-              <div className="w-40">
-                <DropdownNew
-                  dataList={styleList?.data?.filter((item) => item.active)}
-                  value={searchStyleId}
-                  setValue={(value) => {
-                    setSearchStyleId(value);
-                  }}
-                  required={false}
-                  clear={true}
-                  otherField={"sku"}
-                  placeholder={"Style No"}
-                />
-              </div>
-              <div>
-                <button
-                  className="hover:bg-green-700 w-full bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
-                  onClick={() => {
-                    setShowForm(true);
-                    onNew();
-                  }}
-                >
-                  <FaPlus /> Create New
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden  ">
-            <PurchaseInwardFormReport
-              onView={handleView}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              itemsPerPage={10}
-              searchStyleId={searchStyleId}
-            />
-          </div>
-        </div>
-      )
-    }
+      )}
     </>
   );
+
 }

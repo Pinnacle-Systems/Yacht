@@ -22,10 +22,11 @@ import Modal from "../../../UiComponents/Modal";
 import { PDFViewer } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf";
 import PDF from "./PrintFormat/PDF";
-import {
+import SalesEntryApi, {
   useGetSalesEntryQuery,
   useLazyGetSalesInvDetailQuery,
 } from "../../../redux/uniformService/SalesEntryService";
+import { useDispatch } from "react-redux";
 export default function SalesReturnForm({
   onClose,
   id,
@@ -43,7 +44,7 @@ export default function SalesReturnForm({
   const [pdfOpen, setPdfOpen] = useState("");
   const [invNo, setInvNo] = useState("");
   const [getSalesInvDetail] = useLazyGetSalesInvDetailQuery();
-
+  const dispatch = useDispatch();
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
@@ -226,6 +227,7 @@ export default function SalesReturnForm({
     } else {
       handleSubmitCustom(addData, data, "Added", nextProcess);
     }
+    dispatch(SalesEntryApi.util.invalidateTags(["SalesEntry"]));
   };
 
   const handleKeyDown = (event) => {
@@ -245,7 +247,16 @@ export default function SalesReturnForm({
       });
       return;
     }
+    const hasUnfilledRequired = salesReturnItems.some((row) => {
+      return row.styleId && !row.returnQty;
+    });
 
+    if (hasUnfilledRequired) {
+      toast.info("Please fill all required fields before adding...!", {
+        position: "top-center",
+      });
+      return;
+    }
     try {
       const { data: salesData } = await getSalesInvDetail({
         params: {

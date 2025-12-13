@@ -13,6 +13,7 @@ import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleI
 import { toast } from "react-toastify";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { VIEW } from "../../../icons";
+import Swal from "sweetalert2";
 
 export default function AdjustItems({
   stockAdjustmentItems,
@@ -778,9 +779,21 @@ export default function AdjustItems({
                           handleInputChange(e.target.value, index, "adjQty")
                         }
                         onBlur={(e) => {
+                          if (e.target.value == 0) {
+                            e.target.value = "";
+                            Swal.fire({
+                              icon: "warning",
+                              title: "Invalid Qty",
+                              text: `Minimum Qty is 1`,
+                              confirmButtonText: "OK",
+                            });
+                            return;
+                          }
                           handleInputChange(e.target.value, index, "adjQty");
                         }}
-                        disabled={readOnly || !row.adjType || (row.salesQty ?? 0) > 0}
+                        disabled={
+                          readOnly || !row.adjType || (row.salesQty ?? 0) > 0
+                        }
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
