@@ -680,13 +680,11 @@ function findRemovedItems(dataFound, stockInwardItems) {
 }
 
 async function remove(id) {
-  console.log(id, "id");
   const data = await prisma.stockInward.delete({
     where: {
       id: parseInt(id),
     },
   });
-  console.log(data, "data");
 
   return { statusCode: 0, data };
 }

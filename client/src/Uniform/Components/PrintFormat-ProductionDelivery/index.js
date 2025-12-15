@@ -1,7 +1,6 @@
 import React from 'react'
 import Address from './Address';
 import RainDot from "../../../assets/RainDot.png"
-import QRCode from "react-qr-code";
 import { getDateFromDateTimeToDisplay } from '../../../Utils/helper';
 import { useGetPartyByIdQuery } from '../../../redux/services/PartyMasterService';
 import ProductionDeliveryDetails from './ProductionDeliveryDetails';
@@ -69,7 +68,7 @@ export default function PrintFormatProductionDelivery({ innerRef, id }) {
                 <td> Del. Date : {getDateFromDateTimeToDisplay(singleData?.data?.createdAt)}</td>
                 <td> Due. Date : {getDateFromDateTimeToDisplay(singleData?.data?.dueDate)}</td>
                 <td className='table-data px-14 py-1 w-1/6'>
-                  <QRCode value={singleData?.data?.docId} size={80} />
+                  {/* <QRCode value={singleData?.data?.docId} size={80} /> */}
                 </td>
               </tr>
             </tbody>

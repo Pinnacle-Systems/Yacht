@@ -51,7 +51,6 @@ async function getSearch(req) {
 
 async function create(body) {
     const { name, companyId, active } = await body
-    console.log('its working')
     const data = await prisma.unitOfMeasurement.create(
         {
             data: {

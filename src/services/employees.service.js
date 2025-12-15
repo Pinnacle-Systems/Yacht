@@ -117,7 +117,6 @@ async function getEmployeeId(branchId, startTime, endTime) {
       id: "desc",
     },
   });
-  console.log(lastObject, "lastObject");
 
   const code = "EMP";
   const branchObj = await getTableRecordWithId(branchId, "branch");
@@ -134,7 +133,6 @@ async function getEmployeeId(branchId, startTime, endTime) {
 async function get(req) {
   const { branchId, active, employeeCategory, finYearId, companyId } =
     req.query;
-  console.log("API Calls");
 
   const data = await prisma.employee.findMany({
     where: {
@@ -165,10 +163,8 @@ async function get(req) {
       EmployeeFamilyDetails: true,
     },
   });
-  console.log(data, "apidata");
 
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-  console.log(finYearDate, "finYearDate");
   let Regno = finYearDate
     ? await getEmployeeId(
         branchId,
@@ -323,7 +319,6 @@ async function create(req) {
   const presentAddressObj = presentAddress ? presentAddress : {};
   const permanentAddressObj = permanentAddress ? permanentAddress : {};
 
-  console.log(req.body, "form");
 
   const data = await prisma.employee.create({
     data: {
@@ -509,7 +504,6 @@ async function update(id, req) {
     ? JSON.parse(permanentAddress)
     : {};
 
-  console.log(req.body, "form");
 
   const dataFound = await prisma.employee.findFirst({
     where: {

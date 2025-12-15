@@ -2,7 +2,7 @@ import React from 'react'
 import Address from './Address';
 import YarnPurchaseOrder from './YarnPurchaseOrder';
 import RainDot from "../../../assets/RainDot.png"
-import QRCode from "react-qr-code";
+// import QRCode from "react-qr-code";
 import FabricPurchaseOrder from './FabricPurchaseOrder';
 import AccessoryPurchaseOrder from './AccessoryPurchaseOrder';
 import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterServices";
@@ -76,7 +76,7 @@ export default function Form({ poType, innerRef, poItems, supplierDetails, singl
             <div className='flex ml-1'><span className="font-bold">Payment Terms :</span> {findFromList(payTermId, payTermList.data, "name")}</div>
           </div>
           <div className='mr-2 p-1'>
-            <QRCode value={poNumber} size={80} />
+            {/* <QRCode value={poNumber} size={80} /> */}
           </div>
         </div>
         <Address deliveryTo={deliveryTo} deliveryType={deliveryType} supplierDetails={supplierDetails} />

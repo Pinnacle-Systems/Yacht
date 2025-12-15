@@ -353,7 +353,6 @@ async function get(req) {
 }
 
 async function getOne(id) {
-  console.log("error is Here", id);
   const data = await prisma.stockAdjustment.findUnique({
     where: {
       id: parseInt(id),
@@ -445,7 +444,6 @@ async function create(body) {
     draftSave
   );
   let data;
-  console.log(newDocId);
   await prisma.$transaction(async (tx) => {
     data = await tx.stockAdjustment.create({
       data: {
@@ -739,8 +737,6 @@ async function remove(id) {
       id: parseInt(id),
     },
   });
-  console.log(data, "data");
-
   return { statusCode: 0, data };
 }
 

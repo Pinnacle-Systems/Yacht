@@ -52,17 +52,13 @@ async function getStyleDetail(req) {
     );
     nextProcessId = nextProcess?.processId;
     prevProcessId = prevProcess?.processId;
-    console.log(prevProcess, "prevPrrocess");
   }
-  console.log(prevProcessId, "prevProcessId");
   if (prevProcessId === undefined || !styleId) {
     return {
       statusCode: 400,
       message: "Choose Correct From Process",
     };
   }
-  console.log(nextProcessId, "nextProcessId");
-  console.log(toProcessId, "toProcessId");
   if (nextProcessId !== parseInt(toProcessId)) {
     return {
       statusCode: 400,
@@ -126,7 +122,6 @@ async function getProductionStyle(req) {
     },
   });
   const lastProcessId = lostProcess?.id;
-  console.log(lastProcessId, "lastProcessId");
   let data;
   if (lastProcessId) {
     data = await prisma.productionStock.groupBy({

@@ -178,7 +178,6 @@ async function get(req) {
 }
 
 async function getOne(id) {
-  console.log("error is Here", id);
   const childRecord = 0;
   const data = await prisma.purchaseReturn.findUnique({
     where: {
@@ -291,7 +290,6 @@ async function create(body) {
     draftSave
   );
   let data;
-  console.log(newDocId);
   await prisma.$transaction(async (tx) => {
     data = await tx.purchaseReturn.create({
       data: {
@@ -487,7 +485,6 @@ async function update(id, body) {
     },
   });
   if (!dataFound) return NoRecordFound("Purchase Return");
-  console.log(purchaseReturnItems, "purchaseReturnItems");
 
   let removedItems = findRemovedItems(dataFound, purchaseReturnItems);
   let removeItemsIds = removedItems.map((item) => parseInt(item.id));
@@ -824,7 +821,6 @@ async function remove(id) {
       id: parseInt(id),
     },
   });
-  console.log(data, "data");
 
   return { statusCode: 0, data };
 }

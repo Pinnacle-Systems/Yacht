@@ -6,7 +6,6 @@ const prisma = new PrismaClient()
 async function get(req) {
     const { companyId, active, defaultRole, approverData } = req.query
     let data;
-    console.log(approverData, "hit");
 
     if (!approverData) {
 

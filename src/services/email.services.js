@@ -18,7 +18,6 @@ async function get(req) {
 
 
 async function getOne(id) {
-    console.log(id,"mailidddd")
     const childRecord = await prisma.email.count({ where: { orderId: parseInt(id) } });
     const data = await prisma.email.findUnique({
         where: {

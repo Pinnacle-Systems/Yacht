@@ -406,7 +406,6 @@ async function create(body) {
     draftSave
   );
   let data;
-  console.log(newDocId);
   await prisma.$transaction(async (tx) => {
     data = await tx.salesEntry.create({
       data: {
@@ -437,7 +436,6 @@ async function create(body) {
 }
 
 async function update(id, body) {
-  console.log(body);
   const {
     branchId,
     salesEntryItems,
@@ -776,13 +774,11 @@ async function deleteItemsFromStock(tx, removeItemsStockIds) {
 }
 
 async function remove(id) {
-  console.log(id, "id");
   const data = await prisma.salesEntry.delete({
     where: {
       id: parseInt(id),
     },
   });
-  console.log(data, "data");
 
   return { statusCode: 0, data };
 }

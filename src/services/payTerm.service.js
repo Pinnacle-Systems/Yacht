@@ -4,8 +4,6 @@ import { NoRecordFound } from "../configs/Responses.js";
 const prisma = new PrismaClient();
 
 async function get(req) {
-  console.log("data");
-
   const { companyId, active } = req.query;
   const data = await prisma.payTerm.findMany({
     where: {
@@ -62,7 +60,6 @@ async function create(body) {
 
 async function update(id, body) {
   const { name, days, companyId, active, aliasName } = await body;
-  console.log(body,"body")
   const dataFound = await prisma.payTerm.findUnique({
     where: {
       id: parseInt(id),

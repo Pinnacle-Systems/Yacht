@@ -159,7 +159,6 @@ async function create(body) {
             isAdmin
         }
     })
-    console.log("data", data);
     return { statusCode: 0, data };
 }
 

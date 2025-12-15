@@ -862,7 +862,6 @@ async function getStyleDetail(req) {
   const price = await prisma.style.findFirst({
     where: { sku: styleNo },
   });
-  console.log(price, "sku");
   // 3️⃣ If still no data, return no record message
   if (!data || data.length === 0)
     return NoRecordFound("Style or Barcode not found");

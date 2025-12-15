@@ -278,7 +278,6 @@ async function create(body) {
     locationId,
     // processGroupId
   } = await body;
-  console.log(branchId, "branchId");
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(
@@ -294,7 +293,6 @@ async function create(body) {
     draftSave
   );
   let data;
-  console.log(newDocId);
   const exist = await prisma.cuttingOrder.findFirst({
     where: {
       styleId: parseInt(styleId),
@@ -845,14 +843,11 @@ async function updateCuttingOrderItems(
 }
 
 async function remove(id) {
-  console.log(id, "id");
   const data = await prisma.cuttingOrder.delete({
     where: {
       id: parseInt(id),
     },
   });
-  console.log(data, "data");
-
   return { statusCode: 0, data };
 }
 

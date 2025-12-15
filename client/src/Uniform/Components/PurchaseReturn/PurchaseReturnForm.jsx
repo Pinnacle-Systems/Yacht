@@ -31,6 +31,7 @@ import ReturnItems from "./ReturnItems";
 import CuttingDeliveryApi from "../../../redux/uniformService/CuttingDeliveryServices";
 import CuttingOrderApi from "../../../redux/uniformService/CuttingOrderService";
 import { useDispatch } from "react-redux";
+import { Loader } from "../../../Basic/components";
 
 const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
     isSingleFetching,
@@ -223,6 +224,8 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
     //         && data?.purchaseReturnItems.length > 0
     //     )
     // };
+    const isLoadingIndicator = isSingleFetching || isSingleLoading;
+
 
     const saveData = (nextProcess) => {
         if (!validateData(data)) {
@@ -372,8 +375,13 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
 
 
     return (
-        <div onKeyDown={handleKeyDown}>
-            {/* <Modal
+        <>
+            {
+                isLoadingIndicator ? (
+                    <Loader />
+                ) : (
+                    <div onKeyDown={handleKeyDown}>
+                        {/* <Modal
                 isOpen={pdfOpen}
                 onClose={() => setPdfOpen(false)}
                 widthClass={"w-[90%] h-[90%]"}
@@ -382,81 +390,81 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                     <PDF singleData={singleData?.data} branchList={branchList} />
                 </PDFViewer>
             </Modal> */}
-            <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
-                <div className="flex justify-between items-center mb-1">
-                    <h1 className="text-xl font-bold text-gray-800">Purchase Return</h1>
-                    <button
-                        onClick={onClose}
-                        className="text-indigo-600 hover:text-indigo-700"
-                        title="Open Report"
-                    >
-                        <FaFileAlt className="w-5 h-5" />
-                    </button>
-                </div>
-            </div>
-            <div className="space-y-3  mt-2">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                    <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                        <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
-                        <div className="grid grid-cols-2 gap-1">
-                            <ReusableInput label="Purchase Return No" readOnly value={docId} />
-                            <ReusableInput
-                                label="Purchase Return Date"
-                                value={docDate}
-                                type={"date"}
-                                required={true}
-                                readOnly={true}
-                                disabled
-                            />
-                        </div>
-                    </div>
-                    <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                        <div className="grid grid-cols-1 gap-1">
-                            <h2 className="font-medium text-slate-700 mb-2">Location Details</h2>
-                            <div className="grid grid-cols-2 gap-1">
-                                <DropdownInput
-                                    name="Branch"
-                                    options={
-                                        branchList
-                                            ? dropDownListObject(
-                                                id
-                                                    ? branchList?.data
-                                                    : branchList?.data?.filter((item) => item.active),
-                                                "branchName",
-                                                "id"
-                                            )
-                                            : []
-                                    }
-                                    value={locationId}
-                                    setValue={(value) => {
-                                        setLocationId(value);
-                                        setStoreId("");
-                                    }}
-                                    required={true}
-                                    readOnly={id}
-                                />
-                                <DropdownInput
-                                    name="Location"
-                                    options={dropDownListObject(
-                                        id
-                                            ? storeOptions
-                                            : storeOptions?.filter((item) => item.active),
-                                        "storeName",
-                                        "id"
-                                    )}
-                                    value={storeId}
-                                    setValue={setStoreId}
-                                    required={true}
-                                    readOnly={id}
-                                    autoFocus={true}
-                                />
+                        <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
+                            <div className="flex justify-between items-center mb-1">
+                                <h1 className="text-xl font-bold text-gray-800">Purchase Return</h1>
+                                <button
+                                    onClick={onClose}
+                                    className="text-indigo-600 hover:text-indigo-700"
+                                    title="Open Report"
+                                >
+                                    <FaFileAlt className="w-5 h-5" />
+                                </button>
                             </div>
                         </div>
-                    </div>
-                    <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                        <h2 className="font-medium text-slate-700 mb-2">Return Details</h2>
-                        <div className="grid grid-cols-2 gap-1">
-                            {/* <ReusableInput
+                        <div className="space-y-3  mt-2">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                                    <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
+                                    <div className="grid grid-cols-2 gap-1">
+                                        <ReusableInput label="Purchase Return No" readOnly value={docId} />
+                                        <ReusableInput
+                                            label="Purchase Return Date"
+                                            value={docDate}
+                                            type={"date"}
+                                            required={true}
+                                            readOnly={true}
+                                            disabled
+                                        />
+                                    </div>
+                                </div>
+                                <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                                    <div className="grid grid-cols-1 gap-1">
+                                        <h2 className="font-medium text-slate-700 mb-2">Location Details</h2>
+                                        <div className="grid grid-cols-2 gap-1">
+                                            <DropdownInput
+                                                name="Branch"
+                                                options={
+                                                    branchList
+                                                        ? dropDownListObject(
+                                                            id
+                                                                ? branchList?.data
+                                                                : branchList?.data?.filter((item) => item.active),
+                                                            "branchName",
+                                                            "id"
+                                                        )
+                                                        : []
+                                                }
+                                                value={locationId}
+                                                setValue={(value) => {
+                                                    setLocationId(value);
+                                                    setStoreId("");
+                                                }}
+                                                required={true}
+                                                readOnly={id}
+                                            />
+                                            <DropdownInput
+                                                name="Location"
+                                                options={dropDownListObject(
+                                                    id
+                                                        ? storeOptions
+                                                        : storeOptions?.filter((item) => item.active),
+                                                    "storeName",
+                                                    "id"
+                                                )}
+                                                value={storeId}
+                                                setValue={setStoreId}
+                                                required={true}
+                                                readOnly={id}
+                                                autoFocus={true}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                                    <h2 className="font-medium text-slate-700 mb-2">Return Details</h2>
+                                    <div className="grid grid-cols-2 gap-1">
+                                        {/* <ReusableInput
                                 label="Invoice No"
                                 value={invNo}
                                 setValue={setInvNo}
@@ -470,52 +478,52 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                     }
                                 }}
                             /> */}
-                            <DropdownNew
-                                name="Inv No"
-                                dataList={
-                                    invList?.data
-                                }
-                                value={invNo}
-                                setValue={handleAddRow}
-                                required={true}
-                                readOnly={readOnly}
-                                placeholder={"Select Inv"}
-                                otherField={"invNo"}
-                                otherValue={"invNo"}
-                                disabled={readOnly}
-                            />
-                            <DropdownInput
-                                name="Return Type"
-                                options={poTypes}
-                                value={returnType}
-                                setValue={setReturnType}
-                                required={true}
-                                readOnly={id}
-                                beforeChange={() => {
-                                    setPurchaseReturnItems([]);
-                                }}
-                            />
-                            <DropdownInput
-                                name="Supplier"
-                                options={
-                                    partyList
-                                        ? dropDownListObject(
-                                            id
-                                                ? partyList?.data
-                                                : partyList?.data?.filter((item) => item.active),
-                                            "name",
-                                            "id"
-                                        )
-                                        : []
-                                }
-                                value={supplierId}
-                                setValue={(value) => {
-                                    setSupplierId(value);
-                                }}
-                                required={true}
-                                readOnly={readOnly}
-                            />
-                            {/* <TextInput
+                                        <DropdownNew
+                                            name="Inv No"
+                                            dataList={
+                                                invList?.data
+                                            }
+                                            value={invNo}
+                                            setValue={handleAddRow}
+                                            required={true}
+                                            readOnly={readOnly}
+                                            placeholder={"Select Inv"}
+                                            otherField={"invNo"}
+                                            otherValue={"invNo"}
+                                            disabled={readOnly}
+                                        />
+                                        <DropdownInput
+                                            name="Return Type"
+                                            options={poTypes}
+                                            value={returnType}
+                                            setValue={setReturnType}
+                                            required={true}
+                                            readOnly={id}
+                                            beforeChange={() => {
+                                                setPurchaseReturnItems([]);
+                                            }}
+                                        />
+                                        <DropdownInput
+                                            name="Supplier"
+                                            options={
+                                                partyList
+                                                    ? dropDownListObject(
+                                                        id
+                                                            ? partyList?.data
+                                                            : partyList?.data?.filter((item) => item.active),
+                                                        "name",
+                                                        "id"
+                                                    )
+                                                    : []
+                                            }
+                                            value={supplierId}
+                                            setValue={(value) => {
+                                                setSupplierId(value);
+                                            }}
+                                            required={true}
+                                            readOnly={readOnly}
+                                        />
+                                        {/* <TextInput
                                 name={"Invoice No"}
                                 value={invNo}
                                 setValue={setInvNo}
@@ -529,78 +537,82 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                 }}
                             /> */}
 
-                        </div>
-                    </div>
+                                    </div>
+                                </div>
 
 
-                </div>
-                <fieldset>
+                            </div>
+                            <fieldset>
 
-                    <ReturnItems
-                        id={id}
-                        returnType={returnType}
-                        params={params}
-                        purchaseReturnItems={purchaseReturnItems}
-                        setPurchaseReturnItems={setPurchaseReturnItems}
-                        readOnly={readOnly}
-                    />
-                </fieldset>
+                                <ReturnItems
+                                    id={id}
+                                    returnType={returnType}
+                                    params={params}
+                                    purchaseReturnItems={purchaseReturnItems}
+                                    setPurchaseReturnItems={setPurchaseReturnItems}
+                                    readOnly={readOnly}
+                                />
+                            </fieldset>
 
-                <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
-                    <div className="flex gap-2 flex-wrap">
-                        <button
-                            onClick={() => saveData("new")}
-                            className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
-                        >
-                            <FiSave className="w-4 h-4 mr-2" />
-                            Save & New
-                        </button>
-                        <button
-                            onClick={() => saveData("close")}
-                            className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
-                        >
-                            <HiOutlineRefresh className="w-4 h-4 mr-2" />
-                            Save & Close
-                        </button>
-                        <button
-                            onClick={() => saveData("draft")}
-                            className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
-                        >
-                            <HiOutlineRefresh className="w-4 h-4 mr-2" />
-                            Draft Save
-                        </button>
-                    </div>
+                            <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
+                                <div className="flex gap-2 flex-wrap">
+                                    <button
+                                        onClick={() => saveData("new")}
+                                        className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
+                                    >
+                                        <FiSave className="w-4 h-4 mr-2" />
+                                        Save & New
+                                    </button>
+                                    <button
+                                        onClick={() => saveData("close")}
+                                        className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
+                                    >
+                                        <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                                        Save & Close
+                                    </button>
+                                    <button
+                                        onClick={() => saveData("draft")}
+                                        className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
+                                    >
+                                        <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                                        Draft Save
+                                    </button>
+                                </div>
 
-                    <div className="flex gap-2 flex-wrap">
-                        {/* <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
+                                <div className="flex gap-2 flex-wrap">
+                                    {/* <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
               <FiShare2 className="w-4 h-4 mr-2" />
               Email
             </button> */}
-                        <button
-                            className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                            onClick={() => setReadOnly(false)}
-                        >
-                            <FiEdit2 className="w-4 h-4 mr-2" />
-                            Edit
-                        </button>
-                        <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
-                            <FaWhatsapp className="w-4 h-4 mr-2" />
-                            WhatsApp
-                        </button>
-                        <button
-                            className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
-                            disabled={!id}
-                            onClick={() => {
-                                setPdfOpen(true);
-                            }}
-                        >
-                            <FiPrinter className="w-4 h-4 mr-2" />
-                            Print
-                        </button>
+                                    <button
+                                        className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                                        onClick={() => setReadOnly(false)}
+                                    >
+                                        <FiEdit2 className="w-4 h-4 mr-2" />
+                                        Edit
+                                    </button>
+                                    <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
+                                        <FaWhatsapp className="w-4 h-4 mr-2" />
+                                        WhatsApp
+                                    </button>
+                                    <button
+                                        className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
+                                        disabled={!id}
+                                        onClick={() => {
+                                            setPdfOpen(true);
+                                        }}
+                                    >
+                                        <FiPrinter className="w-4 h-4 mr-2" />
+                                        Print
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </div>
+                )
+            }
+        </>
+
     );
 };
 

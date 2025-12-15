@@ -15,14 +15,6 @@ async function getNextDocId(
   endTime,
   isTaxBill
 ) {
-  console.log(
-    "argumnts : ",
-    branchId,
-    shortCode,
-    startTime,
-    endTime,
-    isTaxBill
-  );
 
   let lastObject = await prisma.ShiftCommonTemplate.findFirst({
     where: {
@@ -44,15 +36,12 @@ async function getNextDocId(
   if (lastObject) {
     newDocId = `${branchObj.branchCode}/${code}/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`;
   }
-console.log(newDocId ,"newDocId");
 
   return newDocId;
 }
 
 async function get(req) {
   const { companyId, active, branchId, finYearId, searchDocId } = req.query;
-
-  console.log(companyId, active, finYearId, "received");
 
   const data = await prisma.shiftCommonTemplate.findMany({
     where: {
@@ -74,8 +63,6 @@ async function get(req) {
     },
   });
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-
-  console.log(finYearDate, "finyear--");
 
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(

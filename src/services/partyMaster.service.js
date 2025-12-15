@@ -143,7 +143,6 @@ async function create(body) {
     payTermId,
   } = await body;
   let data;
-  console.log(contactNumber);
   data = await prisma.party.create({
     data: {
       isClient,
@@ -268,7 +267,6 @@ async function update(id, body) {
       },
     },
   });
-  console.log("dataFound", dataFound);
   if (!dataFound) return NoRecordFound("party");
 
   await prisma.$transaction(async (tx) => {

@@ -16,7 +16,6 @@ import { getTotalQty } from "../utils/poHelpers/getTotalQuantity.js";
 const prisma = new PrismaClient();
 
 async function getNextDocId(branchId, shortCode, startTime, endTime) {
-  console.log("branchId, shortCode, ", branchId, shortCode);
 
   let lastObject = await prisma.po.findFirst({
     where: {
@@ -1257,7 +1256,6 @@ async function create(body) {
 
 async function update(id, req) {
   const files = req.files;
-  console.log(files, "file--");
 
   const {
     docId,
@@ -1380,8 +1378,6 @@ const afterPoDelete = async (poId) => {
       });
 
       const allPurchased = subGrids.every((sg) => sg.isPurchased === true);
-
-      console.log(allPurchased, "allPurchased");
 
       await tx.orderBillItems.update({
         where: { id: item.gridId },

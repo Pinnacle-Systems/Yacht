@@ -115,7 +115,6 @@ async function get(req) {
   let data;
   let totalCount;
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-  console.log(finYearDate, "finYearDate");
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(
         finYearDate?.startDateStartTime,
@@ -239,7 +238,6 @@ export async function getDirectItems(req) {
   } = req.query;
   let data;
   let totalCount;
-  console.log(pagination, "pagination");
   if (pagination) {
     data = await prisma.directItems.findMany({
       where: {
@@ -555,7 +553,6 @@ export async function getDirectItemById(
     },
   });
 
-  console.log(alreadyReturnedData, "alreadyReturnedData");
 
   const alreadyReturnedLotWiseData = await prisma.directReturnItems.groupBy({
     where: {
@@ -595,17 +592,9 @@ export async function getDirectItemById(
     alreadyInwardedRolls,
     alreadyReturnedRolls
   );
-  console.log(
-    alreadyInwardedQty,
-    "alreadyInwardedQty",
-    alreadyReturnedQty,
-    "alreadyReturnedQty"
-  );
+
   let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty);
-  console.log(
-    substract(alreadyInwardedQty, alreadyReturnedQty),
-    "allowedReturnQty"
-  );
+
 
   let stockQty = parseFloat(
     (
@@ -812,16 +801,6 @@ export async function getDirectItemById(
     fDiaId
   ) {
     let sql;
-
-    console.log(
-      "hitstock",
-      itemType == "Accessory",
-      colorId,
-      uomId,
-      sizeId,
-      accessoryId,
-      storeId
-    );
 
     if (itemType == "Accessory") {
       sql = `select
@@ -1178,8 +1157,6 @@ async function createAccessoryStock(
   storeId,
   item
 ) {
-  console.log(storeId, "storeId");
-
   await tx.stock.create({
     data: {
       itemType: poType ? poType : undefined,
@@ -1210,7 +1187,6 @@ async function createYarnItemsStock(
   storeId,
   item
 ) {
-  console.log(item, "item");
   await tx.stock.create({
     data: {
       itemType: poType,
@@ -1226,7 +1202,6 @@ async function createYarnItemsStock(
       orderId: item.orderId ? item.orderId : undefined,
     },
   });
-  console.log("Eror");
 }
 
 async function createDirectInwardReturnItems(
@@ -1238,7 +1213,6 @@ async function createDirectInwardReturnItems(
   storeId,
   branchId
 ) {
-  console.log(poType == "GreyYarn" || poType == "DyedYarn", "condition");
   let promises;
   if (poType == "GreyYarn" || poType == "DyedYarn") {
     promises = directItems?.map(async (item, index) => {
@@ -1286,7 +1260,6 @@ async function createDirectInwardReturnItems(
       );
     });
   } else {
-    // console.log(directItems,"directItems")
     promises = directItems?.map(async (item, index) => {
       const data = await tx.directItems.create({
         data: {
@@ -1399,7 +1372,6 @@ async function create(body) {
         docId,
       },
     });
-    // console.log(directInwardReturnItems,"directItems")
 
     await createDirectInwardReturnItems(
       tx,

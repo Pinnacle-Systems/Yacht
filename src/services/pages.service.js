@@ -38,10 +38,7 @@ async function getPageId(pageId) {
 
 async function getPermissions(req) {
 
-    const { roleId, pageId } = req.params
-
-    console.log(roleId, pageId ,"roleId, pageId");
-    
+    const { roleId, pageId } = req.params    
 
     let pageData = await getPageId(pageId);
 

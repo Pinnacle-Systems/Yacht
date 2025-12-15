@@ -42,7 +42,6 @@ async function getNextDocId(
 async function get(req) {
   const { companyId, active, branchId, finYearId, searchDocId, } = req.query;
 
-  console.log(companyId, active, finYearId, "received--");
 
   const data = await prisma.shiftTemplate.findMany({
 
@@ -64,7 +63,6 @@ async function get(req) {
 
   });
 
-  console.log(data,"datasending");
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
   let newDocId = finYearDate ? await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime,) : "";
@@ -116,7 +114,6 @@ async function getSearch(req) {
 async function create(body) {
   const { name, branchId, companyId, active, categoryId, docId, ShiftTemplateItems } = await body;
 
-  console.log(ShiftTemplateItems, "ShiftTemplateItems");
   let data;
 
   await prisma.$transaction(async (tx) => {
@@ -172,8 +169,6 @@ async function create(body) {
 }
 
 async function updateShiftTemplateItems(tx, ShiftTemplateItems, data) {
-  console.log(data, "data")
-  console.log(ShiftTemplateItems, "ShiftTemplateItems")
 
   let removedItems = data?.ShiftTemplateItems?.filter(oldItem => {
     let result = ShiftTemplateItems?.find(newItem => newItem.id === oldItem.id)

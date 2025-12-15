@@ -934,7 +934,6 @@ BARCODE ${x + 5},${y + 20},"128",40,1,0,2,2,"${item.barcodeNo}"
   // Replace with your printer name exactly as in Windows
   const printerName = "BarCode";
   const data = printTSPL(tspl, printerName);
-  console.log(data, "data");
   return { statusCode: 0, data };
 }
 

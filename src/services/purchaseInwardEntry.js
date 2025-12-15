@@ -372,7 +372,6 @@ async function create(req) {
     draftSave
   );
   let data;
-  console.log(newDocId);
   await prisma.$transaction(async (tx) => {
     data = await tx.purchaseInward.create({
       data: {
@@ -571,7 +570,6 @@ async function update(id, body) {
     },
   });
   if (!dataFound) return NoRecordFound("Purchase Inward");
-  console.log(fabricInwardItems, "fabricInwardItems");
 
   let removedItems = findRemovedItems(dataFound, fabricInwardItems);
   let removeItemsIds = removedItems.map((item) => parseInt(item.id));
@@ -898,7 +896,6 @@ async function remove(id) {
       id: parseInt(id),
     },
   });
-  console.log(data, "data");
 
   return { statusCode: 0, data };
 }

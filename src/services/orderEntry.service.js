@@ -17,7 +17,6 @@ async function getNextDocId(
   endTime,
   isTaxBill
 ) {
-  // console.log("argumnts : ", branchId, shortCode, startTime, endTime, isTaxBill);
 
   let lastObject = await prisma.order.findFirst({
     where: {
@@ -204,8 +203,6 @@ async function get(req) {
 async function getOne(req) {
   const id = parseInt(req.params.id);
 
-
-  console.log(id, "id ");
 
   if (!id || isNaN(id)) {
     return {
@@ -456,13 +453,11 @@ async function getOneFilter(req) {
   const filterGrid = data?.orderBillItems?.filter(
     (item) => item.isPurchased !== true
   );
-  // console.log(filterGrid, "filterGrid");
 
   const filterSubGrid = filterGrid?.flatMap((val) =>
     val.subGrid.filter((sub) => sub.isPurchased !== true)
   );
 
-  // console.log(filterSubGrid, "filterSubGrid");
 
   if (!data) return NoRecordFound("Not Found");
 
@@ -651,8 +646,6 @@ async function create(body) {
       },
     });
   });
-  console.log("response data", data);
-
   return { statusCode: 0, data };
 }
 

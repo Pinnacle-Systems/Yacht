@@ -32,6 +32,7 @@ import tw from "../../../Utils/tailwind-react-pdf";
 import CuttingDeliveryApi from "../../../redux/uniformService/CuttingDeliveryServices";
 import CuttingOrderApi from "../../../redux/uniformService/CuttingOrderService";
 import purchaseReturnApi from "../../../redux/services/PurchaseReturnService";
+import { Loader } from "../../../Basic/components";
 
 const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
   , isSingleFetching,
@@ -84,6 +85,8 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
   const dispatch = useDispatch();
 
   const isFabric = inwardType === "Fabric"
+
+  const isLoadingIndicator = isSingleFetching || isSingleLoading;
 
   const data = {
     docId,
@@ -296,285 +299,292 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
   };
 
   return (
-    <div onKeyDown={handleKeyDown}>
-      <Modal
-        isOpen={pdfOpen}
-        onClose={() => setPdfOpen(false)}
-        widthClass={"w-[90%] h-[90%]"}
-      >
-        <PDFViewer style={tw("w-full h-full")}>
-          <PDF singleData={singleData?.data} branchList={branchList} />
-        </PDFViewer>
-      </Modal>
-      <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
-        <div className="flex justify-between items-center mb-1">
-          <h1 className="text-xl font-bold text-gray-800">Purchase Inward</h1>
-          <button
-            onClick={onClose}
-            className="text-indigo-600 hover:text-indigo-700"
-            title="Open Report"
+    <>
+      {isLoadingIndicator ? (
+        <Loader />
+      ) : (
+        <div onKeyDown={handleKeyDown}>
+          <Modal
+            isOpen={pdfOpen}
+            onClose={() => setPdfOpen(false)}
+            widthClass={"w-[90%] h-[90%]"}
           >
-            <FaFileAlt className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-      <div className="space-y-3  mt-2">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
-            <div className="grid grid-cols-2 gap-1">
-              <ReusableInput label="Purchase Inward No" readOnly value={docId} />
-              <ReusableInput
-                label="Purchase Inward Date"
-                value={docDate}
-                type={"date"}
-                required={true}
-                readOnly={true}
-                disabled
-              />
-              <DropdownInput
-                name="Inward Type"
-                options={poTypes}
-                value={inwardType}
-                setValue={setInwardType}
-                required={true}
-                readOnly={id}
-                beforeChange={() => {
-                  setFabricInwardItems([]);
-                }}
-                autoFocus={true}
-              />
-              <TextInput
-                name={"Invoice No"}
-                value={invNo}
-                setValue={setInvNo}
-                readOnly={readOnly}
-                required
-              />
+            <PDFViewer style={tw("w-full h-full")}>
+              <PDF singleData={singleData?.data} branchList={branchList} />
+            </PDFViewer >
+          </Modal >
+          <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
+            <div className="flex justify-between items-center mb-1">
+              <h1 className="text-xl font-bold text-gray-800">Purchase Inward</h1>
+              <button
+                onClick={onClose}
+                className="text-indigo-600 hover:text-indigo-700"
+                title="Open Report"
+              >
+                <FaFileAlt className="w-5 h-5" />
+              </button>
             </div>
           </div>
-
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">Supplier Details</h2>
-            <div className="grid grid-cols-2 gap-1">
-              <TextInput
-                name={"Dc No"}
-                value={dcNo}
-                setValue={setDcNo}
-                readOnly={readOnly}
-                required
-              />
-              <DateInput
-                name="Dc Date"
-                value={dcDate}
-                setValue={setDcDate}
-                required={true}
-                readOnly={readOnly}
-              />
-              <DropdownInput
-                name="Supplier"
-                options={
-                  partyList
-                    ? dropDownListObject(
-                      id
-                        ? partyList?.data
-                        : partyList?.data?.filter((item) => item.isSupplier),
-                      "name",
-                      "id"
-                    )
-                    : []
-                }
-                value={supplierId}
-                setValue={(value) => {
-                  setSupplierId(value);
-                }}
-                required={true}
-                readOnly={readOnly}
-              />
-            </div>
-          </div>
-
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <div className="grid grid-cols-1 gap-1">
-              <h2 className="font-medium text-slate-700 mb-2">Location Details</h2>
-              <div className="grid grid-cols-2 gap-1">
-                <DropdownInput
-                  name="Branch"
-                  options={
-                    branchList
-                      ? dropDownListObject(
-                        id
-                          ? branchList?.data
-                          : branchList?.data?.filter((item) => item.active),
-                        "branchName",
-                        "id"
-                      )
-                      : []
-                  }
-                  value={locationId}
-                  setValue={(value) => {
-                    setLocationId(value);
-                    setStoreId("");
-                  }}
-                  required={true}
-                  readOnly={id}
-                />
-                <DropdownInput
-                  name="Location"
-                  options={dropDownListObject(
-                    id
-                      ? storeOptions
-                      : storeOptions?.filter((item) => item.active),
-                    "storeName",
-                    "id"
-                  )}
-                  value={storeId}
-                  setValue={setStoreId}
-                  required={true}
-                  readOnly={id}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        <fieldset>
-          {
-            inwardType.toLowerCase().includes("fabric") ? (
-              <FabricItems
-                id={id}
-                inwardType={inwardType}
-                params={params}
-                fabricInwardItems={fabricInwardItems}
-                setFabricInwardItems={setFabricInwardItems}
-                readOnly={readOnly}
-              />
-            ) : (
-              <AccessoryInwardItems
-                id={id}
-                inwardType={inwardType}
-                params={params}
-                fabricInwardItems={fabricInwardItems}
-                setFabricInwardItems={setFabricInwardItems}
-                readOnly={readOnly}
-              />
-            )}
-        </fieldset>
-
-        <div className="grid grid-cols-3 gap-3">
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-            <h2 className="font-medium text-slate-700 mb-2 text-base">
-              Vehicle No
-            </h2>
-            <textarea
-              readOnly={readOnly}
-              value={vehicleNo}
-              onChange={(e) => {
-                setVehicleNo(e.target.value);
-              }}
-              className="w-full overflow-auto h-14 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-              placeholder="Vehicle Details..."
-              disabled={readOnly}
-            />
-          </div>
-
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
-            <h2 className="font-medium text-slate-700 mb-2 text-base">
-              Remarks
-            </h2>
-            <textarea
-              readOnly={readOnly}
-              value={remarks}
-              onChange={(e) => {
-                setRemarks(e.target.value);
-              }}
-              className="w-full  overflow-auto h-14 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-              placeholder="Additional remarks..."
-              disabled={readOnly}
-            />
-          </div>
-
-          <div className="border border-slate-200 p-2 bg-white rounded-md  shadow-sm">
-            <h2 className="font-semibold text-slate-800 mb-2 text-base">
-              Summary
-            </h2>
-
-            <div className="space-y-1.5">
-              {inwardType === "Fabric" && (
-                <div className="flex justify-between  text-sm">
-                  <span className="text-slate-600">Total Meters</span>
-                  <span className="font-medium">
-                    {fabricInwardItems.reduce(
-                      (sum, row) => sum + (Number(row.fabMeter) || 0),
-                      0
-                    ).toFixed(2)}
-                  </span>
+          <div className="space-y-3  mt-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
+                <div className="grid grid-cols-2 gap-1">
+                  <ReusableInput label="Purchase Inward No" readOnly value={docId} />
+                  <ReusableInput
+                    label="Purchase Inward Date"
+                    value={docDate}
+                    type={"date"}
+                    required={true}
+                    readOnly={true}
+                    disabled
+                  />
+                  <DropdownInput
+                    name="Inward Type"
+                    options={poTypes}
+                    value={inwardType}
+                    setValue={setInwardType}
+                    required={true}
+                    readOnly={id}
+                    beforeChange={() => {
+                      setFabricInwardItems([]);
+                    }}
+                    autoFocus={true}
+                  />
+                  <TextInput
+                    name={"Invoice No"}
+                    value={invNo}
+                    setValue={setInvNo}
+                    readOnly={readOnly}
+                    required
+                  />
                 </div>
-              )}
-              <div className="flex justify-between  text-sm">
-                <span className="text-slate-600">{inwardType === "Fabric" ? "Total Rolls" : "Total Qty"}</span>
-                <span className="font-medium">
-                  {parseInt(getTotalQty()).toFixed(2)}
-                </span>
+              </div>
+
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                <h2 className="font-medium text-slate-700 mb-2">Supplier Details</h2>
+                <div className="grid grid-cols-2 gap-1">
+                  <TextInput
+                    name={"Dc No"}
+                    value={dcNo}
+                    setValue={setDcNo}
+                    readOnly={readOnly}
+                    required
+                  />
+                  <DateInput
+                    name="Dc Date"
+                    value={dcDate}
+                    setValue={setDcDate}
+                    required={true}
+                    readOnly={readOnly}
+                  />
+                  <DropdownInput
+                    name="Supplier"
+                    options={
+                      partyList
+                        ? dropDownListObject(
+                          id
+                            ? partyList?.data
+                            : partyList?.data?.filter((item) => item.isSupplier),
+                          "name",
+                          "id"
+                        )
+                        : []
+                    }
+                    value={supplierId}
+                    setValue={(value) => {
+                      setSupplierId(value);
+                    }}
+                    required={true}
+                    readOnly={readOnly}
+                  />
+                </div>
+              </div>
+
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                <div className="grid grid-cols-1 gap-1">
+                  <h2 className="font-medium text-slate-700 mb-2">Location Details</h2>
+                  <div className="grid grid-cols-2 gap-1">
+                    <DropdownInput
+                      name="Branch"
+                      options={
+                        branchList
+                          ? dropDownListObject(
+                            id
+                              ? branchList?.data
+                              : branchList?.data?.filter((item) => item.active),
+                            "branchName",
+                            "id"
+                          )
+                          : []
+                      }
+                      value={locationId}
+                      setValue={(value) => {
+                        setLocationId(value);
+                        setStoreId("");
+                      }}
+                      required={true}
+                      readOnly={id}
+                    />
+                    <DropdownInput
+                      name="Location"
+                      options={dropDownListObject(
+                        id
+                          ? storeOptions
+                          : storeOptions?.filter((item) => item.active),
+                        "storeName",
+                        "id"
+                      )}
+                      value={storeId}
+                      setValue={setStoreId}
+                      required={true}
+                      readOnly={id}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+            <fieldset>
+              {
+                inwardType.toLowerCase().includes("fabric") ? (
+                  <FabricItems
+                    id={id}
+                    inwardType={inwardType}
+                    params={params}
+                    fabricInwardItems={fabricInwardItems}
+                    setFabricInwardItems={setFabricInwardItems}
+                    readOnly={readOnly}
+                  />
+                ) : (
+                  <AccessoryInwardItems
+                    id={id}
+                    inwardType={inwardType}
+                    params={params}
+                    fabricInwardItems={fabricInwardItems}
+                    setFabricInwardItems={setFabricInwardItems}
+                    readOnly={readOnly}
+                  />
+                )}
+            </fieldset>
 
-        <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => saveData("new")}
-              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
-            >
-              <FiSave className="w-4 h-4 mr-2" />
-              Save & New
-            </button>
-            <button
-              onClick={() => saveData("close")}
-              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
-            >
-              <HiOutlineRefresh className="w-4 h-4 mr-2" />
-              Save & Close
-            </button>
-            <button
-              onClick={() => saveData("draft")}
-              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
-            >
-              <HiOutlineRefresh className="w-4 h-4 mr-2" />
-              Draft Save
-            </button>
-          </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
+                <h2 className="font-medium text-slate-700 mb-2 text-base">
+                  Vehicle No
+                </h2>
+                <textarea
+                  readOnly={readOnly}
+                  value={vehicleNo}
+                  onChange={(e) => {
+                    setVehicleNo(e.target.value);
+                  }}
+                  className="w-full overflow-auto h-14 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                  placeholder="Vehicle Details..."
+                  disabled={readOnly}
+                />
+              </div>
 
-          <div className="flex gap-2 flex-wrap">
-            {/* <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
+                <h2 className="font-medium text-slate-700 mb-2 text-base">
+                  Remarks
+                </h2>
+                <textarea
+                  readOnly={readOnly}
+                  value={remarks}
+                  onChange={(e) => {
+                    setRemarks(e.target.value);
+                  }}
+                  className="w-full  overflow-auto h-14 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                  placeholder="Additional remarks..."
+                  disabled={readOnly}
+                />
+              </div>
+
+              <div className="border border-slate-200 p-2 bg-white rounded-md  shadow-sm">
+                <h2 className="font-semibold text-slate-800 mb-2 text-base">
+                  Summary
+                </h2>
+
+                <div className="space-y-1.5">
+                  {inwardType === "Fabric" && (
+                    <div className="flex justify-between  text-sm">
+                      <span className="text-slate-600">Total Meters</span>
+                      <span className="font-medium">
+                        {fabricInwardItems.reduce(
+                          (sum, row) => sum + (Number(row.fabMeter) || 0),
+                          0
+                        ).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between  text-sm">
+                    <span className="text-slate-600">{inwardType === "Fabric" ? "Total Rolls" : "Total Qty"}</span>
+                    <span className="font-medium">
+                      {parseInt(getTotalQty()).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => saveData("new")}
+                  className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
+                >
+                  <FiSave className="w-4 h-4 mr-2" />
+                  Save & New
+                </button>
+                <button
+                  onClick={() => saveData("close")}
+                  className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
+                >
+                  <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                  Save & Close
+                </button>
+                <button
+                  onClick={() => saveData("draft")}
+                  className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
+                >
+                  <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                  Draft Save
+                </button>
+              </div>
+
+              <div className="flex gap-2 flex-wrap">
+                {/* <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
               <FiShare2 className="w-4 h-4 mr-2" />
               Email
             </button> */}
-            <button
-              className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-              onClick={() => setReadOnly(false)}
-            >
-              <FiEdit2 className="w-4 h-4 mr-2" />
-              Edit
-            </button>
-            <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
-              <FaWhatsapp className="w-4 h-4 mr-2" />
-              WhatsApp
-            </button>
-            <button
-              className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
-              disabled={!id}
-              onClick={() => {
-                setPdfOpen(true);
-              }}
-            >
-              <FiPrinter className="w-4 h-4 mr-2" />
-              Print
-            </button>
+                <button
+                  className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                  onClick={() => setReadOnly(false)}
+                >
+                  <FiEdit2 className="w-4 h-4 mr-2" />
+                  Edit
+                </button>
+                <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
+                  <FaWhatsapp className="w-4 h-4 mr-2" />
+                  WhatsApp
+                </button>
+                <button
+                  className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
+                  disabled={!id}
+                  onClick={() => {
+                    setPdfOpen(true);
+                  }}
+                >
+                  <FiPrinter className="w-4 h-4 mr-2" />
+                  Print
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
+        </div >
+      )}
+
+    </>
   );
 };
 

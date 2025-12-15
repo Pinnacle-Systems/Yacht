@@ -22,6 +22,7 @@ import BarCodePrintFormat from "../OpeningStock/BarcodePrintFormat";
 import { useDispatch } from "react-redux";
 import OpeningStockApi from "../../../redux/uniformService/OpeningStockService";
 import SalesEntryApi from "../../../redux/uniformService/SalesEntryService";
+import { Loader } from "../../../Basic/components";
 
 export default function StockAdjustmentForm({
   onClose,
@@ -50,6 +51,8 @@ export default function StockAdjustmentForm({
     params: { branchId },
     searchParams: searchValue,
   });
+
+  const isLoadingIndicator = isSingleFetching || isSingleLoading;
 
   const storeOptions = locationData
     ? locationData.data.filter(
@@ -230,157 +233,167 @@ export default function StockAdjustmentForm({
   };
 
   return (
-    <div className="" onKeyDown={handleKeyDown}>
-      <Modal
-        isOpen={barcodePrintOpen}
-        onClose={() => setBarcodePrintOpen(false)}
-        widthClass={"px-2 h-[90%] w-[90%]"}
-      >
-        <BarCodePrintFormat
-          data={barcodeItems.filter((i) => i?.styleId)}
-          // barCodePerPage={barCodePerPage}
-        />
-      </Modal>
-      <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
-        <div className="flex justify-between items-center mb-1">
-          <h1 className="text-xl font-bold text-gray-800">Stock Adjustment</h1>
-          <button
-            onClick={onClose}
-            className="text-indigo-600 hover:text-indigo-700"
-            title="Open Report"
+    <>
+      {isLoadingIndicator ? (
+        <Loader />
+      ) : (
+        <div className="" onKeyDown={handleKeyDown}>
+          <Modal
+            isOpen={barcodePrintOpen}
+            onClose={() => setBarcodePrintOpen(false)}
+            widthClass={"px-2 h-[90%] w-[90%]"}
           >
-            <FaFileAlt className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-      <div className="space-y-3 mt-3">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
-            <div className="grid grid-cols-2 gap-1">
-              <ReusableInput
-                label="Stock Adjustment No"
-                readOnly
-                value={docId}
-              />
-              <ReusableInput
-                label="Stock Adjustment Date"
-                value={docDate}
-                type={"date"}
-                required={true}
-                readOnly={true}
-                disabled
-              />
+            <BarCodePrintFormat
+              data={barcodeItems.filter((i) => i?.styleId)}
+              // barCodePerPage={barCodePerPage}
+            />
+          </Modal>
+          <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
+            <div className="flex justify-between items-center mb-1">
+              <h1 className="text-xl font-bold text-gray-800">
+                Stock Adjustment
+              </h1>
+              <button
+                onClick={onClose}
+                className="text-indigo-600 hover:text-indigo-700"
+                title="Open Report"
+              >
+                <FaFileAlt className="w-5 h-5" />
+              </button>
             </div>
           </div>
+          <div className="space-y-3 mt-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                <h2 className="font-medium text-slate-700 mb-2">
+                  Basic Details
+                </h2>
+                <div className="grid grid-cols-2 gap-1">
+                  <ReusableInput
+                    label="Stock Adjustment No"
+                    readOnly
+                    value={docId}
+                  />
+                  <ReusableInput
+                    label="Stock Adjustment Date"
+                    value={docDate}
+                    type={"date"}
+                    required={true}
+                    readOnly={true}
+                    disabled
+                  />
+                </div>
+              </div>
 
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">
-              Location Details
-            </h2>
-            <div className="grid grid-cols-2 gap-1">
-              <DropdownInput
-                name="Branch"
-                options={
-                  branchList
-                    ? dropDownListObject(
-                        id
-                          ? branchList?.data
-                          : branchList?.data?.filter((item) => item.active),
-                        "branchName",
-                        "id"
-                      )
-                    : []
-                }
-                value={locationId}
-                setValue={(value) => {
-                  setLocationId(value);
-                  setStoreId("");
-                }}
-                required={true}
-                readOnly={id}
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                <h2 className="font-medium text-slate-700 mb-2">
+                  Location Details
+                </h2>
+                <div className="grid grid-cols-2 gap-1">
+                  <DropdownInput
+                    name="Branch"
+                    options={
+                      branchList
+                        ? dropDownListObject(
+                            id
+                              ? branchList?.data
+                              : branchList?.data?.filter((item) => item.active),
+                            "branchName",
+                            "id"
+                          )
+                        : []
+                    }
+                    value={locationId}
+                    setValue={(value) => {
+                      setLocationId(value);
+                      setStoreId("");
+                    }}
+                    required={true}
+                    readOnly={id}
+                  />
+                  <DropdownInput
+                    name="Location"
+                    options={dropDownListObject(
+                      id
+                        ? storeOptions
+                        : storeOptions?.filter((item) => item.active),
+                      "storeName",
+                      "id"
+                    )}
+                    value={storeId}
+                    setValue={setStoreId}
+                    required={true}
+                    readOnly={id}
+                    autoFocus={true}
+                  />
+                </div>
+              </div>
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1"></div>
+            </div>
+            <fieldset className="w-full  min-w-[1200px]">
+              <AdjustItems
+                stockAdjustmentItems={stockAdjustmentItems}
+                setStockAdjustmentItems={setStockAdjustmentItems}
+                readOnly={readOnly}
+                branchId={branchId}
+                storeId={storeId}
               />
-              <DropdownInput
-                name="Location"
-                options={dropDownListObject(
-                  id
-                    ? storeOptions
-                    : storeOptions?.filter((item) => item.active),
-                  "storeName",
-                  "id"
-                )}
-                value={storeId}
-                setValue={setStoreId}
-                required={true}
-                readOnly={id}
-                autoFocus={true}
-              />
+            </fieldset>
+            <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => saveData("new")}
+                  className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
+                >
+                  <FiSave className="w-4 h-4 mr-2" />
+                  Save & New
+                </button>
+                <button
+                  onClick={() => saveData("close")}
+                  className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
+                >
+                  <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                  Save & Close
+                </button>
+                <button
+                  onClick={() => saveData("draft")}
+                  className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
+                >
+                  <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                  Draft Save
+                </button>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                  onClick={() => setReadOnly(false)}
+                >
+                  <FiEdit2 className="w-4 h-4 mr-2" />
+                  Edit
+                </button>
+                <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
+                  <FaWhatsapp className="w-4 h-4 mr-2" />
+                  WhatsApp
+                </button>
+                <button
+                  className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
+                  disabled={!id}
+                  onClick={() => {
+                    const allStockRows = stockAdjustmentItems.flatMap(
+                      (item) => item.Stock
+                    );
+                    setBarcodeItems(allStockRows);
+                    setBarcodePrintOpen(true);
+                  }}
+                >
+                  <FiPrinter className="w-4 h-4 mr-2" />
+                  Print
+                </button>
+              </div>
             </div>
           </div>
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1"></div>
         </div>
-        <fieldset className="w-full  min-w-[1200px]">
-          <AdjustItems
-            stockAdjustmentItems={stockAdjustmentItems}
-            setStockAdjustmentItems={setStockAdjustmentItems}
-            readOnly={readOnly}
-            branchId={branchId}
-            storeId={storeId}
-          />
-        </fieldset>
-        <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => saveData("new")}
-              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
-            >
-              <FiSave className="w-4 h-4 mr-2" />
-              Save & New
-            </button>
-            <button
-              onClick={() => saveData("close")}
-              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
-            >
-              <HiOutlineRefresh className="w-4 h-4 mr-2" />
-              Save & Close
-            </button>
-            <button
-              onClick={() => saveData("draft")}
-              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
-            >
-              <HiOutlineRefresh className="w-4 h-4 mr-2" />
-              Draft Save
-            </button>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <button
-              className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-              onClick={() => setReadOnly(false)}
-            >
-              <FiEdit2 className="w-4 h-4 mr-2" />
-              Edit
-            </button>
-            <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
-              <FaWhatsapp className="w-4 h-4 mr-2" />
-              WhatsApp
-            </button>
-            <button
-              className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
-              disabled={!id}
-              onClick={() => {
-                const allStockRows = stockAdjustmentItems.flatMap(
-                  (item) => item.Stock
-                );
-                setBarcodeItems(allStockRows);
-                setBarcodePrintOpen(true);
-              }}
-            >
-              <FiPrinter className="w-4 h-4 mr-2" />
-              Print
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }

@@ -402,7 +402,6 @@ async function create(body) {
     toProcessId,
     storeId,
   } = await body;
-  console.log(branchId, "branchId");
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(
@@ -418,7 +417,6 @@ async function create(body) {
     draftSave
   );
   let data;
-  console.log(newDocId);
   if (fromProcessId) {
     const existProcess = await prisma.productionStock.findFirst({
       where: {
@@ -474,7 +472,6 @@ async function create(body) {
     );
     prevProcessId = prevProcess?.processId;
   }
-  console.log(prevProcessId, "prevProcees");
   const NoStock = await prisma.productionStock.findFirst({
     where: {
       styleId: parseInt(styleId),
@@ -568,7 +565,6 @@ async function createProductionEntryItems(
       );
       beforeProcessId = previousProcess.processId || null;
     }
-    console.log(beforeProcessId, "beforeProcessId");
     const createdItem = await tx.productionEntryItems.create({
       data: {
         productionEntryId: parseInt(productionEntry.id),
@@ -1203,13 +1199,11 @@ async function updateProductionEntryItems(
 }
 
 async function remove(id) {
-  console.log(id, "id");
   const data = await prisma.productionEntry.delete({
     where: {
       id: parseInt(id),
     },
   });
-  console.log(data, "data");
 
   return { statusCode: 0, data };
 }

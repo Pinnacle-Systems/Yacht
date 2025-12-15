@@ -39,8 +39,6 @@ async function getNextDocId(
 async function get(req) {
   const { companyId, active, branchId, finYearId, searchDocId } = req.query;
 
-  console.log(companyId, active, finYearId, "received--");
-
   const data = await prisma.companyPaycode.findMany({
     where: {
       companyId: companyId ? parseInt(companyId) : undefined,
@@ -57,7 +55,6 @@ async function get(req) {
     orderBy: { id: "desc" },
   });
 
-  console.log(data, "datasending");
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(
@@ -157,8 +154,6 @@ async function create(body) {
 }
 
 async function updateCompanyPayCode(tx, payDetails, data) {
-  console.log(data, "data");
-
   let removedItems = data?.payDetails?.filter((oldItem) => {
     let result = payDetails?.find((newItem) => newItem.id === oldItem.id);
     if (result) return false;
