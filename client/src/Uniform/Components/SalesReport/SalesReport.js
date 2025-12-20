@@ -12,8 +12,9 @@ import Parameter from "./Parameter";
 import { EMPTY_ICON } from "../../../icons";
 import { useGetStockQuery } from "../../../redux/services/StockService";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
-import { useGetSalesReportQuery } from "../../../redux/uniformService/SalesEntryService";
-
+import { useGetSalesReportQuery, useLazyGetSalesEntryByIdQuery } from "../../../redux/uniformService/SalesEntryService";
+import { useDispatch } from "react-redux";
+import { push } from "../../../redux/features/opentabs";
 const SalesReport = forwardRef(
   (
     { onClick, itemsPerPage = 10, parameter, setParameter, onDataLoaded },
@@ -27,6 +28,9 @@ const SalesReport = forwardRef(
     const [totalCount, setTotalCount] = useState(0);
     const [currentPageNumber, setCurrentPageNumber] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
+    const [showForm, setShowForm] = useState(false);
+    const [id, setId] = useState("");
+    const [readOnly, setReadOnly] = useState(false);
     const [storeId, setStoreId] = useState("");
     const [locationId, setLocationId] = useState("");
     const [fromDate, setFromDate] = useState("");
@@ -43,7 +47,6 @@ const SalesReport = forwardRef(
       branchId,
       companyId,
     };
-
     const {
       data: allData,
       isFetching,
@@ -80,7 +83,7 @@ const SalesReport = forwardRef(
     useImperativeHandle(ref, () => ({
       refetch,
     }));
-
+    const dispatch = useDispatch();
     const totalPages = Math?.ceil(allDataDetail?.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -223,6 +226,10 @@ const SalesReport = forwardRef(
       }
     }, [allData, onDataLoaded]);
 
+    const handleView = (orderId) => {
+      dispatch(push({ name: "SALES DELIVERY" })); // or exact tab name
+    };
+
     return (
       <>
         <Modal
@@ -260,9 +267,11 @@ const SalesReport = forwardRef(
                         <th className=" px-1 py-1.5  font-medium text-[13px]  text-gray-900  text-center  w-12">
                           <div className="">S No</div>
                         </th>
-
                         <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                          <div>Delivery Date</div>
+                          <div>Sales Delivery Date</div>
+                        </th>
+                        <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
+                          <div>Sales Delivery No</div>
                         </th>
                         <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-56">
                           <div>Customer</div>
@@ -294,11 +303,16 @@ const SalesReport = forwardRef(
                             }`}
                           >
                             <td className="text-center h-8">{index + 1}</td>
-
                             <td className="py-1.5 text-center">
                               {dataObj?.docDate
                                 ? getDateFromDateTimeToDisplay(dataObj.docDate)
                                 : ""}
+                            </td>
+                            <td
+                              className="py-1.5 text-center cursor-pointer cursor-underline"
+                              onClick={() => handleView(dataObj?.id)}
+                            >
+                              {dataObj?.docId ? dataObj?.docId : ""}
                             </td>
                             <td className="py-1.5 text-center">
                               {findFromList(
@@ -326,7 +340,7 @@ const SalesReport = forwardRef(
                     )}
                     <tfoot className="border-2">
                       <tr className="bg-gray-100 font-medium text-[14px]  text-gray-900 border-b   border-gray-200">
-                        <td colSpan={3} className="text-right py-1.5">
+                        <td colSpan={4} className="text-right py-1.5">
                           Total
                         </td>
                         <td className="py-1.5 text-center">{totalQty}</td>

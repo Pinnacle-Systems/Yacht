@@ -20,7 +20,6 @@ import {
   useGetOpeningStockQuery,
   useLazyGetOpeningStockByIdQuery,
   useLazyGetOpeningStockQuery,
-  usePrintBarcodeMutation,
   useUpdateOpeningStockMutation,
 } from "../../../redux/uniformService/OpeningStockService.js";
 import moment from "moment";
@@ -116,7 +115,6 @@ export default function OpeningStockForm({
 
   const [addData] = useAddOpeningStockMutation();
   const [updateData] = useUpdateOpeningStockMutation();
-  const [printBarcode] = usePrintBarcodeMutation();
 
   const storeOptions = locationData
     ? locationData.data.filter(

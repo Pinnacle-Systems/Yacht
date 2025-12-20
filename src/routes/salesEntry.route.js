@@ -9,6 +9,7 @@ import {
   remove,
   getReport,
   getSalesInvDetail,
+  getSalesInvStyleDetail
 } from "../controllers/salesEntry.controller.js";
 
 router.post("/", create);
@@ -17,6 +18,7 @@ router.get("/", get);
 
 router.get("/salesReport", getReport);
 router.get("/salesInvDetail", getSalesInvDetail);
+router.get("/salesInvStyleDetail", getSalesInvStyleDetail);
 
 router.get("/:id", getOne);
 

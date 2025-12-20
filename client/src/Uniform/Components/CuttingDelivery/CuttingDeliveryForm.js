@@ -43,6 +43,7 @@ import { useGetProcessGroupMasterQuery } from "../../../redux/uniformService/Pro
 import purchaseInwardEntryApi from "../../../redux/uniformService/PurchaseInwardEntry.js";
 import purchaseReturnApi from "../../../redux/services/PurchaseReturnService.js";
 import ProductionDeliveryApi from "../../../redux/uniformService/ProductionDeliveryServices.js";
+import { Loader } from "../../../Basic/components/index.js";
 
 export default function CuttingDeliveryForm({
   onClose,
@@ -73,6 +74,7 @@ export default function CuttingDeliveryForm({
   const [pdfOpen, setPdfOpen] = useState("");
   const [sizeColumns, setSizeColumns] = useState([]);
   const [processGroupId, setProcessGroupId] = useState("");
+  const isLoadingIndicator = isSingleFetching || isSingleLoading;
 
   const dispatch = useDispatch();
 
@@ -490,253 +492,263 @@ export default function CuttingDeliveryForm({
   };
 
   return (
-    <div onKeyDown={handleKeyDown}>
-      <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
-        <div className="flex justify-between items-center mb-1">
-          <h1 className="text-xl font-bold text-gray-800">
-            Cutting Production Entry
-          </h1>
-          <button
-            onClick={onClose}
-            className="text-indigo-600 hover:text-indigo-700"
-            title="Open Report"
-          >
-            <FaFileAlt className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-      <div className="space-y-3 mt-3">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
-            <div className="grid grid-cols-2 gap-1">
-              <ReusableInput
-                label="Cutting Production No"
-                readOnly
-                value={docId}
-              />
-              <ReusableInput
-                label="Cutting Production Date"
-                value={docDate}
-                type={"date"}
-                required={true}
-                readOnly={true}
-                disabled
-              />
-              <CustomDropdown
-                name="Process Group"
-                value={processGroupId}
-                onChange={(val) => setProcessGroupId(val)}
-                options={(processGroupList?.data || [])
-                  .filter((item) => item.active)
-                  .map((item) => ({
-                    label: item?.ProcessGroupSeq?.name,
-                    value: item.id,
-                  }))}
-                disabled={id}
-                required={true}
-                placeholder="Select Group"
-                onKeyDown={(e) => {
-                  if (e.key === "Delete") setProcessGroupId("");
-                }}
-                autoFocus={true}
-              />
+    <>
+      {isLoadingIndicator ? (
+        <Loader />
+      ) : (
+        <div onKeyDown={handleKeyDown}>
+          <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
+            <div className="flex justify-between items-center mb-1">
+              <h1 className="text-xl font-bold text-gray-800">
+                Cutting Production Entry
+              </h1>
+              <button
+                onClick={onClose}
+                className="text-indigo-600 hover:text-indigo-700"
+                title="Open Report"
+              >
+                <FaFileAlt className="w-5 h-5" />
+              </button>
             </div>
           </div>
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">
-              Location Details
-            </h2>
-            <div className="grid grid-cols-2 gap-1">
-              <DropdownInput
-                name="Branch"
-                options={
-                  branchList
-                    ? dropDownListObject(
+          <div className="space-y-3 mt-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                <h2 className="font-medium text-slate-700 mb-2">
+                  Basic Details
+                </h2>
+                <div className="grid grid-cols-2 gap-1">
+                  <ReusableInput
+                    label="Cutting Production No"
+                    readOnly
+                    value={docId}
+                  />
+                  <ReusableInput
+                    label="Cutting Production Date"
+                    value={docDate}
+                    type={"date"}
+                    required={true}
+                    readOnly={true}
+                    disabled
+                  />
+                  <CustomDropdown
+                    name="Process Group"
+                    value={processGroupId}
+                    onChange={(val) => setProcessGroupId(val)}
+                    options={(processGroupList?.data || [])
+                      .filter((item) => item.active)
+                      .map((item) => ({
+                        label: item?.ProcessGroupSeq?.name,
+                        value: item.id,
+                      }))}
+                    disabled={id}
+                    required={true}
+                    placeholder="Select Group"
+                    onKeyDown={(e) => {
+                      if (e.key === "Delete") setProcessGroupId("");
+                    }}
+                    autoFocus={true}
+                  />
+                </div>
+              </div>
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                <h2 className="font-medium text-slate-700 mb-2">
+                  Location Details
+                </h2>
+                <div className="grid grid-cols-2 gap-1">
+                  <DropdownInput
+                    name="Branch"
+                    options={
+                      branchList
+                        ? dropDownListObject(
+                            id
+                              ? branchList?.data
+                              : branchList?.data?.filter((item) => item.active),
+                            "branchName",
+                            "id"
+                          )
+                        : []
+                    }
+                    value={locationId}
+                    setValue={(value) => {
+                      setLocationId(value);
+                      setStoreId("");
+                    }}
+                    required={true}
+                    readOnly={id}
+                  />
+                  <DropdownInput
+                    name="Location"
+                    options={dropDownListObject(
+                      id
+                        ? storeOptions
+                        : storeOptions?.filter((item) => item.active),
+                      "storeName",
+                      "id"
+                    )}
+                    value={storeId}
+                    setValue={setStoreId}
+                    required={true}
+                    readOnly={id}
+                  />
+                  <DropdownInput
+                    name="Production Type"
+                    options={inHouseOutsideTypes}
+                    value={productionType}
+                    setValue={setProductionType}
+                    required={true}
+                    readOnly={id}
+                  />
+                  {data?.productionType === "OUTSIDE" && (
+                    <DropdownNew
+                      name="Supplier"
+                      dataList={
                         id
-                          ? branchList?.data
-                          : branchList?.data?.filter((item) => item.active),
-                        "branchName",
-                        "id"
-                      )
-                    : []
-                }
-                value={locationId}
-                setValue={(value) => {
-                  setLocationId(value);
-                  setStoreId("");
-                }}
-                required={true}
-                readOnly={id}
-              />
-              <DropdownInput
-                name="Location"
-                options={dropDownListObject(
-                  id
-                    ? storeOptions
-                    : storeOptions?.filter((item) => item.active),
-                  "storeName",
-                  "id"
-                )}
-                value={storeId}
-                setValue={setStoreId}
-                required={true}
-                readOnly={id}
-              />
-              <DropdownInput
-                name="Production Type"
-                options={inHouseOutsideTypes}
-                value={productionType}
-                setValue={setProductionType}
-                required={true}
-                readOnly={id}
-              />
-              {data?.productionType === "OUTSIDE" && (
-                <DropdownNew
-                  name="Supplier"
-                  dataList={
-                    id
-                      ? supplierList?.data
-                      : supplierList?.data?.filter((item) => item.active)
-                  }
-                  value={supplierId}
-                  setValue={setSupplierId}
-                  readOnly={readOnly}
-                  placeholder={"Select Supplier"}
-                  disabled={readOnly}
-                  clear={true}
-                />
-              )}
-            </div>
-          </div>
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">
-              Production Details
-            </h2>
+                          ? supplierList?.data
+                          : supplierList?.data?.filter((item) => item.active)
+                      }
+                      value={supplierId}
+                      setValue={setSupplierId}
+                      readOnly={readOnly}
+                      placeholder={"Select Supplier"}
+                      disabled={readOnly}
+                      clear={true}
+                    />
+                  )}
+                </div>
+              </div>
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                <h2 className="font-medium text-slate-700 mb-2">
+                  Production Details
+                </h2>
 
-            <div className="grid grid-cols-2 gap-1">
-              <DropdownNew
-                name="Process"
-                dataList={processList?.data?.filter((item) => item.isCutting)}
-                value={fromProcessId}
-                setValue={setFromProcessId}
-                readOnly={readOnly}
-                placeholder={"Select Process"}
-                disabled={id}
-                required={true}
-              />
-              <DropdownNew
-                name="Style No"
-                dataList={
-                  id
-                    ? styleList?.data
-                    : styleList?.data?.filter((item) => item.active)
-                }
-                value={styleId}
-                setValue={handleAddRow}
-                required={true}
-                readOnly={readOnly}
-                placeholder={"Select Style"}
-                otherField={"sku"}
-                disabled={id}
-                clear={true}
-              />
-              <ReusableInput
-                label="Cutting Plan No"
-                value={cuttingNo}
-                setValue={setCuttingNo}
-                type={"text"}
-                readOnly={true}
-              />
-              <DropdownNew
-                name="Employee"
-                dataList={employeeList?.data}
-                value={employeeId}
-                setValue={setEmployeeId}
-                readOnly={readOnly}
-                placeholder={"Select Employee"}
-                disabled={readOnly}
-                required={true}
-                otherField={"firstName"}
-              />
+                <div className="grid grid-cols-2 gap-1">
+                  <DropdownNew
+                    name="Process"
+                    dataList={processList?.data?.filter(
+                      (item) => item.isCutting
+                    )}
+                    value={fromProcessId}
+                    setValue={setFromProcessId}
+                    readOnly={readOnly}
+                    placeholder={"Select Process"}
+                    disabled={id}
+                    required={true}
+                  />
+                  <DropdownNew
+                    name="Style No"
+                    dataList={
+                      id
+                        ? styleList?.data
+                        : styleList?.data?.filter((item) => item.active)
+                    }
+                    value={styleId}
+                    setValue={handleAddRow}
+                    required={true}
+                    readOnly={readOnly}
+                    placeholder={"Select Style"}
+                    otherField={"sku"}
+                    disabled={id}
+                    clear={true}
+                  />
+                  <ReusableInput
+                    label="Cutting Plan No"
+                    value={cuttingNo}
+                    setValue={setCuttingNo}
+                    type={"text"}
+                    readOnly={true}
+                  />
+                  <DropdownNew
+                    name="Employee"
+                    dataList={employeeList?.data}
+                    value={employeeId}
+                    setValue={setEmployeeId}
+                    readOnly={readOnly}
+                    placeholder={"Select Employee"}
+                    disabled={readOnly}
+                    required={true}
+                    otherField={"firstName"}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-1"></div>
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-1"></div>
+            <fieldset className="w-full  min-w-[1200px]">
+              <CuttingDeliveryItem
+                cuttingDeliveryItems={cuttingDeliveryItems}
+                setCuttingDeliveryItems={setCuttingDeliveryItems}
+                readOnly={readOnly}
+                id={id}
+                styleId={styleId}
+                sizeTemplateId={sizeTemplateId}
+                uomList={uomList}
+                styleTemplateDetail={styleTemplateDetail}
+                companyId={companyId}
+                params={params}
+                cuttingNo={cuttingNo}
+              />
+            </fieldset>
+            <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => saveData("new")}
+                  className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
+                >
+                  <FiSave className="w-4 h-4 mr-2" />
+                  Save & New
+                </button>
+                <button
+                  onClick={() => saveData("close")}
+                  className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
+                >
+                  <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                  Save & Close
+                </button>
+                <button
+                  onClick={() => saveData("draft")}
+                  className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
+                >
+                  <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                  Draft Save
+                </button>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                  onClick={() => setReadOnly(false)}
+                >
+                  <FiEdit2 className="w-4 h-4 mr-2" />
+                  Edit
+                </button>
+                <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
+                  <FaWhatsapp className="w-4 h-4 mr-2" />
+                  WhatsApp
+                </button>
+                <button
+                  className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
+                  disabled={!id}
+                  onClick={() => {
+                    getSizeTemplate();
+                    setPdfOpen(true);
+                  }}
+                >
+                  <FiPrinter className="w-4 h-4 mr-2" />
+                  Print
+                </button>
+              </div>
+            </div>
           </div>
+          <Modal
+            isOpen={pdfOpen}
+            onClose={() => setPdfOpen(false)}
+            widthClass={"w-[90%] h-[90%]"}
+          >
+            <PDFViewer style={tw("w-full h-full")}>
+              <PDF singleData={singleData?.data} sizeColumns={sizeColumns} />
+            </PDFViewer>
+          </Modal>
         </div>
-        <fieldset className="w-full  min-w-[1200px]">
-          <CuttingDeliveryItem
-            cuttingDeliveryItems={cuttingDeliveryItems}
-            setCuttingDeliveryItems={setCuttingDeliveryItems}
-            readOnly={readOnly}
-            id={id}
-            styleId={styleId}
-            sizeTemplateId={sizeTemplateId}
-            uomList={uomList}
-            styleTemplateDetail={styleTemplateDetail}
-            companyId={companyId}
-            params={params}
-            cuttingNo={cuttingNo}
-          />
-        </fieldset>
-        <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => saveData("new")}
-              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
-            >
-              <FiSave className="w-4 h-4 mr-2" />
-              Save & New
-            </button>
-            <button
-              onClick={() => saveData("close")}
-              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
-            >
-              <HiOutlineRefresh className="w-4 h-4 mr-2" />
-              Save & Close
-            </button>
-            <button
-              onClick={() => saveData("draft")}
-              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
-            >
-              <HiOutlineRefresh className="w-4 h-4 mr-2" />
-              Draft Save
-            </button>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <button
-              className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-              onClick={() => setReadOnly(false)}
-            >
-              <FiEdit2 className="w-4 h-4 mr-2" />
-              Edit
-            </button>
-            <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
-              <FaWhatsapp className="w-4 h-4 mr-2" />
-              WhatsApp
-            </button>
-            <button
-              className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
-              disabled={!id}
-              onClick={() => {
-                getSizeTemplate();
-                setPdfOpen(true);
-              }}
-            >
-              <FiPrinter className="w-4 h-4 mr-2" />
-              Print
-            </button>
-          </div>
-        </div>
-      </div>
-      <Modal
-        isOpen={pdfOpen}
-        onClose={() => setPdfOpen(false)}
-        widthClass={"w-[90%] h-[90%]"}
-      >
-        <PDFViewer style={tw("w-full h-full")}>
-          <PDF singleData={singleData?.data} sizeColumns={sizeColumns} />
-        </PDFViewer>
-      </Modal>
-    </div>
+      )}
+    </>
   );
 }

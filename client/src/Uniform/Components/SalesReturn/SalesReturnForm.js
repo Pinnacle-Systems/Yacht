@@ -27,6 +27,7 @@ import SalesEntryApi, {
   useLazyGetSalesInvDetailQuery,
 } from "../../../redux/uniformService/SalesEntryService";
 import { useDispatch } from "react-redux";
+import { Loader } from "../../../Basic/components";
 export default function SalesReturnForm({
   onClose,
   id,
@@ -122,6 +123,8 @@ export default function SalesReturnForm({
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetSalesReturnByIdQuery(id, { skip: !id });
+
+  const isLoadingIndicator = isSingleFetching || isSingleLoading;
 
   const data = {
     id,
@@ -247,16 +250,16 @@ export default function SalesReturnForm({
       });
       return;
     }
-    const hasUnfilledRequired = salesReturnItems.some((row) => {
-      return row.styleId && !row.returnQty;
-    });
+    // const hasUnfilledRequired = salesReturnItems.some((row) => {
+    //   return row.styleId && !row.returnQty;
+    // });
 
-    if (hasUnfilledRequired) {
-      toast.info("Please fill all required fields before adding...!", {
-        position: "top-center",
-      });
-      return;
-    }
+    // if (hasUnfilledRequired) {
+    //   toast.info("Please fill all required fields before adding...!", {
+    //     position: "top-center",
+    //   });
+    //   return;
+    // }
     try {
       const { data: salesData } = await getSalesInvDetail({
         params: {
@@ -266,215 +269,229 @@ export default function SalesReturnForm({
         },
       });
       setCustomerId(salesData?.data?.customerId);
-      const salesItems = salesData?.data?.SalesEntryItems;
-      if (!salesItems) return;
-      setSalesReturnItems((prev) => {
-        const updated = [...prev];
-        // Find first empty slot index
-        let startIndex = updated.findIndex(
-          (row) =>
-            !row.styleId &&
-            !row.sizeId &&
-            !row.styleNo &&
-            !row.fabricId &&
-            !row.barcode
-        );
-        if (startIndex === -1) startIndex = updated.length;
+      // const salesItems = salesData?.data?.SalesEntryItems;
+      // if (!salesItems) return;
+      // setSalesReturnItems((prev) => {
+      //   const updated = [...prev];
+      //   // Find first empty slot index
+      //   let startIndex = updated.findIndex(
+      //     (row) =>
+      //       !row.styleId &&
+      //       !row.sizeId &&
+      //       !row.styleNo &&
+      //       !row.fabricId &&
+      //       !row.barcode
+      //   );
+      //   if (startIndex === -1) startIndex = updated.length;
 
-        // Fill in sizeRows starting at first empty slot
-        salesItems.forEach((row, i) => {
-          if (startIndex + i < updated.length) {
-            updated[startIndex + i] = row;
-          } else {
-            updated.push(row); // append if no empty slot
-          }
-        });
+      //   // Fill in sizeRows starting at first empty slot
+      //   salesItems.forEach((row, i) => {
+      //     if (startIndex + i < updated.length) {
+      //       updated[startIndex + i] = row;
+      //     } else {
+      //       updated.push(row); // append if no empty slot
+      //     }
+      //   });
 
-        // Ensure at least 6 rows
-        while (updated.length < 6) {
-          updated.push({
-            styleNo: "",
-            fabricId: "",
-            styleId: "",
-            sizeId: "",
-            qty: "",
-            remarks: "",
-            stkQty: "",
-            barcode: "",
-            styleItemId: "",
-            colorId: "",
-            selected: false,
-          });
-        }
+      //   // Ensure at least 6 rows
+      //   while (updated.length < 6) {
+      //     updated.push({
+      //       styleNo: "",
+      //       fabricId: "",
+      //       styleId: "",
+      //       sizeId: "",
+      //       qty: "",
+      //       remarks: "",
+      //       stkQty: "",
+      //       barcode: "",
+      //       styleItemId: "",
+      //       colorId: "",
+      //       selected: false,
+      //     });
+      //   }
 
-        return updated;
-      });
+      //   return updated;
+      // });
     } catch (error) {
       console.error("Error adding row:", error);
     }
   };
 
   return (
-    <div className="" onKeyDown={handleKeyDown}>
-      <Modal
-        isOpen={pdfOpen}
-        onClose={() => setPdfOpen(false)}
-        widthClass={"w-[90%] h-[90%]"}
-      >
-        <PDFViewer style={tw("w-full h-full")}>
-          <PDF singleData={singleData?.data} />
-        </PDFViewer>
-      </Modal>
-      <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
-        <div className="flex justify-between items-center mb-1">
-          <h1 className="text-xl font-bold text-gray-800">Sales Return</h1>
-          <button
-            onClick={onClose}
-            className="text-indigo-600 hover:text-indigo-700"
-            title="Open Report"
+    <>
+      {isLoadingIndicator ? (
+        <Loader />
+      ) : (
+        <div className="" onKeyDown={handleKeyDown}>
+          <Modal
+            isOpen={pdfOpen}
+            onClose={() => setPdfOpen(false)}
+            widthClass={"w-[90%] h-[90%]"}
           >
-            <FaFileAlt className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-      <div className="space-y-3 mt-3">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
-            <div className="grid grid-cols-2 gap-1">
-              <ReusableInput label="Sales Return no" readOnly value={docId} />
-              <ReusableInput
-                label="Sales Return Date"
-                value={docDate}
-                type={"date"}
-                required={true}
-                readOnly={true}
-                disabled
-              />
+            <PDFViewer style={tw("w-full h-full")}>
+              <PDF singleData={singleData?.data} />
+            </PDFViewer>
+          </Modal>
+          <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
+            <div className="flex justify-between items-center mb-1">
+              <h1 className="text-xl font-bold text-gray-800">Sales Return</h1>
+              <button
+                onClick={onClose}
+                className="text-indigo-600 hover:text-indigo-700"
+                title="Open Report"
+              >
+                <FaFileAlt className="w-5 h-5" />
+              </button>
             </div>
           </div>
+          <div className="space-y-3 mt-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                <h2 className="font-medium text-slate-700 mb-2">
+                  Basic Details
+                </h2>
+                <div className="grid grid-cols-2 gap-1">
+                  <ReusableInput
+                    label="Sales Return no"
+                    readOnly
+                    value={docId}
+                  />
+                  <ReusableInput
+                    label="Sales Return Date"
+                    value={docDate}
+                    type={"date"}
+                    required={true}
+                    readOnly={true}
+                    disabled
+                  />
+                </div>
+              </div>
 
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">
-              Location Details
-            </h2>
-            <div className="grid grid-cols-2 gap-1">
-              <DropdownNew
-                name="Branch"
-                dataList={branchList?.data?.filter((item) => item.active)}
-                value={locationId}
-                setValue={(value) => {
-                  setLocationId(value);
-                  setStoreId("");
-                }}
-                required={true}
-                disabled={id}
-                otherField={"branchName"}
-                placeholder={"Select Branch"}
-              />
-              <DropdownNew
-                name="Location"
-                dataList={storeOptions?.filter((item) => item.active)}
-                value={storeId}
-                setValue={setStoreId}
-                required={true}
-                disabled={id}
-                otherField={"storeName"}
-                placeholder={"Select Location"}
-                autoFocus={true}
-              />
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                <h2 className="font-medium text-slate-700 mb-2">
+                  Location Details
+                </h2>
+                <div className="grid grid-cols-2 gap-1">
+                  <DropdownNew
+                    name="Branch"
+                    dataList={branchList?.data?.filter((item) => item.active)}
+                    value={locationId}
+                    setValue={(value) => {
+                      setLocationId(value);
+                      setStoreId("");
+                    }}
+                    required={true}
+                    disabled={id}
+                    otherField={"branchName"}
+                    placeholder={"Select Branch"}
+                  />
+                  <DropdownNew
+                    name="Location"
+                    dataList={storeOptions?.filter((item) => item.active)}
+                    value={storeId}
+                    setValue={setStoreId}
+                    required={true}
+                    disabled={id}
+                    otherField={"storeName"}
+                    placeholder={"Select Location"}
+                    autoFocus={true}
+                  />
+                </div>
+              </div>
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                <h2 className="font-medium text-slate-700 mb-2">
+                  Sales Delivery Details
+                </h2>
+                <div className="grid grid-cols-2 gap-1">
+                  <DropdownNew
+                    name="Sales Delivery No"
+                    dataList={salesList?.data}
+                    value={invNo}
+                    setValue={handleAddRow}
+                    required={true}
+                    readOnly={readOnly}
+                    placeholder={"Select Sales"}
+                    otherField={"docId"}
+                    otherValue={"docId"}
+                    disabled={id}
+                  />
+                  <DropdownNew
+                    name="Customer"
+                    dataList={partyList?.data?.filter((item) => item.active)}
+                    value={customerId}
+                    setValue={(value) => {
+                      setCustomerId(value);
+                    }}
+                    required={true}
+                    disabled={id}
+                    placeholder={"Select Customer"}
+                    clear={true}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">
-              Sales Delivery Details
-            </h2>
-            <div className="grid grid-cols-2 gap-1">
-              <DropdownNew
-                name="Sales Delivery No"
-                dataList={salesList?.data}
-                value={invNo}
-                setValue={handleAddRow}
-                required={true}
+            <fieldset className="w-full  min-w-[1200px]">
+              <SalesItems
+                salesReturnItems={salesReturnItems}
+                setSalesReturnItems={setSalesReturnItems}
                 readOnly={readOnly}
-                placeholder={"Select Sales"}
-                otherField={"docId"}
-                otherValue={"docId"}
-                disabled={id}
+                branchId={branchId}
+                storeId={storeId}
+                customerId={customerId}
+                invNo={invNo}
               />
-              <DropdownNew
-                name="Customer"
-                dataList={partyList?.data?.filter((item) => item.active)}
-                value={customerId}
-                setValue={(value) => {
-                  setCustomerId(value);
-                }}
-                required={true}
-                disabled={id}
-                placeholder={"Select Customer"}
-                clear={true}
-              />
+            </fieldset>
+            <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => saveData("new")}
+                  className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
+                >
+                  <FiSave className="w-4 h-4 mr-2" />
+                  Save & New
+                </button>
+                <button
+                  onClick={() => saveData("close")}
+                  className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
+                >
+                  <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                  Save & Close
+                </button>
+                <button
+                  onClick={() => saveData("draft")}
+                  className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
+                >
+                  <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                  Draft Save
+                </button>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                  onClick={() => setReadOnly(false)}
+                >
+                  <FiEdit2 className="w-4 h-4 mr-2" />
+                  Edit
+                </button>
+                <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
+                  <FaWhatsapp className="w-4 h-4 mr-2" />
+                  WhatsApp
+                </button>
+                <button
+                  className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
+                  disabled={!id}
+                  onClick={() => {
+                    setPdfOpen(true);
+                  }}
+                >
+                  <FiPrinter className="w-4 h-4 mr-2" />
+                  Print
+                </button>
+              </div>
             </div>
           </div>
         </div>
-        <fieldset className="w-full  min-w-[1200px]">
-          <SalesItems
-            salesReturnItems={salesReturnItems}
-            setSalesReturnItems={setSalesReturnItems}
-            readOnly={readOnly}
-            branchId={branchId}
-            storeId={storeId}
-          />
-        </fieldset>
-        <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => saveData("new")}
-              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
-            >
-              <FiSave className="w-4 h-4 mr-2" />
-              Save & New
-            </button>
-            <button
-              onClick={() => saveData("close")}
-              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
-            >
-              <HiOutlineRefresh className="w-4 h-4 mr-2" />
-              Save & Close
-            </button>
-            <button
-              onClick={() => saveData("draft")}
-              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
-            >
-              <HiOutlineRefresh className="w-4 h-4 mr-2" />
-              Draft Save
-            </button>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <button
-              className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-              onClick={() => setReadOnly(false)}
-            >
-              <FiEdit2 className="w-4 h-4 mr-2" />
-              Edit
-            </button>
-            <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
-              <FaWhatsapp className="w-4 h-4 mr-2" />
-              WhatsApp
-            </button>
-            <button
-              className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
-              disabled={!id}
-              onClick={() => {
-                setPdfOpen(true);
-              }}
-            >
-              <FiPrinter className="w-4 h-4 mr-2" />
-              Print
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }

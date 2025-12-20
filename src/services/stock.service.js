@@ -859,12 +859,29 @@ async function getStyleDetail(req) {
     });
   }
 
-  const price = await prisma.style.findFirst({
+  const styleMaster = await prisma.style.findFirst({
     where: { sku: styleNo },
   });
+  let sizeOrderMap = new Map();
+  if (styleMaster?.sizeTemplateId) {
+    const sizeTemplateMaster = await prisma.sizeTemplate.findFirst({
+      where: { id: styleMaster.sizeTemplateId },
+      include: { SizeTemplateList: true },
+    });
+
+    if (sizeTemplateMaster?.SizeTemplateList) {
+      sizeTemplateMaster.SizeTemplateList.forEach((s, index) => {
+        sizeOrderMap.set(s.sizeId, index);
+      });
+    }
+  }
+  data.sort((a, b) => {
+    const orderA = sizeOrderMap.get(a.sizeId) ?? 999;
+    const orderB = sizeOrderMap.get(b.sizeId) ?? 999;
+    return orderA - orderB;
+  });
   // 3️⃣ If still no data, return no record message
-  if (!data || data.length === 0)
-    return NoRecordFound("Style or Barcode not found");
+  if (!data || data.length === 0) return NoRecordFound("Style");
 
   // 4️⃣ Return formatted result
   return {
@@ -878,7 +895,7 @@ async function getStyleDetail(req) {
       stkQty: d._sum.qty,
       fabricId: d.fabricId,
       barcode: d.barCode,
-      price: price ? price?.price : 0,
+      price: styleMaster ? styleMaster?.price : 0,
     })),
   };
 }

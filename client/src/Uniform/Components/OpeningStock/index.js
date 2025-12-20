@@ -104,15 +104,19 @@ export default function Form() {
         style={{ display: showForm ? "none" : "block" }}
       >
         <div className="flex justify-between bg-white py-1 px-2 rounded shadow-sm">
-          <h1 className="text-xl font-bold text-gray-800">
-            Opening Stock Report
-          </h1>
-
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">
+              Opening Stock Report
+            </h1>
+          </div>
           <button
-            className="bg-white border border-green-700 text-green-700 px-4 py-1 rounded"
-            onClick={onNew}
+            className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
+            onClick={() => {
+              setShowForm(true);
+              onNew();
+            }}
           >
-            Create New
+            <FaPlus /> Create New
           </button>
         </div>
 

@@ -14,6 +14,7 @@ import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleI
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { VIEW } from "../../../icons";
 import { toast } from "react-toastify";
+import FxSelect from "../../../Inputs";
 
 export default function ReadyGoods({
   openingStockItems,
@@ -137,47 +138,6 @@ export default function ReadyGoods({
     }
   }, [openingStockItems, setOpeningStockItems]);
 
-  // const handleAddRow = async () => {
-  //   try {
-  //     const { data: styleData } = await getStyleCodeDetail({ params });
-  //     const style = styleData?.data?.[0]; // since response has "0" key
-  //     if (!style) return;
-  //     const sizeTemplateId = style.sizeTemplateId;
-  //     let sizeRows = [];
-  //     if (sizeTemplateId) {
-  //       const { data: sizeData } = await styleTemplateDetail(sizeTemplateId);
-
-  //       if (sizeData?.SizeTemplateList?.length) {
-  //         sizeRows = sizeData.SizeTemplateList.map((s) => ({
-  //           styleNo: styleNo,
-  //           fabricId: style.fabricId || "",
-  //           styleId: style.id || "",
-  //           sizeId: s.sizeId,
-  //           qty: "",
-  //           remarks: "",
-  //         }));
-  //       }
-  //     }
-  //     const totalRows = [
-  //       ...sizeRows,
-  //       ...Array.from({ length: Math.max(0, 6 - sizeRows.length) }, () => ({
-  //         styleNo: "",
-  //         fabricId: "",
-  //         styleId: "",
-  //         sizeId: "",
-  //         qty: "",
-  //         remarks: "",
-  //       })),
-  //     ];
-
-  //     // 4. Update state
-  //     setOpeningStockItems(totalRows);
-
-  //     console.log("Opening Stock Items set:", totalRows);
-  //   } catch (error) {
-  //     console.error("Error adding row:", error);
-  //   }
-  // };
   const handleAddRow = async () => {
     const isFirstTime = openingStockItems.every((row) => !row.styleNo);
 
@@ -293,19 +253,6 @@ export default function ReadyGoods({
               }
             }}
           />
-          {/* <button
-            className="hover:bg-green-700 h-6 mt-3 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-xs"
-            onClick={() => {
-              handleAddRow();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleAddRow();
-              }
-            }}
-          >
-            <FaPlus /> Add
-          </button> */}
         </div>
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
@@ -480,20 +427,6 @@ export default function ReadyGoods({
                     </td>
                     <td className="border border-gray-300 py-0.5 text-center">
                       {row?.styleId ? (
-                        // <img
-                        //   style={{
-                        //     height: "35px",
-                        //     width: "35px",
-                        //     objectFit: "cover",
-                        //     borderRadius: "2px",
-                        //     margin: "auto",
-                        //     cursor: "pointer",
-                        //   }}
-                        //   src={imageFormatter(row?.styleId)}
-                        //   onClick={() =>
-                        //     setPreviewImage(imageFormatter(row?.styleId))
-                        //   }
-                        // />
                         <button
                           className="text-xs"
                           onClick={() => {
@@ -565,34 +498,29 @@ export default function ReadyGoods({
                       </select>
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px]">
-                      <select
-                        id={`qty-input-${index}`}
+                      <FxSelect
+                        value={row.colorId}
+                        onChange={(val) =>
+                          handleInputChange(val, index, "colorId")
+                        }
+                        options={(colorList?.data || [])
+                          .filter((item) => item.active)
+                          .map((item) => ({
+                            label: item.name,
+                            value: item.id,
+                          }))}
+                        readOnly={readOnly || (row.stockQty ?? 0) > 0}
+                        placeholder=""
+                        onBlur={() =>
+                          handleInputChange(row.colorId, index, "colorId")
+                        }
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
                             handleInputChange("", index, "colorId");
                           }
                         }}
-                        tabIndex={"0"}
-                        disabled={readOnly || (row.stockQty ?? 0) > 0}
-                        className="text-left w-full rounded py-1 table-data-input"
-                        value={row.colorId}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "colorId")
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "colorId");
-                        }}
-                      >
-                        <option></option>
-                        {(id
-                          ? colorList?.data
-                          : colorList?.data?.filter((item) => item.active)
-                        )?.map((blend) => (
-                          <option value={blend.id} key={blend.id}>
-                            {blend?.name}
-                          </option>
-                        ))}
-                      </select>
+                        inputId={`qty-input-${index}`}
+                      />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input

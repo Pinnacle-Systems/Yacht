@@ -1,4 +1,4 @@
-import { NoRecordFound } from "../configs/Responses.js";
+import { CustomError, NoRecordFound } from "../configs/Responses.js";
 import { getTableRecordWithId } from "../utils/helperQueries.js";
 import {
   getDateFromDateTime,
@@ -799,23 +799,23 @@ async function getSalesInvDetail(req) {
       storeId: parseInt(storeId),
       branchId: parseInt(branchId),
     },
-    include: {
-      SalesEntryItems: {
-        select: {
-          id: true,
-          salesEntryId: true,
-          barcode: true,
-          styleId: true,
-          sizeId: true,
-          qty: true,
-          remarks: true,
-          styleNo: true,
-          fabricId: true,
-          styleItemId: true,
-          colorId: true,
-        },
-      },
-    },
+    // include: {
+    //   SalesEntryItems: {
+    //     select: {
+    //       id: true,
+    //       salesEntryId: true,
+    //       barcode: true,
+    //       styleId: true,
+    //       sizeId: true,
+    //       qty: true,
+    //       remarks: true,
+    //       styleNo: true,
+    //       fabricId: true,
+    //       styleItemId: true,
+    //       colorId: true,
+    //     },
+    //   },
+    // },
   });
 
   if (!data) return NoRecordFound("Sales Entry");
@@ -824,6 +824,43 @@ async function getSalesInvDetail(req) {
     data: {
       ...data,
     },
+  };
+}
+
+async function getSalesInvStyleDetail(req) {
+  const { invNo, storeId, branchId, styleNo } = req.query;
+  if (!invNo || !storeId || !branchId || !styleNo) {
+    return {
+      statusCode: 400,
+      message: "Please Choose Required Fields",
+    };
+  }
+  const salesEntry = await prisma.salesEntry.findFirst({
+    where: {
+      docId: invNo,
+      storeId: parseInt(storeId),
+      branchId: parseInt(branchId),
+    },
+    include: {
+      SalesEntryItems: true,
+    },
+  });
+
+  // 1️⃣ First try fetching by styleNo
+  let data = salesEntry.SalesEntryItems.filter(
+    (item) => item.styleNo === styleNo
+  );
+
+  if (data.length === 0) {
+    return {
+      statusCode: 1,
+      message: "Style No Not Found",
+    };
+  }
+
+  return {
+    statusCode: 0,
+    data: data,
   };
 }
 
@@ -836,4 +873,5 @@ export {
   remove,
   getSalesReport,
   getSalesInvDetail,
+  getSalesInvStyleDetail,
 };

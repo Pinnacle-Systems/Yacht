@@ -9,6 +9,7 @@ import {
   remove as _remove,
   getSalesReport as _getReport,
   getSalesInvDetail as _getSalesInvDetail,
+  getSalesInvStyleDetail as _getSalesInvStyleDetail,
 } from "../services/salesEntry.service.js";
 
 async function get(req, res, next) {
@@ -136,6 +137,14 @@ async function getSalesInvDetail(req, res, next) {
   }
 }
 
+async function getSalesInvStyleDetail(req, res, next) {
+  try {
+    res.json(await _getSalesInvStyleDetail(req));
+  } catch (err) {
+    console.error(`Error`, err.message);
+  }
+}
+
 export {
   get,
   getOne,
@@ -145,4 +154,5 @@ export {
   remove,
   getReport,
   getSalesInvDetail,
+  getSalesInvStyleDetail
 };

@@ -43,15 +43,15 @@ export default function Form() {
         onClose={() => setPdfOpen(false)}
         widthClass={"w-[90%] h-[90%]"}
       >
-        {/* <PDFViewer style={tw("w-full h-full")}>
-          <PDF
+        <PDFViewer style={tw("w-full h-full")}>
+          {/* <PDF
             allData={allData || []}
             sizeList={sizeList}
             fabricList={fabricList}
             styleItemList={styleItemList}
             colorList={colorList}
-          />
-        </PDFViewer> */}
+          /> */}
+        </PDFViewer>
       </Modal>
       <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
         <div>

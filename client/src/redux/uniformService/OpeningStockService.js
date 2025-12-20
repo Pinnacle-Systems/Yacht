@@ -74,17 +74,6 @@ const OpeningStockApi = createApi({
       }),
       invalidatesTags: ["OpeningStock"],
     }),
-    printBarcode: builder.mutation({
-      query: (payload) => ({
-        url: OPENING_STOCK_API + "/barcode",
-        method: "POST",
-        body: payload,
-        headers: {
-          "Content-type": "application/json; charset=UTF-8",
-        },
-      }),
-      invalidatesTags: ["OpeningStock"],
-    }),
   }),
 });
 
@@ -96,7 +85,6 @@ export const {
   useAddOpeningStockMutation,
   useUpdateOpeningStockMutation,
   useDeleteOpeningStockMutation,
-  usePrintBarcodeMutation,
 } = OpeningStockApi;
 
 export default OpeningStockApi;

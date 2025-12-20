@@ -81,6 +81,19 @@ const SalesEntryApi = createApi({
       },
       providesTags: ["SalesEntry"],
     }),
+    getSalesInvStyleDetail: builder.query({
+      query: ({ params }) => {
+        return {
+          url: `${SALES_ENTRY_API}/salesInvStyleDetail`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["SalesEntry"],
+    }),
     addSalesEntry: builder.mutation({
       query: (payload) => ({
         url: SALES_ENTRY_API,
@@ -119,6 +132,7 @@ export const {
   useLazyGetSalesEntryByIdQuery,
   useGetSalesReportQuery,
   useLazyGetSalesInvDetailQuery,
+  useLazyGetSalesInvStyleDetailQuery,
   useAddSalesEntryMutation,
   useUpdateSalesEntryMutation,
   useDeleteSalesEntryMutation,

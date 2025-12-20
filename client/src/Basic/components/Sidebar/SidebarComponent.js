@@ -27,6 +27,13 @@ import style from "./images/fabImage.jpg";
 import location from "./images/location.png";
 import sizetemplate from "./images/sizetemplate.png";
 import fabstyle from "./images/style.png"
+import fabric from "./images/fabric.png"
+import process from "./images/process.png"
+import portion from "./images/portion.png"
+import uom from "./images/uom.png"
+import styleitem from "./images/styleItem.png";
+import seq from "./images/seq.jpg";
+import processGroup from "./images/processgroup.jpg"
 import lossreason from "./images/reason.png";
 import yarncontent from "./images/cotton.png";
 import yarntype from "./images/yarntype.png";
@@ -122,7 +129,33 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
          "STORE MASTER":
             <img src={location} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
         ,
-
+        "FABRIC MASTER":
+            <img src={fabric} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
+        ,
+        "PROCESS MASTER":
+            <img src={process} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
+        ,
+         "PORTION MASTER":
+            <img src={portion} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
+        ,
+         "UOM MASTER":
+            <img src={uom} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
+        ,
+        "STYLE ITEM MASTER":
+            <img src={styleitem} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
+        ,
+        "PROCESS GROUP SEQ":
+            <img src={seq} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
+        ,
+        "PROCESS GROUP MASTER":
+            <img src={processGroup} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
+        ,
+         "ACCESSORY GROUP MASTER":
+            <img src={accessorygroup} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
+        ,
+        "ACCESSORY MASTER":
+            <img src={accessory} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
+        ,
         "FABRIC TYPE MASTER": <img />,
         "GSM MASTER": <img />,
         "GAUGE MASTER": <img />,

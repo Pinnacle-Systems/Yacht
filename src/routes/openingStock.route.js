@@ -7,7 +7,6 @@ import {
   create,
   update,
   remove,
-  printBarcode,
 } from "../controllers/openingStock.controller.js";
 
 router.post("/", create);
@@ -21,7 +20,5 @@ router.get("/search/:searchKey", getSearch);
 router.put("/:id", update);
 
 router.delete("/:id", remove);
-
-router.post("/barcode", printBarcode);
-
+  
 export default router;

@@ -903,38 +903,4 @@ function printTSPL(tsplCommands, printerName) {
   );
 }
 
-async function printBarcode(body) {
-  const { barcodeDetails, labelsPerRow = 4 } = body;
-  const labelWidth = 25; // mm
-  const labelHeight = 20; // mm
-  const gap = 2; // mm
-  let tspl = `
-SIZE ${
-    labelWidth * labelsPerRow + gap * (labelsPerRow - 1)
-  } mm, ${labelHeight} mm
-GAP ${gap} mm,0
-DIRECTION 1
-CLS
-`;
-
-  barcodeDetails.forEach((item, index) => {
-    const col = index % labelsPerRow;
-    const row = Math.floor(index / labelsPerRow);
-    const x = col * (labelWidth + gap);
-    const y = row * (labelHeight + gap);
-
-    tspl += `
-TEXT ${x + 5},${y + 5},"3",0,1,1,"${item.styleNo} ${item.size}"
-BARCODE ${x + 5},${y + 20},"128",40,1,0,2,2,"${item.barcodeNo}"
-`;
-  });
-
-  tspl += "\nPRINT\n";
-
-  // Replace with your printer name exactly as in Windows
-  const printerName = "BarCode";
-  const data = printTSPL(tspl, printerName);
-  return { statusCode: 0, data };
-}
-
-export { get, getOne, getSearch, create, update, remove, printBarcode };
+export { get, getOne, getSearch, create, update, remove };

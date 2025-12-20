@@ -12,6 +12,7 @@ import { toast } from "react-toastify";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { VIEW } from "../../../icons";
 import Swal from "sweetalert2";
+import { useLazyGetSalesInvStyleDetailQuery } from "../../../redux/uniformService/SalesEntryService";
 
 export default function SalesItems({
   salesReturnItems,
@@ -21,6 +22,8 @@ export default function SalesItems({
   id,
   storeId,
   branchId,
+  customerId,
+  invNo,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [styleNo, setStyleNo] = useState("");
@@ -31,7 +34,7 @@ export default function SalesItems({
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
 
-  const [getStyleDetail] = useLazyGetStyleDetailQuery();
+  const [getStyleDetail] = useLazyGetSalesInvStyleDetailQuery();
 
   const [
     triggerGetBarcodeDetail,
@@ -220,12 +223,13 @@ export default function SalesItems({
 
   const handleAddRow = async () => {
     if (!validateData()) {
-      toast.info("Please Choose Store...!", {
+      toast.info("Please Choose Required Fields...!", {
         position: "top-center",
+        autoClose: 2000,
       });
     } else {
       const isFirstTime = salesReturnItems.every(
-        (row) => !row.sizeId && !row.styleNo && !row.fabricId
+        (row) => !row.sizeId && !row.styleId && !row.fabricId
       );
 
       if (!isFirstTime) {
@@ -239,8 +243,9 @@ export default function SalesItems({
           return hasStyle && !row.returnQty;
         });
         if (hasEmpty) {
-          toast.info("Please fill all required fields...!", {
+          toast.info("Please fill all required fields...Before Adding!", {
             position: "top-center",
+            autoClose: 2000,
           });
           return;
         }
@@ -251,8 +256,16 @@ export default function SalesItems({
             styleNo: styleNo,
             storeId,
             branchId,
+            invNo: invNo,
           },
         });
+        if (styleData.statusCode === 1) {
+          toast.info(styleData.message, {
+            position: "top-center",
+            autoClose: 2000,
+          });
+          return;
+        }
         const styleRows = styleData?.data;
         if (!styleRows) return;
 
@@ -310,7 +323,7 @@ export default function SalesItems({
   }
 
   const validateData = () => {
-    if (storeId) {
+    if (storeId && customerId) {
       return true;
     }
     return false;
@@ -319,7 +332,7 @@ export default function SalesItems({
   return (
     <>
       <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[450px] overflow-auto">
-        {/* <div className="flex items-center gap-4 sticky top-0 bg-white z-30 mt-2">
+        <div className="flex items-center gap-4 sticky top-0 bg-white z-30 mt-2">
           <ReusableInput
             label="Style No"
             value={styleNo}
@@ -334,7 +347,7 @@ export default function SalesItems({
               }
             }}
           />
-        </div> */}
+        </div>
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">Return Details</h2>
         </div>
@@ -569,7 +582,6 @@ export default function SalesItems({
                   </td>
                   <td className="py-0.5 border border-gray-300 text-[11px]">
                     <select
-                      id={`qty-${index}`}
                       onKeyDown={(e) => {
                         if (e.key === "Delete") {
                           handleInputChange("", index, "colorId");
@@ -631,7 +643,7 @@ export default function SalesItems({
                       min={"0"}
                       type="number"
                       className="text-right rounded py-1 px-1 w-full table-data-input"
-                      onFocus={(e) => e.target.select()}
+                      onFocus={(e) => e.target.focus()}
                       value={row?.returnQty}
                       onChange={(e) =>
                         handleInputChange(e.target.value, index, "returnQty")
@@ -640,6 +652,7 @@ export default function SalesItems({
                         handleInputChange(e.target.value, index, "returnQty");
                       }}
                       disabled={readOnly}
+                      id={`qty-${index}`}
                     />
                   </td>
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
