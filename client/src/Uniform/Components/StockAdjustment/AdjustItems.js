@@ -14,6 +14,8 @@ import { toast } from "react-toastify";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { VIEW } from "../../../icons";
 import Swal from "sweetalert2";
+import Modal from "../../../UiComponents/Modal";
+import { DropdownNew } from "../../../Inputs";
 
 export default function AdjustItems({
   stockAdjustmentItems,
@@ -32,6 +34,10 @@ export default function AdjustItems({
   const { data: fabricList } = useGetFabricMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
+  const [pendingStyleRows, setPendingStyleRows] = useState([]);
+  const [showColorPopup, setShowColorPopup] = useState(false);
+  const [colorId, setColorId] = useState("");
+  const [uniqueColorIds, setUniqueColorIds] = useState([]);
 
   const [getStyleDetail] = useLazyGetStyleDetailQuery();
 
@@ -94,59 +100,6 @@ export default function AdjustItems({
   const handleCloseContextMenu = () => {
     setContextMenu(null);
   };
-
-  // useEffect(() => {
-  //   if (!stockAdjustmentItems || stockAdjustmentItems.length === 0) {
-  //     setStockAdjustmentItems(
-  //       Array.from({ length: 6 }, () => ({
-  //         barcode: "",
-  //         styleId: "",
-  //         sizeId: "",
-  //         stkQty: "",
-  //         adjType: "",
-  //         adjQty: "",
-  //         remarks: "",
-  //       }))
-  //     );
-  //   }
-  // }, [stockAdjustmentItems, setStockAdjustmentItems]);
-
-  // const handleInputChange = (value, index, field) => {
-  //   const newBlend = structuredClone(stockAdjustmentItems);
-  //   newBlend[index][field] = value;
-  //   setStockAdjustmentItems(newBlend);
-  // };
-
-  // const handleBarcodeApiCall = async (index, row) => {
-  //   try {
-  //     const response = await triggerGetBarcodeDetail({
-  //       params: {
-  //         barcode: row.barcode,
-  //         styleId: row.styleId,
-  //         sizeId: row.sizeId,
-  //       },
-  //     }).unwrap();
-
-  //     if (response?.data?.length > 0) {
-  //       const item = response.data[0];
-  //       setStockAdjustmentItems((prev) =>
-  //         prev.map((r, i) =>
-  //           i === index
-  //             ? {
-  //                 ...r,
-  //                 barcode: item.barCode,
-  //                 styleId: item.styleId,
-  //                 sizeId: item.sizeId,
-  //                 stkQty: response.totalQty,
-  //               }
-  //             : r
-  //         )
-  //       );
-  //     }
-  //   } catch (err) {
-  //     console.error("Error fetching barcode details:", err);
-  //   }
-  // };
 
   useEffect(() => {
     if (stockAdjustmentItems) {
@@ -230,25 +183,6 @@ export default function AdjustItems({
               sizeId: row.sizeId,
             },
           }).unwrap();
-          // if (response?.statusCode === 1) {
-          //   // No record found → reset the row
-          //   setStockAdjustmentItems((prev) =>
-          //     prev.map((r, i) =>
-          //       i === index
-          //         ? {
-          //             barcode: "",
-          //             styleId: "",
-          //             sizeId: "",
-          //             stkQty: "",
-          //             adjType: "",
-          //             adjQty: "",
-          //             remarks: "",
-          //           }
-          //         : r
-          //     )
-          //   );
-          //   return; // stop here
-          // }
           if (response?.data?.length > 0) {
             const item = response.data[0];
             setStockAdjustmentItems((prev) =>
@@ -294,6 +228,48 @@ export default function AdjustItems({
     }
   };
 
+  const fillRows = (rowsToFill) => {
+    setStockAdjustmentItems((prev) => {
+      const updated = [...prev];
+
+      let startIndex = updated.findIndex(
+        (row) =>
+          !row.styleId &&
+          !row.sizeId &&
+          !row.styleNo &&
+          !row.fabricId &&
+          !row.barcode
+      );
+      if (startIndex === -1) startIndex = updated.length;
+
+      rowsToFill.forEach((row, i) => {
+        if (startIndex + i < updated.length) {
+          updated[startIndex + i] = row;
+        } else {
+          updated.push(row);
+        }
+      });
+
+      while (updated.length < 6) {
+        updated.push({
+          styleNo: "",
+          fabricId: "",
+          styleId: "",
+          sizeId: "",
+          qty: "",
+          remarks: "",
+          stkQty: "",
+          barcode: "",
+          styleItemId: "",
+          colorId: "",
+          selected: false,
+        });
+      }
+
+      return updated;
+    });
+  };
+
   const handleAddRow = async () => {
     if (!validateData()) {
       toast.info("Please Choose Store...!", {
@@ -305,9 +281,6 @@ export default function AdjustItems({
       );
 
       if (!isFirstTime) {
-        // const hasEmpty = stockAdjustmentItems.some(
-        //   (row) => !row.adjType || !row.adjQty
-        // );
         const hasEmpty = stockAdjustmentItems.some((row) => {
           const hasStyle =
             row.styleNo !== "" &&
@@ -331,50 +304,28 @@ export default function AdjustItems({
             branchId,
           },
         });
+        if (styleData?.statusCode === 1) {
+          toast.info(styleData.message, {
+            position: "top-center",
+            autoClose: 2000,
+          });
+        }
         const styleRows = styleData?.data;
         if (!styleRows) return;
-
-        setStockAdjustmentItems((prev) => {
-          const updated = [...prev];
-          // Find first empty slot index
-          let startIndex = updated.findIndex(
-            (row) =>
-              !row.styleId &&
-              !row.sizeId &&
-              !row.styleNo &&
-              !row.fabricId &&
-              !row.barcode
-          );
-          if (startIndex === -1) startIndex = updated.length;
-
-          // Fill in sizeRows starting at first empty slot
-          styleRows.forEach((row, i) => {
-            if (startIndex + i < updated.length) {
-              updated[startIndex + i] = row;
-            } else {
-              updated.push(row); // append if no empty slot
-            }
-          });
-
-          // Ensure at least 6 rows
-          while (updated.length < 6) {
-            updated.push({
-              styleNo: "",
-              fabricId: "",
-              styleId: "",
-              sizeId: "",
-              qty: "",
-              remarks: "",
-              stkQty: "",
-              barcode: "",
-              styleItemId: "",
-              colorId: "",
-              selected: false,
-            });
-          }
-
-          return updated;
-        });
+        const colorIds = [
+          ...new Set(styleRows.map((row) => row.colorId).filter(Boolean)),
+        ];
+        setUniqueColorIds(colorIds);
+        if (
+          colorIds.length < 1 ||
+          colorIds.length === 1 ||
+          colorIds.length === null
+        ) {
+          fillRows(styleRows);
+        } else if (colorIds.length > 1) {
+          setPendingStyleRows(styleRows);
+          setShowColorPopup(true);
+        }
       } catch (error) {
         console.error("Error adding row:", error);
       }
@@ -396,6 +347,58 @@ export default function AdjustItems({
 
   return (
     <>
+      <Modal
+        isOpen={showColorPopup}
+        onClose={() => setShowColorPopup(false)}
+        widthClass={"w-[220px]"}
+      >
+        <p className="text-md font-medium">Select Color</p>
+        <div className="w-40 my-4">
+          <DropdownNew
+            name="Color"
+            dataList={
+              colorList?.data?.filter(
+                (item) =>
+                  Array.isArray(uniqueColorIds) &&
+                  uniqueColorIds.includes(item.id)
+              ) || []
+            }
+            value={colorId}
+            setValue={(value) => {
+              setColorId(value);
+            }}
+            required={false}
+            clear={true}
+            autoFocus={true}
+          />
+        </div>
+        <div className="flex justify-end mt-6">
+          <button
+            className="bg-green-700 text-white px-2 text-md rounded hover:bg-green-800"
+            onClick={() => {
+              const filtered = pendingStyleRows.filter(
+                (row) => row.colorId === colorId
+              );
+              fillRows(filtered);
+              setShowColorPopup(false);
+              setColorId("");
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                const filtered = pendingStyleRows.filter(
+                  (row) => row.colorId === colorId
+                );
+                fillRows(filtered);
+                setShowColorPopup(false);
+                setColorId("");
+              }
+            }}
+          >
+            Add
+          </button>
+        </div>
+      </Modal>
       <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[450px] overflow-auto">
         <div className="flex items-center gap-4 sticky top-0 bg-white z-30 mt-2">
           <ReusableInput
@@ -412,19 +415,6 @@ export default function AdjustItems({
               }
             }}
           />
-          {/* <button
-            className="hover:bg-green-700 h-6 mt-3 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-xs"
-            onClick={() => {
-              handleAddRow();
-            }}
-             onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleAddRow();
-              }
-            }}
-          >
-            <FaPlus /> Add
-          </button> */}
         </div>
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">Adjustment Details</h2>
@@ -936,22 +926,12 @@ export default function AdjustItems({
               <button
                 className=" text-black text-[12px] text-left rounded px-1"
                 onClick={() => {
-                  // deleteRow(contextMenu.rowId);
                   deleteSelectedRows();
                   handleCloseContextMenu();
                 }}
               >
                 Delete
               </button>
-              {/* <button
-                className=" text-black text-[12px] text-left rounded px-1"
-                onClick={() => {
-                  handleDeleteAllRows();
-                  handleCloseContextMenu();
-                }}
-              >
-                Delete All
-              </button> */}
             </div>
           </div>
         )}

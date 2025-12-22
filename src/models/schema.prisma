@@ -1850,6 +1850,8 @@ model SalesEntry {
   salesType       String?
   Destination     City?             @relation(fields: [destinationId], references: [id])
   destinationId   Int?
+  overAllDisc     Float?
+  roundOff        Float?
 }
 
 model SalesEntryItems {

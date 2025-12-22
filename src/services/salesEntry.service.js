@@ -390,6 +390,8 @@ async function create(body) {
     taxTemplateId,
     destinationId,
     salesType,
+    overAllDisc,
+    roundOff
   } = await body;
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate
@@ -421,6 +423,8 @@ async function create(body) {
         taxTemplateId: taxTemplateId ? parseInt(taxTemplateId) : null,
         destinationId: destinationId ? parseInt(destinationId) : null,
         salesType,
+        roundOff: roundOff ? parseInt(roundOff) : null,
+        overAllDisc: overAllDisc ? parseInt(overAllDisc) : null
       },
     });
     await createSalesEntryItems(
@@ -449,6 +453,8 @@ async function update(id, body) {
     taxTemplateId,
     destinationId,
     salesType,
+    overAllDisc,
+    roundOff
   } = await body;
   let data;
   const dataFound = await prisma.salesEntry.findUnique({
@@ -489,6 +495,8 @@ async function update(id, body) {
         contactNumber,
         destinationId: destinationId ? parseInt(destinationId) : null,
         salesType,
+        overAllDisc : overAllDisc ? parseInt(overAllDisc) : null,
+        roundOff: roundOff ? parseInt(roundOff) : null
       },
     });
     await updateSalesEntryItems(

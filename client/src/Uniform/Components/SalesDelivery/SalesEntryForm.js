@@ -53,6 +53,8 @@ export function SalesBillForm({
   const [contactNumber, setContactNumber] = useState("");
   const [salesType, setSalesType] = useState("");
   const [destinationId, setDestinationId] = useState("");
+  const [overAllDisc, setOverAllDisc] = useState("");
+  const [roundOff, setRoundOff] = useState("");
   const { companyId, userId, finYearId, branchId } = getCommonParams();
   const dispatch = useDispatch();
   const isLoadingIndicator = isSingleFetching || isSingleLoading;
@@ -162,6 +164,8 @@ export function SalesBillForm({
     contactNumber,
     destinationId,
     salesType,
+    roundOff,
+    overAllDisc,
   };
 
   const syncFormWithDb = useCallback(
@@ -183,6 +187,8 @@ export function SalesBillForm({
       setContactPerson(data?.contactPerson ? data?.contactPerson : "");
       setDestinationId(data?.destinationId ? data?.destinationId : "");
       setSalesType(data?.salesType ? data?.salesType : "");
+      setOverAllDisc(data?.overAllDisc ? data?.overAllDisc : "");
+      setRoundOff(data?.roundOff ? data?.roundOff : "");
     },
     [id]
   );
@@ -441,7 +447,10 @@ export function SalesBillForm({
                 readOnly={readOnly}
                 branchId={branchId}
                 storeId={storeId}
-                // taxTemplateId={taxTemplateId}
+                overAllDisc={overAllDisc}
+                setOverAllDisc={setOverAllDisc}
+                roundOff={roundOff}
+                setRoundOff={setRoundOff}
               />
             </fieldset>
             <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">

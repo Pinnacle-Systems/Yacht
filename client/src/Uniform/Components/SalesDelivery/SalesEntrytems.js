@@ -1,7 +1,6 @@
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
-import { useLazyGetBarcodeDetailQuery } from "../../../redux/uniformService/StockAdjustmentService";
 import Swal from "sweetalert2";
 import { ReusableInput } from "../../../Utils/CommonInput";
 import { FaPlus } from "react-icons/fa";
@@ -15,6 +14,7 @@ import Modal from "../../../UiComponents/Modal";
 import TaxDetailsFullTemplate from "../TaxDetailsCompleteTemplate";
 import { VIEW } from "../../../icons";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { DropdownNew } from "../../../Inputs";
 
 export default function BillItems({
   salesEntryItems,
@@ -25,6 +25,10 @@ export default function BillItems({
   storeId,
   branchId,
   taxTemplateId,
+  overAllDisc,
+  setOverAllDisc,
+  roundOff,
+  setRoundOff,
 }) {
   const [styleNo, setStyleNo] = useState("");
   const [contextMenu, setContextMenu] = useState(null);
@@ -32,19 +36,15 @@ export default function BillItems({
   const [focusedRowIndex, setFocusedRowIndex] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
   const [currentSelectedIndex, setCurrentSelectedIndex] = useState("");
-  const [barcodeText, setBarcodeText] = useState("");
-
+  const [pendingStyleRows, setPendingStyleRows] = useState([]);
+  const [showColorPopup, setShowColorPopup] = useState(false);
   const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: fabricList } = useGetFabricMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
-
-  const [
-    triggerGetBarcodeDetail,
-    { data: barcodeData, isFetching, isLoading },
-  ] = useLazyGetBarcodeDetailQuery();
-
+  const [colorId, setColorId] = useState("");
+  const [uniqueColorIds, setUniqueColorIds] = useState([]);
   const addRow = () => {
     const newRow = {
       barcode: "",
@@ -223,6 +223,53 @@ export default function BillItems({
     return false;
   };
 
+  const fillRows = (rowsToFill) => {
+    setSalesEntryItems((prev) => {
+      const updated = [...prev];
+
+      let startIndex = updated.findIndex(
+        (row) =>
+          !row.styleId &&
+          !row.sizeId &&
+          !row.styleNo &&
+          !row.fabricId &&
+          !row.barcode
+      );
+
+      if (startIndex === -1) startIndex = updated.length;
+
+      rowsToFill.forEach((row, i) => {
+        if (startIndex + i < updated.length) {
+          updated[startIndex + i] = row;
+        } else {
+          updated.push(row);
+        }
+      });
+
+      while (updated.length < 6) {
+        updated.push({
+          styleNo: "",
+          fabricId: "",
+          styleId: "",
+          sizeId: "",
+          qty: "",
+          remarks: "",
+          stkQty: "",
+          barcode: "",
+          price: "",
+          taxPercent: "",
+          discountType: "",
+          discountValue: "",
+          styleItemId: "",
+          colorId: "",
+          selected: false,
+        });
+      }
+
+      return updated;
+    });
+  };
+
   const handleAddRow = async () => {
     if (!validateData()) {
       toast.info("Please Choose Location...!", {
@@ -258,54 +305,73 @@ export default function BillItems({
             branchId,
           },
         });
+        if (styleData?.statusCode === 1) {
+          toast.info(styleData.message, {
+            position: "top-center",
+            autoClose: 2000,
+          });
+        }
         const styleRows = styleData?.data;
         if (!styleRows) return;
+        const colorIds = [
+          ...new Set(styleRows.map((row) => row.colorId).filter(Boolean)),
+        ];
+        setUniqueColorIds(colorIds);
+        if (
+          colorIds.length < 1 ||
+          colorIds.length === 1 ||
+          colorIds.length === null
+        ) {
+          fillRows(styleRows);
+        } else if (colorIds.length > 1) {
+          setPendingStyleRows(styleRows);
+          setShowColorPopup(true);
+        }
+        // setSalesEntryItems((prev) => {
+        //   const updated = [...prev];
+        //   // Find first empty slot index
+        //   let startIndex = updated.findIndex(
+        //     (row) =>
+        //       !row.styleId &&
+        //       !row.sizeId &&
+        //       !row.styleNo &&
+        //       !row.fabricId &&
+        //       !row.barcode
+        //   );
+        //   if (startIndex === -1) startIndex = updated.length;
 
-        setSalesEntryItems((prev) => {
-          const updated = [...prev];
-          // Find first empty slot index
-          let startIndex = updated.findIndex(
-            (row) =>
-              !row.styleId &&
-              !row.sizeId &&
-              !row.styleNo &&
-              !row.fabricId &&
-              !row.barcode
-          );
-          if (startIndex === -1) startIndex = updated.length;
+        //   // Fill in sizeRows starting at first empty slot
+        //   styleRows.forEach((row, i) => {
+        //     if (startIndex + i < updated.length) {
+        //       updated[startIndex + i] = row;
+        //     } else {
+        //       updated.push(row); // append if no empty slot
+        //     }
+        //   });
 
-          // Fill in sizeRows starting at first empty slot
-          styleRows.forEach((row, i) => {
-            if (startIndex + i < updated.length) {
-              updated[startIndex + i] = row;
-            } else {
-              updated.push(row); // append if no empty slot
-            }
-          });
+        //   // Ensure at least 6 rows
+        //   while (updated.length < 6) {
+        //     updated.push({
+        //       styleNo: "",
+        //       fabricId: "",
+        //       styleId: "",
+        //       sizeId: "",
+        //       qty: "",
+        //       remarks: "",
+        //       stkQty: "",
+        //       barcode: "",
+        //       price: "",
+        //       taxPercent: "",
+        //       discountType: "",
+        //       discountValue: "",
+        //       styleItemId: "",
+        //       colorId: "",
+        //       selected: false,
+        //     });
+        //   }
 
-          // Ensure at least 6 rows
-          while (updated.length < 6) {
-            updated.push({
-              styleNo: "",
-              fabricId: "",
-              styleId: "",
-              sizeId: "",
-              qty: "",
-              remarks: "",
-              stkQty: "",
-              barcode: "",
-              price: "",
-              taxPercent: "",
-              discountType: "",
-              discountValue: "",
-              styleItemId: "",
-              colorId: "",
-              selected: false,
-            });
-          }
-
-          return updated;
-        });
+        //   return updated;
+        // });
       } catch (error) {
         console.error("Error adding row:", error);
       }
@@ -318,27 +384,26 @@ export default function BillItems({
     return `${IMAGE_UPLOAD_URL}${fileName}`;
   }
 
-  // useEffect(() => {
-  //   let timeout;
-  //   const handleKeyDown = (e) => {
-  //     if (e.key === "Enter") {
-  //       if (barcodeText) {
-  //         setStyleNo(barcodeText);
-  //         handleAddRow();
-  //         setBarcodeText("");
-  //       }
-  //       return;
-  //     }
-  //     if (e.key.length === 1) {
-  //       setBarcodeText((prev) => prev + e.key);
-  //       clearTimeout(timeout);
-  //       timeout = setTimeout(() => setBarcodeText(""), 200);
-  //     }
-  //   };
-  //   window.addEventListener("keydown", handleKeyDown);
-  //   console.log("barcodeText", barcodeText);
-  //   return () => window.removeEventListener("keydown", handleKeyDown);
-  // }, [barcodeText]);
+  const totalNetAmount = useMemo(() => {
+    return salesEntryItems
+      .reduce((sum, row) => sum + (parseFloat(calculateNetAmount(row)) || 0), 0)
+      .toFixed(2);
+  }, [salesEntryItems]);
+
+  const overallDiscAmt = useMemo(() => {
+    const total = parseFloat(totalNetAmount) || 0;
+    const disc = parseFloat(overAllDisc) || 0;
+
+    return ((total * disc) / 100).toFixed(2);
+  }, [totalNetAmount, overAllDisc]);
+
+  const overallNetAmount = useMemo(() => {
+    const total = parseFloat(totalNetAmount) || 0;
+    const discAmt = parseFloat(overallDiscAmt) || 0;
+    const round = parseFloat(roundOff) || 0;
+
+    return (total - discAmt - round).toFixed(2);
+  }, [totalNetAmount, overallDiscAmt, roundOff]);
 
   return (
     <>
@@ -355,6 +420,58 @@ export default function BillItems({
           handleInputChange={handleInputChange}
         />
       </Modal>
+      <Modal
+        isOpen={showColorPopup}
+        onClose={() => setShowColorPopup(false)}
+        widthClass={"w-[220px]"}
+      >
+        <p className="text-md font-medium">Select Color</p>
+        <div className="w-40 my-4">
+          <DropdownNew
+            name="Color"
+            dataList={
+              colorList?.data?.filter(
+                (item) =>
+                  Array.isArray(uniqueColorIds) &&
+                  uniqueColorIds.includes(item.id)
+              ) || []
+            }
+            value={colorId}
+            setValue={(value) => {
+              setColorId(value);
+            }}
+            required={false}
+            clear={true}
+            autoFocus={true}
+          />
+        </div>
+        <div className="flex justify-end mt-6">
+          <button
+            className="bg-green-700 text-white px-2 text-md rounded hover:bg-green-800"
+            onClick={() => {
+              const filtered = pendingStyleRows.filter(
+                (row) => row.colorId === colorId
+              );
+              fillRows(filtered);
+              setShowColorPopup(false);
+              setColorId("");
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                const filtered = pendingStyleRows.filter(
+                  (row) => row.colorId === colorId
+                );
+                fillRows(filtered);
+                setShowColorPopup(false);
+                setColorId("");
+              }
+            }}
+          >
+            Add
+          </button>
+        </div>
+      </Modal>
       <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[450px] overflow-auto overflow-x-auto w-full">
         <div className="flex items-center gap-4 sticky top-0 bg-white z-30 mt-2">
           <ReusableInput
@@ -364,7 +481,6 @@ export default function BillItems({
             type={"text"}
             required={true}
             readOnly={readOnly}
-            // autoFocus={true}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.stopPropagation();
@@ -372,19 +488,6 @@ export default function BillItems({
               }
             }}
           />
-          {/* <button
-            className="hover:bg-green-700 h-6 mt-3 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-xs"
-            onClick={() => {
-              handleAddRow();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleAddRow();
-              }
-            }}
-          >
-            <FaPlus /> Add
-          </button> */}
         </div>
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">Sales Item Details</h2>
@@ -433,11 +536,6 @@ export default function BillItems({
                 >
                   Style No
                 </th>
-                {/* <th
-                  className={`w-28 px-4 py-2 text-center font-medium text-[13px] `}
-                >
-                  Barcode No
-                </th> */}
                 <th
                   className={`w-48  py-2 text-center font-medium text-[13px] `}
                 >
@@ -560,26 +658,6 @@ export default function BillItems({
                         disabled={true}
                       />
                     </td>
-                    {/* <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                      <input
-                        onKeyDown={(e) => {
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "barcode");
-                          }
-                        }}
-                        type="string"
-                        className="text-left rounded py-1 px-1 w-full table-data-input"
-                        onFocus={(e) => e.target.select()}
-                        value={row?.barcode}
-                        disabled={true}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "barcode")
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "barcode");
-                        }}
-                      />
-                    </td> */}
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                       <select
                         disabled={true}
@@ -981,32 +1059,104 @@ export default function BillItems({
                 >
                   Total
                 </td>
-                {/* <td
-                  className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={7}
-                >
-                  Total Qty
-                </td> */}
                 <td className="text-right border border-gray-300 px-1 font-medium text-[12px] py-0.5">
                   {salesEntryItems.reduce(
                     (sum, row) => sum + (Number(row.qty) || 0),
                     0
                   )}
                 </td>
-                {/* <td className="border border-gray-300"></td> */}
-                {/* <td className="border border-gray-300"></td> */}
                 <td
                   className="text-right border border-gray-300 px-1 font-medium text-[12px] py-0.5"
                   colSpan={6}
                 >
-                  {salesEntryItems
-                    .reduce(
-                      (sum, row) => sum + parseFloat(calculateNetAmount(row)),
-                      0
-                    )
-                    .toFixed(2)}
+                  {totalNetAmount}
                 </td>
                 <td className="border border-gray-300" colSpan={2}></td>
+              </tr>
+              <tr className="bg-gray-50 h-7  font-medium text-slate-700 text-[14px]">
+                <td colSpan={18} className="">
+                  <fieldset className="flex gap-10 border border-slate-300 rounded-md px-3 py-2">
+                    <legend>Summary</legend>
+                    <div className="text-right flex gap-2 items-center">
+                      <p className="mb-1">Over All Disc % :</p>
+                      <div className="w-14 flex items-center">
+                        <input
+                          onKeyDown={(e) => {
+                            if (
+                              e.code === "Minus" ||
+                              e.code === "NumpadSubtract" ||
+                              e.code === 0
+                            )
+                              e.preventDefault();
+                            if (e.key === "Delete") {
+                              setOverAllDisc("");
+                            }
+                          }}
+                          min={"0"}
+                          type="number"
+                          className="text-right rounded py-1 px-1 w-full border border-slate-300 rounded-md 
+          focus:border-indigo-300 focus:outline-none transition-all duration-200
+          hover:border-slate-400"
+                          onFocus={(e) => e.target.select()}
+                          value={overAllDisc}
+                          onChange={(e) => setOverAllDisc(e.target.value)}
+                          onBlur={(e) => {
+                            setRoundOff(e.target.value);
+                          }}
+                          disabled={readOnly}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="text-right flex gap-2 items-center">
+                      <p className="">Discount Value :</p>
+                      <p className="font-semibold">{overallDiscAmt}</p>
+                    </div>
+
+                    <div className="text-right flex gap-2 items-center">
+                      <p className="">Overall Gross Amount :</p>
+                      <p className="font-semibold">
+                        {totalNetAmount - overallDiscAmt}
+                      </p>
+                    </div>
+
+                    <div className="text-right flex gap-2 items-center">
+                      <p className="">Round Off :</p>
+                      <div className="w-24">
+                        <input
+                          onKeyDown={(e) => {
+                            if (
+                              e.code === "Minus" ||
+                              e.code === "NumpadSubtract" ||
+                              e.code === 0
+                            )
+                              e.preventDefault();
+                            if (e.key === "Delete") {
+                              setRoundOff("");
+                            }
+                          }}
+                          min={"0"}
+                          type="number"
+                          className="text-right rounded py-1 px-1 w-full border border-slate-300 rounded-md 
+          focus:border-indigo-300 focus:outline-none transition-all duration-200
+          hover:border-slate-400"
+                          onFocus={(e) => e.target.select()}
+                          value={roundOff}
+                          onChange={(e) => setRoundOff(e.target.value)}
+                          onBlur={(e) => {
+                            setRoundOff(e.target.value);
+                          }}
+                          disabled={readOnly}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="text-right flex gap-2 items-center">
+                      <p className="">Overall Net Amount :</p>
+                      <p className="font-semibold">{overallNetAmount}</p>
+                    </div>
+                  </fieldset>
+                </td>
               </tr>
             </tfoot>
           </table>
@@ -1057,15 +1207,6 @@ export default function BillItems({
                 >
                   Delete
                 </button>
-                {/* <button
-                  className=" text-black text-[12px] text-left rounded px-1"
-                  onClick={() => {
-                    handleDeleteAllRows();
-                    handleCloseContextMenu();
-                  }}
-                >
-                  Delete All
-                </button> */}
               </div>
             </div>
           )}

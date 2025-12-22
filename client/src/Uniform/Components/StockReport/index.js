@@ -40,7 +40,7 @@ export default function Form() {
     const dataArray = allData?.data || [];
 
     const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet("Stock Report");
+    const sheet = workbook.addWorksheet("Finished Goods Stock Report");
 
     // Title
     sheet.mergeCells("A1:G1");
@@ -53,9 +53,9 @@ export default function Form() {
     const headerRow = [
       "S.No",
       "Style No",
-      "Barcode",
       "Style Name",
       "Fabric Name",
+      "Colour Name",
       "Size",
       "Qty",
     ];
@@ -83,9 +83,9 @@ export default function Form() {
       sheet.addRow([
         index + 1,
         item?.styleNo || "",
-        item?.barcode || "",
         findFromList(item?.styleItemId, styleItemList?.data, "name") || "",
         findFromList(item?.fabricId, fabricList?.data, "name") || "",
+        findFromList(item?.colorId, colorList?.data, "name") || "",
         findFromList(item?.sizeId, sizeList?.data, "name") || "",
         item?.stkQty || 0,
       ]);
@@ -96,7 +96,7 @@ export default function Form() {
       (sum, item) => sum + (Number(item?.stkQty) || 0),
       0
     );
-    const totalRow = sheet.addRow(["", "", "", "", "", "Total", totalQty]);
+    const totalRow = sheet.addRow(["", "", "","", "", "Total", totalQty]);
     totalRow.eachCell((cell, colNumber) => {
       cell.font = { bold: true };
       cell.alignment = { horizontal: "right" };
@@ -112,9 +112,9 @@ export default function Form() {
     sheet.columns = [
       { key: "sno", width: 8 },
       { key: "styleNo", width: 15 },
-      { key: "barcode", width: 18 },
       { key: "styleName", width: 25 },
       { key: "fabricName", width: 25 },
+      { key: "colourName", width: 25 },
       { key: "size", width: 12 },
       { key: "qty", width: 10 },
     ];
@@ -140,7 +140,7 @@ export default function Form() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "StockReport.xlsx";
+    a.download = "FinishedGoodsStockReport.xlsx";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -164,7 +164,9 @@ export default function Form() {
       </Modal>
       <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">Finished Goods Stock Report</h1>
+          <h1 className="text-xl font-bold text-gray-800">
+            Finished Goods Stock Report
+          </h1>
         </div>
         <div className="flex gap-x-5">
           <button
@@ -172,7 +174,6 @@ export default function Form() {
             // disabled={!id}
             onClick={() => {
               setPdfOpen(true);
-              console.log("allData", allData);
             }}
           >
             <FiPrinter className="w-4 h-4 mr-2" />

@@ -111,6 +111,41 @@ const PDF = ({ singleData, allData }) => {
         lastColumn: {
             borderRightWidth: 0, // Remove right border for the last column
         },
+        summaryBox: {
+            borderWidth: 1,
+            borderColor: "#9CA3AF",
+            borderRadius: 4,
+            padding: 8,
+            marginTop: 8,
+        },
+
+        summaryTitle: {
+            position: "absolute",
+            top: -8,
+            left: 10,
+            backgroundColor: "#FFFFFF",
+            paddingHorizontal: 4,
+            fontSize: 9,
+            fontWeight: "bold",
+            color: "#374151",
+        },
+
+        summaryRow: {
+            flexDirection: "row",
+            justifyContent: "space-between",
+            marginVertical: 2,
+        },
+
+        summaryLabel: {
+            fontSize: 8,
+            color: "#374151",
+        },
+
+        summaryValue: {
+            fontSize: 8,
+            fontWeight: "bold",
+            textAlign: "right",
+        },
     });
     useEffect(() => {
         console.log("Single Data Fetched", singleData,)
@@ -142,6 +177,21 @@ const PDF = ({ singleData, allData }) => {
 
         return netAmount.toFixed(2);
     };
+
+    const totalNetAmount = singleData?.SalesEntryItems
+        ?.reduce((sum, row) => sum + parseFloat(calculateNetAmount(row)), 0) || 0;
+
+    const overAllDisc = parseFloat(singleData?.overAllDisc || 0);
+
+    const overallDiscAmt = ((totalNetAmount * overAllDisc) / 100).toFixed(2);
+
+    const overallGrossAmount = (totalNetAmount - overallDiscAmt).toFixed(2);
+
+    const roundOff = parseFloat(singleData?.roundOff || 0);
+
+    const overallNetAmount = (
+        parseFloat(overallGrossAmount) - roundOff
+    ).toFixed(2);
     return (
         <Document>
             <PageWrapper heading={"Sales Delivery"} singleData={singleData} header={false}>
@@ -374,7 +424,6 @@ const PDF = ({ singleData, allData }) => {
                             {[
                                 { label: "S.No", flex: 0.5 },
                                 { label: "Style No", flex: 1 },
-                                { label: "Barcode ", flex: 1 },
                                 { label: "Style", flex: 2 },
                                 { label: "Fabric", flex: 2 },
                                 { label: "Size", flex: 0.8 },
@@ -431,9 +480,6 @@ const PDF = ({ singleData, allData }) => {
                                     <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
                                         {item?.styleNo || ""}
                                     </Text>
-                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
-                                        {item?.barcode || ""}
-                                    </Text>
                                     <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
                                         {item?.StyleItem?.name || ""}
                                     </Text>
@@ -479,11 +525,7 @@ const PDF = ({ singleData, allData }) => {
                                 style={[
                                     styles.headerCell,
                                     {
-                                        flex: 6.7,
-                                        // backgroundColor: "white", borderLeftWidth: 1,
-                                        // borderLeftStyle: "solid",
-                                        // borderColor: "#D1D5DB", borderBottomWidth: 1,
-                                        // borderBottomStyle: "solid",
+                                        flex: 5.7,
                                         fontSize: 8,
                                         textAlign: "right",
                                     },
@@ -501,11 +543,6 @@ const PDF = ({ singleData, allData }) => {
                                         flex: 6,
                                         fontSize: 8,
                                         textAlign: "right",
-                                        // fontWeight: "bold",
-                                        // backgroundColor: "white",
-                                        // marginTop:-1
-                                        // borderColor: "#D1D5DB", borderBottomWidth: 1,
-                                        // borderBottomStyle: "solid",
                                     },
                                 ]}
                             >
@@ -517,8 +554,57 @@ const PDF = ({ singleData, allData }) => {
                                     .toFixed(2)}
                             </Text>
                         </View>
+                        <View style={{
+                            flexDirection: "row",
+                            justifyContent: "flex-end",
+                        }}>
 
+                            <View style={[
+                                styles.summaryBox,
+                                {
+                                    width: 220,          // 👈 controls minimum width
+                                    alignSelf: "flex-end",
+                                    marginRight:5
+                                },
+                            ]}>
+                                {/* Legend Title */}
+                                <Text style={styles.summaryTitle}>Summary</Text>
 
+                                <View style={styles.summaryRow}>
+                                    <Text style={styles.summaryLabel}>Overall Discount %</Text>
+                                    <Text style={styles.summaryValue}>{overAllDisc}%</Text>
+                                </View>
+
+                                <View style={styles.summaryRow}>
+                                    <Text style={styles.summaryLabel}>Discount Value</Text>
+                                    <Text style={styles.summaryValue}>{overallDiscAmt}</Text>
+                                </View>
+
+                                <View style={styles.summaryRow}>
+                                    <Text style={styles.summaryLabel}>Overall Gross Amount</Text>
+                                    <Text style={styles.summaryValue}>{overallGrossAmount}</Text>
+                                </View>
+
+                                <View style={styles.summaryRow}>
+                                    <Text style={styles.summaryLabel}>Round Off</Text>
+                                    <Text style={styles.summaryValue}>{roundOff.toFixed(2)}</Text>
+                                </View>
+
+                                <View
+                                    style={[
+                                        styles.summaryRow,
+                                        { borderTopWidth: 1, borderTopColor: "#D1D5DB", marginTop: 4, paddingTop: 4 },
+                                    ]}
+                                >
+                                    <Text style={[styles.summaryLabel, { fontWeight: "bold" }]}>
+                                        Overall Net Amount
+                                    </Text>
+                                    <Text style={[styles.summaryValue, { fontSize: 10 }]}>
+                                        {overallNetAmount}
+                                    </Text>
+                                </View>
+                            </View>
+                        </View>
                     </View>
 
                 </View>

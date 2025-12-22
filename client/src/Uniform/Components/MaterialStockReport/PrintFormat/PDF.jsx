@@ -5,7 +5,7 @@ import tw from "../../../../Utils/tailwind-react-pdf";
 import { findFromList } from "../../../../Utils/helper";
 import Header from "../../../../Utils/Header";
 
-const PDF = ({ allData, sizeList, fabricList, styleItemList,colorList }) => {
+const PDF = ({ allData, sizeList, fabricList, portionList, colorList, styleList, stockType, accessoryList, accessoryGroupList }) => {
 
     const styles = StyleSheet.create({
         page: { padding: 5 },
@@ -42,10 +42,6 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList,colorList }) => {
         table: {
             display: "table",
             marginTop: 0,
-            // borderTopWidth: 1,
-            // borderTopStyle: "solid",
-            // borderTopColor: "#D1D5DB",
-
             borderCollapse: "collapse",
         },
         tableHeader: {
@@ -104,7 +100,6 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList,colorList }) => {
             fontSize: 7,
             textAlign: "center",
             fontWeight: "bold",
-            // borderRightWidth: 1,
             borderRightColor: "#D1D5DB",
         },
         lastColumn: {
@@ -122,6 +117,27 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList,colorList }) => {
 
     let overallGrandTotal = 0;
 
+    const fabricHeaders = [
+        { label: "S.No", flex: 0.4 },
+        { label: "Style No", flex: 0.5 },
+        { label: "Fabric", flex: 1 },
+        { label: "Color", flex: 1 },
+        { label: "Portion", flex: 0.5 },
+        { label: "Meter", flex: 0.5 },
+    ];
+
+    const accessoryHeaders = [
+        { label: "S.No", flex: 0.4 },
+        { label: "Accessory Name", flex: 1 },
+        { label: "Accessory Group Name", flex: 1 },
+        { label: "Color", flex: 1 },
+        { label: "Size", flex: 0.5 },
+        { label: "Quantity", flex: 0.5 },
+    ];
+
+    const headers =
+        stockType === "Fabric" ? fabricHeaders : accessoryHeaders;
+
     return (
         <Document>
             <PageWrapper heading={"Stock Report"} allData={allData} header={false}>
@@ -130,20 +146,11 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList,colorList }) => {
                 </View>
 
                 <View style={styles.container}>
-                    <Text style={tw("mx-auto     text-base text-black")}>Finished Goods Stock Report</Text>
+                    <Text style={tw("mx-auto     text-base text-black")}>Material Stock Report</Text>
                     <View style={{ height: 1 }} fixed />
                     <View style={[styles.table,]} wrap>
                         <View fixed style={styles.tableHeader}>
-                            {[
-                                { label: "S.No", flex: 0.4 },
-                                { label: "Style No", flex: 0.5 },
-                                // { label: "Barcode ", flex: 0.5 },
-                                { label: "Style", flex: 1.5 },
-                                { label: "Fabric", flex: 1 },
-                                { label: "Color", flex: 1 },
-                                { label: "Size", flex: 0.5 },
-                                { label: "Qty", flex: 0.5 },
-                            ].map((header, index) => (
+                            {headers.map((header, index) => (
                                 <Text
                                     key={index}
                                     style={[
@@ -163,66 +170,74 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList,colorList }) => {
                         </View>
                         {/*  Grouped Rows */}
 
-                        {(allData?.data || []).map((item, index) => {
-                            return (
-                                <View
-                                    key={index}
-                                    wrap={false}
-                                    style={[
-                                        {
-                                            flexDirection: "row",
-                                            width: "100%",
-                                            borderBottomWidth: 1,
-                                            borderBottomColor: "#D1D5DB",
-                                            borderLeftColor: "#D1D5DB",
-                                            borderLeftWidth: 1,
-                                        },
-                                        index % 2 === 0 ? styles.tableRowEven : styles.tableRowOdd, // ✅ alternate color
-                                    ]}
-                                >
-                                    <Text style={[styles.tableCell, { flex: 0.4, fontSize: 7, textAlign: "center" }]}>
-                                        {index + 1}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7 }]}>
-                                        {item?.styleNo || "-"}
-                                    </Text>
-                                    {/* <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7 }]}>
-                                        {item?.barcode || "-"}
-                                    </Text> */}
-                                    <Text style={[styles.tableCell, { flex: 1.5, fontSize: 7 }]}>
-                                        {findFromList(
-                                            item?.styleItemId,
-                                            styleItemList?.data,
-                                            "name"
-                                        )}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
-                                        {findFromList(
-                                            item?.fabricId,
-                                            fabricList?.data,
-                                            "name"
-                                        )}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
-                                        {findFromList(
-                                            item?.colorId,
-                                            colorList?.data,
-                                            "name"
-                                        )}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7 }]}>
-                                        {findFromList(
-                                            item?.sizeId,
-                                            sizeList?.data,
-                                            "name"
-                                        )}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7, textAlign: "right" }]}>
-                                        {item.stkQty || 0}
-                                    </Text>
-                                </View>
-                            );
-                        })}
+                        {(allData?.data || []).map((item, index) => (
+                            <View
+                                key={index}
+                                wrap={false}
+                                style={[
+                                    {
+                                        flexDirection: "row",
+                                        width: "100%",
+                                        borderBottomWidth: 1,
+                                        borderBottomColor: "#D1D5DB",
+                                        borderLeftWidth: 1,
+                                        borderLeftColor: "#D1D5DB",
+                                    },
+                                    index % 2 === 0 ? styles.tableRowEven : styles.tableRowOdd,
+                                ]}
+                            >
+                                {/* S.No */}
+                                <Text style={[styles.tableCell, { flex: 0.4, fontSize: 7, textAlign: "center" }]}>
+                                    {index + 1}
+                                </Text>
+
+                                {stockType === "Fabric" ? (
+                                    <>
+                                        <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7 }]}>
+                                            {findFromList(item?.styleId, styleList?.data, "sku")}
+                                        </Text>
+
+                                        <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
+                                            {findFromList(item?.fabricId, fabricList?.data, "name")}
+                                        </Text>
+
+                                        <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
+                                            {findFromList(item?.colorId, colorList?.data, "name")}
+                                        </Text>
+
+                                        <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7 }]}>
+                                            {findFromList(item?.portionId, portionList?.data, "name")}
+                                        </Text>
+
+                                        <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7, textAlign: "right" }]}>
+                                            {item.fabMeter || 0}
+                                        </Text>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
+                                            {findFromList(item?.accessoryId, accessoryList?.data, "name")}
+                                        </Text>
+
+                                        <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
+                                            {findFromList(item?.accessoryGroupId, accessoryGroupList?.data, "name")}
+                                        </Text>
+
+                                        <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
+                                            {findFromList(item?.colorId, colorList?.data, "name")}
+                                        </Text>
+
+                                        <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7 }]}>
+                                            {findFromList(item?.sizeId, sizeList?.data, "name")}
+                                        </Text>
+
+                                        <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7, textAlign: "right" }]}>
+                                            {item.stkQty || 0}
+                                        </Text>
+                                    </>
+                                )}
+                            </View>
+                        ))}
                         <View
                             style={[
                                 {
@@ -232,19 +247,16 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList,colorList }) => {
                                     borderBottomColor: "#D1D5DB",
                                     borderLeftColor: "#D1D5DB",
                                     borderLeftWidth: 1,
-                                    // backgroundColor: "#F3F4F6"
                                 },
                             ]}
                         >   <Text
                             style={[styles.tableCell, {
-                                flex: 4.8, fontSize: 8, textAlign: "right",
+                                flex: stockType === "Fabric" ? 3.1 : 3.6, fontSize: 8, textAlign: "right",
                                 fontWeight: "bold",
                             }]}></Text>
                             <Text
                                 style={[styles.tableCell, {
                                     flex: 0.5, fontSize: 8, textAlign: "left",
-                                    // fontWeight: "bold",
-                                    // paddingRight: 4,
                                 }]}
                             >
                                 Total
@@ -253,11 +265,9 @@ const PDF = ({ allData, sizeList, fabricList, styleItemList,colorList }) => {
                             <Text
                                 style={[styles.tableCell, {
                                     flex: 0.5, fontSize: 8, textAlign: "right",
-                                    // fontWeight: "bold",
-                                    // paddingRight: 4,
                                 }]}
                             >
-                                {allData?.totalQty || 0}
+                                {stockType === "Fabric" ? allData?.totalMeter || 0 : allData?.totalQty || 0}
                             </Text>
                         </View>
 

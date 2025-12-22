@@ -10,11 +10,14 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import Modal from "../../../UiComponents/Modal";
 import Parameter from "./Parameter";
 import { EMPTY_ICON } from "../../../icons";
-import { useGetStockQuery } from "../../../redux/services/StockService";
+import { useLazyGetSalesEntryByIdQuery } from "../../../redux/uniformService/SalesEntryService";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
-import { useGetSalesReportQuery, useLazyGetSalesEntryByIdQuery } from "../../../redux/uniformService/SalesEntryService";
+import { useGetSalesReportQuery } from "../../../redux/uniformService/SalesEntryService";
 import { useDispatch } from "react-redux";
-import { push } from "../../../redux/features/opentabs";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
+import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 const SalesReport = forwardRef(
   (
     { onClick, itemsPerPage = 10, parameter, setParameter, onDataLoaded },
@@ -23,14 +26,10 @@ const SalesReport = forwardRef(
     const branchId = secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "currentBranchId"
     );
-
-    const [dataPerPage, setDataPerPage] = useState("10");
     const [totalCount, setTotalCount] = useState(0);
     const [currentPageNumber, setCurrentPageNumber] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
     const [showForm, setShowForm] = useState(false);
-    const [id, setId] = useState("");
-    const [readOnly, setReadOnly] = useState(false);
     const [storeId, setStoreId] = useState("");
     const [locationId, setLocationId] = useState("");
     const [fromDate, setFromDate] = useState("");
@@ -66,9 +65,25 @@ const SalesReport = forwardRef(
         skip: !(branchId && storeId),
       }
     );
+    const [
+      trigger,
+      {
+        data: singleData,
+        isFetching: isSingleFetching,
+        isLoading: isSingleLoading,
+      },
+    ] = useLazyGetSalesEntryByIdQuery({
+      params: {
+        branchId,
+      },
+    });
     const { data: customerList } = useGetPartyQuery({
       params: { companyId },
     });
+    const { data: sizeList } = useGetSizeMasterQuery({ params });
+    const { data: fabricList } = useGetFabricMasterQuery({ params });
+    const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
+    const { data: colorList } = useGetColorMasterQuery({ params });
 
     const allDataDetail = allData?.data;
 
@@ -227,7 +242,8 @@ const SalesReport = forwardRef(
     }, [allData, onDataLoaded]);
 
     const handleView = (orderId) => {
-      dispatch(push({ name: "SALES DELIVERY" })); // or exact tab name
+      trigger(orderId);
+      setShowForm(true);
     };
 
     return (
@@ -255,6 +271,299 @@ const SalesReport = forwardRef(
               setParameter(false);
             }}
           />
+        </Modal>
+        <Modal
+          isOpen={showForm}
+          onClose={() => {
+            setShowForm(false);
+          }}
+          widthClass={"w-[1200px]"}
+        >
+          <>
+            <p className="text-lg font-medium mb-2">Sales Delivery Items</p>
+            {isSingleLoading || isSingleFetching ? (
+              <div className="p-10 text-center h-64">
+                <Loader />
+              </div>
+            ) : (
+              <div className="max-h-[420px] overflow-y-auto border">
+                <table className=" border-collapse table-fixed ">
+                  <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
+                    <tr>
+                      <th
+                        className={`w-10 px-1 py-2 text-center font-medium text-[13px]`}
+                      >
+                        S.No
+                      </th>
+                      <th
+                        className={`w-14 px-1 py-2 text-center font-medium text-[13px]`}
+                      >
+                        Style No
+                      </th>
+                      <th
+                        className={`w-48  py-2 text-center font-medium text-[13px] `}
+                      >
+                        Style
+                      </th>
+                      <th
+                        className={`w-36 px-4 py-2 text-center font-medium text-[13px]`}
+                      >
+                        Fabric
+                      </th>
+                      <th
+                        className={`w-14 px-2 py-2 text-center font-medium text-[13px] `}
+                      >
+                        Size
+                      </th>
+                      <th
+                        className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                      >
+                        Color
+                      </th>
+                      <th
+                        className={`w-14 px-1 py-2 text-center font-medium text-[13px] `}
+                      >
+                        Qty
+                      </th>
+                      <th
+                        className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                      >
+                        Price
+                      </th>
+                      <th
+                        className={`w-12 px-1 py-2 text-center font-medium text-[13px] `}
+                      >
+                        Tax %
+                      </th>
+                      <th
+                        className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                      >
+                        Disc Type
+                      </th>
+                      <th
+                        className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
+                      >
+                        Disc %
+                      </th>
+                      <th
+                        className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                      >
+                        Gross Amt
+                      </th>
+                      <th
+                        className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                      >
+                        Net Amt
+                      </th>
+                      <th
+                        className={`w-48 px-1 py-2 text-center font-medium text-[13px] `}
+                      >
+                        Remarks
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(singleData?.data?.SalesEntryItems
+                      ? singleData?.data?.SalesEntryItems
+                      : []
+                    ).map((row, index) => (
+                      <>
+                        <tr
+                          className="border border-blue-gray-200 cursor-pointer "
+                          key={index}
+                        >
+                          <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
+                            {index + 1}
+                          </td>
+
+                          <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                            <input
+                              type="string"
+                              className="text-left rounded py-1 px-1 w-full table-data-input"
+                              value={row?.styleNo}
+                              disabled={true}
+                            />
+                          </td>
+                          <td className="py-0.5 border border-gray-300 text-[11px] ">
+                            <select
+                              disabled={true}
+                              className="text-left w-full rounded py-1 table-data-input"
+                              value={row.styleItemId}
+                            >
+                              <option></option>
+                              {styleItemList?.data
+                                ?.filter((item) => item.active)
+                                ?.map((blend) => (
+                                  <option value={blend.id} key={blend.id}>
+                                    {blend?.name}
+                                  </option>
+                                ))}
+                            </select>
+                          </td>
+                          <td className="py-0.5 border border-gray-300 text-[11px] ">
+                            <select
+                              tabIndex={"0"}
+                              disabled={true}
+                              className="text-left w-full rounded py-1 table-data-input"
+                              value={row.fabricId}
+                            >
+                              <option></option>
+                              {fabricList?.data
+                                ?.filter((item) => item.active)
+                                ?.map((blend) => (
+                                  <option value={blend.id} key={blend.id}>
+                                    {blend?.name}
+                                  </option>
+                                ))}
+                            </select>
+                          </td>
+                          <td className="py-0.5 border border-gray-300 text-[11px]">
+                            <select
+                              disabled={true}
+                              className="text-left w-full rounded py-1 table-data-input"
+                              value={row.sizeId}
+                            >
+                              <option></option>
+                              {sizeList?.data
+                                ?.filter((item) => item.active)
+                                ?.map((blend) => (
+                                  <option value={blend.id} key={blend.id}>
+                                    {blend?.name}
+                                  </option>
+                                ))}
+                            </select>
+                          </td>
+                          <td className="py-0.5 border border-gray-300 text-[11px]">
+                            <select
+                              id={`qty-input-${index}`}
+                              tabIndex={"0"}
+                              disabled={true}
+                              className="text-left w-full rounded py-1 table-data-input"
+                              value={row.colorId}
+                            >
+                              <option></option>
+                              {colorList?.data
+                                ?.filter((item) => item.active)
+                                ?.map((blend) => (
+                                  <option value={blend.id} key={blend.id}>
+                                    {blend?.name}
+                                  </option>
+                                ))}
+                            </select>
+                          </td>
+                          <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                            <input
+                              type="number"
+                              id={`salesqty-input-${index}`}
+                              className="text-right rounded py-1 px-1 w-full table-data-input"
+                              value={row?.qty}
+                              disabled={true}
+                            />
+                          </td>
+                          <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                            <input
+                              type="number"
+                              className="text-right rounded py-1 px-1 w-full table-data-input"
+                              value={
+                                Number(row.price).toFixed(2) // format nicely otherwise
+                              }
+                              disabled={true}
+                            />
+                          </td>
+
+                          <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                            <input
+                              type="number"
+                              className="text-right rounded py-1 px-1 w-full table-data-input"
+                              value={row?.taxPercent}
+                              disabled={true}
+                            />
+                          </td>
+                          <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                            <select
+                              className="text-left rounded py-1 px-1 w-full table-data-input"
+                              value={row?.discountType || ""}
+                              disabled={true}
+                            >
+                              <option value="">Select</option>
+                              <option value="Flat">Flat</option>
+                              <option value="Percent">Percent</option>
+                            </select>
+                          </td>
+                          <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                            <input
+                              type="number"
+                              className="text-right rounded py-1 px-1 w-full table-data-input"
+                              value={row?.discountValue}
+                              disabled={true}
+                            />
+                          </td>
+
+                          <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                            <input
+                              type="number"
+                              className="text-right rounded py-1 px-1 w-full table-data-input"
+                              value={(
+                                parseFloat(row.qty || 0) *
+                                parseFloat(row.price || 0)
+                              ).toFixed(2)}
+                              disabled={true}
+                              onFocus={(e) => e.target.select()}
+                            />
+                          </td>
+                          <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                            <input
+                              type="number"
+                              className="text-right rounded py-1 px-1 w-full table-data-input"
+                              value={calculateNetAmount(row)}
+                              disabled={true}
+                              onFocus={(e) => e.target.select()}
+                            />
+                          </td>
+                          <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                            <input
+                              type="string"
+                              className="text-left rounded py-1 px-1 w-full table-data-input"
+                              onFocus={(e) => e.target.select()}
+                              value={row?.remarks}
+                              disabled={true}
+                            />
+                          </td>
+                        </tr>
+                      </>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-gray-50 h-7 font-medium text-gray-800">
+                      <td
+                        className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
+                        colSpan={6}
+                      >
+                        Total
+                      </td>
+                      <td className="text-right border border-gray-300 px-1 font-medium text-[12px] py-0.5">
+                        {singleData?.data?.SalesEntryItems?.reduce(
+                          (sum, row) => sum + (Number(row.qty) || 0),
+                          0
+                        )}
+                      </td>
+                      <td
+                        className="text-right border border-gray-300 px-1 font-medium text-[12px] py-0.5"
+                        colSpan={6}
+                      >
+                        {singleData?.data?.SalesEntryItems.reduce(
+                          (sum, row) =>
+                            sum + parseFloat(calculateNetAmount(row)),
+                          0
+                        ).toFixed(2)}
+                      </td>
+                      <td className="border border-gray-300" colSpan={1}></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            )}
+          </>
         </Modal>
         <div className="flex flex-col w-full h-[93%] overflow-auto">
           <>

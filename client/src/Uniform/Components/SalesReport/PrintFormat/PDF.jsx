@@ -45,7 +45,7 @@ const PDF = ({ allData, customerList }) => {
             // borderTopWidth: 1,
             // borderTopStyle: "solid",
             // borderTopColor: "#D1D5DB",
-            width:"80%",
+            width: "80%",
             borderCollapse: "collapse",
         },
         tableHeader: {
@@ -177,9 +177,10 @@ const PDF = ({ allData, customerList }) => {
                             {[
                                 { label: "S.No", flex: 0.3 },
                                 { label: "Delivery Date", flex: 0.7 },
+                                { label: "Delivery No", flex: 0.7 },
                                 { label: "Customer ", flex: 1.5 },
                                 { label: "Sales Qty", flex: 0.5 },
-                                { label: "Sales Amount", flex: 0.5 },
+                                { label: " Amount", flex: 0.5 },
                             ].map((header, index) => (
                                 <Text
                                     key={index}
@@ -223,6 +224,11 @@ const PDF = ({ allData, customerList }) => {
                                     <Text style={[styles.tableCell, { flex: 0.7, fontSize: 7 }]}>
                                         {item?.docDate
                                             ? getDateFromDateTimeToDisplay(item.docDate)
+                                            : ""}
+                                    </Text>
+                                    <Text style={[styles.tableCell, { flex: 0.7, fontSize: 7 }]}>
+                                        {item?.docId
+                                            ? item.docId
                                             : ""}
                                     </Text>
                                     <Text style={[styles.tableCell, { flex: 1.5, fontSize: 7 }]}>
@@ -270,9 +276,9 @@ const PDF = ({ allData, customerList }) => {
                                 }]}></Text> */}
                             <Text
                                 style={[styles.tableCell, {
-                                    flex: 1.6,  textAlign: "right",
+                                    flex: 2.1, textAlign: "right",
                                     fontWeight: "bold",
-                                     fontSize: 8,
+                                    fontSize: 8,
                                     // paddingRight: 4,
                                 }]}
                             >
@@ -290,7 +296,7 @@ const PDF = ({ allData, customerList }) => {
                             </Text>
                             <Text
                                 style={[styles.tableCell, {
-                                    flex: 0.3,  textAlign: "right",
+                                    flex: 0.3, textAlign: "right",
                                     fontWeight: "bold",
                                     // paddingRight: 4,
                                 }]}

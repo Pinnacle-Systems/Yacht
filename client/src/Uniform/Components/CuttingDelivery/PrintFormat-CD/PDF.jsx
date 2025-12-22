@@ -210,7 +210,7 @@ const PDF = ({ singleData, sizeColumns }) => {
 
                             </View>
                             <View style={tw("flex flex-row gap-x-2")}>
-                                <View style={tw("flex flex-row gap-x-2 mr-16")}>
+                                <View style={tw("flex flex-row gap-x-2 mr-14")}>
                                     <Text
                                         style={[
                                             tw("text-xs font-bold"),

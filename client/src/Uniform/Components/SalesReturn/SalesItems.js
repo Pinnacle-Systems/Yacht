@@ -13,6 +13,8 @@ import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMaste
 import { VIEW } from "../../../icons";
 import Swal from "sweetalert2";
 import { useLazyGetSalesInvStyleDetailQuery } from "../../../redux/uniformService/SalesEntryService";
+import Modal from "../../../UiComponents/Modal";
+import { DropdownNew } from "../../../Inputs";
 
 export default function SalesItems({
   salesReturnItems,
@@ -33,6 +35,10 @@ export default function SalesItems({
   const { data: fabricList } = useGetFabricMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
+  const [pendingStyleRows, setPendingStyleRows] = useState([]);
+  const [showColorPopup, setShowColorPopup] = useState(false);
+  const [colorId, setColorId] = useState("");
+  const [uniqueColorIds, setUniqueColorIds] = useState([]);
 
   const [getStyleDetail] = useLazyGetSalesInvStyleDetailQuery();
 
@@ -221,6 +227,48 @@ export default function SalesItems({
     }
   };
 
+  const fillRows = (rowsToFill) => {
+    setSalesReturnItems((prev) => {
+      const updated = [...prev];
+
+      let startIndex = updated.findIndex(
+        (row) =>
+          !row.styleId &&
+          !row.sizeId &&
+          !row.styleNo &&
+          !row.fabricId &&
+          !row.barcode
+      );
+      if (startIndex === -1) startIndex = updated.length;
+
+      rowsToFill.forEach((row, i) => {
+        if (startIndex + i < updated.length) {
+          updated[startIndex + i] = row;
+        } else {
+          updated.push(row);
+        }
+      });
+
+      while (updated.length < 6) {
+        updated.push({
+          styleNo: "",
+          fabricId: "",
+          styleId: "",
+          sizeId: "",
+          qty: "",
+          remarks: "",
+          stkQty: "",
+          barcode: "",
+          styleItemId: "",
+          colorId: "",
+          selected: false,
+        });
+      }
+
+      return updated;
+    });
+  };
+
   const handleAddRow = async () => {
     if (!validateData()) {
       toast.info("Please Choose Required Fields...!", {
@@ -231,7 +279,6 @@ export default function SalesItems({
       const isFirstTime = salesReturnItems.every(
         (row) => !row.sizeId && !row.styleId && !row.fabricId
       );
-
       if (!isFirstTime) {
         // const hasEmpty = salesReturnItems.some((row) => !row.returnQty);
         const hasEmpty = salesReturnItems.some((row) => {
@@ -269,47 +316,20 @@ export default function SalesItems({
         const styleRows = styleData?.data;
         if (!styleRows) return;
 
-        setSalesReturnItems((prev) => {
-          const updated = [...prev];
-          // Find first empty slot index
-          let startIndex = updated.findIndex(
-            (row) =>
-              !row.styleId &&
-              !row.sizeId &&
-              !row.styleNo &&
-              !row.fabricId &&
-              !row.barcode
-          );
-          if (startIndex === -1) startIndex = updated.length;
-
-          // Fill in sizeRows starting at first empty slot
-          styleRows.forEach((row, i) => {
-            if (startIndex + i < updated.length) {
-              updated[startIndex + i] = row;
-            } else {
-              updated.push(row); // append if no empty slot
-            }
-          });
-
-          // Ensure at least 6 rows
-          while (updated.length < 6) {
-            updated.push({
-              styleNo: "",
-              fabricId: "",
-              styleId: "",
-              sizeId: "",
-              qty: "",
-              remarks: "",
-              stkQty: "",
-              barcode: "",
-              styleItemId: "",
-              colorId: "",
-              selected: false,
-            });
-          }
-
-          return updated;
-        });
+        const colorIds = [
+          ...new Set(styleRows.map((row) => row.colorId).filter(Boolean)),
+        ];
+        setUniqueColorIds(colorIds);
+        if (
+          colorIds.length < 1 ||
+          colorIds.length === 1 ||
+          colorIds.length === null
+        ) {
+          fillRows(styleRows);
+        } else if (colorIds.length > 1) {
+          setPendingStyleRows(styleRows);
+          setShowColorPopup(true);
+        }
       } catch (error) {
         console.error("Error adding row:", error);
       }
@@ -323,7 +343,7 @@ export default function SalesItems({
   }
 
   const validateData = () => {
-    if (storeId && customerId) {
+    if (storeId && invNo) {
       return true;
     }
     return false;
@@ -331,6 +351,58 @@ export default function SalesItems({
 
   return (
     <>
+      <Modal
+        isOpen={showColorPopup}
+        onClose={() => setShowColorPopup(false)}
+        widthClass={"w-[220px]"}
+      >
+        <p className="text-md font-medium">Select Color</p>
+        <div className="w-40 my-4">
+          <DropdownNew
+            name="Color"
+            dataList={
+              colorList?.data?.filter(
+                (item) =>
+                  Array.isArray(uniqueColorIds) &&
+                  uniqueColorIds.includes(item.id)
+              ) || []
+            }
+            value={colorId}
+            setValue={(value) => {
+              setColorId(value);
+            }}
+            required={false}
+            clear={true}
+            autoFocus={true}
+          />
+        </div>
+        <div className="flex justify-end mt-6">
+          <button
+            className="bg-green-700 text-white px-2 text-md rounded hover:bg-green-800"
+            onClick={() => {
+              const filtered = pendingStyleRows.filter(
+                (row) => row.colorId === colorId
+              );
+              fillRows(filtered);
+              setShowColorPopup(false);
+              setColorId("");
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                const filtered = pendingStyleRows.filter(
+                  (row) => row.colorId === colorId
+                );
+                fillRows(filtered);
+                setShowColorPopup(false);
+                setColorId("");
+              }
+            }}
+          >
+            Add
+          </button>
+        </div>
+      </Modal>
       <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[450px] overflow-auto">
         <div className="flex items-center gap-4 sticky top-0 bg-white z-30 mt-2">
           <ReusableInput
@@ -785,15 +857,6 @@ export default function SalesItems({
               >
                 Delete
               </button>
-              {/* <button
-                className=" text-black text-[12px] text-left rounded px-1"
-                onClick={() => {
-                  handleDeleteAllRows();
-                  handleCloseContextMenu();
-                }}
-              >
-                Delete All
-              </button> */}
             </div>
           </div>
         )}

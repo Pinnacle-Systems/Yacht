@@ -32,6 +32,7 @@ const MaterialStockReport = forwardRef(
       parameter,
       setParameter,
       onDataLoaded,
+      setStockType,
     },
     ref
   ) => {
@@ -53,7 +54,7 @@ const MaterialStockReport = forwardRef(
     const [fabricId, setFabricId] = useState("");
     const [styleItemId, setStyleItemId] = useState("");
     const [colorId, setColorId] = useState("");
-    const [itemType, setItemType] = useState("");
+    const [itemType, setItemType] = useState("Fabric");
     const handleOnclick = (e) => {
       setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
     };
@@ -130,6 +131,12 @@ const MaterialStockReport = forwardRef(
         setTotalCount(allData?.totalCount);
       }
     }, [allData, isLoading, isFetching]);
+
+    useEffect(() => {
+      if (itemType) {
+        setStockType(itemType); // 👈 child updates parent
+      }
+    }, [itemType, setStockType]);
 
     const isLoadingIndicator = isLoading || isFetching;
 
