@@ -158,6 +158,11 @@ export default function SalesItems({
           text: "Return Qty cannot be more than Sales Qty!",
           confirmButtonText: "OK",
         });
+        setSalesReturnItems((prev) => {
+          const newItems = structuredClone(prev);
+          newItems[index].returnQty = ""; // or null
+          return newItems;
+        });
         return;
       }
     }

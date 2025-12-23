@@ -59,7 +59,7 @@ export default function Form() {
       if (data?.childRecordProduction > 0) {
         Swal.fire({
           icon: "error",
-          title: "Child record Exists in Production Entry",
+          title: "This item used in Production Entry",
           text: "Data cannot be deleted!",
         });
       } else {

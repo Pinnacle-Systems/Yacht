@@ -54,13 +54,13 @@ export default function Form() {
       if (data?.data?.childRecordSales > 0) {
         Swal.fire({
           icon: "error",
-          title: "Child record Exists in Sales",
+          title: "This items used in Sales Delivery",
           text: "Data cannot be deleted!",
         });
       } else if (data?.data?.childRecordStock > 0) {
         Swal.fire({
           icon: "error",
-          title: "Child record Exists is Stock Adjustment",
+          title: "This items used in Stock Adjustment",
           text: "Data cannot be deleted!",
         });
       } else {

@@ -16,7 +16,7 @@ import {
 } from "../../../redux/services/PartyMasterService";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
-import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
+import { findFromList, getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import moment from "moment";
@@ -32,6 +32,10 @@ import CuttingDeliveryApi from "../../../redux/uniformService/CuttingDeliverySer
 import CuttingOrderApi from "../../../redux/uniformService/CuttingOrderService";
 import { useDispatch } from "react-redux";
 import { Loader } from "../../../Basic/components";
+import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService";
+import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/AccessoryMasterServices";
 
 const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
     isSingleFetching,
@@ -70,11 +74,10 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
         )
         : [];
 
-    // const {
-    //     data: singleData,
-    //     isFetching: isSingleFetching,
-    //     isLoading: isSingleLoading,
-    // } = useGetPurchaseReturnByIdQuery(id, { skip: !id });
+    const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
+    const { data: sizeList } = useGetSizeMasterQuery({ params: { companyId } });
+    const { data: portionList } = useGetPortionMasterQuery({ params: { companyId } });
+    const { data: accessoryList } = useGetAccessoryMasterQuery({ params: { companyId } });
 
     const [addData] = useAddPurchaseReturnMutation();
     const [updateData] = useUpdatePurchaseReturnMutation();
@@ -156,22 +159,29 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
         }
     };
 
-    const hasDuplicates = (items) => {
-        const seen = new Set();
+    const findDuplicates = (items) => {
+        const seen = new Map(); // key -> first index
+        const duplicates = [];
 
-        for (const row of items) {
-            // Create a unique key using all fields you want to check
-            const key = [
-                row.styleId || "",
-                row.accessoryId || "",
-                row.sizeId || "",
-                row.portionId || ""
-            ].join("-");
+        items.forEach((row, index) => {
+            const key = [row.styleId || "", row.sizeId || "", row.portionId || "", row.accessoryId || ""].join(
+                "-"
+            );
 
-            if (seen.has(key)) return true; // duplicate found
-            seen.add(key);
-        }
-        return false;
+            if (seen.has(key)) {
+                duplicates.push({
+                    firstIndex: seen.get(key),
+                    duplicateIndex: index,
+                    styleId: row.styleId,
+                    portionId: row.portionId,
+                    accessoryId: row.accessoryId,
+                });
+            } else {
+                seen.set(key, index);
+            }
+        });
+
+        return duplicates; // empty array = no duplicates
     };
 
     const validateData = (data) => {
@@ -186,14 +196,25 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                 item.accessoryId
         );
 
+        const duplicates = findDuplicates(filledItems);
         // duplicate check
-        if (hasDuplicates(filledItems)) {
-            toast.info("Duplicate items found!", {
-                position: "top-center",
-                autoClose: 2000,
+        if (duplicates.length > 0) {
+            const dup = duplicates[0]; // show first duplicate
+            Swal.fire({
+                icon: "warning",
+                title: "Duplicate Item Found",
+                html: `
+              Style - ${findFromList(dup?.styleId, styleList?.data, "sku")},
+              Portion - ${findFromList(dup?.portionId, portionList?.data, "name")},
+              Size - ${findFromList(dup?.sizeId, sizeList?.data, "name")},
+              Accessory - ${findFromList(dup?.accessoryId, accessoryList?.data, "name")},
+              Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
+            `,
+                confirmButtonText: "OK",
             });
             return false;
         }
+
         if (!(data?.storeId &&
             data?.supplierId &&
             data?.invNo &&

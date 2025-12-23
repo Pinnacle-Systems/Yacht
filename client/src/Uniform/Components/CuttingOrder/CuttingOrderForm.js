@@ -9,6 +9,7 @@ import FxSelect, {
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import {
+  findFromList,
   getCommonParams,
   isGridDatasValid,
   params,
@@ -36,6 +37,7 @@ import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformServic
 import { useGetProcessGroupMasterQuery } from "../../../redux/uniformService/ProcessGroupMasterServices.js";
 import CuttingDeliveryApi from "../../../redux/uniformService/CuttingDeliveryServices.js";
 import { Loader } from "../../../Basic/components/index.js";
+import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService.js";
 export default function CuttingOrderForm({
   onClose,
   id,
@@ -75,6 +77,9 @@ export default function CuttingOrderForm({
   const { data: locationData } = useGetLocationMasterQuery({
     params: { branchId },
     searchParams: searchValue,
+  });
+  const { data: portionList } = useGetPortionMasterQuery({
+    params: { companyId },
   });
 
   // const {
@@ -177,17 +182,25 @@ export default function CuttingOrderForm({
       console.log("handle");
     }
   };
-  const hasDuplicates = (items) => {
-    const seen = new Set();
+  const findDuplicates = (items) => {
+    const seen = new Map(); // key -> first index
+    const duplicates = [];
 
-    for (const row of items) {
-      // Create a unique key using all fields you want to check
+    items.forEach((row, index) => {
       const key = [row.portionId || ""].join("-");
 
-      if (seen.has(key)) return true; // duplicate found
-      seen.add(key);
-    }
-    return false;
+      if (seen.has(key)) {
+        duplicates.push({
+          firstIndex: seen.get(key),
+          duplicateIndex: index,
+          portionId: row.portionId,
+        });
+      } else {
+        seen.set(key, index);
+      }
+    });
+
+    return duplicates; // empty array = no duplicates
   };
 
   const validateData = (data) => {
@@ -195,10 +208,18 @@ export default function CuttingOrderForm({
     const filledItems = items.filter(
       (item) => item.styleId || item.fabricId || item.portionId
     );
-    if (hasDuplicates(filledItems)) {
-      toast.info("Duplicate items found!", {
-        position: "top-center",
-        autoClose: 2000,
+    const duplicates = findDuplicates(filledItems);
+    // duplicate check
+    if (duplicates.length > 0) {
+      const dup = duplicates[0]; // show first duplicate
+      Swal.fire({
+        icon: "warning",
+        title: "Duplicate Item Found",
+        html: `
+          Portion - ${findFromList(dup?.portionId, portionList?.data, "name")},
+          Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
+        `,
+        confirmButtonText: "OK",
       });
       return false;
     }

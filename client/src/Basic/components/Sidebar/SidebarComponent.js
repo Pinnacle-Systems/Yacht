@@ -1,11 +1,6 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { useDispatch } from "react-redux";
-import secureLocalStorage from "react-secure-storage";
-import { push } from "../../../redux/features/opentabs";
 import { useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
-
-
 import designation from './images/designation.png'
 import pay from './images/money.png'
 import country from './images/flag.png';
@@ -34,20 +29,23 @@ import uom from "./images/uom.png"
 import styleitem from "./images/styleItem.png";
 import seq from "./images/seq.jpg";
 import processGroup from "./images/processgroup.jpg"
-import lossreason from "./images/reason.png";
-import yarncontent from "./images/cotton.png";
-import yarntype from "./images/yarntype.png";
-import yarnblend from "./images/yarnblend.png";
-import yarn from "./images/yarn.png";
-import yarncount from "./images/yarncount.png";
 import accessorygroup from "./images/accessorygroup.png";
 import accessory from "./images/accessory.png";
-import accessoryitem from "./images/accessoryitem.png"
-import Machine from "./images/Machine.jpeg";
-import { useGetPageGroupQuery } from "../../../redux/services/PageGroupMasterServices";
-import axios from "axios";
-import { MachineMaster } from "..";
-
+import purchaseInward from "./images/purchaseinward.png";
+import purchaseReturn from "./images/purchasereturn.png";
+import openingStock from "./images/openingStock.png";
+import stockAdjustment from "./images/stockadjustment.png";
+import salesDelivery from "./images/sales delivery.png";
+import production from "./images/production.png";
+import cutting from "./images/cuttingproduction.jpg";
+import goodsStock from "./images/goodsstock.jpg";
+import materialStock from "./images/materialstock.png";
+import salesReport from "./images/sales report.png";
+import salesReturnReport from "./images/sales return report.png";
+import stockSummary from "./images/summary report.png"
+import { Search } from "lucide-react";
+import { push } from "../../../redux/features/opentabs";
+import secureLocalStorage from "react-secure-storage";
 
 const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDropdownOpen, heading, setIsOpen }) => {
     const dispatch = useDispatch();
@@ -156,6 +154,21 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
         "ACCESSORY MASTER":
             <img src={accessory} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
         ,
+        "PURCHASE INWARD":<img src={purchaseInward} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "PURCHASE RETURN":<img src={purchaseReturn} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "OPENING STOCK":<img src={openingStock} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "STOCK ADJUSTMENT":<img src={stockAdjustment} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "SALES DELIVERY":<img src={salesDelivery} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "SALES RETURN":<img src={purchaseReturn} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "FINISHED GOODS INWARD":<img src={openingStock} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "PRODUCTION ENTRY":<img src={production} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "CUTTING PLAN":<img src={cutting} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "CUTTING PRODUCTION":<img src={cutting} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "FINISHED GOODS STOCK":<img src={goodsStock} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "MATERIAL STOCK REPORT":<img src={materialStock} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "SALES REPORT":<img src={salesReport} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "SALES RETURN REPORT":<img src={salesReturnReport} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "STOCK SUMMARY REPORT":<img src={stockSummary} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
         "FABRIC TYPE MASTER": <img />,
         "GSM MASTER": <img />,
         "GAUGE MASTER": <img />,

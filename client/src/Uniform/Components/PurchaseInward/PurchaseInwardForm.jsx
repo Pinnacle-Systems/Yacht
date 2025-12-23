@@ -15,7 +15,7 @@ import {
 } from "../../../redux/services/PartyMasterService";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
-import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
+import { findFromList, getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import moment from "moment";
@@ -33,6 +33,10 @@ import CuttingDeliveryApi from "../../../redux/uniformService/CuttingDeliverySer
 import CuttingOrderApi from "../../../redux/uniformService/CuttingOrderService";
 import purchaseReturnApi from "../../../redux/services/PurchaseReturnService";
 import { Loader } from "../../../Basic/components";
+import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService";
+import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/AccessoryMasterServices";
 
 const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
   , isSingleFetching,
@@ -73,11 +77,10 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
     )
     : [];
 
-  // const {
-  //   data: singleData,
-  //   isFetching: isSingleFetching,
-  //   isLoading: isSingleLoading,
-  // } = useGetPurchaseInwardEntryByIdQuery(id, { skip: !id });
+  const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
+  const { data: sizeList } = useGetSizeMasterQuery({ params: { companyId } });
+  const { data: portionList } = useGetPortionMasterQuery({ params: { companyId } });
+  const { data: accessoryList } = useGetAccessoryMasterQuery({ params: { companyId } });
 
   const [addData] = useAddPurchaseInwardEntryMutation();
   const [updateData] = useUpdatePurchaseInwardEntryMutation();
@@ -204,27 +207,30 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
     }
   };
 
-  const hasDuplicates = (items) => {
-    const seen = new Set();
+  const findDuplicates = (items) => {
+    const seen = new Map(); // key -> first index
+    const duplicates = [];
 
-    for (const row of items) {
-      const key = [
-        row.styleId || "",
-        row.portionId || "",
-        row.accessoryId || "",
-        row.sizeId || ""
-      ].join("-");
+    items.forEach((row, index) => {
+      const key = [row.styleId || "", row.sizeId || "", row.portionId || "", row.accessoryId || ""].join(
+        "-"
+      );
 
       if (seen.has(key)) {
-        return true; // duplicate found
+        duplicates.push({
+          firstIndex: seen.get(key),
+          duplicateIndex: index,
+          styleId: row.styleId,
+          portionId: row.portionId,
+          accessoryId: row.accessoryId,
+        });
+      } else {
+        seen.set(key, index);
       }
+    });
 
-      seen.add(key);
-    }
-
-    return false;
+    return duplicates; // empty array = no duplicates
   };
-
 
   const validateData = (data) => {
     const items = data?.fabricInwardItems || [];
@@ -234,13 +240,25 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
         item.fabricId ||
         item.accessoryId
     );
-    if (hasDuplicates(filledItems)) {
-      toast.info("Duplicate items found!", {
-        position: "top-center",
-        autoClose: 2000,
+    const duplicates = findDuplicates(filledItems);
+    // duplicate check
+    if (duplicates.length > 0) {
+      const dup = duplicates[0]; // show first duplicate
+      Swal.fire({
+        icon: "warning",
+        title: "Duplicate Item Found",
+        html: `
+       Style - ${findFromList(dup?.styleId, styleList?.data, "sku")},
+       Portion - ${findFromList(dup?.portionId, portionList?.data, "name")},
+       Size - ${findFromList(dup?.sizeId, sizeList?.data, "name")},
+       Accessory - ${findFromList(dup?.accessoryId, accessoryList?.data, "name")},
+       Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
+     `,
+        confirmButtonText: "OK",
       });
       return false;
     }
+
     if (!(data?.storeId && data?.supplierId && data?.invNo && (isFabric ? isGridDatasValid(data?.fabricInwardItems.filter((item) => item?.styleId), false, ["fabricId", "fabWidth", "fabMeter", "portionId"]) : isGridDatasValid(data?.fabricInwardItems.filter((item) => item?.accessoryId), false, ["sizeId", "qty"]))
       && data?.fabricInwardItems.length > 0)) {
       toast.info("Please fill all required fields...!", {

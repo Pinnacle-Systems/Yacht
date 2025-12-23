@@ -4,7 +4,11 @@ import { ReusableInput } from "../../../Utils/CommonInput";
 import { DropdownInput, DropdownNew } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
-import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
+import {
+  findFromList,
+  getCommonParams,
+  isGridDatasValid,
+} from "../../../Utils/helper";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import Swal from "sweetalert2";
@@ -25,6 +29,8 @@ import { useDispatch } from "react-redux";
 import CuttingDeliveryApi from "../../../redux/uniformService/CuttingDeliveryServices.js";
 import SalesEntryApi from "../../../redux/uniformService/SalesEntryService.js";
 import { Loader } from "../../../Basic/components/index.js";
+import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService.js";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService.js";
 
 export default function StockInwardForm({
   onClose,
@@ -62,6 +68,12 @@ export default function StockInwardForm({
   const { data: locationData } = useGetLocationMasterQuery({
     params: { branchId },
     searchParams: searchValue,
+  });
+  const { data: portionList } = useGetPortionMasterQuery({
+    params: { companyId },
+  });
+  const { data: sizeList } = useGetSizeMasterQuery({
+    params: { companyId },
   });
 
   // const {
@@ -188,24 +200,31 @@ export default function StockInwardForm({
     return false;
   };
 
-  const hasDuplicates = (items) => {
-    const seen = new Set();
+  const findDuplicates = (items) => {
+    const seen = new Map(); // key -> first index
+    const duplicates = [];
 
-    for (const row of items) {
+    items.forEach((row, index) => {
       const key = [
         row.styleId || "",
-        row.portionId || "",
         row.sizeId || "",
+        row.portionId || "",
       ].join("-");
 
       if (seen.has(key)) {
-        return true; // duplicate found
+        duplicates.push({
+          firstIndex: seen.get(key),
+          duplicateIndex: index,
+          styleId: row.styleId,
+          sizeId: row.sizeId,
+          portionId: row.portionId,
+        });
+      } else {
+        seen.set(key, index);
       }
+    });
 
-      seen.add(key);
-    }
-
-    return false;
+    return duplicates; // empty array = no duplicates
   };
 
   const validateData = (data) => {
@@ -224,10 +243,20 @@ export default function StockInwardForm({
     const filledItems = items.filter(
       (item) => item.styleId || item.fabricId || item.portionID
     );
-    if (hasDuplicates(filledItems)) {
-      toast.info("Duplicate items found!", {
-        position: "top-center",
-        autoClose: 2000,
+    const duplicates = findDuplicates(filledItems);
+    // duplicate check
+    if (duplicates.length > 0) {
+      const dup = duplicates[0]; // show first duplicate
+      Swal.fire({
+        icon: "warning",
+        title: "Duplicate Item Found",
+        html: `
+          Style - ${findFromList(dup?.styleId, styleList?.data, "sku")},
+          Size - ${findFromList(dup?.sizeId, sizeList?.data, "name")},
+          Portion - ${findFromList(dup?.portionId, portionList?.data, "name")},
+          Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
+        `,
+        confirmButtonText: "OK",
       });
       return false;
     }

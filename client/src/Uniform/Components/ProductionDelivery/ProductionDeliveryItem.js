@@ -76,6 +76,11 @@ export default function ProductionDeliveryItem({
           text: "Production Qty cannot be more than Stock Qty!",
           confirmButtonText: "OK",
         });
+        setProductionEntryItems((prev) => {
+          const newItems = structuredClone(prev);
+          newItems[index].issueQty = ""; // or null
+          return newItems;
+        });
         return;
       }
     }

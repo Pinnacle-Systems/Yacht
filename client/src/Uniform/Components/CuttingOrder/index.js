@@ -58,7 +58,7 @@ export default function Form() {
       if (data?.data?.childRecordCutting > 0) {
         Swal.fire({
           icon: "error",
-          title: "Child record Exists in Cutting Production",
+          title: "This item used in Cutting Production",
           text: "Data cannot be deleted!",
         });
       } else {

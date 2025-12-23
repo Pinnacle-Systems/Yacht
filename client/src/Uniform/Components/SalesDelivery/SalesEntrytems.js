@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import Swal from "sweetalert2";
 import { ReusableInput } from "../../../Utils/CommonInput";
-import { FaPlus } from "react-icons/fa";
 import { useLazyGetStyleDetailQuery } from "../../../redux/services/StockService";
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
 import { findFromList } from "../../../Utils/helper";
@@ -25,10 +24,6 @@ export default function BillItems({
   storeId,
   branchId,
   taxTemplateId,
-  overAllDisc,
-  setOverAllDisc,
-  roundOff,
-  setRoundOff,
 }) {
   const [styleNo, setStyleNo] = useState("");
   const [contextMenu, setContextMenu] = useState(null);
@@ -170,6 +165,11 @@ export default function BillItems({
           title: "Invalid Quantity",
           text: "Sales Qty cannot be more than Stock Qty!",
           confirmButtonText: "OK",
+        });
+        setSalesEntryItems((prev) => {
+          const newItems = structuredClone(prev);
+          newItems[index].qty = ""; // or null
+          return newItems;
         });
         return;
       }
@@ -389,21 +389,6 @@ export default function BillItems({
       .reduce((sum, row) => sum + (parseFloat(calculateNetAmount(row)) || 0), 0)
       .toFixed(2);
   }, [salesEntryItems]);
-
-  const overallDiscAmt = useMemo(() => {
-    const total = parseFloat(totalNetAmount) || 0;
-    const disc = parseFloat(overAllDisc) || 0;
-
-    return ((total * disc) / 100).toFixed(2);
-  }, [totalNetAmount, overAllDisc]);
-
-  const overallNetAmount = useMemo(() => {
-    const total = parseFloat(totalNetAmount) || 0;
-    const discAmt = parseFloat(overallDiscAmt) || 0;
-    const round = parseFloat(roundOff) || 0;
-
-    return (total - discAmt - round).toFixed(2);
-  }, [totalNetAmount, overallDiscAmt, roundOff]);
 
   return (
     <>
@@ -1072,91 +1057,6 @@ export default function BillItems({
                   {totalNetAmount}
                 </td>
                 <td className="border border-gray-300" colSpan={2}></td>
-              </tr>
-              <tr className="bg-gray-50 h-7  font-medium text-slate-700 text-[14px]">
-                <td colSpan={18} className="">
-                  <fieldset className="flex gap-10 border border-slate-300 rounded-md px-3 py-2">
-                    <legend>Summary</legend>
-                    <div className="text-right flex gap-2 items-center">
-                      <p className="mb-1">Over All Disc % :</p>
-                      <div className="w-14 flex items-center">
-                        <input
-                          onKeyDown={(e) => {
-                            if (
-                              e.code === "Minus" ||
-                              e.code === "NumpadSubtract" ||
-                              e.code === 0
-                            )
-                              e.preventDefault();
-                            if (e.key === "Delete") {
-                              setOverAllDisc("");
-                            }
-                          }}
-                          min={"0"}
-                          type="number"
-                          className="text-right rounded py-1 px-1 w-full border border-slate-300 rounded-md 
-          focus:border-indigo-300 focus:outline-none transition-all duration-200
-          hover:border-slate-400"
-                          onFocus={(e) => e.target.select()}
-                          value={overAllDisc}
-                          onChange={(e) => setOverAllDisc(e.target.value)}
-                          onBlur={(e) => {
-                            setRoundOff(e.target.value);
-                          }}
-                          disabled={readOnly}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="text-right flex gap-2 items-center">
-                      <p className="">Discount Value :</p>
-                      <p className="font-semibold">{overallDiscAmt}</p>
-                    </div>
-
-                    <div className="text-right flex gap-2 items-center">
-                      <p className="">Overall Gross Amount :</p>
-                      <p className="font-semibold">
-                        {totalNetAmount - overallDiscAmt}
-                      </p>
-                    </div>
-
-                    <div className="text-right flex gap-2 items-center">
-                      <p className="">Round Off :</p>
-                      <div className="w-24">
-                        <input
-                          onKeyDown={(e) => {
-                            if (
-                              e.code === "Minus" ||
-                              e.code === "NumpadSubtract" ||
-                              e.code === 0
-                            )
-                              e.preventDefault();
-                            if (e.key === "Delete") {
-                              setRoundOff("");
-                            }
-                          }}
-                          min={"0"}
-                          type="number"
-                          className="text-right rounded py-1 px-1 w-full border border-slate-300 rounded-md 
-          focus:border-indigo-300 focus:outline-none transition-all duration-200
-          hover:border-slate-400"
-                          onFocus={(e) => e.target.select()}
-                          value={roundOff}
-                          onChange={(e) => setRoundOff(e.target.value)}
-                          onBlur={(e) => {
-                            setRoundOff(e.target.value);
-                          }}
-                          disabled={readOnly}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="text-right flex gap-2 items-center">
-                      <p className="">Overall Net Amount :</p>
-                      <p className="font-semibold">{overallNetAmount}</p>
-                    </div>
-                  </fieldset>
-                </td>
               </tr>
             </tfoot>
           </table>

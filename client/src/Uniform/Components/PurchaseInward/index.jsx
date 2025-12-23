@@ -50,13 +50,13 @@ export default function Form() {
       if (data?.data?.childRecordCutting > 0) {
         Swal.fire({
           icon: "error",
-          title: "Child record Exists in Cutting",
+          title: "This item used in Cutting",
           text: "Data cannot be deleted!",
         });
       } else if (data?.data?.childRecordReturn > 0) {
         Swal.fire({
           icon: "error",
-          title: "Child record Exists in Purchase Return",
+          title: "This item used in Purchase Return",
           text: "Data cannot be deleted!",
         });
       } else {

@@ -1,7 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
 import { DropdownInput, DropdownNew, TextInput } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
-import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
+import {
+  findFromList,
+  getCommonParams,
+  isGridDatasValid,
+} from "../../../Utils/helper";
 import { ReusableInput } from "../../../Utils/CommonInput";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
@@ -28,6 +32,9 @@ import SalesEntryApi, {
 } from "../../../redux/uniformService/SalesEntryService";
 import { useDispatch } from "react-redux";
 import { Loader } from "../../../Basic/components";
+import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 export default function SalesReturnForm({
   onClose,
   id,
@@ -59,28 +66,39 @@ export default function SalesReturnForm({
   const { data: salesList } = useGetSalesEntryQuery({
     params: { companyId, branchId },
   });
-
+  const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
+  const { data: sizeList } = useGetSizeMasterQuery({ params: { companyId } });
+  const { data: colorList } = useGetColorMasterQuery({ params: { companyId } });
   const storeOptions = locationData
     ? locationData.data.filter(
         (item) => parseInt(item.locationId) === parseInt(locationId)
       )
     : [];
 
-  const hasDuplicates = (items) => {
-    const seen = new Set();
+  const findDuplicates = (items) => {
+    const seen = new Map(); // key -> first index
+    const duplicates = [];
 
-    for (const row of items) {
-      // Create a unique key using all fields you want to check
+    items.forEach((row, index) => {
       const key = [row.styleId || "", row.sizeId || "", row.colorId || ""].join(
         "-"
       );
 
-      if (seen.has(key)) return true; // duplicate found
-      seen.add(key);
-    }
-    return false;
-  };
+      if (seen.has(key)) {
+        duplicates.push({
+          firstIndex: seen.get(key),
+          duplicateIndex: index,
+          styleId: row.styleId,
+          sizeId: row.sizeId,
+          colorId: row.colorId,
+        });
+      } else {
+        seen.set(key, index);
+      }
+    });
 
+    return duplicates; // empty array = no duplicates
+  };
   const validateData = (data) => {
     const items = data?.salesReturnItems || [];
 
@@ -89,14 +107,24 @@ export default function SalesReturnForm({
       (item) => item.styleId || item.styleItemId || item.fabricId
     );
 
+    const duplicates = findDuplicates(filledItems);
     // duplicate check
-    if (hasDuplicates(filledItems)) {
-      toast.info("Duplicate items found!", {
-        position: "top-center",
-        autoClose: 2000,
+    if (duplicates.length > 0) {
+      const dup = duplicates[0]; // show first duplicate
+      Swal.fire({
+        icon: "warning",
+        title: "Duplicate Item Found",
+        html: `
+    Style - ${findFromList(dup?.styleId, styleList?.data, "sku")},
+    Size - ${findFromList(dup?.sizeId, sizeList?.data, "name")},
+    Color - ${findFromList(dup?.colorId, colorList?.data, "name")},
+    Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
+  `,
+        confirmButtonText: "OK",
       });
       return false;
     }
+
     if (
       !(
         data?.storeId &&

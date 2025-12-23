@@ -81,6 +81,11 @@ const ReturnItems = ({
           text: "Return Meter cannot be more than Stock Meter!",
           confirmButtonText: "OK",
         });
+        setPurchaseReturnItems((prev) => {
+          const newItems = structuredClone(prev);
+          newItems[index].returnFabMeter = ""; // or null
+          return newItems;
+        });
         return;
       }
     }
@@ -94,6 +99,11 @@ const ReturnItems = ({
           title: "Invalid Quantity",
           text: "Return Qty cannot be more than Stock Qty!",
           confirmButtonText: "OK",
+        });
+        setPurchaseReturnItems((prev) => {
+          const newItems = structuredClone(prev);
+          newItems[index].returnQty = ""; // or null
+          return newItems;
         });
         return;
       }

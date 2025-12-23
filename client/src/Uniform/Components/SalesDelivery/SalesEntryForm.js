@@ -1,7 +1,11 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { DropdownInput, DropdownNew, TextInput } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
-import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
+import {
+  findFromList,
+  getCommonParams,
+  isGridDatasValid,
+} from "../../../Utils/helper";
 import { ReusableInput } from "../../../Utils/CommonInput";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
@@ -30,6 +34,9 @@ import { useDispatch } from "react-redux";
 import OpeningStockApi from "../../../redux/uniformService/OpeningStockService";
 import StockAdjustmentApi from "../../../redux/uniformService/StockAdjustmentService";
 import { Loader } from "../../../Basic/components";
+import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 
 export function SalesBillForm({
   onClose,
@@ -75,25 +82,39 @@ export function SalesBillForm({
     params: { companyId },
   });
 
+  const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
+  const { data: sizeList } = useGetSizeMasterQuery({ params: { companyId } });
+  const { data: colorList } = useGetColorMasterQuery({ params: { companyId } });
+
   const storeOptions = locationData
     ? locationData.data.filter(
         (item) => parseInt(item.locationId) === parseInt(locationId)
       )
     : [];
 
-  const hasDuplicates = (items) => {
-    const seen = new Set();
+  const findDuplicates = (items) => {
+    const seen = new Map(); // key -> first index
+    const duplicates = [];
 
-    for (const row of items) {
-      // Create a unique key using all fields you want to check
+    items.forEach((row, index) => {
       const key = [row.styleId || "", row.sizeId || "", row.colorId || ""].join(
         "-"
       );
 
-      if (seen.has(key)) return true; // duplicate found
-      seen.add(key);
-    }
-    return false;
+      if (seen.has(key)) {
+        duplicates.push({
+          firstIndex: seen.get(key),
+          duplicateIndex: index,
+          styleId: row.styleId,
+          sizeId: row.sizeId,
+          colorId: row.colorId,
+        });
+      } else {
+        seen.set(key, index);
+      }
+    });
+
+    return duplicates; // empty array = no duplicates
   };
 
   const validateData = (data) => {
@@ -104,11 +125,20 @@ export function SalesBillForm({
       (item) => item.styleId || item.styleItemId || item.fabricId
     );
 
+    const duplicates = findDuplicates(filledItems);
     // duplicate check
-    if (hasDuplicates(filledItems)) {
-      toast.info("Duplicate items found!", {
-        position: "top-center",
-        autoClose: 2000,
+    if (duplicates.length > 0) {
+      const dup = duplicates[0]; // show first duplicate
+      Swal.fire({
+        icon: "warning",
+        title: "Duplicate Item Found",
+        html: `
+       Style - ${findFromList(dup?.styleId, styleList?.data, "sku")},
+       Size - ${findFromList(dup?.sizeId, sizeList?.data, "name")},
+       Color - ${findFromList(dup?.colorId, colorList?.data, "name")},
+       Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
+     `,
+        confirmButtonText: "OK",
       });
       return false;
     }
@@ -133,12 +163,6 @@ export function SalesBillForm({
     }
     return true;
   };
-
-  // const {
-  //   data: singleData,
-  //   isFetching: isSingleFetching,
-  //   isLoading: isSingleLoading,
-  // } = useGetSalesEntryByIdQuery(id, { skip: !id });
 
   const {
     data: allData,
@@ -294,6 +318,52 @@ export function SalesBillForm({
     }
   };
 
+  const calculateNetAmount = (item) => {
+    const qty = parseFloat(item.qty) || 0;
+    const price = parseFloat(item.price) || 0;
+    const taxPercent = parseFloat(item.taxPercent) || 0;
+    const discountValue = parseFloat(item.discountValue) || 0;
+    const discountType = item.discountType || "";
+
+    // Gross amount
+    const grossAmount = qty * price;
+
+    // GST Subtracted
+    const amountAfterGST = grossAmount - (grossAmount * taxPercent) / 100;
+
+    // Apply Discount
+    let discountAmt = 0;
+    if (discountType === "Flat") discountAmt = discountValue;
+    else if (discountType === "Percent")
+      discountAmt = (amountAfterGST * discountValue) / 100;
+
+    // Final net amount
+    const netAmount = amountAfterGST - discountAmt;
+
+    return netAmount.toFixed(2);
+  };
+
+  const totalNetAmount = useMemo(() => {
+    return salesEntryItems
+      .reduce((sum, row) => sum + (parseFloat(calculateNetAmount(row)) || 0), 0)
+      .toFixed(2);
+  }, [salesEntryItems]);
+
+  const overallDiscAmt = useMemo(() => {
+    const total = parseFloat(totalNetAmount) || 0;
+    const disc = parseFloat(overAllDisc) || 0;
+
+    return ((total * disc) / 100).toFixed(2);
+  }, [totalNetAmount, overAllDisc]);
+
+  const overallNetAmount = useMemo(() => {
+    const total = parseFloat(totalNetAmount) || 0;
+    const discAmt = parseFloat(overallDiscAmt) || 0;
+    const round = parseFloat(roundOff) || 0;
+
+    return (total - discAmt - round).toFixed(2);
+  }, [totalNetAmount, overallDiscAmt, roundOff]);
+
   return (
     <>
       {isLoadingIndicator ? (
@@ -323,7 +393,7 @@ export function SalesBillForm({
               </button>
             </div>
           </div>
-          <div className="space-y-3 mt-3">
+          <div className="space-y-2 mt-3">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                 <h2 className="font-medium text-slate-700 mb-2">
@@ -452,6 +522,87 @@ export function SalesBillForm({
                 roundOff={roundOff}
                 setRoundOff={setRoundOff}
               />
+            </fieldset>
+            <fieldset className=" mt -0 flex gap-10 border border-slate-300 rounded-md px-3 py-1 bg-gray-50 h-16  font-medium text-slate-700 text-[14px]">
+              <legend>Summary</legend>
+              <div className="text-right flex gap-2 items-center">
+                <p className="mb-1">Over All Disc % :</p>
+                <div className="w-14 flex items-center">
+                  <input
+                    onKeyDown={(e) => {
+                      if (
+                        e.code === "Minus" ||
+                        e.code === "NumpadSubtract" ||
+                        e.code === 0
+                      )
+                        e.preventDefault();
+                      if (e.key === "Delete") {
+                        setOverAllDisc("");
+                      }
+                    }}
+                    min={"0"}
+                    type="number"
+                    className="text-right rounded py-1 px-1 w-full border border-slate-300 rounded-md 
+          focus:border-indigo-300 focus:outline-none transition-all duration-200
+          hover:border-slate-400"
+                    onFocus={(e) => e.target.select()}
+                    value={overAllDisc}
+                    onChange={(e) => setOverAllDisc(e.target.value)}
+                    onBlur={(e) => {
+                      setOverAllDisc(e.target.value);
+                    }}
+                    disabled={readOnly}
+                  />
+                </div>
+              </div>
+
+              <div className="text-right flex gap-2 items-center">
+                <p className="">Discount Value :</p>
+                <p className="font-semibold">{overallDiscAmt}</p>
+              </div>
+
+              <div className="text-right flex gap-2 items-center">
+                <p className="">Overall Gross Amount :</p>
+                <p className="font-semibold">
+                  {totalNetAmount - overallDiscAmt}
+                </p>
+              </div>
+
+              <div className="text-right flex gap-2 items-center">
+                <p className="">Round Off :</p>
+                <div className="w-24">
+                  <input
+                    onKeyDown={(e) => {
+                      if (
+                        e.code === "Minus" ||
+                        e.code === "NumpadSubtract" ||
+                        e.code === 0
+                      )
+                        e.preventDefault();
+                      if (e.key === "Delete") {
+                        setRoundOff("");
+                      }
+                    }}
+                    min={"0"}
+                    type="number"
+                    className="text-right rounded py-1 px-1 w-full border border-slate-300 rounded-md 
+          focus:border-indigo-300 focus:outline-none transition-all duration-200
+          hover:border-slate-400"
+                    onFocus={(e) => e.target.select()}
+                    value={roundOff}
+                    onChange={(e) => setRoundOff(e.target.value)}
+                    onBlur={(e) => {
+                      setRoundOff(e.target.value);
+                    }}
+                    disabled={readOnly}
+                  />
+                </div>
+              </div>
+
+              <div className="text-right flex gap-2 items-center">
+                <p className="">Overall Net Amount :</p>
+                <p className="font-semibold">{overallNetAmount}</p>
+              </div>
             </fieldset>
             <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">
               <div className="flex gap-2 flex-wrap">

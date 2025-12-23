@@ -56,7 +56,7 @@ export default function Form() {
       if (data?.data?.childRecordSales > 0) {
         Swal.fire({
           icon: "error",
-          title: "Child record Exists in Sales",
+          title: "This items used in in Sales Delivery",
           text: "Data cannot be deleted!",
         });
       } else {

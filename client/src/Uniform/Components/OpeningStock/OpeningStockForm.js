@@ -5,6 +5,7 @@ import { DropdownInput } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import {
+  findFromList,
   getCommonParams,
   isGridDatasValid,
   params,
@@ -27,8 +28,12 @@ import Modal from "../../../UiComponents/Modal/index.js";
 import BarCodePrintFormat from "./BarcodePrintFormat.jsx";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
-import StyleMasterApi from "../../../redux/uniformService/StyleMasterService.js";
+import StyleMasterApi, {
+  useGetStyleMasterQuery,
+} from "../../../redux/uniformService/StyleMasterService.js";
 import { Loader } from "../../../Basic/components/index.js";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService.js";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService.js";
 
 export default function OpeningStockForm({
   onClose,
@@ -64,11 +69,9 @@ export default function OpeningStockForm({
     searchParams: searchValue,
   });
 
-  // const {
-  //   data: singleData,
-  //   isFetching: isSingleFetching,
-  //   isLoading: isSingleLoading,
-  // } = useLazyGetOpeningStockByIdQuery(id, { skip: !id });
+  const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
+  const { data: sizeList } = useGetSizeMasterQuery({ params: { companyId } });
+  const { data: colorList } = useGetColorMasterQuery({ params: { companyId } });
 
   const [trigger, { data: allDataLazy, isFetchingLazy }] =
     useLazyGetOpeningStockQuery();
@@ -161,19 +164,29 @@ export default function OpeningStockForm({
     }
   };
 
-  const hasDuplicates = (items) => {
-    const seen = new Set();
+  const findDuplicates = (items) => {
+    const seen = new Map(); // key -> first index
+    const duplicates = [];
 
-    for (const row of items) {
-      // Create a unique key using all fields you want to check
+    items.forEach((row, index) => {
       const key = [row.styleId || "", row.sizeId || "", row.colorId || ""].join(
         "-"
       );
 
-      if (seen.has(key)) return true; // duplicate found
-      seen.add(key);
-    }
-    return false;
+      if (seen.has(key)) {
+        duplicates.push({
+          firstIndex: seen.get(key),
+          duplicateIndex: index,
+          styleId: row.styleId,
+          sizeId: row.sizeId,
+          colorId: row.colorId,
+        });
+      } else {
+        seen.set(key, index);
+      }
+    });
+
+    return duplicates; // empty array = no duplicates
   };
 
   const isLoadingIndicator = isSingleFetching || isSingleLoading;
@@ -185,12 +198,20 @@ export default function OpeningStockForm({
     const filledItems = items.filter(
       (item) => item.styleId || item.styleItemId || item.fabricId
     );
-
+    const duplicates = findDuplicates(filledItems);
     // duplicate check
-    if (hasDuplicates(filledItems)) {
-      toast.info("Duplicate items found!", {
-        position: "top-center",
-        autoClose: 2000,
+    if (duplicates.length > 0) {
+      const dup = duplicates[0]; // show first duplicate
+      Swal.fire({
+        icon: "warning",
+        title: "Duplicate Item Found",
+        html: `
+    Style - ${findFromList(dup?.styleId, styleList?.data, "sku")},
+    Size - ${findFromList(dup?.sizeId, sizeList?.data, "name")},
+    Color - ${findFromList(dup?.colorId, colorList?.data, "name")},
+    Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
+  `,
+        confirmButtonText: "OK",
       });
       return false;
     }
@@ -214,6 +235,24 @@ export default function OpeningStockForm({
     return true;
   };
 
+  const findExistingItem = (newItems, existingItems) => {
+    for (let i = 0; i < newItems.length; i++) {
+      const newItem = newItems[i];
+
+      const existing = existingItems.find(
+        (ex) =>
+          ex.styleNo === newItem.styleNo &&
+          ex.sizeId === newItem.sizeId &&
+          ex.colorId === newItem.colorId
+      );
+
+      if (existing) {
+        return { newItem, existing, rowIndex: i };
+      }
+    }
+    return null;
+  };
+
   const saveData = (nextProcess) => {
     if (!validateData(data)) {
       return;
@@ -225,20 +264,25 @@ export default function OpeningStockForm({
       const existingItems =
         allData?.data?.flatMap((d) => d.OpeningStockItems || []) || [];
       const newItems = openingStockItems || [];
-      const duplicate = newItems.some((newItem) =>
-        existingItems.some(
-          (existing) =>
-            existing.styleNo === newItem.styleNo &&
-            existing.sizeId === newItem.sizeId &&
-            existing.colorId === newItem.colorId
-        )
-      );
-      if (duplicate) {
+      const existingMatch = findExistingItem(newItems, existingItems);
+
+      if (existingMatch) {
+        const { newItem } = existingMatch;
+
+        const style =
+          findFromList(newItem?.styleId, styleList?.data, "sku") || "";
+        const size =
+          findFromList(newItem?.sizeId, sizeList?.data, "name") || "";
+        const color =
+          findFromList(newItem?.colorId, colorList?.data, "name") || "";
+
         Swal.fire({
           icon: "warning",
-          title: "This item already exists",
-          text: "Cannot Create items in opening stock.",
+          title: "Item Already Exists",
+          html: `Style - ${style},` + `Size - ${size},` + `Color - ${color}`,
+          confirmButtonText: "OK",
         });
+
         return;
       }
       handleSubmitCustom(
@@ -260,20 +304,25 @@ export default function OpeningStockForm({
       const existingItems =
         allData?.data?.flatMap((d) => d.OpeningStockItems || []) || [];
       const newItems = openingStockItems || [];
-      const duplicate = newItems.some((newItem) =>
-        existingItems.some(
-          (existing) =>
-            existing.styleNo === newItem.styleNo &&
-            existing.sizeId === newItem.sizeId &&
-            existing.colorId === newItem.colorId
-        )
-      );
-      if (duplicate) {
+      const existingMatch = findExistingItem(newItems, existingItems);
+
+      if (existingMatch) {
+        const { newItem } = existingMatch;
+
+        const style =
+          findFromList(newItem?.styleId, styleList?.data, "sku") || "";
+        const size =
+          findFromList(newItem?.sizeId, sizeList?.data, "name") || "";
+        const color =
+          findFromList(newItem?.colorId, colorList?.data, "name") || "";
+
         Swal.fire({
           icon: "warning",
-          title: "This item already exists",
-          text: "Cannot Create items in opening stock.",
+          title: "Item Already Exists",
+          html: `Style - ${style},` + `Size - ${size},` + `Color - ${color}`,
+          confirmButtonText: "OK",
         });
+
         return;
       }
       handleSubmitCustom(addData, data, "Added", nextProcess);

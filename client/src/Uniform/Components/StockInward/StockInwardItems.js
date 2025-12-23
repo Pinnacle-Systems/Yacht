@@ -74,6 +74,11 @@ export default function StockInwardItems({
           text: "Inward Qty cannot be more than Stock Qty!",
           confirmButtonText: "OK",
         });
+        setStockInwardItems((prev) => {
+          const newItems = structuredClone(prev);
+          newItems[index].qty = ""; // or null
+          return newItems;
+        });
         return;
       }
     }
