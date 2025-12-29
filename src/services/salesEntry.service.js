@@ -391,7 +391,7 @@ async function create(body) {
     destinationId,
     salesType,
     overAllDisc,
-    roundOff
+    roundOff,
   } = await body;
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate
@@ -424,7 +424,7 @@ async function create(body) {
         destinationId: destinationId ? parseInt(destinationId) : null,
         salesType,
         roundOff: roundOff ? parseInt(roundOff) : null,
-        overAllDisc: overAllDisc ? parseInt(overAllDisc) : null
+        overAllDisc: overAllDisc ? parseInt(overAllDisc) : null,
       },
     });
     await createSalesEntryItems(
@@ -454,7 +454,7 @@ async function update(id, body) {
     destinationId,
     salesType,
     overAllDisc,
-    roundOff
+    roundOff,
   } = await body;
   let data;
   const dataFound = await prisma.salesEntry.findUnique({
@@ -495,8 +495,8 @@ async function update(id, body) {
         contactNumber,
         destinationId: destinationId ? parseInt(destinationId) : null,
         salesType,
-        overAllDisc : overAllDisc ? parseInt(overAllDisc) : null,
-        roundOff: roundOff ? parseInt(roundOff) : null
+        overAllDisc: overAllDisc ? parseInt(overAllDisc) : null,
+        roundOff: roundOff ? parseInt(roundOff) : null,
       },
     });
     await updateSalesEntryItems(
@@ -850,7 +850,18 @@ async function getSalesInvStyleDetail(req) {
       branchId: parseInt(branchId),
     },
     include: {
-      SalesEntryItems: true,
+      SalesEntryItems: {
+        select: {
+          barcode: true,
+          styleNo: true,
+          styleId: true,
+          sizeId: true,
+          colorId: true,
+          fabricId: true,
+          styleItemId: true,
+          qty: true,
+        },
+      },
     },
   });
 
