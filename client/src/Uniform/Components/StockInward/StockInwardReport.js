@@ -78,7 +78,7 @@ const StockInwardReport = ({
 
   const isLoadingIndicator = isLoading || isFetching;
 
-  const totalPages = Math?.ceil(allData?.data?.length / itemsPerPage);
+  const totalPages = Math?.ceil(allData?.totalCount / itemsPerPage);
   const indexOfLastItem = currentPage * parseInt(10);
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
@@ -88,6 +88,7 @@ const StockInwardReport = ({
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
+      setCurrentPageNumber(newPage);
     }
   };
   const Pagination = () => {
