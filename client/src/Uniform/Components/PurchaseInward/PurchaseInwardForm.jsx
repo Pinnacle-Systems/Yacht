@@ -1,7 +1,7 @@
 
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../../../Utils/CommonInput";
-import { poTypes } from "../../../Utils/DropdownData";
+import { purInwardTypes } from "../../../Utils/DropdownData";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   DateInput,
@@ -22,6 +22,7 @@ import moment from "moment";
 import { toast } from "react-toastify";
 import FabricItems from "./FabricItems";
 import AccessoryInwardItems from "./AccessoryItems";
+import ReadyGoods from "./ReadyGoods";
 import { useAddPurchaseInwardEntryMutation, useDeletePurchaseInwardEntryMutation, useGetPurchaseInwardEntryByIdQuery, useUpdatePurchaseInwardEntryMutation } from "../../../redux/uniformService/PurchaseInwardEntry";
 import Swal from "sweetalert2";
 import Modal from "../../../UiComponents/Modal";
@@ -37,6 +38,8 @@ import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMaste
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService";
 import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/AccessoryMasterServices";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import BarCodePrintFormat from "../OpeningStock/BarcodePrintFormat";
 
 const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
   , isSingleFetching,
@@ -55,10 +58,13 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
   const [searchValue, setSearchValue] = useState("");
   const [invNo, setInvNo] = useState("")
   const [fabricInwardItems, setFabricInwardItems] = useState([]);
+  const [readyGoods, setReadyGoods] = useState([]);
   const [docDate, setDocDate] = useState("")
   const { branchId, companyId, userId, finYearId } = getCommonParams();
   const branchIdFromApi = useRef(branchId);
   const [pdfOpen, setPdfOpen] = useState(false);
+  const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
+  const [barcodeItems, setBarcodeItems] = useState([]);
   const params = {
     branchId,
     companyId,
@@ -81,6 +87,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
   const { data: sizeList } = useGetSizeMasterQuery({ params: { companyId } });
   const { data: portionList } = useGetPortionMasterQuery({ params: { companyId } });
   const { data: accessoryList } = useGetAccessoryMasterQuery({ params: { companyId } });
+  const { data: colorList } = useGetColorMasterQuery({ params: { companyId } });
 
   const [addData] = useAddPurchaseInwardEntryMutation();
   const [updateData] = useUpdatePurchaseInwardEntryMutation();
@@ -104,6 +111,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
     fabricInwardItems: isFabric ?
       fabricInwardItems?.filter((item) => item.styleId) : fabricInwardItems?.filter((item) => item.accessoryId)
     ,
+    readyGoods: readyGoods?.filter((item) => item.styleId),
     dcNo,
     finYearId,
     locationId,
@@ -152,6 +160,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
         branchIdFromApi.current = data?.branchId;
       }
       setFabricInwardItems(data?.fabricInwardItems ? data.fabricInwardItems : []);
+      setReadyGoods(data?.readyGoods ? data?.readyGoods : []);
       setVehicleNo(data?.vehicleNo ? data.vehicleNo : "");
       setRemarks(data?.remarks ? data.remarks : "");
       setInvNo(data?.invNo ? data?.invNo : "")
@@ -163,7 +172,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
     try {
       const formData = new FormData();
       for (let key in data) {
-        if (key === 'fabricInwardItems') {
+        if (key === "fabricInwardItems" || key === "readyGoods") {
           formData.append(key, JSON.stringify(data[key].map(i => ({ ...i, filePath: (i.filePath instanceof File) ? i.filePath.name : "" }))));
           data[key].forEach(option => {
             if (option?.filePath instanceof File) {
@@ -232,6 +241,31 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
     return duplicates; // empty array = no duplicates
   };
 
+  const findDuplicateGoodss = (items) => {
+    const seen = new Map(); // key -> first index
+    const duplicates = [];
+
+    items.forEach((row, index) => {
+      const key = [row.styleId || "", row.sizeId || "", row.colorId || ""].join(
+        "-"
+      );
+
+      if (seen.has(key)) {
+        duplicates.push({
+          firstIndex: seen.get(key),
+          duplicateIndex: index,
+          styleId: row.styleId,
+          sizeId: row.sizeId,
+          colorId: row.colorId
+        });
+      } else {
+        seen.set(key, index);
+      }
+    });
+
+    return duplicates; // empty array = no duplicates
+  };
+
   const validateData = (data) => {
     const items = data?.fabricInwardItems || [];
     const filledItems = items.filter(
@@ -258,13 +292,44 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
       });
       return false;
     }
-
-    if (!(data?.storeId && data?.supplierId && data?.invNo && (isFabric ? isGridDatasValid(data?.fabricInwardItems.filter((item) => item?.styleId), false, ["fabricId", "fabWidth", "fabMeter", "portionId"]) : isGridDatasValid(data?.fabricInwardItems.filter((item) => item?.accessoryId), false, ["sizeId", "qty"]))
-      && data?.fabricInwardItems.length > 0)) {
-      toast.info("Please fill all required fields...!", {
-        position: "top-center",
+    const goodsITems = data?.readyGoods || [];
+    const filledGoodsItems = goodsITems.filter(
+      (item) =>
+        item.styleId
+    );
+    const duplicatesGoods = findDuplicateGoodss(filledGoodsItems);
+    // duplicate check
+    if (duplicatesGoods.length > 0) {
+      const dup = duplicatesGoods[0]; // show first duplicate
+      Swal.fire({
+        icon: "warning",
+        title: "Duplicate Item Found",
+        html: `
+       Style - ${findFromList(dup?.styleId, styleList?.data, "sku")},
+       Size - ${findFromList(dup?.sizeId, sizeList?.data, "name")},
+       Color - ${findFromList(dup?.colorId, colorList?.data, "name")},
+       Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
+     `,
+        confirmButtonText: "OK",
       });
-      return false
+      return false;
+    }
+    if (inwardType === "Finished Goods") {
+      if (!(data?.storeId && data?.supplierId && data?.invNo && isGridDatasValid(data?.readyGoods.filter((item) => item?.styleId), false, ["styleItemId", "colorId", "sizeId", "qty"]))
+        && data?.fabricInwardItems.length > 0) {
+        toast.info("Please fill all required fields...!", {
+          position: "top-center",
+        });
+        return false
+      }
+    } else {
+      if (!(data?.storeId && data?.supplierId && data?.invNo && (isFabric ? isGridDatasValid(data?.fabricInwardItems.filter((item) => item?.styleId), false, ["fabricId", "fabWidth", "fabMeter", "portionId"]) : isGridDatasValid(data?.fabricInwardItems.filter((item) => item?.accessoryId), false, ["sizeId", "qty"]))
+        && data?.fabricInwardItems.length > 0)) {
+        toast.info("Please fill all required fields...!", {
+          position: "top-center",
+        });
+        return false
+      }
     }
     return true;
   };
@@ -331,6 +396,16 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
               <PDF singleData={singleData?.data} branchList={branchList} />
             </PDFViewer >
           </Modal >
+          <Modal
+            isOpen={barcodePrintOpen}
+            onClose={() => setBarcodePrintOpen(false)}
+            widthClass={"px-2 h-[90%] w-[90%]"}
+          >
+            <BarCodePrintFormat
+              data={barcodeItems.filter((i) => i?.styleId)}
+            // barCodePerPage={barCodePerPage}
+            />
+          </Modal>
           <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
             <div className="flex justify-between items-center mb-1">
               <h1 className="text-xl font-bold text-gray-800">Purchase Inward</h1>
@@ -359,13 +434,14 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
                   />
                   <DropdownInput
                     name="Inward Type"
-                    options={poTypes}
+                    options={purInwardTypes}
                     value={inwardType}
                     setValue={setInwardType}
                     required={true}
                     readOnly={id}
                     beforeChange={() => {
                       setFabricInwardItems([]);
+                      setReadyGoods([])
                     }}
                     autoFocus={true}
                   />
@@ -464,7 +540,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
             </div>
             <fieldset>
               {
-                inwardType.toLowerCase().includes("fabric") ? (
+                inwardType.toLowerCase().includes("fabric") && (
                   <FabricItems
                     id={id}
                     inwardType={inwardType}
@@ -473,7 +549,9 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
                     setFabricInwardItems={setFabricInwardItems}
                     readOnly={readOnly}
                   />
-                ) : (
+                )}
+              {
+                inwardType.toLocaleLowerCase().includes("accessory") && (
                   <AccessoryInwardItems
                     id={id}
                     inwardType={inwardType}
@@ -482,7 +560,19 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
                     setFabricInwardItems={setFabricInwardItems}
                     readOnly={readOnly}
                   />
-                )}
+                )
+              }
+              {
+                inwardType.toLocaleLowerCase().includes("finished goods") && (
+                  <ReadyGoods
+                    id={id}
+                    params={params}
+                    readyGoods={readyGoods}
+                    setReadyGoods={setReadyGoods}
+                    readOnly={readOnly}
+                  />
+                )
+              }
             </fieldset>
 
             <div className="grid grid-cols-3 gap-3">
@@ -496,7 +586,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
                   onChange={(e) => {
                     setVehicleNo(e.target.value);
                   }}
-                  className="w-full overflow-auto h-14 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                  className="w-full overflow-auto h-10 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
                   placeholder="Vehicle Details..."
                   disabled={readOnly}
                 />
@@ -512,7 +602,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
                   onChange={(e) => {
                     setRemarks(e.target.value);
                   }}
-                  className="w-full  overflow-auto h-14 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                  className="w-full  overflow-auto h-10 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
                   placeholder="Additional remarks..."
                   disabled={readOnly}
                 />
@@ -522,26 +612,42 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
                 <h2 className="font-semibold text-slate-800 mb-2 text-base">
                   Summary
                 </h2>
-
-                <div className="space-y-1.5">
-                  {inwardType === "Fabric" && (
-                    <div className="flex justify-between  text-sm">
-                      <span className="text-slate-600">Total Meters</span>
-                      <span className="font-medium">
-                        {fabricInwardItems.reduce(
-                          (sum, row) => sum + (Number(row.fabMeter) || 0),
-                          0
-                        ).toFixed(2)}
-                      </span>
+                {
+                  inwardType === "Finished Goods" ? (
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between  text-sm">
+                        <span className="text-slate-600">Total Qty</span>
+                        <span className="font-medium">
+                          {readyGoods.reduce(
+                            (sum, row) => sum + (Number(row.qty) || 0),
+                            0
+                          ).toFixed(2)}
+                        </span>
+                      </div>
                     </div>
-                  )}
-                  <div className="flex justify-between  text-sm">
-                    <span className="text-slate-600">{inwardType === "Fabric" ? "Total Rolls" : "Total Qty"}</span>
-                    <span className="font-medium">
-                      {parseInt(getTotalQty()).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {inwardType === "Fabric" && (
+                        <div className="flex justify-between  text-sm">
+                          <span className="text-slate-600">Total Meters</span>
+                          <span className="font-medium">
+                            {fabricInwardItems.reduce(
+                              (sum, row) => sum + (Number(row.fabMeter) || 0),
+                              0
+                            ).toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex justify-between  text-sm">
+                        <span className="text-slate-600">{inwardType === "Fabric" ? "Total Rolls" : "Total Qty"}</span>
+                        <span className="font-medium">
+                          {parseInt(getTotalQty()).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                }
+
               </div>
             </div>
 
@@ -571,10 +677,6 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
               </div>
 
               <div className="flex gap-2 flex-wrap">
-                {/* <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
-              <FiShare2 className="w-4 h-4 mr-2" />
-              Email
-            </button> */}
                 <button
                   className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
                   onClick={() => setReadOnly(false)}
@@ -586,6 +688,25 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
                   <FaWhatsapp className="w-4 h-4 mr-2" />
                   WhatsApp
                 </button>
+                {
+                  inwardType === "Finished Goods" && (
+                    <button
+                      className="bg-blue-600 text-white px-4 py-1 rounded-md hover:bg-blue-700 flex items-center text-sm"
+                      onClick={() => {
+                        const allStockRows = readyGoods.flatMap(
+                          (item) => item.Stock
+                        );
+                        setBarcodeItems(allStockRows);
+                        setBarcodePrintOpen(true);
+                      }}
+                      disabled={!id}
+                    >
+                      <FiPrinter className="w-4 h-4 mr-2" />
+                      Barcode
+                    </button>
+                  )
+                }
+
                 <button
                   className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
                   disabled={!id}
@@ -594,7 +715,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
                   }}
                 >
                   <FiPrinter className="w-4 h-4 mr-2" />
-                  Print
+                  PDF
                 </button>
               </div>
             </div>

@@ -53,6 +53,12 @@ export const poTypes = [
   { show: "Accessory", value: "Accessory" },
 ];
 
+export const purInwardTypes = [
+  { show: "Fabric", value: "Fabric" },
+  { show: "Accessory", value: "Accessory" },
+  { show: "Finished Goods", value: "Finished Goods" },
+];
+
 export const Generalpurchase = [
   { show: "Grey Yarn", value: "GreyYarn" },
   { show: "Dyed Yarn", value: "DyedYarn" },

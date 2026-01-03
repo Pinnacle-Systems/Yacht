@@ -1147,6 +1147,8 @@ model Fabric {
   cuttingDeliveryItems CuttingDeliveryItems[]
   productionStocks     ProductionStock[]
   productionEntryItems ProductionEntryItems[]
+  readyGoods           ReadyGoods[]
+  returnGoods          ReturnGoods[]
 }
 
 model Color {
@@ -1174,6 +1176,8 @@ model Color {
   productionStocks           ProductionStock[]
   productionEntryItems       ProductionEntryItems[]
   stockInwardItems           StockInwardItems[]
+  readyGoods                 ReadyGoods[]
+  returnGoods                ReturnGoods[]
 }
 
 model UnitOfMeasurement {
@@ -1589,6 +1593,8 @@ model Style {
   productionEntries    ProductionEntry[]
   productionEntryItems ProductionEntryItems[]
   stockInwards         StockInward[]
+  readyGoods           ReadyGoods[]
+  returnGoods          ReturnGoods[]
 }
 
 model Size {
@@ -1614,6 +1620,8 @@ model Size {
   sizeDetails          sizeDetails[]
   productionEntryItems ProductionEntryItems[]
   pcsSizeDetails       PcsSizeDetails[]
+  readyGoods           ReadyGoods[]
+  returnGoods          ReturnGoods[]
 }
 
 model Measurement {
@@ -1739,6 +1747,10 @@ model Stock {
   styleItemId          Int?
   SalesReturnItems     SalesReturnItems?     @relation(fields: [salesReturnItemsId], references: [id], onDelete: Cascade)
   salesReturnItemsId   Int?
+  ReadyGoods           ReadyGoods?           @relation(fields: [readyGoodsId], references: [id], onDelete: Cascade)
+  readyGoodsId         Int?
+  returnGoods          ReturnGoods?          @relation(fields: [returnGoodsId], references: [id],onDelete: Cascade)
+  returnGoodsId        Int?
 }
 
 model OpeningStock {
@@ -1966,6 +1978,8 @@ model StyleItem {
   productionStocks     ProductionStock[]
   productionEntryItems ProductionEntryItems[]
   stockInwardItems     StockInwardItems[]
+  readyGoods           ReadyGoods[]
+  returnGoods          ReturnGoods[]
 }
 
 model SalesReturn {
@@ -2036,6 +2050,7 @@ model PurchaseInward {
   vehicleNo         String?
   invNo             String?
   fabricInwardItems FabricInwardItems[]
+  readyGoods        ReadyGoods[]
 }
 
 model FabricInwardItems {
@@ -2071,6 +2086,26 @@ model FabricInwardItems {
   invNo            String?
   Portion          Portion?           @relation(fields: [portionId], references: [id])
   portionId        Int?
+}
+
+model ReadyGoods {
+  id               Int             @id @default(autoincrement())
+  PurchaseInward   PurchaseInward? @relation(fields: [purchaseInwardId], references: [id], onDelete: Cascade)
+  purchaseInwardId Int?
+  styleNo          String?
+  Fabric           Fabric?         @relation(fields: [fabricId], references: [id])
+  fabricId         Int?
+  Style            Style?          @relation(fields: [styleId], references: [id])
+  styleId          Int?
+  Size             Size?           @relation(fields: [sizeId], references: [id])
+  sizeId           Int?
+  qty              Int?
+  StyleItem        StyleItem?      @relation(fields: [styleItemId], references: [id])
+  styleItemId      Int?
+  Stock            Stock[]
+  Color            Color?          @relation(fields: [colorId], references: [id])
+  colorId          Int?
+  invNo            String?
 }
 
 model MaterialStock {
@@ -2150,6 +2185,7 @@ model PurchaseReturn {
   returnType          String?
   invNo               String?
   purchaseReturnItems PurchaseReturnItems[]
+  returnGoods         ReturnGoods[]
 }
 
 model PurchaseReturnItems {
@@ -2187,6 +2223,27 @@ model PurchaseReturnItems {
   returnQty        Float?
   Portion          Portion?           @relation(fields: [portionId], references: [id])
   portionId        Int?
+}
+
+model ReturnGoods {
+  id               Int             @id @default(autoincrement())
+  PurchaseReturn   PurchaseReturn? @relation(fields: [purchaseReturnId], references: [id], onDelete: Cascade)
+  purchaseReturnId Int?
+  styleNo          String?
+  Fabric           Fabric?         @relation(fields: [fabricId], references: [id])
+  fabricId         Int?
+  Style            Style?          @relation(fields: [styleId], references: [id])
+  styleId          Int?
+  Size             Size?           @relation(fields: [sizeId], references: [id])
+  sizeId           Int?
+  stkQty           Int?
+  returnQty        Int?
+  StyleItem        StyleItem?      @relation(fields: [styleItemId], references: [id])
+  styleItemId      Int?
+  Stock            Stock[]
+  Color            Color?          @relation(fields: [colorId], references: [id])
+  colorId          Int?
+  invNo            String?
 }
 
 model Portion {

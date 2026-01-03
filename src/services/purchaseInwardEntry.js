@@ -239,6 +239,20 @@ async function getOne(id) {
           portionId: true,
         },
       },
+      readyGoods: {
+        select: {
+          Stock: true,
+          id: true,
+          purchaseInwardId: true,
+          styleId: true,
+          sizeId: true,
+          qty: true,
+          styleNo: true,
+          fabricId: true,
+          styleItemId: true,
+          colorId: true,
+        },
+      },
     },
   });
   if (!data) return NoRecordFound("Purchase Inward");
@@ -353,6 +367,7 @@ async function create(req) {
     remarks,
     vehicleNo,
     fabricInwardItems,
+    readyGoods,
     finYearId,
     draftSave,
     invNo,
@@ -390,16 +405,27 @@ async function create(req) {
         invNo,
       },
     });
-    await createPurchaseInwardItems(
-      tx,
-      fabricInwardItems,
-      data,
-      userId,
-      branchId,
-      storeId,
-      inwardType,
-      invNo
-    );
+    if (inwardType === "Finished Goods") {
+      await createReadyGoods(
+        tx,
+        readyGoods,
+        data,
+        userId,
+        branchId,
+        storeId,
+        invNo
+      );
+    } else {
+      await createPurchaseInwardItems(
+        tx,
+        fabricInwardItems,
+        data,
+        userId,
+        branchId,
+        storeId,
+        invNo
+      );
+    }
   });
   return { statusCode: 0, data };
 }
@@ -519,6 +545,61 @@ async function createPurchaseInwardItems(
   return Promise.all(promises);
 }
 
+async function createReadyGoods(
+  tx,
+  readyGoods,
+  purchaseInward,
+  userId,
+  branchId,
+  storeId,
+  invNo
+) {
+  const promises = JSON.parse(readyGoods).map(async (stockDetail, index) => {
+    const qty = stockDetail?.qty
+      ? Math.round(parseFloat(stockDetail.qty))
+      : null;
+    const createdItem = await tx.readyGoods.create({
+      data: {
+        purchaseInwardId: parseInt(purchaseInward.id),
+        styleNo: stockDetail?.styleNo ?? undefined,
+        fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
+        styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+        styleItemId: stockDetail?.styleItemId
+          ? parseInt(stockDetail.styleItemId)
+          : null,
+        sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+        colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+        qty,
+        invNo: invNo ? invNo : "",
+      },
+    });
+
+    // Create corresponding Stock row
+    await tx.stock.create({
+      data: {
+        inOrOut: "PurchaseGoods",
+        createdById: parseInt(userId),
+        branchId: parseInt(branchId),
+        storeId: parseInt(storeId),
+        styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+        sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+        colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+        fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
+        qty,
+        readyGoodsId: createdItem.id,
+        styleNo: stockDetail?.styleNo ?? undefined,
+        styleItemId: stockDetail?.styleItemId
+          ? parseInt(stockDetail.styleItemId)
+          : null,
+      },
+    });
+
+    return createdItem;
+  });
+
+  return Promise.all(promises);
+}
+
 function findRemovedItems(dataFound, fabricInwardItems) {
   let removedItems = dataFound.fabricInwardItems.filter((oldItem) => {
     let result = JSON.parse(fabricInwardItems).find(
@@ -554,6 +635,7 @@ async function update(id, body) {
     remarks,
     vehicleNo,
     fabricInwardItems,
+    readyGoods,
     invNo,
   } = await body;
   let data;
@@ -599,16 +681,28 @@ async function update(id, body) {
         invNo,
       },
     });
-    await updateFabricInwardItems(
-      tx,
-      fabricInwardItems,
-      data,
-      userId,
-      branchId,
-      storeId,
-      inwardType,
-      invNo
-    );
+    if (inwardType === "Finished Goods") {
+      await updateReadyGoods(
+        tx,
+        readyGoods,
+        data,
+        userId,
+        branchId,
+        storeId,
+        invNo
+      );
+    } else {
+      await updateFabricInwardItems(
+        tx,
+        fabricInwardItems,
+        data,
+        userId,
+        branchId,
+        storeId,
+        inwardType,
+        invNo
+      );
+    }
   });
   return { statusCode: 0, data };
 }
@@ -890,6 +984,166 @@ async function updateFabricInwardItems(
   return Promise.all(promises);
 }
 
+async function updateReadyGoods(
+  tx,
+  readyGoods,
+  purchaseInward,
+  userId,
+  branchId,
+  storeId,
+  invNo
+) {
+  const parsedReadyGoods = JSON.parse(readyGoods || "[]");
+  const existingRows = await tx.readyGoods.findMany({
+    where: { purchaseInwardId: parseInt(purchaseInward.id) },
+    select: { id: true },
+  });
+  const existingIds = existingRows.map((r) => r.id);
+  const incomingIds = parsedReadyGoods
+    .filter((r) => r.id)
+    .map((r) => parseInt(r.id));
+  const idsToDelete = existingIds.filter((id) => !incomingIds.includes(id));
+  if (idsToDelete.length > 0) {
+    // Delete stock first (FK dependency)
+    await tx.stock.deleteMany({
+      where: { readyGoodsId: { in: idsToDelete } },
+    });
+
+    // Delete ready goods
+    await tx.readyGoods.deleteMany({
+      where: { id: { in: idsToDelete } },
+    });
+  }
+  const promises = JSON.parse(readyGoods).map(async (stockDetail) => {
+    const qty = stockDetail?.qty
+      ? Math.round(parseFloat(stockDetail.qty))
+      : null;
+
+    if (stockDetail.id) {
+      // Update existing OpeningStockItem
+      const updatedItem = await tx.readyGoods.update({
+        where: { id: parseInt(stockDetail.id) },
+        data: {
+          purchaseInwardId: parseInt(purchaseInward.id),
+          styleNo: stockDetail?.styleNo ?? undefined,
+          fabricId: stockDetail?.fabricId
+            ? parseInt(stockDetail.fabricId)
+            : null,
+          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
+            : null,
+          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+          qty,
+          invNo: invNo ? invNo : "",
+        },
+      });
+
+      // Update or create Stock row
+      const existingStock = await tx.stock.findFirst({
+        where: { readyGoodsId: updatedItem.id },
+      });
+
+      if (existingStock) {
+        await tx.stock.update({
+          where: { id: existingStock.id },
+          data: {
+            styleId: stockDetail?.styleId
+              ? parseInt(stockDetail.styleId)
+              : null,
+            styleItemId: stockDetail?.styleItemId
+              ? parseInt(stockDetail.styleItemId)
+              : null,
+            sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+            colorId: stockDetail?.colorId
+              ? parseInt(stockDetail.colorId)
+              : null,
+            qty,
+            updatedById: parseInt(userId),
+            fabricId: stockDetail?.fabricId
+              ? parseInt(stockDetail.fabricId)
+              : null,
+            styleNo: stockDetail?.styleNo ?? undefined,
+          },
+        });
+      } else {
+        await tx.stock.create({
+          data: {
+            inOrOut: "PurchaseGoods",
+            createdById: parseInt(userId),
+            branchId: parseInt(branchId),
+            storeId: parseInt(storeId),
+            styleId: stockDetail?.styleId
+              ? parseInt(stockDetail.styleId)
+              : null,
+            sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+            colorId: stockDetail?.colorId
+              ? parseInt(stockDetail.colorId)
+              : null,
+            qty,
+            readyGoodsId: updatedItem.id,
+            styleNo: stockDetail?.styleNo ?? undefined,
+            fabricId: stockDetail?.fabricId
+              ? parseInt(stockDetail.fabricId)
+              : null,
+            styleItemId: stockDetail?.styleItemId
+              ? parseInt(stockDetail.styleItemId)
+              : null,
+          },
+        });
+      }
+
+      return updatedItem;
+    } else {
+      // Create new OpeningStockItem
+      const createdItem = await tx.readyGoods.create({
+        data: {
+          purchaseInwardId: parseInt(purchaseInward.id),
+          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+          qty,
+          fabricId: stockDetail?.fabricId
+            ? parseInt(stockDetail.fabricId)
+            : null,
+          styleNo: stockDetail?.styleNo ?? undefined,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
+            : null,
+          invNo: invNo ? invNo : "",
+        },
+      });
+
+      // Create Stock row
+      await tx.stock.create({
+        data: {
+          inOrOut: "PurchaseGoods",
+          createdById: parseInt(userId),
+          branchId: parseInt(branchId),
+          storeId: parseInt(storeId),
+          fabricId: stockDetail?.fabricId
+            ? parseInt(stockDetail.fabricId)
+            : null,
+          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+          qty,
+          readyGoodsId: createdItem.id,
+          styleNo: stockDetail?.styleNo ?? undefined,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
+            : null,
+        },
+      });
+
+      return createdItem;
+    }
+  });
+
+  return Promise.all(promises);
+}
+
 async function remove(id) {
   const data = await prisma.purchaseInward.delete({
     where: {
@@ -985,7 +1239,7 @@ async function getPurchaseDetailStock(req) {
       invNo: invNo,
     },
     _sum: {
-      qty: true,
+      qty: true, 
       fabMeter: true,
     },
   });

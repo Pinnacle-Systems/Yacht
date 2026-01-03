@@ -10,6 +10,7 @@ import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/Access
 import { useGetAccessoryGroupMasterQuery } from "../../../redux/uniformService/AccessoryGroupMasterServices";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
+import FxSelect from "../../../Inputs";
 
 const AccessoryInwardItems = ({
   id,
@@ -237,170 +238,134 @@ const AccessoryInwardItems = ({
                       {index + 1}
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
-                      <select
-                        id={`accessory-input-${index}`}
+                      <FxSelect
+                        inputId={`accessory-input-${index}`}
+                        value={row.accessoryId}
+                        onChange={(val) =>
+                          handleInputChange(val, index, "accessoryId")
+                        }
+                        options={(accessoryList?.data || [])
+                          .filter((item) => item.active)
+                          .map((item) => ({
+                            label: item.name,
+                            value: item.id,
+                          }))}
+                        readOnly={readOnly}
+                        placeholder=""
+                        onBlur={() =>
+                          handleInputChange(
+                            row.accessoryId,
+                            index,
+                            "accessoryId"
+                          )
+                        }
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
                             handleInputChange("", index, "accessoryId");
                           }
                         }}
-                        tabIndex={"0"}
-                        disabled={readOnly}
-                        className="text-left w-full rounded py-1 table-data-input"
-                        value={row.accessoryId}
-                        onFocus={(e) => e.target.focus()}
-                        onChange={(e) =>
-                          handleInputChange(
-                            e.target.value,
-                            index,
-                            "accessoryId"
-                          )
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(
-                            e.target.value,
-                            index,
-                            "accessoryId"
-                          );
-                        }}
-                      >
-                        <option></option>
-                        {(id
-                          ? accessoryList?.data
-                          : accessoryList?.data?.filter((item) => item.active)
-                        )?.map((blend) => (
-                          <option value={blend.id} key={blend.id}>
-                            {blend?.name}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
-                      <select
+                      <FxSelect
+                        value={row.accessoryGroupId}
+                        onChange={(val) =>
+                          handleInputChange(val, index, "accessoryGroupId")
+                        }
+                        options={(accessoryGroupList?.data || [])
+                          .filter((item) => item.active)
+                          .map((item) => ({
+                            label: item.name,
+                            value: item.id,
+                          }))}
+                        readOnly={readOnly || (row.stockQty ?? 0) > 0}
+                        placeholder=""
+                        onBlur={() =>
+                          handleInputChange(
+                            row.accessoryGroupId,
+                            index,
+                            "accessoryGroupId"
+                          )
+                        }
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
                             handleInputChange("", index, "accessoryGroupId");
                           }
                         }}
-                        tabIndex={"0"}
-                        disabled={readOnly}
-                        className="text-left w-full rounded py-1 table-data-input"
-                        value={row.accessoryGroupId}
-                        onChange={(e) =>
-                          handleInputChange(
-                            e.target.value,
-                            index,
-                            "accessoryGroupId"
-                          )
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(
-                            e.target.value,
-                            index,
-                            "accessoryGroupId"
-                          );
-                        }}
-                      >
-                        <option></option>
-                        {(id
-                          ? accessoryGroupList?.data
-                          : accessoryGroupList?.data?.filter(
-                              (item) => item.active
-                            )
-                        )?.map((blend) => (
-                          <option value={blend.id} key={blend.id}>
-                            {blend?.name}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </td>
 
                     <td className="py-0.5 border border-gray-300 text-[11px]">
-                      <select
+                      <FxSelect
+                        value={row.colorId}
+                        onChange={(val) =>
+                          handleInputChange(val, index, "colorId")
+                        }
+                        options={(colorList?.data || [])
+                          .filter((item) => item.active)
+                          .map((item) => ({
+                            label: item.name,
+                            value: item.id,
+                          }))}
+                        readOnly={readOnly || (row.stockQty ?? 0) > 0}
+                        placeholder=""
+                        onBlur={() =>
+                          handleInputChange(row.colorId, index, "colorId")
+                        }
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
                             handleInputChange("", index, "colorId");
                           }
                         }}
-                        tabIndex={"0"}
-                        disabled={readOnly}
-                        className="text-left w-full rounded py-1 table-data-input"
-                        value={row.colorId}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "colorId")
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "colorId");
-                        }}
-                      >
-                        <option></option>
-                        {(id
-                          ? colorList?.data
-                          : colorList?.data?.filter((item) => item.active)
-                        )?.map((blend) => (
-                          <option value={blend.id} key={blend.id}>
-                            {blend?.name}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px]">
-                      <select
+                      <FxSelect
+                        value={row.sizeId}
+                        onChange={(val) =>
+                          handleInputChange(val, index, "sizeId")
+                        }
+                        options={(sizeList?.data || [])
+                          .filter((item) => item.active)
+                          .map((item) => ({
+                            label: item.name,
+                            value: item.id,
+                          }))}
+                        readOnly={readOnly}
+                        placeholder=""
+                        onBlur={() =>
+                          handleInputChange(row.sizeId, index, "sizeId")
+                        }
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
                             handleInputChange("", index, "sizeId");
                           }
                         }}
-                        tabIndex={"0"}
-                        disabled={readOnly}
-                        className="text-left w-full rounded py-1 table-data-input"
-                        value={row.sizeId}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "sizeId")
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "sizeId");
-                        }}
-                      >
-                        <option></option>
-                        {(id
-                          ? sizeList?.data
-                          : sizeList?.data?.filter((item) => item.active)
-                        )?.map((blend) => (
-                          <option value={blend.id} key={blend.id}>
-                            {blend?.name}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
-                      <select
+                      <FxSelect
+                        value={row.uomId}
+                        onChange={(val) =>
+                          handleInputChange(val, index, "uomId")
+                        }
+                        options={(uomList?.data || [])
+                          .filter((item) => item.active)
+                          .map((item) => ({
+                            label: item.name,
+                            value: item.id,
+                          }))}
+                        readOnly={readOnly}
+                        placeholder=""
+                        onBlur={() =>
+                          handleInputChange(row.uomId, index, "uomId")
+                        }
                         onKeyDown={(e) => {
                           if (e.key === "Delete") {
                             handleInputChange("", index, "uomId");
                           }
                         }}
-                        tabIndex={"0"}
-                        disabled={readOnly}
-                        className="text-left w-full rounded py-1 table-data-input"
-                        value={row.uomId}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "uomId")
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "uomId");
-                        }}
-                      >
-                        <option></option>
-                        {(id
-                          ? uomList?.data
-                          : uomList?.data?.filter((item) => item.active)
-                        )?.map((blend) => (
-                          <option value={blend.id} key={blend.id}>
-                            {blend?.name}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input

@@ -1,7 +1,7 @@
 
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../../../Utils/CommonInput";
-import { poTypes } from "../../../Utils/DropdownData";
+import { purInwardTypes } from "../../../Utils/DropdownData";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
     DateInput,
@@ -485,20 +485,17 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                 <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                                     <h2 className="font-medium text-slate-700 mb-2">Return Details</h2>
                                     <div className="grid grid-cols-2 gap-1">
-                                        {/* <ReusableInput
-                                label="Invoice No"
-                                value={invNo}
-                                setValue={setInvNo}
-                                type={"text"}
-                                required={true}
-                                readOnly={readOnly}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                        e.stopPropagation();
-                                        handleAddRow();
-                                    }
-                                }}
-                            /> */}
+                                        <DropdownInput
+                                            name="Return Type"
+                                            options={purInwardTypes}
+                                            value={returnType}
+                                            setValue={setReturnType}
+                                            required={true}
+                                            readOnly={id}
+                                            beforeChange={() => {
+                                                setPurchaseReturnItems([]);
+                                            }}
+                                        />
                                         <DropdownNew
                                             name="Inv No"
                                             dataList={
@@ -512,17 +509,6 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                             otherField={"invNo"}
                                             otherValue={"invNo"}
                                             disabled={readOnly}
-                                        />
-                                        <DropdownInput
-                                            name="Return Type"
-                                            options={poTypes}
-                                            value={returnType}
-                                            setValue={setReturnType}
-                                            required={true}
-                                            readOnly={id}
-                                            beforeChange={() => {
-                                                setPurchaseReturnItems([]);
-                                            }}
                                         />
                                         <DropdownInput
                                             name="Supplier"
