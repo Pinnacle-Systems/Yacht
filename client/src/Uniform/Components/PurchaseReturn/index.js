@@ -127,14 +127,14 @@ export default function Form() {
 
       {showForm && (
         <PurchaseReturnForm
-          readOnly={readOnly}
-          setReadOnly={setReadOnly}
-          id={id}
-          setId={setId}
           onClose={() => {
             setShowForm(false);
             setReadOnly((prev) => !prev);
           }}
+          id={id}
+          readOnly={readOnly}
+          setReadOnly={setReadOnly}
+          setId={setId}
           setShowForm={setShowForm}
           singleData={singleData}
           isSingleFetching={isSingleFetching}

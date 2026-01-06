@@ -337,7 +337,7 @@ const ReturnItems = ({
                   <th
                     className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                   >
-                    No of Rolls
+                    Return Rolls
                   </th>
                 )}
                 {returnType === "Fabric" && (
@@ -643,40 +643,39 @@ const ReturnItems = ({
                         </select>
                       </td>
                     )}
-                    {returnType === "Fabric" && (
-                      <td className="py-0.5 border border-gray-300 text-[11px]">
-                        <select
-                          id={`qty-input-${index}`}
-                          onKeyDown={(e) => {
-                            if (e.key === "Delete") {
-                              handleInputChange("", index, "colorId");
-                            }
-                          }}
-                          tabIndex={"0"}
-                          disabled={true}
-                          className="text-left w-full rounded py-1 table-data-input"
-                          value={row.colorId}
-                          onChange={(e) =>
-                            handleInputChange(e.target.value, index, "colorId")
+
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <select
+                        id={`qty-input-${index}`}
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "colorId");
                           }
-                          onBlur={(e) => {
-                            handleInputChange(e.target.value, index, "colorId");
-                          }}
-                        >
-                          <option></option>
-                          {(id
-                            ? colorList?.data
-                            : colorList?.data?.filter((item) => item.active)
-                          )?.map((blend) => (
-                            <option value={blend.id} key={blend.id}>
-                              {blend?.name}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                    )}
-                    {(returnType === "Fabric" ||
-                      returnType === "Accessory") && (
+                        }}
+                        tabIndex={"0"}
+                        disabled={true}
+                        className="text-left w-full rounded py-1 table-data-input"
+                        value={row.colorId}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "colorId")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "colorId");
+                        }}
+                      >
+                        <option></option>
+                        {(id
+                          ? colorList?.data
+                          : colorList?.data?.filter((item) => item.active)
+                        )?.map((blend) => (
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+
+                    {returnType === "Fabric" && (
                       <td className="py-0.5 border border-gray-300 text-[11px]">
                         <select
                           id={`qty-input-${index}`}

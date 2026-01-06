@@ -59,8 +59,20 @@ export default function Form() {
           title: "This item used in Purchase Return",
           text: "Data cannot be deleted!",
         });
-      } else {
-
+      } else if (data?.data?.childRecordSales > 0) {
+        Swal.fire({
+          icon: "error",
+          title: "This item used in Sales Entry",
+          text: "Data cannot be deleted!",
+        });
+      } else if (data?.data?.childRecordStock > 0) {
+        Swal.fire({
+          icon: "error",
+          title: "This item used in Stock Adjustment",
+          text: "Data cannot be deleted!",
+        });
+      }
+      else {
         try {
           let deldata = await removeData(id).unwrap();
           if (deldata?.statusCode == 1) {

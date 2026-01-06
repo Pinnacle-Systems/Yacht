@@ -36,6 +36,8 @@ import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMaste
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService";
 import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/AccessoryMasterServices";
+import ReturnGoods from "./ReturnGoods";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 
 const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
     isSingleFetching,
@@ -49,6 +51,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
     const [storeId, setStoreId] = useState("");
     const [searchValue, setSearchValue] = useState("");
     const [purchaseReturnItems, setPurchaseReturnItems] = useState([]);
+    const [returnGoods, setReturnGoods] = useState([])
     const [docDate, setDocDate] = useState("")
     const { branchId, companyId, userId, finYearId } = getCommonParams();
     const branchIdFromApi = useRef(branchId);
@@ -76,6 +79,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
 
     const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
     const { data: sizeList } = useGetSizeMasterQuery({ params: { companyId } });
+    const { data: colorList } = useGetColorMasterQuery({ params: { companyId } });
     const { data: portionList } = useGetPortionMasterQuery({ params: { companyId } });
     const { data: accessoryList } = useGetAccessoryMasterQuery({ params: { companyId } });
 
@@ -96,6 +100,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
         storeId,
         purchaseReturnItems: isFabric ?
             purchaseReturnItems?.filter((item) => item.styleId) : purchaseReturnItems?.filter((item) => item.accessoryId),
+        returnGoods: returnGoods?.filter((item) => item.styleId),
         finYearId,
         locationId,
         invNo
@@ -120,6 +125,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                 branchIdFromApi.current = data?.branchId;
             }
             setPurchaseReturnItems(data?.purchaseReturnItems ? data.purchaseReturnItems : []);
+            setReturnGoods(data?.returnGoods ? data.returnGoods : [])
             setInvNo(data?.invNo ? data?.invNo : "")
         },
         [id]
@@ -184,6 +190,31 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
         return duplicates; // empty array = no duplicates
     };
 
+    const findDuplicateGoodss = (items) => {
+        const seen = new Map(); // key -> first index
+        const duplicates = [];
+
+        items.forEach((row, index) => {
+            const key = [row.styleId || "", row.sizeId || "", row.colorId || ""].join(
+                "-"
+            );
+
+            if (seen.has(key)) {
+                duplicates.push({
+                    firstIndex: seen.get(key),
+                    duplicateIndex: index,
+                    styleId: row.styleId,
+                    sizeId: row.sizeId,
+                    colorId: row.colorId
+                });
+            } else {
+                seen.set(key, index);
+            }
+        });
+
+        return duplicates; // empty array = no duplicates
+    };
+
     const validateData = (data) => {
         const items = data?.purchaseReturnItems || [];
 
@@ -215,36 +246,66 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
             return false;
         }
 
-        if (!(data?.storeId &&
-            data?.supplierId &&
-            data?.invNo &&
-            filledItems.length > 0 &&
-            (isFabric
-                ? isGridDatasValid(
-                    filledItems,
-                    false,
-                    ["returnFabMeter"]
-                )
-                : isGridDatasValid(
-                    filledItems,
-                    false,
-                    ["returnQty"]
-                )))) {
+        const goodsItems = data?.returnGoods || [];
 
-            toast.info("Please fill all required fields...!", {
-                position: "top-center",
+        // remove blank rows
+        const filledGoodsItems = goodsItems.filter(
+            (item) =>
+                item.styleId
+
+        );
+
+        const duplicatesGoods = findDuplicateGoodss(filledGoodsItems);
+        // duplicate check
+        if (duplicatesGoods.length > 0) {
+            const dup = duplicatesGoods[0]; // show first duplicate
+            Swal.fire({
+                icon: "warning",
+                title: "Duplicate Item Found",
+                html: `
+              Style - ${findFromList(dup?.styleId, styleList?.data, "sku")},
+              Size - ${findFromList(dup?.sizeId, sizeList?.data, "name")},
+              Color - ${findFromList(dup?.colorId, colorList?.data, "name")},
+              Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
+            `,
+                confirmButtonText: "OK",
             });
             return false;
+        }
+        if (returnType === "Finished Goods") {
+            if (!(data?.storeId && data?.supplierId && data?.invNo && isGridDatasValid(data?.returnGoods.filter((item) => item?.styleId), false, ["styleItemId", "colorId", "sizeId", "returnQty"]))
+                && data?.returnGoods.length > 0) {
+                toast.info("Please fill all required fields...!", {
+                    position: "top-center",
+                });
+                return false
+            }
+        } else {
+            if (!(data?.storeId &&
+                data?.supplierId &&
+                data?.invNo &&
+                filledItems.length > 0 &&
+                (isFabric
+                    ? isGridDatasValid(
+                        filledItems,
+                        false,
+                        ["returnFabMeter"]
+                    )
+                    : isGridDatasValid(
+                        filledItems,
+                        false,
+                        ["returnQty"]
+                    )))) {
+
+                toast.info("Please fill all required fields...!", {
+                    position: "top-center",
+                });
+                return false;
+            }
         }
         return true;
     };
 
-    // const validateData = (data) => {
-    //     return (
-    //         data?.storeId && data?.supplierId && data?.invNo && (isFabric ? isGridDatasValid(data?.purchaseReturnItems.filter((item) => item?.styleId), false, ["returnFabMeter"]) : isGridDatasValid(data?.purchaseReturnItems.filter((item) => item?.accessoryId), false, ["returnQty"]))
-    //         && data?.purchaseReturnItems.length > 0
-    //     )
-    // };
     const isLoadingIndicator = isSingleFetching || isSingleLoading;
 
 
@@ -289,10 +350,6 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
         }
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-    useEffect(() => {
-        console.log(invList, "invList")
-    }, [invList])
-
 
     const handleAddRow = async (newValue) => {
         setInvNo(newValue)
@@ -303,17 +360,22 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
             });
             return;
         }
-        const hasUnfilledRequired = purchaseReturnItems.some((row) => {
-            const isFabric = returnType === "Fabric";
+        const hasUnfilledRequired =
+            returnType === "Finished Goods"
+                ? returnGoods.some((row) => {
+                    const styleSelected = row.styleId;
+                    return styleSelected && !row.returnQty;
+                })
+                : purchaseReturnItems.some((row) => {
+                    const isFabric = returnType === "Fabric";
 
-            const hasSelected =
-                isFabric ? row.styleId : row.accessoryId;
+                    const hasSelected = isFabric ? row.styleId : row.accessoryId;
+                    const isRequiredMissing = isFabric
+                        ? !row.returnFabMeter
+                        : !row.returnQty;
 
-            const isRequiredMissing =
-                isFabric ? !row.returnFabMeter : !row.returnQty;
-
-            return hasSelected && isRequiredMissing;
-        });
+                    return hasSelected && isRequiredMissing;
+                });
 
         if (hasUnfilledRequired) {
             toast.info("Please fill all required fields before adding...!", {
@@ -325,6 +387,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
             const { data: purchaseData } = await getPurchaseDetail({
                 params: {
                     invNo: newValue,
+                    returnType: returnType,
                     storeId,
                     branchId,
                 },
@@ -332,53 +395,99 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
             setReturnType(purchaseData?.returnType);
             setSupplierId(purchaseData?.supplierId);
             const purchaseItems = purchaseData?.data;
-            if (!purchaseItems) return;
-            setPurchaseReturnItems((prev) => {
-                const updated = [...prev];
-                // Find first empty slot index
-                let startIndex = updated.findIndex(
-                    (row) =>
-                        !row.styleNo &&
-                        !row.styleItemId &&
-                        !row.fabricId &&
-                        !row.accessoryId &&
-                        !row.accessoryGroupId &&
-                        !row.styleId
-                );
-                if (startIndex === -1) startIndex = updated.length;
-
-                // Fill in sizeRows starting at first empty slot
-                purchaseItems.forEach((row, i) => {
-                    if (startIndex + i < updated.length) {
-                        updated[startIndex + i] = { ...row };
-                    } else {
-                        updated.push({ ...row }); // append if no empty slot
-                    }
+            if (!purchaseItems) {
+                toast.info(`Invoice No - ${newValue},Inward Type - ${returnType} No items Found `, {
+                    position: "top-center",
+                    autoClose: 2000
                 });
+                return;
+            }
+            if (returnType.toLowerCase().includes("finished goods")) {
+                setReturnGoods((prev) => {
+                    const updated = [...prev];
+                    // Find first empty slot index
+                    let startIndex = updated.findIndex(
+                        (row) =>
+                            !row.styleNo &&
+                            !row.styleItemId &&
+                            !row.fabricId &&
+                            !row.styleId
+                    );
+                    if (startIndex === -1) startIndex = updated.length;
 
-                // Ensure at least 6 rows
-                while (updated.length < 4) {
-                    updated.push({
-                        styleNo: "",
-                        fabricId: "",
-                        styleId: "",
-                        styleItemId: "",
-                        colorId: "",
-                        qty: "",
-                        fabWidth: "",
-                        fabMeter: "",
-                        noOfPcs: "",
-                        accessoryId: "",
-                        accessoryGroupId: "",
-                        sizeId: "",
-                        uomId: "",
-                        qty: "",
-                        selected: false,
+                    // Fill in sizeRows starting at first empty slot
+                    purchaseItems?.forEach((row, i) => {
+                        if (startIndex + i < updated.length) {
+                            updated[startIndex + i] = { ...row };
+                        } else {
+                            updated.push({ ...row }); // append if no empty slot
+                        }
                     });
-                }
 
-                return updated;
-            });
+                    // Ensure at least 6 rows
+                    while (updated.length < 4) {
+                        updated.push({
+                            styleNo: "",
+                            fabricId: "",
+                            styleId: "",
+                            styleItemId: "",
+                            colorId: "",
+                            stockQty: "",
+                            sizeId: "",
+                            selected: false,
+                        });
+                    }
+
+                    return updated;
+                });
+            } else {
+                setPurchaseReturnItems((prev) => {
+                    const updated = [...prev];
+                    // Find first empty slot index
+                    let startIndex = updated.findIndex(
+                        (row) =>
+                            !row.styleNo &&
+                            !row.styleItemId &&
+                            !row.fabricId &&
+                            !row.accessoryId &&
+                            !row.accessoryGroupId &&
+                            !row.styleId
+                    );
+                    if (startIndex === -1) startIndex = updated.length;
+
+                    // Fill in sizeRows starting at first empty slot
+                    purchaseItems?.forEach((row, i) => {
+                        if (startIndex + i < updated.length) {
+                            updated[startIndex + i] = { ...row };
+                        } else {
+                            updated.push({ ...row }); // append if no empty slot
+                        }
+                    });
+
+                    // Ensure at least 6 rows
+                    while (updated.length < 4) {
+                        updated.push({
+                            styleNo: "",
+                            fabricId: "",
+                            styleId: "",
+                            styleItemId: "",
+                            colorId: "",
+                            qty: "",
+                            fabWidth: "",
+                            fabMeter: "",
+                            noOfPcs: "",
+                            accessoryId: "",
+                            accessoryGroupId: "",
+                            sizeId: "",
+                            uomId: "",
+                            qty: "",
+                            selected: false,
+                        });
+                    }
+
+                    return updated;
+                });
+            }
         } catch (error) {
             console.error("Error adding row:", error);
         }
@@ -393,7 +502,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
         }
     };
 
-
+    const type = returnType?.toLowerCase() || "";
 
     return (
         <>
@@ -494,6 +603,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                             readOnly={id}
                                             beforeChange={() => {
                                                 setPurchaseReturnItems([]);
+                                                setReturnGoods([])
                                             }}
                                         />
                                         <DropdownNew
@@ -550,15 +660,31 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
 
                             </div>
                             <fieldset>
+                                {
+                                    (type.includes("fabric") || type.includes("accessory")) && (
 
-                                <ReturnItems
-                                    id={id}
-                                    returnType={returnType}
-                                    params={params}
-                                    purchaseReturnItems={purchaseReturnItems}
-                                    setPurchaseReturnItems={setPurchaseReturnItems}
-                                    readOnly={readOnly}
-                                />
+                                        <ReturnItems
+                                            id={id}
+                                            returnType={returnType}
+                                            params={params}
+                                            purchaseReturnItems={purchaseReturnItems}
+                                            setPurchaseReturnItems={setPurchaseReturnItems}
+                                            readOnly={readOnly}
+                                        />
+                                    )
+                                }
+                                {
+                                    type.includes("finished goods") && (
+                                        <ReturnGoods
+                                            params={params}
+                                            returnGoods={returnGoods}
+                                            setReturnGoods={setReturnGoods}
+                                            readOnly={readOnly}
+                                            id={id}
+                                        />
+                                    )
+                                }
+
                             </fieldset>
 
                             <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">

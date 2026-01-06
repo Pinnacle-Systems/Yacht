@@ -223,6 +223,7 @@ async function getOne(id) {
           portionId: true,
         },
       },
+      returnGoods: true,
       Branch: true,
       Store: true,
       Supplier: true,
@@ -271,6 +272,7 @@ async function create(body) {
     supplierId,
     returnType,
     purchaseReturnItems,
+    returnGoods,
     invNo,
     finYearId,
     draftSave,
@@ -304,16 +306,28 @@ async function create(body) {
         invNo,
       },
     });
-    await createPurchaseReturnItems(
-      tx,
-      purchaseReturnItems,
-      data,
-      userId,
-      branchId,
-      storeId,
-      returnType,
-      invNo
-    );
+    if (returnType === "Finished Goods") {
+      await createReturnGoods(
+        tx,
+        returnGoods,
+        data,
+        userId,
+        branchId,
+        storeId,
+        invNo
+      );
+    } else {
+      await createPurchaseReturnItems(
+        tx,
+        purchaseReturnItems,
+        data,
+        userId,
+        branchId,
+        storeId,
+        returnType,
+        invNo
+      );
+    }
   });
   return { statusCode: 0, data };
 }
@@ -438,6 +452,67 @@ async function createPurchaseReturnItems(
   return Promise.all(promises);
 }
 
+async function createReturnGoods(
+  tx,
+  returnGoods,
+  purchaseReturn,
+  userId,
+  branchId,
+  storeId,
+  invNo
+) {
+  const promises = returnGoods.map(async (stockDetail, index) => {
+    const stkQty = stockDetail?.stkQty
+      ? Math.round(parseFloat(stockDetail.stkQty))
+      : null;
+    const createdItem = await tx.returnGoods.create({
+      data: {
+        purchaseReturnId: parseInt(purchaseReturn.id),
+        styleNo: stockDetail?.styleNo ?? undefined,
+        fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
+        styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+        styleItemId: stockDetail?.styleItemId
+          ? parseInt(stockDetail.styleItemId)
+          : null,
+        sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+        colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+        stkQty,
+        invNo: invNo ? invNo : "",
+        returnQty: stockDetail?.returnQty
+          ? parseFloat(stockDetail.returnQty)
+          : null,
+      },
+    });
+
+    // Create corresponding Stock row
+    await tx.stock.create({
+      data: {
+        inOrOut: "ReturnGoods",
+        createdById: parseInt(userId),
+        branchId: parseInt(branchId),
+        storeId: parseInt(storeId),
+        styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+        sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+        colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+        fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
+        qty:
+          stockDetail?.returnQty && !isNaN(parseFloat(stockDetail.returnQty))
+            ? -Math.abs(parseInt(stockDetail.returnQty))
+            : null,
+        returnGoodsId: createdItem.id,
+        styleNo: stockDetail?.styleNo ?? undefined,
+        styleItemId: stockDetail?.styleItemId
+          ? parseInt(stockDetail.styleItemId)
+          : null,
+      },
+    });
+
+    return createdItem;
+  });
+
+  return Promise.all(promises);
+}
+
 function findRemovedItems(dataFound, purchaseReturnItems) {
   let removedItems = dataFound.purchaseReturnItems.filter((oldItem) => {
     let result = purchaseReturnItems.find(
@@ -470,6 +545,7 @@ async function update(id, body) {
     returnType,
     invNo,
     purchaseReturnItems,
+    returnGoods,
   } = await body;
   let data;
   const dataFound = await prisma.purchaseReturn.findUnique({
@@ -510,16 +586,28 @@ async function update(id, body) {
         invNo,
       },
     });
-    await updatepurchaseReturnItems(
-      tx,
-      purchaseReturnItems,
-      data,
-      userId,
-      branchId,
-      storeId,
-      returnType,
-      invNo
-    );
+    if (returnType === "Finished Goods") {
+      await updateReturnGoods(
+        tx,
+        returnGoods,
+        data,
+        userId,
+        branchId,
+        storeId,
+        invNo
+      );
+    } else {
+      await updatepurchaseReturnItems(
+        tx,
+        purchaseReturnItems,
+        data,
+        userId,
+        branchId,
+        storeId,
+        returnType,
+        invNo
+      );
+    }
   });
   return { statusCode: 0, data };
 }
@@ -804,6 +892,182 @@ async function updatepurchaseReturnItems(
           itemType: returnType ? returnType : undefined,
           portionId: returnDetails?.portionId
             ? parseInt(returnDetails.portionId)
+            : null,
+        },
+      });
+
+      return createdItem;
+    }
+  });
+
+  return Promise.all(promises);
+}
+
+async function updateReturnGoods(
+  tx,
+  returnGoods,
+  purchaseReturn,
+  userId,
+  branchId,
+  storeId,
+  invNo
+) {
+  const existingRows = await tx.returnGoods.findMany({
+    where: { purchaseReturnId: parseInt(purchaseReturn.id) },
+    select: { id: true },
+  });
+  const existingIds = existingRows.map((r) => r.id);
+  const incomingIds = returnGoods
+    .filter((r) => r.id)
+    .map((r) => parseInt(r.id));
+  const idsToDelete = existingIds.filter((id) => !incomingIds.includes(id));
+  if (idsToDelete.length > 0) {
+    // Delete stock first (FK dependency)
+    await tx.stock.deleteMany({
+      where: { returnGoodsId: { in: idsToDelete } },
+    });
+
+    // Delete ready goods
+    await tx.returnGoods.deleteMany({
+      where: { id: { in: idsToDelete } },
+    });
+  }
+  const promises = returnGoods.map(async (stockDetail) => {
+    const stkQty = stockDetail?.stkQty
+      ? Math.round(parseFloat(stockDetail.stkQty))
+      : null;
+
+    if (stockDetail.id) {
+      // Update existing OpeningStockItem
+      const updatedItem = await tx.returnGoods.update({
+        where: { id: parseInt(stockDetail.id) },
+        data: {
+          purchaseReturnId: parseInt(purchaseReturn.id),
+          styleNo: stockDetail?.styleNo ?? undefined,
+          fabricId: stockDetail?.fabricId
+            ? parseInt(stockDetail.fabricId)
+            : null,
+          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
+            : null,
+          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+          stkQty,
+          returnQty: stockDetail?.returnQty
+            ? parseFloat(stockDetail.returnQty)
+            : null,
+          invNo: invNo ? invNo : "",
+        },
+      });
+
+      // Update or create Stock row
+      const existingStock = await tx.stock.findFirst({
+        where: { returnGoodsId: updatedItem.id },
+      });
+
+      if (existingStock) {
+        await tx.stock.update({
+          where: { id: existingStock.id },
+          data: {
+            styleId: stockDetail?.styleId
+              ? parseInt(stockDetail.styleId)
+              : null,
+            styleItemId: stockDetail?.styleItemId
+              ? parseInt(stockDetail.styleItemId)
+              : null,
+            sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+            colorId: stockDetail?.colorId
+              ? parseInt(stockDetail.colorId)
+              : null,
+            qty:
+              stockDetail?.returnQty &&
+              !isNaN(parseFloat(stockDetail.returnQty))
+                ? -Math.abs(parseInt(stockDetail.returnQty))
+                : null,
+            updatedById: parseInt(userId),
+            fabricId: stockDetail?.fabricId
+              ? parseInt(stockDetail.fabricId)
+              : null,
+            styleNo: stockDetail?.styleNo ?? undefined,
+          },
+        });
+      } else {
+        await tx.stock.create({
+          data: {
+            inOrOut: "ReturnGoods",
+            createdById: parseInt(userId),
+            branchId: parseInt(branchId),
+            storeId: parseInt(storeId),
+            styleId: stockDetail?.styleId
+              ? parseInt(stockDetail.styleId)
+              : null,
+            sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+            colorId: stockDetail?.colorId
+              ? parseInt(stockDetail.colorId)
+              : null,
+            qty:
+              stockDetail?.returnQty &&
+              !isNaN(parseFloat(stockDetail.returnQty))
+                ? -Math.abs(parseInt(stockDetail.returnQty))
+                : null,
+            returnGoodsId: updatedItem.id,
+            styleNo: stockDetail?.styleNo ?? undefined,
+            fabricId: stockDetail?.fabricId
+              ? parseInt(stockDetail.fabricId)
+              : null,
+            styleItemId: stockDetail?.styleItemId
+              ? parseInt(stockDetail.styleItemId)
+              : null,
+          },
+        });
+      }
+
+      return updatedItem;
+    } else {
+      // Create new OpeningStockItem
+      const createdItem = await tx.returnGoods.create({
+        data: {
+          purchaseReturnId: parseInt(purchaseReturn.id),
+          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+          stkQty,
+          returnQty: stockDetail?.returnQty
+            ? parseFloat(stockDetail.returnQty)
+            : null,
+          fabricId: stockDetail?.fabricId
+            ? parseInt(stockDetail.fabricId)
+            : null,
+          styleNo: stockDetail?.styleNo ?? undefined,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
+            : null,
+          invNo: invNo ? invNo : "",
+        },
+      });
+
+      // Create Stock row
+      await tx.stock.create({
+        data: {
+          inOrOut: "ReturnGoods",
+          createdById: parseInt(userId),
+          branchId: parseInt(branchId),
+          storeId: parseInt(storeId),
+          fabricId: stockDetail?.fabricId
+            ? parseInt(stockDetail.fabricId)
+            : null,
+          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+          qty:
+            stockDetail?.returnQty && !isNaN(parseFloat(stockDetail.returnQty))
+              ? -Math.abs(parseInt(stockDetail.returnQty))
+              : null,
+          returnGoodsId: createdItem.id,
+          styleNo: stockDetail?.styleNo ?? undefined,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
             : null,
         },
       });

@@ -16,10 +16,10 @@ import { VIEW } from "../../../icons";
 import { toast } from "react-toastify";
 import FxSelect from "../../../Inputs";
 
-export default function ReadyGoods({
-  readyGoods,
-  setReadyGoods,
+export default function ReturnGoods({
   params,
+  returnGoods,
+  setReturnGoods,
   readOnly,
   id,
 }) {
@@ -44,23 +44,29 @@ export default function ReadyGoods({
       fabricId: "",
       styleId: "",
       sizeId: "",
-      qty: "",
+      stkQty: "",
+      returnQty: "",
       remarks: "",
       styleItemId: "",
       colorId: "",
       selected: false,
     };
-    setReadyGoods([...readyGoods, newRow]);
+    setReturnGoods([...returnGoods, newRow]);
   };
 
+  useEffect(() => {
+console.log(id,"idd")
+  }, [id])
+  
+
   const handleInputChange = (value, index, field) => {
-    const newBlend = structuredClone(readyGoods);
+    const newBlend = structuredClone(returnGoods);
     newBlend[index][field] = value;
-    setReadyGoods(newBlend);
+    setReturnGoods(newBlend);
   };
 
   const deleteRow = (id) => {
-    setReadyGoods((currentRows) => {
+    setReturnGoods((currentRows) => {
       if (currentRows.length > 1) {
         return currentRows.filter((row, index) => index !== parseInt(id));
       }
@@ -69,14 +75,14 @@ export default function ReadyGoods({
   };
 
   const deleteSelectedRows = () => {
-    setReadyGoods((rows) =>
-      rows.filter((r) => !(r.selected && (r.stockQty ?? 0) === 0))
+    setReturnGoods((rows) =>
+      rows.filter((r) => !(r.selected && (r.balQty ?? 0) === 0))
     );
     setContextMenu(null);
   };
 
   const handleDeleteAllRows = () => {
-    setReadyGoods((prevRows) => {
+    setReturnGoods((prevRows) => {
       if (prevRows.length <= 1) return prevRows;
       return [prevRows[0]];
     });
@@ -97,8 +103,8 @@ export default function ReadyGoods({
   };
 
   useEffect(() => {
-    if (readyGoods) {
-      setReadyGoods((prev) => {
+    if (returnGoods) {
+      setReturnGoods((prev) => {
         const filledRows = prev.length;
 
         if (filledRows < 6) {
@@ -110,7 +116,8 @@ export default function ReadyGoods({
               fabricId: "",
               styleId: "",
               sizeId: "",
-              qty: "",
+              stkQty: "",
+              returnQty: "",
               remarks: "",
               styleItemId: "",
               colorId: "",
@@ -122,13 +129,14 @@ export default function ReadyGoods({
       });
     } else {
       // if null/undefined, initialize with 6 empty rows
-      setReadyGoods(
+      setReturnGoods(
         Array.from({ length: 6 }, () => ({
           styleNo: "",
           fabricId: "",
           styleId: "",
           sizeId: "",
-          qty: "",
+          stkQty: "",
+          returnQty: "",
           remarks: "",
           styleItemId: "",
           colorId: "",
@@ -136,20 +144,20 @@ export default function ReadyGoods({
         }))
       );
     }
-  }, [readyGoods, setReadyGoods]);
+  }, [returnGoods, setReturnGoods]);
 
   const handleAddRow = async () => {
-    const isFirstTime = readyGoods.every((row) => !row.styleNo);
+    const isFirstTime = returnGoods.every((row) => !row.styleNo);
 
     if (!isFirstTime) {
-      // const hasEmpty = readyGoods.some((row) => !row.qty);
-      const hasEmpty = readyGoods.some((row) => {
+      // const hasEmpty = returnGoods.some((row) => !row.qty);
+      const hasEmpty = returnGoods.some((row) => {
         const hasStyle =
           row.styleNo !== "" &&
           row.styleNo !== null &&
           row.styleNo !== undefined;
 
-        return hasStyle && (!row.styleItemId || !row.qty);
+        return hasStyle && (!row.styleItemId || !row.returnQty);
       });
       if (hasEmpty) {
         toast.info("Please fill all required fields...!", {
@@ -180,7 +188,8 @@ export default function ReadyGoods({
             fabricId: style.fabricId || "",
             styleId: style.id || "",
             sizeId: s.sizeId,
-            qty: "",
+            stkQty: "",
+            returnQty: "",
             remarks: "",
             colorId: "",
             styleItemId: style.styleItemId || "",
@@ -189,7 +198,7 @@ export default function ReadyGoods({
           }));
         }
       }
-      setReadyGoods((prev) => {
+      setReturnGoods((prev) => {
         const updated = [...prev];
 
         // Find first empty slot index
@@ -214,7 +223,8 @@ export default function ReadyGoods({
             fabricId: "",
             styleId: "",
             sizeId: "",
-            qty: "",
+            stkQty: "",
+            returnQty: "",
             remarks: "",
             styleItemId: "",
             colorId: "",
@@ -267,16 +277,16 @@ export default function ReadyGoods({
                     <input
                       type="checkbox"
                       checked={
-                        readyGoods.length > 0 &&
-                        readyGoods
-                          .filter((row) => (row.usedQty ?? 0) === 0)
+                        returnGoods.length > 0 &&
+                        returnGoods
+                          .filter((row) => (row.balQty ?? 0) === 0)
                           .every((row) => row.selected)
                       }
                       onChange={(e) => {
                         const checked = e.target.checked;
-                        setReadyGoods((prev) =>
+                        setReturnGoods((prev) =>
                           prev.map((row) =>
-                            (row.usedQty ?? 0) > 0
+                            (row.balQty ?? 0) > 0
                               ? row
                               : { ...row, selected: checked }
                           )
@@ -330,7 +340,12 @@ export default function ReadyGoods({
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Qty
+                  Stock Qty
+                </th>
+                <th
+                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Return Qty
                 </th>
                 <th
                   className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
@@ -338,7 +353,7 @@ export default function ReadyGoods({
               </tr>
             </thead>
             <tbody>
-              {(readyGoods ? readyGoods : [])?.map((row, index) => (
+              {(returnGoods ? returnGoods : [])?.map((row, index) => (
                 <tr
                   className="border border-blue-gray-200 cursor-pointer "
                   key={index}
@@ -347,7 +362,7 @@ export default function ReadyGoods({
                     <input
                       type="checkbox"
                       checked={row.selected || false}
-                      disabled={readOnly || (row.usedQty ?? 0) > 0}
+                      disabled={readOnly || (row.balQty ?? 0) > 0}
                       onChange={(e) =>
                         handleInputChange(e.target.checked, index, "selected")
                       }
@@ -375,7 +390,7 @@ export default function ReadyGoods({
                           label: item.sku,
                           value: item.id,
                         }))}
-                      readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                      readOnly={true}
                       placeholder=""
                       onBlur={() =>
                         handleInputChange(row.styleId, index, "styleId")
@@ -399,7 +414,7 @@ export default function ReadyGoods({
                           label: item.name,
                           value: item.id,
                         }))}
-                      readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                      readOnly={true}
                       placeholder=""
                       onBlur={() =>
                         handleInputChange(row.styleItemId, index, "styleItemId")
@@ -437,7 +452,7 @@ export default function ReadyGoods({
                           label: item.name,
                           value: item.id,
                         }))}
-                      readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                      readOnly={true}
                       placeholder=""
                       onBlur={() =>
                         handleInputChange(row.fabricId, index, "fabricId")
@@ -461,7 +476,7 @@ export default function ReadyGoods({
                           label: item.name,
                           value: item.id,
                         }))}
-                      readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                      readOnly={true}
                       placeholder=""
                       onBlur={() =>
                         handleInputChange(row.sizeId, index, "sizeId")
@@ -485,7 +500,7 @@ export default function ReadyGoods({
                           label: item.name,
                           value: item.id,
                         }))}
-                      readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                      readOnly={true}
                       placeholder=""
                       onBlur={() =>
                         handleInputChange(row.colorId, index, "colorId")
@@ -504,7 +519,7 @@ export default function ReadyGoods({
                         if (e.code === "Minus" || e.code === "NumpadSubtract")
                           e.preventDefault();
                         if (e.key === "Delete") {
-                          handleInputChange("", index, "qty");
+                          handleInputChange("", index, "stkQty");
                         }
                         if (e.key === "Enter") {
                           e.preventDefault(); // prevent form submit or line break
@@ -521,14 +536,47 @@ export default function ReadyGoods({
                       type="number"
                       className="text-right rounded py-1 px-1 w-full table-data-input"
                       onFocus={(e) => e.target.select()}
-                      value={row?.qty}
+                      value={row?.stkQty}
                       onChange={(e) =>
-                        handleInputChange(e.target.value, index, "qty")
+                        handleInputChange(e.target.value, index, "stkQty")
                       }
                       onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "qty");
+                        handleInputChange(e.target.value, index, "stkQty");
                       }}
-                      disabled={readOnly || (row.usedQty ?? 0) > 0}
+                      disabled={true}
+                    />
+                  </td>
+                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                    <input
+                      onKeyDown={(e) => {
+                        if (e.code === "Minus" || e.code === "NumpadSubtract")
+                          e.preventDefault();
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "returnQty");
+                        }
+                        if (e.key === "Enter") {
+                          e.preventDefault(); // prevent form submit or line break
+                          e.stopPropagation();
+                          const nextQtyInput = document.querySelector(
+                            `#styleId-input-${index + 1}`
+                          );
+                          if (nextQtyInput) {
+                            nextQtyInput.focus();
+                          }
+                        }
+                      }}
+                      min={"0"}
+                      type="number"
+                      className="text-right rounded py-1 px-1 w-full table-data-input"
+                      onFocus={(e) => e.target.select()}
+                      value={row?.returnQty}
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "returnQty")
+                      }
+                      onBlur={(e) => {
+                        handleInputChange(e.target.value, index, "returnQty");
+                      }}
+                      disabled={readOnly || (row.balQty ?? 0) > 0}
                     />
                   </td>
                   <td className="w-2 border border-gray-300">
@@ -550,13 +598,13 @@ export default function ReadyGoods({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={8}
+                  colSpan={9}
                 >
                   Total Qty
                 </td>
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
-                  {(Array.isArray(readyGoods) ? readyGoods : []).reduce(
-                    (sum, row) => sum + (Number(row.qty) || 0),
+                  {(Array.isArray(returnGoods) ? returnGoods : []).reduce(
+                    (sum, row) => sum + (Number(row.returnQty) || 0),
                     0
                   )}
                 </td>

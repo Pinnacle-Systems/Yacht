@@ -318,8 +318,53 @@ async function getOne(id) {
       };
     })
   );
+  const goodsWithStkQty = await Promise.all(
+    data.readyGoods.map(async (item) => {
+      const childRecordSales = await prisma.salesEntryItems.count({
+        where: {
+          styleId: item.styleId,
+          sizeId: item.sizeId,
+          colorId: item.colorId,
+          fabricId: item.fabricId,
+          styleItemId: item.styleItemId,
+        },
+      });
+      const childRecordAdjustment = await prisma.stockAdjustmentItems.count({
+        where: {
+          styleId: item.styleId,
+          sizeId: item.sizeId,
+          colorId: item.colorId,
+          fabricId: item.fabricId,
+          styleItemId: item.styleItemId,
+        },
+      });
+      const childRecordReturn = await prisma.returnGoods.count({
+        where: {
+          styleId: item.styleId,
+          sizeId: item.sizeId,
+          colorId: item.colorId,
+          styleItemId: item.styleItemId,
+          fabricId: item.fabricId,
+        },
+      });
+      return {
+        ...item,
+        usedQty:
+          childRecordSales + childRecordAdjustment + childRecordReturn || 0,
+        // minQty:
+        //   (minDelivery._sum.usedMeter || 0) +
+        //   (minReturn._sum.returnFabMeter || 0),
+      };
+    })
+  );
   const styleIds = data.fabricInwardItems
     .map((item) => item.styleId)
+    .filter(Boolean);
+  const goodsStyleIds = data.readyGoods
+    .map((item) => item.styleId)
+    .filter(Boolean);
+  const accessoryIds = data.fabricInwardItems
+    .map((item) => item.accessoryId)
     .filter(Boolean);
   const childRecordCutPlan = await prisma.cuttingOrderItems.count({
     where: {
@@ -335,11 +380,39 @@ async function getOne(id) {
       },
     },
   });
-  const childRecordReturn = await prisma.purchaseReturnItems.count({
+  const childRecordReturn =
+    data?.inwardType === "Finished Goods"
+      ? await prisma.returnGoods.count({
+          where: {
+            styleId: {
+              in: goodsStyleIds,
+            },
+          },
+        })
+      : await prisma.purchaseReturnItems.count({
+          where: {
+            OR: [
+              {
+                styleId: {
+                  in: styleIds,
+                },
+              },
+              {
+                accessoryId: {
+                  in: accessoryIds,
+                },
+              },
+            ],
+          },
+        });
+  const childRecordSales = await prisma.salesEntryItems.count({
     where: {
-      styleId: {
-        in: styleIds,
-      },
+      styleId: { in: goodsStyleIds },
+    },
+  });
+  const childRecordStock = await prisma.stockAdjustmentItems.count({
+    where: {
+      styleId: { in: goodsStyleIds },
     },
   });
   return {
@@ -347,8 +420,11 @@ async function getOne(id) {
     data: {
       ...data,
       fabricInwardItems: itemWithStkQty,
+      readyGoods: goodsWithStkQty,
       childRecordCutting: childRecordCutDelivery + childRecordCutPlan,
       childRecordReturn: childRecordReturn,
+      childRecordSales: childRecordSales,
+      childRecordStock: childRecordStock,
     },
   };
 }
@@ -423,6 +499,7 @@ async function create(req) {
         userId,
         branchId,
         storeId,
+        inwardType,
         invNo
       );
     }
@@ -486,7 +563,6 @@ async function createPurchaseInwardItems(
             : null,
         },
       });
-
       // Create corresponding Stock row
       await tx.materialStock.create({
         data: {
@@ -1209,63 +1285,110 @@ async function getPurchaseDetail(req) {
 }
 
 async function getPurchaseDetailStock(req) {
-  const { invNo, storeId, branchId } = req.query;
+  const { invNo, storeId, branchId, returnType } = req.query;
 
   let purchaseData = await prisma.purchaseInward.findFirst({
     where: {
       invNo: invNo,
+      inwardType: returnType,
+    },
+    include: {
+      readyGoods: true,
     },
   });
   if (!purchaseData || purchaseData.length === 0)
     return NoRecordFound("Invoice");
-  let data = await prisma.materialStock.groupBy({
-    by: [
-      // "styleNo",
-      "fabricId",
-      "colorId",
-      "fabWidth",
-      // "noOfPcs",
-      "accessoryId",
-      "accessoryGroupId",
-      "sizeId",
-      "uomId",
-      "styleId",
-      "invNo",
-      "portionId",
-    ],
-    where: {
-      branchId: branchId ? parseInt(branchId) : undefined,
-      storeId: storeId ? parseInt(storeId) : undefined,
-      invNo: invNo,
-    },
-    _sum: {
-      qty: true, 
-      fabMeter: true,
-    },
-  });
+  let data;
+  const isMaterial =
+    returnType?.toLowerCase().includes("fabric") ||
+    returnType?.toLowerCase().includes("accessory");
+  if (isMaterial) {
+    data = await prisma.materialStock.groupBy({
+      by: [
+        "fabricId",
+        "colorId",
+        "fabWidth",
+        "accessoryId",
+        "accessoryGroupId",
+        "sizeId",
+        "uomId",
+        "styleId",
+        "invNo",
+        "portionId",
+      ],
+      where: {
+        branchId: branchId ? parseInt(branchId) : undefined,
+        storeId: storeId ? parseInt(storeId) : undefined,
+        invNo: invNo,
+      },
+      _sum: {
+        qty: true,
+        fabMeter: true,
+      },
+    });
+  } else {
+    const rg =
+      purchaseData.readyGoods.filter(
+        (item) => item.styleId && item.styleItemId && item.sizeId
+      ) || [];
+    const orConditions = rg.map((item) => ({
+      styleId: item.styleId,
+      styleItemId: item.styleItemId,
+      colorId: item.colorId,
+      sizeId: item.sizeId,
+    }));
+    data = await prisma.stock.groupBy({
+      by: [
+        "fabricId",
+        "colorId",
+        "sizeId",
+        "styleId",
+        "styleItemId",
+        "styleNo",
+      ],
+      where: {
+        branchId: branchId ? parseInt(branchId) : undefined,
+        storeId: storeId ? parseInt(storeId) : undefined,
+        OR: orConditions,
+      },
+      _sum: {
+        qty: true,
+      },
+    });
+  }
 
   if (!data || data.length === 0) return NoRecordFound("Invoice not found");
 
   // 4️⃣ Return formatted result
   return {
     statusCode: 0,
-    data: data.map((d) => ({
-      invNo: d.invNo,
-      styleItemId: d.styleItemId,
-      fabricId: d.fabricId,
-      colorId: d.colorId,
-      sizeId: d.sizeId,
-      fabWidth: d.fabWidth,
-      fabMeter: d._sum.fabMeter,
-      // noOfPcs: d.noOfPcs,
-      accessoryId: d.accessoryId,
-      accessoryGroupId: d.accessoryGroupId,
-      sizeId: d.sizeId,
-      uomId: d.uomId,
-      qty: d._sum.qty,
-      styleId: d.styleId,
-      portionId: d.portionId,
-    })),
+    data: isMaterial
+      ? data.map((d) => ({
+          invNo: d.invNo,
+          styleItemId: d.styleItemId,
+          fabricId: d.fabricId,
+          colorId: d.colorId,
+          sizeId: d.sizeId,
+          fabWidth: d.fabWidth,
+          fabMeter: d._sum.fabMeter,
+          accessoryId: d.accessoryId,
+          accessoryGroupId: d.accessoryGroupId,
+          sizeId: d.sizeId,
+          uomId: d.uomId,
+          qty: d._sum.qty,
+          styleId: d.styleId,
+          portionId: d.portionId,
+        }))
+      : data.map((d) => ({
+          invNo: purchaseData.invNo,
+          styleItemId: d.styleItemId,
+          fabricId: d.fabricId,
+          colorId: d.colorId,
+          sizeId: d.sizeId,
+          stkQty: d._sum.qty,
+          styleId: d.styleId,
+          styleNo: d.styleNo,
+        })),
     returnType: purchaseData.inwardType,
     supplierId: purchaseData.supplierId,
   };
