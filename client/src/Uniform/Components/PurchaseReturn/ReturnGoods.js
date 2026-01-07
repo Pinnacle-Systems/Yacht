@@ -15,6 +15,7 @@ import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMaste
 import { VIEW } from "../../../icons";
 import { toast } from "react-toastify";
 import FxSelect from "../../../Inputs";
+import Swal from "sweetalert2";
 
 export default function ReturnGoods({
   params,
@@ -55,11 +56,29 @@ export default function ReturnGoods({
   };
 
   useEffect(() => {
-console.log(id,"idd")
-  }, [id])
-  
+    console.log(id, "idd");
+  }, [id]);
 
   const handleInputChange = (value, index, field) => {
+    if (field === "returnQty") {
+      const row = returnGoods[index];
+      const balanceQty = row?.stkQty || 0;
+
+      if (parseFloat(balanceQty) < parseFloat(value)) {
+        Swal.fire({
+          icon: "warning",
+          title: "Invalid Quantity",
+          text: "Return Qty cannot be more than Stock Qty!",
+          confirmButtonText: "OK",
+        });
+        setReturnGoods((prev) => {
+          const newItems = structuredClone(prev);
+          newItems[index].returnQty = ""; // or null
+          return newItems;
+        });
+        return;
+      }
+    }
     const newBlend = structuredClone(returnGoods);
     newBlend[index][field] = value;
     setReturnGoods(newBlend);
@@ -548,6 +567,7 @@ console.log(id,"idd")
                   </td>
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                     <input
+                      id={`returnQty-input-${index}`}
                       onKeyDown={(e) => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract")
                           e.preventDefault();
@@ -558,7 +578,7 @@ console.log(id,"idd")
                           e.preventDefault(); // prevent form submit or line break
                           e.stopPropagation();
                           const nextQtyInput = document.querySelector(
-                            `#styleId-input-${index + 1}`
+                            `#returnQty-input-${index + 1}`
                           );
                           if (nextQtyInput) {
                             nextQtyInput.focus();

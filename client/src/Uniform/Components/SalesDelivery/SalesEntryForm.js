@@ -37,6 +37,8 @@ import { Loader } from "../../../Basic/components";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import  purchaseInwardEntryApi  from "../../../redux/uniformService/PurchaseInwardEntry";
+import  purchaseReturnApi  from "../../../redux/services/PurchaseReturnService";
 
 export function SalesBillForm({
   onClose,
@@ -290,6 +292,10 @@ export function SalesBillForm({
     }
     dispatch(OpeningStockApi.util.invalidateTags(["OpeningStock"]));
     dispatch(StockAdjustmentApi.util.invalidateTags(["StockAdjustment"]));
+    dispatch(
+      purchaseInwardEntryApi.util.invalidateTags(["purchaseInwardEntry"])
+    );
+    dispatch(purchaseReturnApi.util.invalidateTags(["PurchaseReturn"]))
   };
 
   const handlePartyChange = (selectedId, field) => {

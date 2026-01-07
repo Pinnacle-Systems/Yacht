@@ -315,7 +315,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
       return false;
     }
     if (inwardType === "Finished Goods") {
-      if (!(data?.storeId && data?.supplierId && data?.invNo && isGridDatasValid(data?.readyGoods.filter((item) => item?.styleId), false, ["styleItemId", "colorId", "sizeId", "qty"]))
+      if (!(data?.storeId && data?.supplierId && data?.invNo && isGridDatasValid(data?.readyGoods.filter((item) => item?.styleId), false, ["styleItemId", "sizeId", "qty"]))
         && data?.readyGoods.length > 0) {
         toast.info("Please fill all required fields...!", {
           position: "top-center",

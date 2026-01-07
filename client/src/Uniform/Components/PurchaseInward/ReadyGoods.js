@@ -15,6 +15,7 @@ import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMaste
 import { VIEW } from "../../../icons";
 import { toast } from "react-toastify";
 import FxSelect from "../../../Inputs";
+import Swal from "sweetalert2";
 
 export default function ReadyGoods({
   readyGoods,
@@ -526,9 +527,20 @@ export default function ReadyGoods({
                         handleInputChange(e.target.value, index, "qty")
                       }
                       onBlur={(e) => {
+                        const minQty = row.minQty || 0;
+                        if (parseFloat(minQty) > parseFloat(e.target.value)) {
+                          e.target.value = "";
+                          Swal.fire({
+                            icon: "warning",
+                            title: "Invalid Qty",
+                            text: `Inward Qty cannot be Less than Min Qty! - ${minQty}`,
+                            confirmButtonText: "OK",
+                          });
+                          return;
+                        }
                         handleInputChange(e.target.value, index, "qty");
                       }}
-                      disabled={readOnly || (row.usedQty ?? 0) > 0}
+                      disabled={readOnly}
                     />
                   </td>
                   <td className="w-2 border border-gray-300">

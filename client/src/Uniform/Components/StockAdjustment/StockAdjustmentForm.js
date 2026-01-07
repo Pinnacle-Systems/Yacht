@@ -30,6 +30,8 @@ import { Loader } from "../../../Basic/components";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import purchaseInwardEntryApi from "../../../redux/uniformService/PurchaseInwardEntry";
+import purchaseReturnApi from "../../../redux/services/PurchaseReturnService";
 
 export default function StockAdjustmentForm({
   onClose,
@@ -245,6 +247,10 @@ export default function StockAdjustmentForm({
     }
     dispatch(OpeningStockApi.util.invalidateTags(["OpeningStock"]));
     dispatch(SalesEntryApi.util.invalidateTags(["SalesEntry"]));
+    dispatch(
+      purchaseInwardEntryApi.util.invalidateTags(["purchaseInwardEntry"])
+    );
+    dispatch(purchaseReturnApi.util.invalidateTags(["PurchaseReturn"]));
   };
 
   const handleKeyDown = (event) => {

@@ -11,6 +11,8 @@ import { getCommonParams } from "../../../Utils/helper";
 import { useDispatch } from "react-redux";
 import StockAdjustmentApi from "../../../redux/uniformService/StockAdjustmentService";
 import OpeningStockApi from "../../../redux/uniformService/OpeningStockService";
+import purchaseInwardEntryApi from "../../../redux/uniformService/PurchaseInwardEntry";
+import  purchaseReturnApi  from "../../../redux/services/PurchaseReturnService";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -80,6 +82,10 @@ export default function Form() {
           setShowForm(false);
           dispatch(OpeningStockApi.util.invalidateTags(["OpeningStock"]));
           dispatch(StockAdjustmentApi.util.invalidateTags(["StockAdjustment"]));
+          dispatch(
+            purchaseInwardEntryApi.util.invalidateTags(["purchaseInwardEntry"])
+          );
+          dispatch(purchaseReturnApi.util.invalidateTags(["PurchaseReturn"]));
         } catch (error) {
           Swal.fire({
             icon: "error",

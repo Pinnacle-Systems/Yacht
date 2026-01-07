@@ -252,11 +252,32 @@ async function getOne(id) {
       };
     })
   );
+  const returnGoodsStkQty = await Promise.all(
+    data.returnGoods.map(async (item) => {
+      const stkQty = await prisma.stock.aggregate({
+        where: {
+          styleId: item.styleId,
+          fabricId: item.fabricId,
+          colorId: item.colorId,
+          sizeId: item.sizeId,
+          styleItemId: item.styleItemId,
+        },
+        _sum: {
+          qty: true,
+        },
+      });
+      return {
+        ...item,
+        stkQty: stkQty._sum.qty + item.returnQty,
+      };
+    })
+  );
   return {
     statusCode: 0,
     data: {
       ...data,
       purchaseReturnItems: purchaseReturnStkQty,
+      returnGoods:returnGoodsStkQty,
       ...{ childRecord },
     },
   };

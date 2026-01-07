@@ -273,7 +273,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
             return false;
         }
         if (returnType === "Finished Goods") {
-            if (!(data?.storeId && data?.supplierId && data?.invNo && isGridDatasValid(data?.returnGoods.filter((item) => item?.styleId), false, ["styleItemId", "colorId", "sizeId", "returnQty"]))
+            if (!(data?.storeId && data?.supplierId && data?.invNo && isGridDatasValid(data?.returnGoods.filter((item) => item?.styleId), false, ["styleItemId", "sizeId", "returnQty"]))
                 && data?.returnGoods.length > 0) {
                 toast.info("Please fill all required fields...!", {
                     position: "top-center",
@@ -400,7 +400,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                     position: "top-center",
                     autoClose: 2000
                 });
-                return;
+                return false;
             }
             if (returnType.toLowerCase().includes("finished goods")) {
                 setReturnGoods((prev) => {
@@ -659,7 +659,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
 
 
                             </div>
-                            <fieldset>
+                            <fieldset className="min-h-[150px]">
                                 {
                                     (type.includes("fabric") || type.includes("accessory")) && (
 
