@@ -513,6 +513,7 @@ const StyleMaster = () => {
                               setValue={setPrice}
                               required={false}
                               readOnly={readOnly}
+                              
                             />
                           </div>
                         </div>

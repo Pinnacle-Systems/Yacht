@@ -215,6 +215,20 @@ export const TextInput = forwardRef(
     },
     ref
   ) => {
+    const handleBlur = (e) => {
+      if (type === "number") {
+        const val = Number(e.target.value);
+
+        if (!isNaN(val) && val < 0) {
+          alert(`${name} cannot be negative`);
+          setValue(""); // or "" if you prefer
+          return;
+        }
+      }
+
+      // Call parent onBlur if provided
+      if (onBlur) onBlur(e);
+    };
     return (
       <div className={`mb-2 ${width}`}>
         {name && (
@@ -231,7 +245,7 @@ export const TextInput = forwardRef(
               ? setValue(e.target.value)
               : handleOnChange(e, setValue, type)
           }
-          onBlur={onBlur}
+          onBlur={handleBlur}
           placeholder={name}
           readOnly={readOnly}
           disabled={disabled}
@@ -1814,7 +1828,7 @@ export const DropdownNew = ({
       ? [
           {
             value: "",
-            label: `Select ${name ||  placeholder || "Option"}`,
+            label: `Select ${name || placeholder || "Option"}`,
             isDisabled: false,
           },
         ]

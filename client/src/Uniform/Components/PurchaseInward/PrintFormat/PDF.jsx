@@ -337,7 +337,7 @@ const PDF = ({ singleData, branchList }) => {
                                         { fontWeight: 900, fontFamily: "Times-Bold" },
                                     ]}
                                 >
-                                    Vehicle No
+                                    Invoice No
                                 </Text>
                                 <Text
                                     style={[
@@ -352,7 +352,7 @@ const PDF = ({ singleData, branchList }) => {
                                     :
                                 </Text>
                                 <Text style={tw("text-xs ml-2")}>
-                                    {singleData?.vehicleNo || ""}
+                                    {singleData?.invNo || ""}
                                 </Text>
                             </View>
                         </View>
@@ -369,9 +369,9 @@ const PDF = ({ singleData, branchList }) => {
                                     {[
                                         { label: "S.No", flex: 0.5 },
                                         { label: "Style No", flex: 0.8 },
-                                        { label: "Style", flex: 2.5 },
                                         { label: "Fabric", flex: 2 },
                                         { label: "Color", flex: 2 },
+                                        { label: "Portion", flex: 1 },
                                         { label: "Width ", flex: 0.8 },
                                         { label: "Meter", flex: 0.8 },
                                         { label: "No Of Rolls", flex: 1 },
@@ -427,6 +427,38 @@ const PDF = ({ singleData, branchList }) => {
                                 </View>
                             )
                         }
+                        {
+                            singleData?.inwardType === "Finished Goods" && (
+
+                                <View fixed style={styles.tableHeader}>
+                                    {[
+                                        { label: "S.No", flex: 0.5 },
+                                        { label: "Style No", flex: 0.8 },
+                                        { label: "Style", flex: 2.5 },
+                                        { label: "Fabric", flex: 2 },
+                                        { label: "Color ", flex: 2 },
+                                        { label: "Size", flex: 1 },
+                                        { label: "Quantity", flex: 1 },
+                                    ].map((header, index) => (
+                                        <Text
+                                            key={index}
+                                            style={[
+                                                styles.headerCell,
+                                                {
+                                                    flex: header.flex,
+                                                    textAlign: "center",
+                                                    fontSize: 8,
+                                                    fontWeight: "bold",
+                                                },
+                                                index === header.length - 1 && styles.lastColumn,
+                                            ]}
+                                        >
+                                            {header.label}
+                                        </Text>
+                                    ))}
+                                </View>
+                            )
+                        }
                         {/*  Grouped Rows */}
 
                         {(singleData?.fabricInwardItems || []).map((item, index) => {
@@ -450,18 +482,12 @@ const PDF = ({ singleData, branchList }) => {
                                     {
                                         singleData?.inwardType === "Fabric" && (
                                             <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7 }]}>
-                                                {item?.styleNo || ""}
+                                                {item?.Style?.sku || ""}
                                             </Text>
                                         )
 
                                     }
-                                    {
-                                        singleData?.inwardType === "Fabric" && (
 
-                                            <Text style={[styles.tableCell, { flex: 2.5, fontSize: 7 }]}>
-                                                {item?.StyleItem?.name || ""}
-                                            </Text>
-                                        )}
                                     {
                                         singleData?.inwardType === "Fabric" && (
 
@@ -490,6 +516,14 @@ const PDF = ({ singleData, branchList }) => {
                                                 {item?.Color?.name || ""}
                                             </Text>
                                         )}
+                                    {
+                                        singleData?.inwardType === "Fabric" && (
+                                            <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
+                                                {item?.Portion?.name || ""}
+                                            </Text>
+                                        )
+
+                                    }
                                     {
                                         singleData?.inwardType === "Accessory" && (
 
@@ -543,6 +577,73 @@ const PDF = ({ singleData, branchList }) => {
                                 </View>
                             );
                         })}
+                        {(singleData?.readyGoods || []).map((item, index) => {
+
+                            return (
+                                <View
+                                    key={index}
+                                    wrap={false}
+                                    style={{
+                                        flexDirection: "row",
+                                        width: "100%",
+                                        borderBottomWidth: 1,
+                                        borderBottomColor: "#D1D5DB",
+                                        borderLeftColor: "#D1D5DB",
+                                        borderLeftWidth: 1
+                                    }}
+                                >
+                                    <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7, textAlign: "center" }]}>
+                                        {index + 1}
+                                    </Text>
+                                    {
+                                        singleData?.inwardType === "Finished Goods" && (
+                                            <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7 }]}>
+                                                {item?.Style?.sku || ""}
+                                            </Text>
+                                        )
+
+                                    }
+
+                                    {
+                                        singleData?.inwardType === "Finished Goods" && (
+
+                                            <Text style={[styles.tableCell, { flex: 2.5, fontSize: 7 }]}>
+                                                {item?.StyleItem?.name || ""}
+                                            </Text>
+                                        )}
+                                    {
+                                        singleData?.inwardType === "Finished Goods" && (
+
+                                            <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
+                                                {item?.Fabric?.name || ""}
+                                            </Text>
+                                        )}
+                                    {
+                                        singleData?.inwardType === "Finished Goods" && (
+
+                                            <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
+                                                {item?.Color?.name || ""}
+                                            </Text>
+                                        )}
+                                    {
+                                        singleData?.inwardType === "Finished Goods" && (
+
+                                            <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
+                                                {item?.Size?.name || ""}
+                                            </Text>
+                                        )}
+
+                                    {
+                                        singleData?.inwardType === "Finished Goods" && (
+
+                                            <Text style={[styles.tableCell, { flex: 1, fontSize: 7, textAlign: "right" }]}>
+                                                {item?.qty || ""}
+                                            </Text>
+                                        )}
+
+                                </View>
+                            );
+                        })}
                         {
                             singleData?.inwardType === "Fabric" && (
 
@@ -558,7 +659,7 @@ const PDF = ({ singleData, branchList }) => {
                                         style={[
                                             styles.headerCell,
                                             {
-                                                flex: 9.6,
+                                                flex: 7.8,
                                                 // backgroundColor: "white", borderLeftWidth: 1,
                                                 // borderLeftStyle: "solid",
                                                 // borderColor: "#D1D5DB", borderBottomWidth: 1,
@@ -594,7 +695,7 @@ const PDF = ({ singleData, branchList }) => {
                                         style={[
                                             styles.headerCell,
                                             {
-                                                flex: 9.5,
+                                                flex: 8.2,
                                                 // backgroundColor: "white", borderLeftWidth: 1,
                                                 // borderLeftStyle: "solid",
                                                 // borderColor: "#D1D5DB", borderBottomWidth: 1,
@@ -606,8 +707,37 @@ const PDF = ({ singleData, branchList }) => {
                                     >
                                         Total
                                     </Text>
-                                    <Text style={[styles.headerCell, { flex: 1, fontSize: 8, textAlign: "right" }]}>
+                                    <Text style={[styles.headerCell, { flex: 0.8, fontSize: 8, textAlign: "right" }]}>
                                         {singleData?.fabricInwardItems?.reduce((sum, row) => sum + row.qty, 0)}
+                                    </Text>
+                                </View>
+                            )}
+                        {
+                            singleData?.inwardType === "Finished Goods" && (
+
+
+                                <View style={{
+                                    flexDirection: "row",
+                                    width: "100%",
+                                    borderBottomWidth: 1,
+                                    borderBottomColor: "#D1D5DB",
+                                    borderLeftColor: "#D1D5DB",
+                                    borderLeftWidth: 1
+                                }}>
+                                    <Text
+                                        style={[
+                                            styles.headerCell,
+                                            {
+                                                flex: 7.8,
+                                                fontSize: 8,
+                                                textAlign: "right",
+                                            },
+                                        ]}
+                                    >
+                                        Total
+                                    </Text>
+                                    <Text style={[styles.headerCell, { flex: 0.8, fontSize: 8, textAlign: "right" }]}>
+                                        {singleData?.readyGoods?.reduce((sum, row) => sum + row.qty, 0)}
                                     </Text>
                                 </View>
                             )}

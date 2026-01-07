@@ -237,6 +237,8 @@ async function getOne(id) {
           Size: true,
           filePath: true,
           portionId: true,
+          Style: true,
+          Portion: true,
         },
       },
       readyGoods: {
@@ -251,6 +253,11 @@ async function getOne(id) {
           fabricId: true,
           styleItemId: true,
           colorId: true,
+          Style: true,
+          StyleItem: true,
+          Fabric: true,
+          Size: true,
+          Color: true,
         },
       },
     },
@@ -371,7 +378,7 @@ async function getOne(id) {
           returnQty: true,
         },
       });
-       const minAdjust = await prisma.stockAdjustmentItems.aggregate({
+      const minAdjust = await prisma.stockAdjustmentItems.aggregate({
         where: {
           styleId: item.styleId,
           fabricId: item.fabricId,
@@ -389,7 +396,8 @@ async function getOne(id) {
           childRecordSales + childRecordAdjustment + childRecordReturn || 0,
         minQty:
           (minDelivery._sum.qty || 0) +
-          (minReturn._sum.returnQty || 0) + (minAdjust._sum.adjQty || 0),
+          (minReturn._sum.returnQty || 0) +
+          (minAdjust._sum.adjQty || 0),
       };
     })
   );
