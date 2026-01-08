@@ -23,7 +23,7 @@ import { toast } from "react-toastify";
 import FabricItems from "./FabricItems";
 import AccessoryInwardItems from "./AccessoryItems";
 import ReadyGoods from "./ReadyGoods";
-import { useAddPurchaseInwardEntryMutation, useDeletePurchaseInwardEntryMutation, useGetPurchaseInwardEntryByIdQuery, useUpdatePurchaseInwardEntryMutation } from "../../../redux/uniformService/PurchaseInwardEntry";
+import { useAddPurchaseInwardEntryMutation, useDeletePurchaseInwardEntryMutation, useGetPurchaseInwardEntryByIdQuery, useGetPurchaseInwardEntryQuery, useUpdatePurchaseInwardEntryMutation } from "../../../redux/uniformService/PurchaseInwardEntry";
 import Swal from "sweetalert2";
 import Modal from "../../../UiComponents/Modal";
 import { PDFViewer } from "@react-pdf/renderer";
@@ -40,6 +40,7 @@ import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionM
 import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/AccessoryMasterServices";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import BarCodePrintFormat from "../OpeningStock/BarcodePrintFormat";
+import secureLocalStorage from "react-secure-storage";
 
 const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
   , isSingleFetching,
@@ -82,12 +83,24 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
       (item) => parseInt(item.locationId) === parseInt(locationId)
     )
     : [];
-
+  const finyearId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "currentFinYear"
+  );
   const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
   const { data: sizeList } = useGetSizeMasterQuery({ params: { companyId } });
   const { data: portionList } = useGetPortionMasterQuery({ params: { companyId } });
   const { data: accessoryList } = useGetAccessoryMasterQuery({ params: { companyId } });
   const { data: colorList } = useGetColorMasterQuery({ params: { companyId } });
+  // const {
+  //   data: allData,
+  //   isFetching,
+  //   isLoading,
+  // } = useGetPurchaseInwardEntryQuery({
+  //   params: {
+  //     branchId,
+  //     finyearId,
+  //   },
+  // });
 
   const [addData] = useAddPurchaseInwardEntryMutation();
   const [updateData] = useUpdatePurchaseInwardEntryMutation();
@@ -335,6 +348,26 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
   };
 
   const saveData = (nextProcess) => {
+    // let foundItem;
+    // if (id) {
+    //   foundItem = allData?.data
+    //     ?.filter((i) => i.id !== id)
+    //     ?.some((item) => item.invNo?.trim().toLowerCase() === invNo?.trim().toLowerCase());
+    // } else {
+    //   foundItem = allData?.data?.some(
+    //     (item) => item.invNo?.trim().toLowerCase() === invNo?.trim().toLowerCase()
+    //   );
+    // }
+
+    // if (foundItem) {
+    //   Swal.fire({
+    //     text: "The Invoice Number already exists.",
+    //     icon: "warning",
+    //     timer: 1500,
+    //     showConfirmButton: false,
+    //   });
+    //   return false;
+    // }
     if (!validateData(data)) {
       return;
     }

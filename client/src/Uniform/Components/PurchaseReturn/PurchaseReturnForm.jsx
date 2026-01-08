@@ -64,7 +64,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
     };
     const { data: partyList } = useGetPartyQuery({ params: { ...params } });
     const { data: branchList } = useGetBranchQuery({ params: { companyId } });
-    const { data: invList } = useGetPurchaseInwardEntryQuery({ params: { branchId } });
+    const { data: invList } = useGetPurchaseInwardEntryQuery({ params: { branchId: branchId, searchInwardType: returnType } });
 
     const { data: locationData } = useGetLocationMasterQuery({
         params: { branchId },
