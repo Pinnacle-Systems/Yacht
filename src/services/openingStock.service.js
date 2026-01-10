@@ -75,9 +75,41 @@ async function getNextDocId(
       new Date()
     )}/OST/1`;
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/OST/${
-        parseInt(lastObject.docId.split("/").at(-1)) + 1
-      }`;
+      if (lastObject.docId === "Draft Save") {
+        const records = await prisma.openingStock.findMany({
+          select: {
+            docId: true,
+          },
+          where: {
+            branchId: parseInt(branchId),
+            AND: [
+              {
+                createdAt: {
+                  gte: startTime,
+                },
+              },
+              {
+                createdAt: {
+                  lte: endTime,
+                },
+              },
+            ],
+          },
+        });
+        const maxDocId = records.reduce((max, current) => {
+          const currentNo = Number(current.docId.split("/").pop());
+          const maxNo = max ? Number(max.split("/").pop()) : 0;
+
+          return currentNo > maxNo ? current.docId : max;
+        }, null);
+        newDocId = `${branchObj.branchCode}${getYearShortCode(
+          new Date()
+        )}/OST/${parseInt(maxDocId.split("/").at(-1)) + 1}`;
+      } else {
+        newDocId = `${branchObj.branchCode}${getYearShortCode(
+          new Date()
+        )}/OST/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`;
+      }
     }
     return newDocId;
   }
@@ -198,23 +230,6 @@ async function getOne(id) {
       OpeningStockItems: {
         select: {
           Stock: true,
-          // Stock: {
-          //   select: {
-          //     barCode: true,
-          //     Style: {
-          //       select: {
-          //         id: true,
-          //         name: true, // use the actual field name in your Style model
-          //       },
-          //     },
-          //     Size: {
-          //       select: {
-          //         id: true,
-          //         name: true, // use the actual field name in your Size model
-          //       },
-          //     },
-          //   },
-          // },
           id: true,
           openingStockId: true,
           styleId: true,
@@ -330,7 +345,6 @@ async function create(body) {
       draftSave
     );
     let data;
-    console.log(newDocId);
     await prisma.$transaction(async (tx) => {
       data = await tx.openingStock.create({
         data: {
@@ -350,7 +364,8 @@ async function create(body) {
         data,
         userId,
         branchId,
-        storeId
+        storeId,
+        newDocId
       );
     });
     return { statusCode: 0, data };
@@ -372,6 +387,7 @@ async function update(id, body) {
     notes,
     docDate,
     locationId,
+    finYearId,
   } = await body;
   let data;
   const dataFound = await prisma.openingStock.findUnique({
@@ -387,6 +403,29 @@ async function update(id, body) {
     },
   });
   if (!dataFound) return NoRecordFound("openingStock");
+  if (dataFound.docId === "Draft Save") {
+    let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+    const shortCode = finYearDate
+      ? getYearShortCodeForFinYear(
+          finYearDate?.startDateStartTime,
+          finYearDate?.endDateEndTime
+        )
+      : "";
+    let newDocId = await getNextDocId(
+      branchId,
+      shortCode,
+      finYearDate?.startDateStartTime,
+      finYearDate?.endDateEndTime,
+    );
+    await prisma.openingStock.update({
+      where: {
+        id: parseInt(id),
+      },
+      data: {
+        docId: newDocId,
+      },
+    });
+  }
   let removedItems = findRemovedItems(dataFound, openingStockItems);
   let removeItemsIds = removedItems.map((item) => parseInt(item.id));
   await prisma.$transaction(async (tx) => {
@@ -763,7 +802,8 @@ async function createOpeningStockItems(
   openingStock,
   userId,
   branchId,
-  storeId
+  storeId,
+  newDocId
 ) {
   const newItems = openingStockItems || [];
   for (const item of newItems) {
@@ -828,26 +868,30 @@ async function createOpeningStockItems(
     });
 
     // Create corresponding Stock row
-    await tx.stock.create({
-      data: {
-        inOrOut: "OpeningStock",
-        createdById: parseInt(userId),
-        branchId: parseInt(branchId),
-        storeId: parseInt(storeId),
-        styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
-        sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-        colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-        fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
-        qty,
-        OpeningStockItemsId: createdItem.id,
-        barCode: barcode,
-        styleNo: stockDetail?.styleNo ?? undefined,
-        styleItemId: stockDetail?.styleItemId
-          ? parseInt(stockDetail.styleItemId)
-          : null,
-        price: stockDetail?.price ? parseInt(stockDetail.price) : null,
-      },
-    });
+    if (newDocId !== "Draft Save") {
+      await tx.stock.create({
+        data: {
+          inOrOut: "OpeningStock",
+          createdById: parseInt(userId),
+          branchId: parseInt(branchId),
+          storeId: parseInt(storeId),
+          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+          fabricId: stockDetail?.fabricId
+            ? parseInt(stockDetail.fabricId)
+            : null,
+          qty,
+          OpeningStockItemsId: createdItem.id,
+          barCode: barcode,
+          styleNo: stockDetail?.styleNo ?? undefined,
+          styleItemId: stockDetail?.styleItemId
+            ? parseInt(stockDetail.styleItemId)
+            : null,
+          price: stockDetail?.price ? parseInt(stockDetail.price) : null,
+        },
+      });
+    }
 
     return createdItem;
   });

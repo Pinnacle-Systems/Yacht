@@ -39,7 +39,6 @@ export default function Form() {
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
   const departmentNameref = useRef(null);
-  console.log(form, "form");
   const params = {
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -65,6 +64,7 @@ export default function Form() {
       setName(data?.name || "");
       setCode(data?.code || "");
       setActive(id ? data?.active ?? false : true);
+      childRecord.current = data?.childRecord ? data?.childRecord : 0;
     },
     [id]
   );
@@ -122,25 +122,28 @@ export default function Form() {
 
   const saveData = () => {
     let foundItem;
-          if (id) {
-            foundItem = allData?.data
-              ?.filter((i) => i.id !== id)
-              ?.some((item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase());
-          } else {
-            foundItem = allData?.data?.some(
-              (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
-            );
-          }
-        
-          if (foundItem) {
-            Swal.fire({
-              text: "The Department Name already exists.",
-              icon: "warning",
-              timer: 1500,
-              showConfirmButton: false,
-            });
-            return false;
-          }
+    if (id) {
+      foundItem = allData?.data
+        ?.filter((i) => i.id !== id)
+        ?.some(
+          (item) =>
+            item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+        );
+    } else {
+      foundItem = allData?.data?.some(
+        (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+      );
+    }
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The Department Name already exists.",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return false;
+    }
     if (!validateData(data)) {
       Swal.fire({
         icon: "error",

@@ -36,6 +36,7 @@ export default function Form() {
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
   const [errors, setErrors] = useState({});
+  const sizeNameRef = useRef(null);
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -89,6 +90,7 @@ export default function Form() {
             : []
         );
         setActive(id ? data?.active ?? false : true);
+        childRecord.current = data?.childRecord ? data?.childRecord : 0;
       }
     },
     [id]
@@ -97,6 +99,12 @@ export default function Form() {
   useEffect(() => {
     syncFormWithDb(singleData?.data);
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+  useEffect(() => {
+    if (form && !readOnly && sizeNameRef.current) {
+      sizeNameRef.current.focus();
+    }
+  }, [form, readOnly]);
 
   const data = {
     id,
@@ -387,6 +395,7 @@ export default function Form() {
                           required={true}
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
+                          ref={sizeNameRef}
                         />
                       </div>
                       <div className=" w-[50%] mt-5">
@@ -396,6 +405,7 @@ export default function Form() {
                           setSelected={setSizeTemplateList}
                           options={sizeOptions}
                           readOnly={readOnly}
+                          disabled={childRecord.current > 0 }
                         />
                       </div>
                       <div className="mt-5">

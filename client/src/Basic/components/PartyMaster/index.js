@@ -89,7 +89,6 @@ export default function Form({ partyId, onCloseForm }) {
   const [alterContactNumber, setAlterContactNumber] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [msmeNo, setMsmeNo] = useState("");
-
   const childRecord = useRef(0);
   const dispatch = useDispatch();
   const companyId = secureLocalStorage.getItem(
@@ -169,7 +168,7 @@ export default function Form({ partyId, onCloseForm }) {
         setCity("");
         setActive(id ? data?.active : true);
         setSupplier(false);
-        setClient(false);
+        setClient(true);
         setAccessoryGroup(false);
         setAccessoryItemList([]);
         setPriceTemplateId("");
@@ -250,6 +249,7 @@ export default function Form({ partyId, onCloseForm }) {
               })
             : []
         );
+        childRecord.current = data?.childRecord ? data?.childRecord : 0;
       }
     },
     [id]
@@ -431,7 +431,6 @@ export default function Form({ partyId, onCloseForm }) {
       handleSubmitCustom(addData, data, "Added", true);
     }
   };
-  console.log(id, "id");
 
   const deleteData = async (id) => {
     setId(id);
@@ -440,7 +439,10 @@ export default function Form({ partyId, onCloseForm }) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-      if (data?.data?.childRecordSales > 0 || data?.data?.childRecordPurchase > 0) {
+      if (
+        data?.data?.childRecordSales > 0 ||
+        data?.data?.childRecordPurchase > 0
+      ) {
         Swal.fire({
           icon: "error",
           title: "Child record Exists",
@@ -551,8 +553,6 @@ export default function Form({ partyId, onCloseForm }) {
     setForm(true);
     setReadOnly(false);
   }, [partyId]);
-
-  console.log(readOnly, "readOnly");
 
   const columns = [
     {
@@ -714,6 +714,7 @@ export default function Form({ partyId, onCloseForm }) {
                             checked={isClient}
                             onChange={() => handleChange("client")}
                             readOnly={readOnly}
+                            disabled={childRecord.current > 0}
                           />
                           <label className="block text-xs font-bold text-gray-600 mt-1">
                             Customer
@@ -726,13 +727,13 @@ export default function Form({ partyId, onCloseForm }) {
                             checked={isSupplier}
                             onChange={() => handleChange("supplier")}
                             readOnly={readOnly}
+                            disabled={childRecord.current > 0}
                           />
                           <label className="block text-xs font-bold text-gray-600 mt-1">
                             Supplier
                           </label>
                         </div>
-                        <div className="col-span-4 flex flex-row">
-                        </div>
+                        <div className="col-span-4 flex flex-row"></div>
                       </div>
 
                       <div className="col-span-2">
@@ -745,6 +746,7 @@ export default function Form({ partyId, onCloseForm }) {
                           required={true}
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
+                          autoFocus={true}
                           onBlur={(e) => {
                             if (aliasName) return;
                             setAliasName(e.target.value);
@@ -761,7 +763,6 @@ export default function Form({ partyId, onCloseForm }) {
                           setValue={setAliasName}
                           required={false}
                           readOnly={readOnly}
-                          disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100"
                         />
                       </div>
@@ -772,7 +773,6 @@ export default function Form({ partyId, onCloseForm }) {
                           value={code}
                           setValue={setCode}
                           readOnly={readOnly}
-                          disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100 w-10"
                         />
                       </div>
@@ -809,7 +809,6 @@ export default function Form({ partyId, onCloseForm }) {
                             required={true}
                             readOnly={readOnly}
                             d
-                            isabled={childRecord.current > 0}
                           />
                         </div>
                         <TextInput
@@ -818,7 +817,6 @@ export default function Form({ partyId, onCloseForm }) {
                           value={landMark}
                           setValue={setlandMark}
                           readOnly={readOnly}
-                          disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100 w-10"
                         />
                         <DropdownInput
@@ -837,7 +835,6 @@ export default function Form({ partyId, onCloseForm }) {
                           setValue={setCity}
                           required={true}
                           readOnly={readOnly}
-                          disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100"
                         />
                         <div className="col-span-2 flex flex-row gap-3">
@@ -849,7 +846,6 @@ export default function Form({ partyId, onCloseForm }) {
                               required={true}
                               setValue={setPincode}
                               readOnly={readOnly}
-                              disabled={childRecord.current > 0}
                               className="focus:ring-2 focus:ring-blue-100 w-10"
                             />
                           </div>
@@ -860,7 +856,6 @@ export default function Form({ partyId, onCloseForm }) {
                               value={email}
                               setValue={setEmail}
                               readOnly={readOnly}
-                              disabled={childRecord.current > 0}
                               className="focus:ring-2 focus:ring-blue-100 w-10"
                             />
                             <div></div>
@@ -873,7 +868,6 @@ export default function Form({ partyId, onCloseForm }) {
                             value={mobileNumber}
                             setValue={setMobileNumber}
                             readOnly={readOnly}
-                            disabled={childRecord.current > 0}
                             className="focus:ring-2 focus:ring-blue-100 w-10"
                           />
                         </div>
@@ -896,7 +890,6 @@ export default function Form({ partyId, onCloseForm }) {
                               value={contactPersonName}
                               setValue={setContactPersonName}
                               readOnly={readOnly}
-                              disabled={childRecord.current > 0}
                               className="focus:ring-2 focus:ring-blue-100 w-10"
                             />
                           </div>
@@ -907,7 +900,6 @@ export default function Form({ partyId, onCloseForm }) {
                           value={designation}
                           setValue={setDesignation}
                           readOnly={readOnly}
-                          disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100 w-10"
                         />
                         <TextInput
@@ -916,7 +908,6 @@ export default function Form({ partyId, onCloseForm }) {
                           value={department}
                           setValue={setDepartment}
                           readOnly={readOnly}
-                          disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100 w-10"
                         />
                         <div className="col-span-2">
@@ -926,7 +917,6 @@ export default function Form({ partyId, onCloseForm }) {
                             value={contactPersonEmail}
                             setValue={setContactPersonEmail}
                             readOnly={readOnly}
-                            disabled={childRecord.current > 0}
                             className="focus:ring-2 focus:ring-blue-100 w-10"
                           />
                         </div>
@@ -937,7 +927,6 @@ export default function Form({ partyId, onCloseForm }) {
                             value={contactNumber}
                             setValue={setContactNumber}
                             readOnly={readOnly}
-                            disabled={childRecord.current > 0}
                             className="focus:ring-2 focus:ring-blue-100 w-10"
                           />
                         </div>
@@ -948,7 +937,6 @@ export default function Form({ partyId, onCloseForm }) {
                             value={alterContactNumber}
                             setValue={setAlterContactNumber}
                             readOnly={readOnly}
-                            disabled={childRecord.current > 0}
                             className="focus:ring-2 focus:ring-blue-100 w-10"
                           />
                         </div>
@@ -963,23 +951,23 @@ export default function Form({ partyId, onCloseForm }) {
                       Business Details
                     </h3>
                     <div className="space-y-2">
-                      <div className="grid grid-cols-2 gap-2">  
+                      <div className="grid grid-cols-2 gap-2">
                         <DropdownInput
                           name="PayTerm"
                           options={dropDownListObject(
-                            Array.isArray(payTermList?.data) ?
-                            id
-                              ? payTermList?.data
-                              : payTermList?.data?.filter(
-                                  (item) => item.active
-                                ) : [],
+                            Array.isArray(payTermList?.data)
+                              ? id
+                                ? payTermList?.data
+                                : payTermList?.data?.filter(
+                                    (item) => item.active
+                                  )
+                              : [],
                             "name",
                             "id"
                           )}
                           value={payTermId}
                           setValue={setPayTermId}
                           readOnly={readOnly}
-                          disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100"
                         />
                         <TextInput
@@ -988,7 +976,6 @@ export default function Form({ partyId, onCloseForm }) {
                           value={panNo}
                           setValue={setPanNo}
                           readOnly={readOnly}
-                          disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100"
                         />
                         <TextInput
@@ -1005,7 +992,6 @@ export default function Form({ partyId, onCloseForm }) {
                           value={msmeNo}
                           setValue={setMsmeNo}
                           readOnly={readOnly}
-                          disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100"
                         />
                         <TextInput
@@ -1014,7 +1000,6 @@ export default function Form({ partyId, onCloseForm }) {
                           value={cinNo}
                           setValue={setCinNo}
                           readOnly={readOnly}
-                          disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100"
                         />
                       </div>
@@ -1033,7 +1018,6 @@ export default function Form({ partyId, onCloseForm }) {
                         value={bankName}
                         setValue={setBankName}
                         readOnly={readOnly}
-                        disabled={childRecord.current > 0}
                         className="focus:ring-2 focus:ring-blue-100 w-10"
                       />
                       <div className="grid grid-cols-2 gap-2">
@@ -1043,7 +1027,6 @@ export default function Form({ partyId, onCloseForm }) {
                           value={branchName}
                           setValue={setBranchName}
                           readOnly={readOnly}
-                          disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100 w-10"
                         />
                         <TextInput
@@ -1052,7 +1035,6 @@ export default function Form({ partyId, onCloseForm }) {
                           value={accountNumber}
                           setValue={setAccountNumber}
                           readOnly={readOnly}
-                          disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100 w-10"
                         />
                         <TextInput
@@ -1061,7 +1043,6 @@ export default function Form({ partyId, onCloseForm }) {
                           value={ifscCode}
                           setValue={setIfscCode}
                           readOnly={readOnly}
-                          disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100 w-10"
                         />
                       </div>

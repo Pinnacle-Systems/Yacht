@@ -72,9 +72,41 @@ async function getNextDocId(
       new Date()
     )}/PI/1`;
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/PI/${
-        parseInt(lastObject.docId.split("/").at(-1)) + 1
-      }`;
+      if (lastObject.docId === "Draft Save") {
+        const records = await prisma.purchaseInward.findMany({
+          select: {
+            docId: true,
+          },
+          where: {
+            branchId: parseInt(branchId),
+            AND: [
+              {
+                createdAt: {
+                  gte: startTime,
+                },
+              },
+              {
+                createdAt: {
+                  lte: endTime,
+                },
+              },
+            ],
+          },
+        });
+        const maxDocId = records.reduce((max, current) => {
+          const currentNo = Number(current.docId.split("/").pop());
+          const maxNo = max ? Number(max.split("/").pop()) : 0;
+
+          return currentNo > maxNo ? current.docId : max;
+        }, null);
+        newDocId = `${branchObj.branchCode}${getYearShortCode(
+          new Date()
+        )}/PI/${parseInt(maxDocId.split("/").at(-1)) + 1}`;
+      } else {
+        newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/PI/${
+          parseInt(lastObject.docId.split("/").at(-1)) + 1
+        }`;
+      }
     }
     return newDocId;
   }
@@ -149,6 +181,7 @@ async function get(req) {
         },
       },
       fabricInwardItems: true,
+      readyGoods: true,
       Supplier: {
         select: {
           id: true,
@@ -165,11 +198,15 @@ async function get(req) {
   }
   if (searchStyleId) {
     const styleIdNumber = Number(searchStyleId);
-    data = data.filter((item) =>
-      item.fabricInwardItems.some(
-        (fabric) => Number(fabric.styleId) === styleIdNumber
-      )
-    );
+    data = data.filter((item) => {
+      return item.inwardType === "Finished Goods"
+        ? item.readyGoods?.some(
+            (style) => Number(style.styleId) === styleIdNumber
+          )
+        : item.fabricInwardItems?.some(
+            (style) => Number(style.styleId) === styleIdNumber
+          );
+    });
   }
   if (pagination) {
     data = data.slice(

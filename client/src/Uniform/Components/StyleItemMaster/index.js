@@ -26,6 +26,7 @@ export default function Form() {
 
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
+  const styleNameRef = useRef(null);
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -63,6 +64,7 @@ export default function Form() {
       } else {
         setName(data?.name || "");
         setActive(id ? data?.active ?? false : true);
+        childRecord.current = data?.childRecord ? data?.childRecord : 0;
       }
     },
     [id]
@@ -71,6 +73,12 @@ export default function Form() {
   useEffect(() => {
     syncFormWithDb(singleData?.data);
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+  useEffect(() => {
+    if (form && !readOnly && styleNameRef.current) {
+      styleNameRef.current.focus();
+    }
+  }, [form, readOnly]);
 
   const data = {
     id,
@@ -352,6 +360,7 @@ export default function Form() {
                               required={true}
                               readOnly={readOnly}
                               disabled={childRecord.current > 0}
+                              ref={styleNameRef}
                             />
                           </div>
                         </div>

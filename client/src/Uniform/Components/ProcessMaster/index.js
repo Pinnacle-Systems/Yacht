@@ -34,6 +34,7 @@ export default function Form() {
   const [isIroning, setIsIroning] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
+  const processNameRef = useRef(null);
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -74,6 +75,7 @@ export default function Form() {
         setIsStiching(data?.isStiching ? data?.isStiching : false);
         setIsCutting(data?.isCutting ? data?.isCutting : false);
         setIsIroning(data?.isIroning ? data?.isIroning : false);
+        childRecord.current = data?.childRecord ? data?.childRecord : 0;
       }
     },
     [id]
@@ -82,6 +84,12 @@ export default function Form() {
   useEffect(() => {
     syncFormWithDb(singleData?.data);
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+  useEffect(() => {
+    if (form && !readOnly && processNameRef.current) {
+      processNameRef.current.focus();
+    }
+  }, [form, readOnly]);
 
   const data = {
     id,
@@ -357,7 +365,7 @@ export default function Form() {
                     <div className="">
                       <div className="flex justify-between">
                         <div>
-                          <div className="mb-5 ">
+                          <div className="mb-5 w-48">
                             <TextInput
                               name="Process"
                               type="text"
@@ -366,6 +374,7 @@ export default function Form() {
                               required={true}
                               readOnly={readOnly}
                               disabled={childRecord.current > 0}
+                              ref={processNameRef}
                             />
                           </div>
                           <div className="mb-5 flex gap-2">
@@ -374,24 +383,28 @@ export default function Form() {
                               value={isCutting}
                               setValue={setIsCutting}
                               readOnly={readOnly}
+                              disabled={childRecord.current > 0}
                             />
                             <CheckBox
                               name="Stiching"
                               value={isStiching}
                               setValue={setIsStiching}
                               readOnly={readOnly}
+                              disabled={childRecord.current > 0}
                             />
                             <CheckBox
                               name="Ironing"
                               value={isIroning}
                               setValue={setIsIroning}
                               readOnly={readOnly}
+                              disabled={childRecord.current > 0}
                             />
                             <CheckBox
                               name="Packing"
                               value={isPacking}
                               setValue={setIsPacking}
                               readOnly={readOnly}
+                              disabled={childRecord.current > 0}
                             />
                           </div>
                         </div>

@@ -240,7 +240,7 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
                                                         parseInt(page.pageGroupId) === parseInt(group.id)
                                                 )
                                                 .map((page) => (
-                                                    <>
+                                                
                                                         <li
                                                             key={page.id}
                                                             onClick={() => {
@@ -267,8 +267,7 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
                                                                 </div>
                                                             </div>
 
-                                                        </li></>
-
+                                                        </li>
                                                 ))}
                                         </ul>
 

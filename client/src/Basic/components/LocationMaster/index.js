@@ -83,7 +83,6 @@ export default function Form() {
         setIsGarments(false);
         setActive(id ? data?.active : true);
       } else {
-        setReadOnly(true);
         setStoreName(data?.storeName || "");
         setLocationId(data?.locationId || "");
         setIsAccessory(data?.isAccessory || false);
@@ -91,6 +90,7 @@ export default function Form() {
         setIsYarn(data?.isYarn || false);
         setIsGarments(data?.isGarments || false);
         setActive(id ? data?.active ?? false : true);
+        childRecord.current = data?.childRecord ? data?.childRecord : 0;
       }
     },
     [id]
@@ -435,6 +435,7 @@ export default function Form() {
                               required={true}
                               readOnly={readOnly}
                               disabled={childRecord.current > 0}
+                              autoFocus={true}
                             />
                           </div>
                           <div className="mb-3 w-[48%]">

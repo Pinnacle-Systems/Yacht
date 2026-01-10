@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import StyleMasterApi from "../../../redux/uniformService/StyleMasterService.js";
 import { getCommonParams } from "../../../Utils/helper.js";
+import stockApi from "../../../redux/services/StockService.js";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -82,6 +83,7 @@ export default function Form() {
           });
           setShowForm(false);
           dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
+          dispatch(stockApi.util.invalidateTags(["Stock"]));
         } catch (error) {
           Swal.fire({
             icon: "error",

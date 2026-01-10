@@ -76,6 +76,9 @@ async function getOne(id) {
   const childRecordPurchase = await prisma.fabricInwardItems.count({
     where: { styleId: parseInt(id) },
   });
+  const childRecordReadyGoods = await prisma.readyGoods.count({
+    where: { styleId: parseInt(id) },
+  })
   const data = await prisma.style.findUnique({
     where: {
       id: parseInt(id),
@@ -89,6 +92,7 @@ async function getOne(id) {
       ...data,
       childRecordStock: childRecordStock,
       childRecordPurchase: childRecordPurchase,
+      childRecord : childRecordPurchase + childRecordStock + childRecordReadyGoods
     },
   };
 }

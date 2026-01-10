@@ -82,7 +82,7 @@ const Designation = () => {
       setName(data?.name || "");
       setCode(data?.code)
       setActive(id ? data?.active ?? false : true);
-
+      childRecord.current = data?.childRecord ? data?.childRecord : 0;
     },
     [id]
   );

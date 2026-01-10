@@ -16,7 +16,9 @@ async function get(req) {
 }
 
 async function getOne(id) {
-  const childRecord = 0;
+  const childRecord = await prisma.fabricInwardItems.count({
+    where: { accessoryId: parseInt(id) },
+  });
   const data = await prisma.accessory.findUnique({
     where: {
       id: parseInt(id),

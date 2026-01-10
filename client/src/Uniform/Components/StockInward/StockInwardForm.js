@@ -546,13 +546,13 @@ export default function StockInwardForm({
                   <HiOutlineRefresh className="w-4 h-4 mr-2" />
                   Save & Close
                 </button>
-                <button
+                {/* <button
                   onClick={() => saveData("draft")}
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
                   <HiOutlineRefresh className="w-4 h-4 mr-2" />
                   Draft Save
-                </button>
+                </button> */}
               </div>
               <div className="flex gap-2 flex-wrap">
                 <button

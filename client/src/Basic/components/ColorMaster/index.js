@@ -34,7 +34,7 @@ export default function Form() {
 
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
-
+  const colorNameRef = useRef(null);
   const params = {
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -70,6 +70,7 @@ export default function Form() {
         setPantone(data?.pantone || "");
         setIsGrey(data?.isGrey || false);
         setActive(id ? data?.active ?? false : true);
+        childRecord.current = data?.childRecord ? data?.childRecord : 0;
       }
     },
     [id]
@@ -78,6 +79,12 @@ export default function Form() {
   useEffect(() => {
     syncFormWithDb(singleData?.data);
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+  useEffect(() => {
+    if (form && !readOnly && colorNameRef.current) {
+      colorNameRef.current.focus();
+    }
+  }, [form, readOnly]);
 
   const data = {
     id,
@@ -122,25 +129,28 @@ export default function Form() {
 
   const saveData = () => {
     let foundItem;
-          if (id) {
-            foundItem = allData?.data
-              ?.filter((i) => i.id !== id)
-              ?.some((item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase());
-          } else {
-            foundItem = allData?.data?.some(
-              (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
-            );
-          }
-        
-          if (foundItem) {
-            Swal.fire({
-              text: "The Colour Name already exists.",
-              icon: "warning",
-              timer: 1500,
-              showConfirmButton: false,
-            });
-            return false;
-          }
+    if (id) {
+      foundItem = allData?.data
+        ?.filter((i) => i.id !== id)
+        ?.some(
+          (item) =>
+            item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+        );
+    } else {
+      foundItem = allData?.data?.some(
+        (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+      );
+    }
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The Colour Name already exists.",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return false;
+    }
     if (!validateData(data)) {
       Swal.fire({
         title: "Please fill all required fields...!",
@@ -345,6 +355,7 @@ export default function Form() {
                               required={true}
                               readOnly={readOnly}
                               disabled={childRecord.current > 0}
+                              ref={colorNameRef}
                             />
                           </div>
                         </div>

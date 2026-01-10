@@ -36,10 +36,15 @@ export default function Form() {
   const [id, setId] = useState("");
   const [processGroupSeqsId, setProcessGroupSeqsId] = useState("");
   const [active, setActive] = useState(true);
-  const [processGroupLists, setProcessGroupLists] = useState([]);
-
+  const [processGroupLists, setProcessGroupLists] = useState(
+    Array.from({ length: 4 }, (_, i) => ({
+      id: null,
+      processId: "",
+      seqNo: i + 1,
+    }))
+  );
   const [searchValue, setSearchValue] = useState("");
-  const childRecord = useRef(0);
+  const childRecordProduction = useRef(0);
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -83,8 +88,17 @@ export default function Form() {
       );
       setActive(id ? data?.active ?? false : true);
       setProcessGroupLists(
-        data?.processGroupLists ? data?.processGroupLists : []
+        data?.processGroupLists
+          ? data?.processGroupLists
+          : Array.from({ length: 4 }, (_, i) => ({
+              id: null,
+              processId: "",
+              seqNo: (sequence ?? 1) + i,
+            }))
       );
+      childRecordProduction.current = data?.childRecordProduction
+        ? data?.childRecordProduction
+        : 0;
     },
     [id]
   );
@@ -301,14 +315,6 @@ export default function Form() {
     });
   };
 
-  // const addRow = () => {
-  //   const newRow = {
-  //     processId: "",
-  //     seqNo: "",
-  //   };
-  //   setProcessGroupLists([...processGroupLists, newRow]);
-  // };
-
   const addRow = () => {
     setProcessGroupLists((prev) => {
       const maxSeq = Math.max(...prev.map((r) => Number(r.seqNo)));
@@ -337,45 +343,11 @@ export default function Form() {
     });
   };
 
-  // const handleDeleteAllRows = () => {
-  //   setProcessGroupLists((prevRows) => {
-  //     if (prevRows.length <= 1) return prevRows;
-  //     return [prevRows[0]];
-  //   });
-  // };
-
-  // useEffect(() => {
-  //   if (processGroupLists) {
-  //     setProcessGroupLists((prev) => {
-  //       const count = prev.length;
-
-  //       if (count < 4) {
-  //         return [
-  //           ...prev,
-  //           ...Array.from({ length: 4 - count }, () => ({
-  //             processId: "",
-  //             seqNo: "",
-  //           })),
-  //         ];
-  //       }
-
-  //       return prev; // keep as-is if already >= 6
-  //     });
-  //   } else {
-  //     setProcessGroupLists(
-  //       Array.from({ length: 4 }, () => ({
-  //         processId: "",
-  //         seqNo: "",
-  //       }))
-  //     );
-  //   }
-  // }, [processGroupLists, setProcessGroupLists]);
-
   useEffect(() => {
     if (!sequence) return;
 
     // If editing and existing data exists
-    if (processGroupLists.length > 0) {
+    if (processGroupLists.length >= 4) {
       // Merge existing rows + re-index seqNo starting from sequence
       const updated = processGroupLists.map((row, i) => ({
         ...row,
@@ -499,8 +471,9 @@ export default function Form() {
                           setValue={setProcessGroupSeqsId}
                           readOnly={readOnly}
                           placeholder={"Select Group"}
-                          disabled={readOnly}
+                          disabled={childRecordProduction.current > 0 || readOnly}
                           required={true}
+                          autoFocus={true}
                         />
                       </div>
                       <div
@@ -543,7 +516,7 @@ export default function Form() {
                                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                                       <select
                                         id={`processId-input-${index}`}
-                                        disabled={readOnly}
+                                        disabled={readOnly || childRecordProduction.current > 0}
                                         className="text-left w-full rounded py-1 table-data-input"
                                         value={row.processId}
                                         onKeyDown={(e) => {
@@ -649,7 +622,7 @@ export default function Form() {
                                             addRow();
                                           }
                                         }}
-                                        disabled={readOnly}
+                                        disabled={readOnly || childRecordProduction.current > 0}
                                       />
                                     </td>
                                   </tr>

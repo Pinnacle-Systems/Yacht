@@ -21,6 +21,7 @@ async function getOne(id) {
   const childRecordPurchase = await prisma.purchaseInward.count({
     where: { storeId: parseInt(id) },
   });
+  const childRecord = await prisma.stock.count({ where: { storeId: parseInt(id) } });
   const data = await prisma.location.findUnique({
     where: {
       id: parseInt(id),
@@ -33,6 +34,7 @@ async function getOne(id) {
       ...data,
       childRecordStock: childRecordStock,
       childRecordPurchase: childRecordPurchase,
+      childRecord: childRecord,
     },
   };
 }

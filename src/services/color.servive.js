@@ -16,14 +16,15 @@ async function get(req) {
 }
 
 async function getOne(id) {
-  const childRecord = 0;
+  const childRecordOpeningStk = await prisma.openingStockItems.count({ where: { colorId: parseInt(id) } });
+  const childRecordPurchaase = await prisma.fabricInwardItems.count({ where: { colorId: parseInt(id) } });
   const data = await prisma.color.findUnique({
     where: {
       id: parseInt(id),
     },
   });
   if (!data) return NoRecordFound("color");
-  return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+  return { statusCode: 0, data: { ...data, ...{ childRecord : childRecordOpeningStk + childRecordPurchaase } } };
 }
 
 async function getSearch(req) {

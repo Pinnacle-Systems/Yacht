@@ -34,6 +34,7 @@ import StyleMasterApi, {
 import { Loader } from "../../../Basic/components/index.js";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService.js";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService.js";
+import stockApi from "../../../redux/services/StockService.js";
 
 export default function OpeningStockForm({
   onClose,
@@ -154,6 +155,7 @@ export default function OpeningStockForm({
           },
         });
         dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
+        dispatch(stockApi.util.invalidateTags(["Stock"]));
       } else {
         toast.error(returnData?.message, {
           autoClose: 2000,
@@ -465,13 +467,15 @@ export default function OpeningStockForm({
                   <HiOutlineRefresh className="w-4 h-4 mr-2" />
                   Save & Close
                 </button>
-                <button
-                  onClick={() => saveData("draft")}
-                  className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
-                >
-                  <HiOutlineRefresh className="w-4 h-4 mr-2" />
-                  Draft Save
-                </button>
+                {!id && (
+                  <button
+                    onClick={() => saveData("draft")}
+                    className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
+                  >
+                    <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                    Draft Save
+                  </button>
+                )}
               </div>
               <div className="flex gap-2 flex-wrap">
                 <button

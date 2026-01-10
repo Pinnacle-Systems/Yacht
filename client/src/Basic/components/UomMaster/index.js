@@ -7,7 +7,13 @@ import { Check, Power } from "lucide-react";
 import { statusDropdown } from "../../../Utils/DropdownData";
 import Modal from "../../../UiComponents/Modal";
 import Swal from "sweetalert2";
-import { useAddUnitOfMeasurementMasterMutation, useDeleteUnitOfMeasurementMasterMutation, useGetUnitOfMeasurementMasterByIdQuery, useGetUnitOfMeasurementMasterQuery, useUpdateUnitOfMeasurementMasterMutation } from "../../../redux/uniformService/UnitOfMeasurementServices";
+import {
+  useAddUnitOfMeasurementMasterMutation,
+  useDeleteUnitOfMeasurementMasterMutation,
+  useGetUnitOfMeasurementMasterByIdQuery,
+  useGetUnitOfMeasurementMasterQuery,
+  useUpdateUnitOfMeasurementMasterMutation,
+} from "../../../redux/uniformService/UnitOfMeasurementServices";
 
 const MODEL = "UOM Master";
 export default function Form() {
@@ -21,6 +27,7 @@ export default function Form() {
 
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
+  const uomNameRef = useRef(null);
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -57,6 +64,7 @@ export default function Form() {
       } else {
         setName(data?.name || "");
         setActive(id ? data?.active ?? false : true);
+        childRecord.current = data?.childRecord ? data?.childRecord : 0;
       }
     },
     [id]
@@ -65,6 +73,12 @@ export default function Form() {
   useEffect(() => {
     syncFormWithDb(singleData?.data);
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+  useEffect(() => {
+    if (form && !readOnly && uomNameRef.current) {
+      uomNameRef.current.focus();
+    }
+  }, [form, readOnly]);
 
   const data = {
     id,
@@ -282,11 +296,7 @@ export default function Form() {
             <div className="border-b py-2 px-4 mt-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-                  {id
-                    ? !readOnly
-                      ? "Edit UOM"
-                      : "UOM Master"
-                    : "Add New UOM"}
+                  {id ? (!readOnly ? "Edit UOM" : "UOM Master") : "Add New UOM"}
                 </h2>
               </div>
               <div className="flex gap-2">
@@ -335,6 +345,7 @@ export default function Form() {
                               required={true}
                               readOnly={readOnly}
                               disabled={childRecord.current > 0}
+                              ref={uomNameRef}
                             />
                           </div>
                         </div>

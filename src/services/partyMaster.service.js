@@ -28,7 +28,13 @@ async function getOne(id) {
   const childRecordSales = await prisma.salesEntry.count({
     where: { customerId: parseInt(id) },
   });
+  const childRecordSalesReturn = await prisma.salesReturn.count({
+    where: { customerId: parseInt(id) },
+  });
   const childRecordPurchase = await prisma.purchaseInward.count({
+    where: { supplierId: parseInt(id) },
+  });
+  const childRecordPurchaseReturn = await prisma.purchaseReturn.count({
     where: { supplierId: parseInt(id) },
   });
   const data = await prisma.party.findUnique({
@@ -49,8 +55,9 @@ async function getOne(id) {
     statusCode: 0,
     data: {
       ...data,
-      childRecordSales: childRecordSales,
+      childRecord: childRecordSales,
       childRecordPurchase: childRecordPurchase,
+      childRecord: childRecordSalesReturn + childRecordPurchaseReturn + childRecordSales + childRecordPurchase
     },
   };
 }

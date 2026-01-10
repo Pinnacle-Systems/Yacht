@@ -39,11 +39,9 @@ async function getOne(id) {
   const processIds = data.processGroupLists
     .map((item) => item.processId)
     .filter(Boolean);
-  const childRecordProduction = await prisma.productionStock.count({
+  const childRecordProduction = await prisma.cuttingDelivery.count({
     where: {
-      prevProcessId: {
-        in: processIds,
-      },
+      processGroupId: parseInt(id),
     },
   });
   return { statusCode: 0, data: { ...data, ...{ childRecordProduction } } };

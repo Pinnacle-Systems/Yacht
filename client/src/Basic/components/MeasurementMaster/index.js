@@ -27,6 +27,7 @@ export default function Form() {
 
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
+  const measurementNameRef = useRef(null);
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -71,6 +72,12 @@ export default function Form() {
   useEffect(() => {
     syncFormWithDb(singleData?.data);
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+  useEffect(() => {
+    if (form && !readOnly && measurementNameRef.current) {
+      measurementNameRef.current.focus();
+    }
+  }, [form, readOnly]);
 
   const data = {
     id,
@@ -341,6 +348,7 @@ export default function Form() {
                               required={true}
                               readOnly={readOnly}
                               disabled={childRecord.current > 0}
+                               ref={measurementNameRef}
                             />
                           </div>
                         </div>

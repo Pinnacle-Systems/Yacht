@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { Check, Power } from "lucide-react";
 import Modal from "../../../UiComponents/Modal";
 import secureLocalStorage from "react-secure-storage";
@@ -45,6 +45,9 @@ const StyleMaster = () => {
   const [addData] = useAddStyleMasterMutation();
   const [updateData] = useUpdateStyleMasterMutation();
   const [removeData] = useDeleteStyleMasterMutation();
+
+  const styleNameRef = useRef(null);
+  const childRecord = useRef(0);
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -179,6 +182,7 @@ const StyleMaster = () => {
       setFabricId(data?.fabricId ? data?.fabricId : "");
       setStyleItemId(data?.styleItemId ? data?.styleItemId : "");
       setPrice(data?.price ? data?.price : "");
+      childRecord.current = data?.childRecord ? data?.childRecord : 0;
     },
     [id]
   );
@@ -186,6 +190,12 @@ const StyleMaster = () => {
   useEffect(() => {
     syncFormWithDb(singleData?.data);
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+  useEffect(() => {
+    if (form && !readOnly && styleNameRef.current) {
+      styleNameRef.current.focus();
+    }
+  }, [form, readOnly]);
 
   const onNew = () => {
     setId("");
@@ -427,6 +437,8 @@ const StyleMaster = () => {
                               setValue={setSku}
                               required={true}
                               readOnly={readOnly}
+                              ref={styleNameRef}
+                              disabled={childRecord.current > 0}
                             />
                           </div>
                           <div className="mb-3 w-48">
@@ -449,6 +461,7 @@ const StyleMaster = () => {
                               setValue={setStyleItemId}
                               required={false}
                               readOnly={readOnly}
+                              disabled={childRecord.current > 0}
                             />
                           </div>
                           <div className="mb-5 w-48">
@@ -459,6 +472,7 @@ const StyleMaster = () => {
                               setValue={setAlias}
                               required={false}
                               readOnly={readOnly}
+                              disabled={childRecord.current > 0}
                             />
                           </div>
                           <div className="mb-5 w-48">
@@ -481,6 +495,7 @@ const StyleMaster = () => {
                               setValue={setFabricId}
                               required={true}
                               readOnly={readOnly}
+                              disabled={childRecord.current > 0}
                             />
                           </div>
                           <div className="mb-5 w-48">
@@ -503,6 +518,7 @@ const StyleMaster = () => {
                               setValue={setSizeTemplateId}
                               required={false}
                               readOnly={readOnly}
+                              disabled={childRecord.current > 0}
                             />
                           </div>
                           <div className="mb-5 w-48">
@@ -513,7 +529,6 @@ const StyleMaster = () => {
                               setValue={setPrice}
                               required={false}
                               readOnly={readOnly}
-                              
                             />
                           </div>
                         </div>

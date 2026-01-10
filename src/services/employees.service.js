@@ -180,6 +180,10 @@ async function get(req) {
 }
 
 async function getOne(id) {
+  const childRecord = await prisma.employee.count({
+    where: { designationId: parseInt(id) },
+  });
+
   const data = await xprisma.employee.findUnique({
     where: {
       id: parseInt(id),
@@ -217,7 +221,7 @@ async function getOne(id) {
     },
   });
   if (!data) return NoRecordFound("Employee");
-  return { statusCode: 0, data: exclude({ ...data }, ["image"]) };
+  return { statusCode: 0, data: exclude({ ...data, ...{ childRecord } }, ["image"]) };
 }
 
 async function getSearch(req) {
@@ -318,7 +322,6 @@ async function create(req) {
   };
   const presentAddressObj = presentAddress ? presentAddress : {};
   const permanentAddressObj = permanentAddress ? permanentAddress : {};
-
 
   const data = await prisma.employee.create({
     data: {
@@ -503,7 +506,6 @@ async function update(id, req) {
   const permanentAddressObj = permanentAddress
     ? JSON.parse(permanentAddress)
     : {};
-
 
   const dataFound = await prisma.employee.findFirst({
     where: {

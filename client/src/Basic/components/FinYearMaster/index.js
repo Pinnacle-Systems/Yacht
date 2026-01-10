@@ -44,7 +44,7 @@ export default function Form() {
   const [code, setCode] = useState("");
   const childRecord = useRef(0);
   const [errors, setErrors] = useState({});
-    const designationRef = useRef(null);
+  const designationRef = useRef(null);
   const params = {
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -73,6 +73,7 @@ export default function Form() {
         setFrom(data?.from ? moment.utc(data.from).format("YYYY-MM-DD") : "");
         setActive(data?.active);
         setCode(data?.code);
+        childRecord.current = data?.childRecord ? data?.childRecord : 0;
       }
     },
     [id]
@@ -99,11 +100,11 @@ export default function Form() {
     }
     return false;
   };
-     useEffect(() => {
-       if (form && !readOnly && designationRef.current) {
-         designationRef.current.focus();
-       }
-     }, [form, readOnly]);
+  useEffect(() => {
+    if (form && !readOnly && designationRef.current) {
+      designationRef.current.focus();
+    }
+  }, [form, readOnly]);
   const validateOneActiveFinYear = (active) => {
     if (Boolean(active)) {
       return !allData.data.some((finYear) =>
@@ -148,14 +149,14 @@ export default function Form() {
       return;
     }
     if (!validateData(data)) {
-         Swal.fire({
-           icon: "error",
-           title: "Submission error",
-           text: "Please fill all required fields...!",
-         });
-         return;
-       }
-    
+      Swal.fire({
+        icon: "error",
+        title: "Submission error",
+        text: "Please fill all required fields...!",
+      });
+      return;
+    }
+
     if (id) {
       handleSubmitCustom(updateData, data, "Updated");
     } else {
@@ -211,7 +212,7 @@ export default function Form() {
     setTo("");
     setFrom("");
     setCode("");
-    setActive(true)
+    setActive(true);
   };
 
   function onDataClick(id) {
@@ -412,7 +413,7 @@ export default function Form() {
                             required={true}
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
-                             ref={designationRef}
+                            ref={designationRef}
                           />
 
                           {errors.name && (

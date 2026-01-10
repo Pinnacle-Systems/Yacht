@@ -106,6 +106,7 @@ export const MultiSelectDropdown = ({
   tabIndex = null,
   className = "",
   inputClass,
+  disabled = false,
 }) => {
   console.log(options, "options");
   console.log(selected, "selected");
@@ -191,6 +192,7 @@ export const MultiSelectDropdown = ({
             padding: "2px",
           }),
         }}
+        disabled={readOnly || disabled}
       />
     </div>
   );
@@ -486,6 +488,7 @@ export const TextArea = ({
   label = null,
   inputClass = "",
   onBlur = null,
+  autoFocus = false,
 }) => {
   return (
     <div className="mb-3 w-full">
@@ -504,6 +507,7 @@ export const TextArea = ({
         disabled={disabled}
         required={required}
         readOnly={readOnly}
+        autoFocus={autoFocus}
         value={value}
         onChange={(e) => handleOnChange(e, setValue)}
         onBlur={onBlur}
@@ -948,7 +952,7 @@ export const CheckBox = ({
           onChange={(e) => {
             handleOnChange(e);
           }}
-          disabled={readOnly}
+          disabled={readOnly || disabled}
         />
         {name}
       </label>

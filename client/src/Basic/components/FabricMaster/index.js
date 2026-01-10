@@ -24,6 +24,7 @@ export default function Form() {
 
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
+  const fabricNameRef = useRef(null);
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -53,10 +54,11 @@ export default function Form() {
         setAliasName("");
         setActive(id ? data?.active : true);
       } else {
-        setReadOnly(true);
+        // setReadOnly(true);
         setName(data?.name || "");
         setActive(id ? data?.active ?? false : true);
         setAliasName(data?.aliasName || "");
+        childRecord.current = data?.childRecord ? data?.childRecord : 0;
       }
     },
     [id]
@@ -65,6 +67,12 @@ export default function Form() {
   useEffect(() => {
     syncFormWithDb(singleData?.data);
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+  useEffect(() => {
+    if (form && !readOnly && fabricNameRef.current) {
+      fabricNameRef.current.focus();
+    }
+  }, [form, readOnly]);
 
   const data = {
     id,
@@ -109,26 +117,29 @@ export default function Form() {
   };
 
   const saveData = () => {
-     let foundItem;
-      if (id) {
-        foundItem = allData?.data
-          ?.filter((i) => i.id !== id)
-          ?.some((item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase());
-      } else {
-        foundItem = allData?.data?.some(
-          (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+    let foundItem;
+    if (id) {
+      foundItem = allData?.data
+        ?.filter((i) => i.id !== id)
+        ?.some(
+          (item) =>
+            item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
         );
-      }
-    
-      if (foundItem) {
-        Swal.fire({
-          text: "The Fabric Name already exists.",
-          icon: "warning",
-          timer: 1500,
-          showConfirmButton: false,
-        });
-        return false;
-      }
+    } else {
+      foundItem = allData?.data?.some(
+        (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+      );
+    }
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The Fabric Name already exists.",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return false;
+    }
     if (!validateData(data)) {
       Swal.fire({
         title: "Please fill all required fields...!",
@@ -149,7 +160,7 @@ export default function Form() {
 
   const handleDelete = async () => {
     if (id) {
-      console.log(id)
+      console.log(id);
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
@@ -335,6 +346,7 @@ export default function Form() {
                               required={true}
                               readOnly={readOnly}
                               disabled={childRecord.current > 0}
+                              ref={fabricNameRef}
                             />
                           </div>
                           <div className="mb-3 w-48">
@@ -345,6 +357,7 @@ export default function Form() {
                               setValue={setAliasName}
                               required={false}
                               readOnly={readOnly}
+                              disabled={childRecord.current > 0}
                             />
                           </div>
                         </div>

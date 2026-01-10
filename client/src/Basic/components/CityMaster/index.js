@@ -41,8 +41,8 @@ export default function Form() {
   const [searchValue, setSearchValue] = useState("");
   const [errors, setErrors] = useState({});
 
-  const childRecord = useRef(0);
   const dispatch = useDispatch();
+  const childRecord = useRef(0);
   const cityNameRef = useRef(null);
 
   const params = {

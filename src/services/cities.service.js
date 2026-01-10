@@ -33,14 +33,15 @@ async function get(req) {
 
 
 async function getOne(id) {
-     const childRecord = await prisma.party.count({ where: { cityId: parseInt(id) } });
+     const childRecordParty = await prisma.party.count({ where: { cityId: parseInt(id) } });
+     const childRecordSales = await prisma.salesEntry.count({ where: { destinationId: parseInt(id) } });
     const data = await prisma.city.findUnique({
         where: {
             id: parseInt(id)
         }
     })
     if (!data) return NoRecordFound("City");
-    return { statusCode: 0, data : { ...data, ...{ childRecord } } };
+    return { statusCode: 0, data : { ...data, ...{ childRecord : childRecordParty + childRecordSales } } };
 }
 
 async function getSearch(req) {

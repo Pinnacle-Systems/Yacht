@@ -28,6 +28,8 @@ export default function Form() {
 
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
+  const accessoryNameRef = useRef(null);
+
   const dispatch = useDispatch();
 
   const params = {
@@ -54,9 +56,9 @@ export default function Form() {
 
   const syncFormWithDb = useCallback(
     (data) => {
-      if (id) setReadOnly(true);
       setName(data?.name ? data.name : "");
       setActive(id ? (data?.active ? data.active : false) : true);
+      childRecord.current = data?.childRecord ? data?.childRecord : 0;
     },
     [id]
   );
@@ -64,6 +66,12 @@ export default function Form() {
   useEffect(() => {
     syncFormWithDb(singleData?.data);
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+  useEffect(() => {
+    if (form && !readOnly && accessoryNameRef.current) {
+      accessoryNameRef.current.focus();
+    }
+  }, [form, readOnly]);
 
   const data = {
     id,
@@ -351,6 +359,7 @@ export default function Form() {
                               setValue={setName}
                               required={true}
                               readOnly={readOnly}
+                              ref={accessoryNameRef}
                               disabled={childRecord.current > 0}
                             />
                           </div>
