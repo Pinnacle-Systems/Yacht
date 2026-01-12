@@ -91,16 +91,16 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
   const { data: portionList } = useGetPortionMasterQuery({ params: { companyId } });
   const { data: accessoryList } = useGetAccessoryMasterQuery({ params: { companyId } });
   const { data: colorList } = useGetColorMasterQuery({ params: { companyId } });
-  // const {
-  //   data: allData,
-  //   isFetching,
-  //   isLoading,
-  // } = useGetPurchaseInwardEntryQuery({
-  //   params: {
-  //     branchId,
-  //     finyearId,
-  //   },
-  // });
+  const {
+    data: allData,
+    isFetching,
+    isLoading,
+  } = useGetPurchaseInwardEntryQuery({
+    params: {
+      branchId,
+      finyearId,
+    },
+  });
 
   const [addData] = useAddPurchaseInwardEntryMutation();
   const [updateData] = useUpdatePurchaseInwardEntryMutation();
@@ -348,26 +348,60 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
   };
 
   const saveData = (nextProcess) => {
-    // let foundItem;
-    // if (id) {
-    //   foundItem = allData?.data
-    //     ?.filter((i) => i.id !== id)
-    //     ?.some((item) => item.invNo?.trim().toLowerCase() === invNo?.trim().toLowerCase());
-    // } else {
-    //   foundItem = allData?.data?.some(
-    //     (item) => item.invNo?.trim().toLowerCase() === invNo?.trim().toLowerCase()
-    //   );
-    // }
-
-    // if (foundItem) {
-    //   Swal.fire({
-    //     text: "The Invoice Number already exists.",
-    //     icon: "warning",
-    //     timer: 1500,
-    //     showConfirmButton: false,
-    //   });
-    //   return false;
-    // }
+    let foundItem;
+    if (id) {
+      foundItem = allData?.data
+        ?.filter((i) => i.id !== id)
+        ?.find((item) => item.invNo?.trim().toLowerCase() === invNo?.trim().toLowerCase());
+    } else {
+      foundItem = allData?.data?.find(
+        (item) => item.invNo?.trim().toLowerCase() === invNo?.trim().toLowerCase()
+      );
+    }
+    if (foundItem) {
+      const hasDuplicateStyle = foundItem.fabricInwardItems?.some(existing =>
+        fabricInwardItems?.some(
+          current => Number(current.styleId) === Number(existing.styleId) && Number(current.portionId) === Number(existing.portionId)
+        )
+      );
+      const hasDuplicateAccessory = foundItem.fabricInwardItems?.some(existing =>
+        fabricInwardItems?.some(
+          current => Number(current.accessoryId) === Number(existing.accessoryId) && Number(current.sizeId) === Number(existing.sizeId)
+        )
+      );
+      const hasDuplicateGoods = foundItem.readyGoods?.some(existing =>
+        readyGoods?.some(
+          current => Number(current.styleId) === Number(existing.styleId) && Number(current.sizeId) === Number(existing.sizeId)
+        )
+      );
+      if (hasDuplicateGoods) {
+        Swal.fire({
+          text: `Duplicate Style and Size already exists in this Invoice.`,
+          icon: "warning",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+        return false;
+      }
+      if (hasDuplicateStyle) {
+        Swal.fire({
+          text: `Duplicate Style and Portion already exists in this Invoice.`,
+          icon: "warning",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+        return false;
+      }
+      if (hasDuplicateAccessory) {
+        Swal.fire({
+          text: `Duplicate Accessory and Size already exists in this Invoice.`,
+          icon: "warning",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+        return false;
+      }
+    }
     if (!validateData(data)) {
       return;
     }

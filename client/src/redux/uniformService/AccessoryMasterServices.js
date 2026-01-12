@@ -76,6 +76,7 @@ const AccessoryMasterApi = createApi({
 export const {
   useGetAccessoryMasterQuery,
   useGetAccessoryMasterByIdQuery,
+  useLazyGetAccessoryMasterByIdQuery,
   useAddAccessoryMasterMutation,
   useUpdateAccessoryMasterMutation,
   useDeleteAccessoryMasterMutation,

@@ -167,7 +167,7 @@ export default function Form() {
       if (data?.data?.childRecord > 0) {
         Swal.fire({
           icon: "error",
-          title: "Child record Exists",
+          title: "Child record Exists in Accessory Master",
           text: "Data cannot be deleted!",
         });
       } else {

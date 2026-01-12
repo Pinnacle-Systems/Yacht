@@ -80,6 +80,7 @@ const UnitOfMeasurementMasterApi = createApi({
 export const {
   useGetUnitOfMeasurementMasterQuery,
   useGetUnitOfMeasurementMasterByIdQuery,
+  useLazyGetUnitOfMeasurementMasterByIdQuery,
   useAddUnitOfMeasurementMasterMutation,
   useUpdateUnitOfMeasurementMasterMutation,
   useDeleteUnitOfMeasurementMasterMutation,

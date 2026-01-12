@@ -80,6 +80,7 @@ const departmentMasterApi = createApi({
 export const {
   useGetDepartmentQuery,
   useGetDepartmentByIdQuery,
+  useLazyGetDepartmentByIdQuery,
   useAddDepartmentMutation,
   useUpdateDepartmentMutation,
   useDeleteDepartmentMutation,

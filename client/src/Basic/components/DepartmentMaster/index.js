@@ -6,6 +6,7 @@ import {
   useAddDepartmentMutation,
   useUpdateDepartmentMutation,
   useDeleteDepartmentMutation,
+  useLazyGetDepartmentByIdQuery
 } from "../../../redux/services/DepartmentMasterService";
 import FormHeader from "../FormHeader";
 import FormReport from "../FormReportTemplate";
@@ -53,6 +54,8 @@ export default function Form() {
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetDepartmentByIdQuery(id, { skip: !id });
+  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
+    useLazyGetDepartmentByIdQuery();
 
   const [addData] = useAddDepartmentMutation();
   const [updateData] = useUpdateDepartmentMutation();
@@ -161,30 +164,40 @@ export default function Form() {
   };
 
   const deleteData = async (id) => {
+    setId(id);
+    const { data } = await trigger(id);
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-      try {
-        const deldata = await removeData(id).unwrap();
-        if (deldata?.statusCode == 1) {
-          // toast.error(deldata?.message);
-          setForm(false);
-          return;
-        }
-        setId("");
-        Swal.fire({
-          title: "Deleted Successfully",
-          icon: "success",
-          timer: 1000,
-        });
-        setForm(false);
-      } catch (error) {
+      if (data?.data?.childRecord > 0) {
         Swal.fire({
           icon: "error",
-          title: "Submission error",
-          text: error.data?.message || "Something went wrong!",
+          title: "Child record in Employee Master",
+          text: "Data cannot be deleted!",
         });
+      } else {
+        try {
+          const deldata = await removeData(id).unwrap();
+          if (deldata?.statusCode == 1) {
+            // toast.error(deldata?.message);
+            setForm(false);
+            return;
+          }
+          setId("");
+          Swal.fire({
+            title: "Deleted Successfully",
+            icon: "success",
+            timer: 1000,
+          });
+          setForm(false);
+        } catch (error) {
+          Swal.fire({
+            icon: "error",
+            title: "Submission error",
+            text: error.data?.message || "Something went wrong!",
+          });
+        }
       }
     }
   };

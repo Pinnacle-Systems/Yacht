@@ -19,6 +19,7 @@ import {
   useGetAccessoryMasterByIdQuery,
   useGetAccessoryMasterQuery,
   useUpdateAccessoryMasterMutation,
+  useLazyGetAccessoryMasterByIdQuery,
 } from "../../../redux/uniformService/AccessoryMasterServices";
 import { useGetAccessoryGroupMasterQuery } from "../../../redux/uniformService/AccessoryGroupMasterServices";
 const MODEL = "Accessory Master";
@@ -63,7 +64,8 @@ export default function Form() {
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetAccessoryMasterByIdQuery(id, { skip: !id });
-
+  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
+    useLazyGetAccessoryMasterByIdQuery();
   const [addData] = useAddAccessoryMasterMutation();
   const [updateData] = useUpdateAccessoryMasterMutation();
   const [removeData] = useDeleteAccessoryMasterMutation();
@@ -128,7 +130,6 @@ export default function Form() {
   };
 
   const saveData = () => {
-    console.log("Accseessory  Clicked")
     let foundItem;
     if (id) {
       foundItem = allData?.data
@@ -169,10 +170,19 @@ export default function Form() {
   };
 
   const deleteData = async (id) => {
+    setId(id);
+    const { data } = await trigger(id);
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
+       if (data?.data?.childRecord > 0) {
+              Swal.fire({
+                icon: "error",
+                title: "Child record Exists in Purchase Inward",
+                text: "Data cannot be deleted!",
+              });
+            } else {
       try {
         const deldata = await removeData(id).unwrap();
         if (deldata?.statushsn == 1) {
@@ -197,7 +207,7 @@ export default function Form() {
           text: error.data?.message || "Something went wrong!",
         });
         setForm(false);
-      }
+      }}
     }
   };
 

@@ -76,6 +76,7 @@ const FabricMasterApi = createApi({
 export const {
   useGetFabricMasterQuery,
   useGetFabricMasterByIdQuery,
+  useLazyGetFabricMasterByIdQuery,
   useAddFabricMasterMutation,
   useUpdateFabricMasterMutation,
   useDeleteFabricMasterMutation,

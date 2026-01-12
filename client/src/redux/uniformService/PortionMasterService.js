@@ -80,6 +80,7 @@ const PortionMasterApi = createApi({
 export const {
     useGetPortionMasterQuery,
     useGetPortionMasterByIdQuery,
+    useLazyGetPortionMasterByIdQuery,
     useAddPortionMasterMutation,
     useUpdatePortionMasterMutation,
     useDeletePortionMasterMutation,

@@ -80,6 +80,7 @@ const designationMasterApi = createApi({
 export const {
   useGetdesignationQuery,
   useGetdesignationByIdQuery,
+  useLazyGetdesignationByIdQuery,
   useAdddesignationMutation,
   useUpdatedesignationMutation,
   useDeletedesignationMutation,

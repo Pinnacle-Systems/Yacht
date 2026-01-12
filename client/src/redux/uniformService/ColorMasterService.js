@@ -80,6 +80,7 @@ const ColorMasterApi = createApi({
 export const {
     useGetColorMasterQuery,
     useGetColorMasterByIdQuery,
+    useLazyGetColorMasterByIdQuery,
     useAddColorMasterMutation,
     useUpdateColorMasterMutation,
     useDeleteColorMasterMutation,

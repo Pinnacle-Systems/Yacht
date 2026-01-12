@@ -70,7 +70,8 @@ export default function Form() {
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetStateByIdQuery(id, { skip: !id });
-
+  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
+      useLazyGetStateByIdQuery();
   const [addData] = useAddStateMutation();
   const [updateData] = useUpdateStateMutation();
   const [removeData] = useDeleteStateMutation();
@@ -86,8 +87,6 @@ export default function Form() {
     },
     [id]
   );
-
-  console.log(childRecord.current, "childRecord.current");
 
   useEffect(() => {
     syncFormWithDb(singleData?.data);
@@ -220,10 +219,19 @@ export default function Form() {
   //   }
   // };
   const deleteData = async (id) => {
+    setId(id);
+    const { data } = await trigger(id);
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
+       if (data?.data?.childRecord > 0) {
+              Swal.fire({
+                icon: "error",
+                title: "Child record in City Master",
+                text: "Data cannot be deleted!",
+              });
+            } else {
       try {
         let deldata = await removeData(id).unwrap();
         if (deldata?.statusCode == 1) {
@@ -252,7 +260,7 @@ export default function Form() {
           text: error.data?.message || "Something went wrong!",
         });
         setForm(false);
-      }
+      }}
     }
   };
   const handleKeyDown = (event) => {

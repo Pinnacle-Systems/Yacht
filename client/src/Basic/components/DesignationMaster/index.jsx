@@ -26,6 +26,7 @@ import {
   useGetdesignationByIdQuery,
   useGetdesignationQuery,
   useUpdatedesignationMutation,
+  useLazyGetdesignationByIdQuery
 } from "../../../redux/services/DesignationMasterService";
 import { useGetCompanyQuery } from "../../../redux/services/CompanyMasterService";
 import Modal from "../../../UiComponents/Modal";
@@ -63,7 +64,8 @@ const Designation = () => {
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetdesignationByIdQuery(id, { skip: !id });
-
+const [trigger, { data: singleDataLazy, isFetchingLazy }] =
+    useLazyGetdesignationByIdQuery();
   useEffect(() => {
     if (company?.data?.length > 0) {
       setCompanyName(company.data[0].name);
@@ -174,10 +176,19 @@ const Designation = () => {
   };
 
   const deleteData = async (id) => {
+    setId(id);
+    const { data } = await trigger(id);
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
+      if (data?.data?.childRecord > 0) {
+              Swal.fire({
+                icon: "error",
+                title: "Child record in Employee Master",
+                text: "Data cannot be deleted!",
+              });
+            } else {
       try {
         const deldata = await removeData(id).unwrap();
         if (deldata?.statusCode == 1) {
@@ -202,7 +213,7 @@ const Designation = () => {
           title: "Submission error",
           text: error.data?.message || "Something went wrong!",
         });
-      }
+      }}
     }
   };
 

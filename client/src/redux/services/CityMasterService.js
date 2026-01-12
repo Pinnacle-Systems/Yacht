@@ -82,6 +82,7 @@ const cityMasterApi = createApi({
 export const {
   useGetCityQuery,
   useGetCityByIdQuery,
+  useLazyGetCityByIdQuery,
   useAddCityMutation,
   useUpdateCityMutation,
   useDeleteCityMutation,

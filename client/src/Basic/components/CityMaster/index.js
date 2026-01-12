@@ -6,6 +6,7 @@ import {
   useAddCityMutation,
   useUpdateCityMutation,
   useDeleteCityMutation,
+  useLazyGetCityByIdQuery
 } from "../../../redux/services/CityMasterService";
 import { useGetStateQuery } from "../../../redux/services/StateMasterService";
 
@@ -66,7 +67,8 @@ export default function Form() {
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetCityByIdQuery(id, { skip: !id });
-
+  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
+    useLazyGetCityByIdQuery();
   const [addData] = useAddCityMutation();
   const [updateData] = useUpdateCityMutation();
   const [removeData] = useDeleteCityMutation();
@@ -170,10 +172,19 @@ export default function Form() {
   };
 
   const deleteData = async (id) => {
+    setId(id);
+    const { data } = await trigger(id);
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
+      if (data?.data?.childRecord > 0) {
+              Swal.fire({
+                icon: "error",
+                title: "Child record Exists",
+                text: "Data cannot be deleted!",
+              });
+            } else {
       try {
         const deldata = await removeData(id).unwrap();
         if (deldata?.statusCode == 1) {
@@ -198,7 +209,7 @@ export default function Form() {
           text: error.data?.message || "Something went wrong!",
         });
         setForm(false);
-      }
+      }}
     }
   };
 
