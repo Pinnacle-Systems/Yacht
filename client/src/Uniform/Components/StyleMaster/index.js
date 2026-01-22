@@ -90,7 +90,7 @@ const StyleMaster = () => {
   };
 
   const validateData = (data) => {
-    if (data.sku && data.fabricId) {
+    if (data.sku && data.fabricId && data.sizeTemplateId) {
       return true;
     }
     return false;
@@ -516,9 +516,8 @@ const StyleMaster = () => {
                               }
                               value={sizeTemplateId}
                               setValue={setSizeTemplateId}
-                              required={false}
+                              required={true}
                               readOnly={readOnly}
-                              disabled={childRecord.current > 0}
                             />
                           </div>
                           <div className="mb-5 w-48">
