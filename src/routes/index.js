@@ -69,3 +69,4 @@ export { default as productionDelivery } from "./productionDelivery.route.js";
 export {default as processGroupSeq } from "./processGroupSeq.route.js"
 export {default as processGroup } from "./processGroupMaster.route.js"
 export {default as productionStock} from "./productionStock.route.js"
+export { default as hsn } from "./hsn.route.js";

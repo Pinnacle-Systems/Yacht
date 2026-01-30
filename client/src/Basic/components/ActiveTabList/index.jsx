@@ -40,6 +40,7 @@ import {
   FabricMaster,
   TaxTemplate,
   TaxTermMaster,
+  HsnMaster,
 } from "../../components";
 
 import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
@@ -81,6 +82,7 @@ import {
   StyleMaster,
   TagTypeMater,
   SummaryReport,
+  PurchaseBill,
 } from "../../../Uniform/Components";
 import NewOrder from "../../../Uniform/Components/NewOrder";
 import Manufacture from "../../../Uniform/Components/styleesheet/Manufacture";
@@ -177,6 +179,8 @@ const ActiveTabList = () => {
     "PROCESS GROUP SEQ": <ProcessGroupSeqMaster />,
     "PROCESS GROUP MASTER": <ProcessGroupMaster />,
     "STOCK SUMMARY REPORT": <SummaryReport />,
+    "HSN MASTER": <HsnMaster />,
+    "PURCHASE BILL": <PurchaseBill />
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

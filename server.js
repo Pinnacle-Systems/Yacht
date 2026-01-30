@@ -77,6 +77,7 @@ import {
   processGroupSeq,
   processGroup,
   productionStock,
+  hsn,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";
@@ -186,6 +187,8 @@ app.use("/cuttingDelivery", cuttingDelivery);
 app.use("/productionDelivery", productionDelivery);
 app.use("/processGroupSeq", processGroupSeq);
 app.use("/processGroup", processGroup);
+app.use("/hsn", hsn);
+
 app.get("/retreiveFile/:fileName", (req, res) => {
   const { fileName } = req.params;
   res.sendFile(__dirname + "/uploads/" + fileName);

@@ -48,7 +48,6 @@ const purchaseInwardEntryApi = createApi({
     }),
     getPurchaseInwardEntryById: builder.query({
       query: (id) => {
-        console.log("Fetching the ID:", id);
         return {
           url: `${PURCHASE_INWARD_ENTRY_API}/${id}`,
           method: "GET",

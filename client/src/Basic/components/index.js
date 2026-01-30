@@ -48,3 +48,4 @@ export { default as EmployeeSubCategory } from "./EmployeeSubCategory";
 export { default as PayComponents } from "./PayComponents";
 export { default as CompanyPaycode } from "./CompanyPaycode";
 export { default as Measurement } from "./MeasurementMaster";
+export { default as HsnMaster } from "./HsnMaster";

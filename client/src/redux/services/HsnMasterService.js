@@ -1,20 +1,20 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { PURCHASE_BILL_API} from "../../Api";
+import { HSN_API} from "../../Api";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
-const purchaseBillApi = createApi({
-  reducerPath: "purchaseBill",
+const HsnMasterApi = createApi({
+  reducerPath: "hsnMaster",
   baseQuery: fetchBaseQuery({
     baseUrl: BASE_URL,
   }),
-  tagTypes: ["PurchaseBill"],
+  tagTypes: ["HsnMaster"],
   endpoints: (builder) => ({
-    getPurchaseBill: builder.query({
+    getHsnMaster: builder.query({
       query: ({params, searchParams}) => {
         if(searchParams){
           return {
-            url: PURCHASE_BILL_API +"/search/"+searchParams,
+            url: HSN_API +"/search/"+searchParams,
             method: "GET",
             headers: {
               "Content-type": "application/json; charset=UTF-8",
@@ -23,7 +23,7 @@ const purchaseBillApi = createApi({
           };
         }
         return {
-          url: PURCHASE_BILL_API,
+          url: HSN_API,
           method: "GET",
           headers: {
             "Content-type": "application/json; charset=UTF-8",
@@ -31,58 +31,58 @@ const purchaseBillApi = createApi({
           params
         };
       },
-      providesTags: ["PurchaseBill"],
+      providesTags: ["HsnMaster"],
     }),
-    getPurchaseBillById: builder.query({
+    getHsnMasterById: builder.query({
       query: (id) => {
         return {
-          url: `${PURCHASE_BILL_API}/${id}`,
+          url: `${HSN_API}/${id}`,
           method: "GET",
           headers: {
             "Content-type": "application/json; charset=UTF-8",
           },
         };
       },
-      providesTags: ["PurchaseBill"],
+      providesTags: ["HsnMaster"],
     }),
-    addPurchaseBill: builder.mutation({
+    addHsnMaster: builder.mutation({
       query: (payload) => ({
-        url: PURCHASE_BILL_API,
+        url: HSN_API,
         method: "POST",
         body: payload,
         headers: {
           "Content-type": "application/json; charset=UTF-8",
         },
       }),
-      invalidatesTags: ["PurchaseBill"],
+      invalidatesTags: ["HsnMaster"],
     }),
-    updatePurchaseBill: builder.mutation({
+    updateHsnMaster: builder.mutation({
       query: (payload) => {
-        const { id, body } = payload;
+        const { id, ...body } = payload;
         return {
-          url: `${PURCHASE_BILL_API}/${id}`,
+          url: `${HSN_API}/${id}`,
           method: "PUT",
           body,
         };
       },
-      invalidatesTags: ["PurchaseBill"],
+      invalidatesTags: ["HsnMaster"],
     }),
-    deletePurchaseBill: builder.mutation({
+    deleteHsnMaster: builder.mutation({
       query: (id) => ({
-        url: `${PURCHASE_BILL_API}/${id}`,
+        url: `${HSN_API}/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["PurchaseBill"],
+      invalidatesTags: ["HsnMaster"],
     }),
   }),
 });
 
 export const {
-  useGetPurchaseBillQuery,
-  useGetPurchaseBillByIdQuery,
-  useAddPurchaseBillMutation,
-  useUpdatePurchaseBillMutation,
-  useDeletePurchaseBillMutation,
-} = purchaseBillApi;
+  useGetHsnMasterQuery,
+  useGetHsnMasterByIdQuery,
+  useAddHsnMasterMutation,
+  useUpdateHsnMasterMutation,
+  useDeleteHsnMasterMutation,
+} = HsnMasterApi;
 
-export default purchaseBillApi;
+export default HsnMasterApi;

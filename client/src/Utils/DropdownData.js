@@ -297,3 +297,10 @@ export const adjTypeData = [
   { show: "PLUS", value: "PLUS" },
   { show: "MINUS", value: "MINUS" },
 ];
+
+export const PaymentTypeData = [
+  { show: "CASH", value: "CASH" },
+  { show: "CARD", value: "CARD" },
+  { show: "UPI", value: "UPI" },
+  { show: "PARTIAL", value: "PARTIAL" },
+];

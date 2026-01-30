@@ -651,6 +651,7 @@ model Hsn {
   Company   Company? @relation(fields: [companyId], references: [id])
   companyId Int?
   active    Boolean  @default(true)
+  taxPerc   String?
 }
 
 model PayTerm {
@@ -1749,7 +1750,7 @@ model Stock {
   salesReturnItemsId   Int?
   ReadyGoods           ReadyGoods?           @relation(fields: [readyGoodsId], references: [id], onDelete: Cascade)
   readyGoodsId         Int?
-  returnGoods          ReturnGoods?          @relation(fields: [returnGoodsId], references: [id],onDelete: Cascade)
+  returnGoods          ReturnGoods?          @relation(fields: [returnGoodsId], references: [id], onDelete: Cascade)
   returnGoodsId        Int?
 }
 
