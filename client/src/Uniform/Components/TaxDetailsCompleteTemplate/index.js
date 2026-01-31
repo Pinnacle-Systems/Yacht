@@ -6,7 +6,7 @@ import { Loader } from "../../../Basic/components";
 import { substract as s } from "../../../Utils/helper";
 
 const TaxDetailsFullTemplate = ({
-  salesEntryItems,
+  purchaseBillItems,
   currentIndex: index,
   setCurrentSelectedIndex,
   readOnly,
@@ -103,14 +103,14 @@ const TaxDetailsFullTemplate = ({
   ) {
     return <Loader />;
   }
-  const row = salesEntryItems[index];
+  const row = purchaseBillItems[index];
 
   if (!row) return null;
 
   let overAllDiscountType = "Flat";
   let overAllDiscountValue = 0;
 
-  let price = isNaN(parseFloat(row["price"])) ? 0 : parseFloat(row["price"]);
+  let price = isNaN(parseFloat(row["rate"])) ? 0 : parseFloat(row["rate"]);
   let qty = isNaN(parseFloat(row["qty"])) ? 0 : parseFloat(row["qty"]);
   let discountType = row["discountType"];
   let discountValue = isNaN(parseFloat(row["discountValue"]))

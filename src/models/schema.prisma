@@ -142,6 +142,9 @@ model Branch {
   cuttingDeliveries       CuttingDelivery[]
   productionStocks        ProductionStock[]
   productionEntries       ProductionEntry[]
+  purchaseBills           PurchaseBill[]
+  stockLedgers            StockLedger[]
+  stockSummaries          StockSummary[]
 }
 
 model UserOnBranch {
@@ -266,6 +269,12 @@ model User {
   productionStocksUpdatedBy    ProductionStock[]     @relation(name: "updatedBy")
   productionEntriesCreatedBy   ProductionEntry[]     @relation(name: "createdBy")
   productionEntriesUpdatedBy   ProductionEntry[]     @relation(name: "updatedBy")
+  purchaseBillsCreatedBy       PurchaseBill[]        @relation(name: "createdBy")
+  purchaseBillsUpdatedBy       PurchaseBill[]        @relation(name: "updatedBy")
+  stockLedgersCreatedBy        StockLedger[]         @relation(name: "createdBy")
+  stockLedgersUpdatedBy        StockLedger[]         @relation(name: "updatedBy")
+  stockSummariesCreatedBy      StockSummary[]        @relation(name: "createdBy")
+  stockSummariesUpdatedBy      StockSummary[]        @relation(name: "updatedBy")
 }
 
 model Employee {
@@ -597,6 +606,7 @@ model Party {
   purchaseReturns           PurchaseReturn[]
   cuttingDeliveries         CuttingDelivery[]
   productionEntries         ProductionEntry[]
+  purchaseBills             PurchaseBill[]
 }
 
 model PartyBranch {
@@ -684,6 +694,7 @@ model TaxTemplate {
   active             Boolean              @default(true)
   TaxTemplateDetails TaxTemplateDetails[]
   SalesEntry         SalesEntry[]
+  purchaseBills      PurchaseBill[]
 }
 
 model TaxTemplateDetails {
@@ -1179,6 +1190,9 @@ model Color {
   stockInwardItems           StockInwardItems[]
   readyGoods                 ReadyGoods[]
   returnGoods                ReturnGoods[]
+  purchaseBillItems          PurchaseBillItems[]
+  stockLedgers               StockLedger[]
+  stockSummaries             StockSummary[]
 }
 
 model UnitOfMeasurement {
@@ -1199,6 +1213,9 @@ model UnitOfMeasurement {
   cuttingOrderItems          CuttingOrderItems[]
   cuttingDeliveryItems       CuttingDeliveryItems[]
   productionEntryItems       ProductionEntryItems[]
+  purchaseBillItems          PurchaseBillItems[]
+  stockLedgers               StockLedger[]
+  stockSummaries             StockSummary[]
 }
 
 model purchaseInwardEntry {
@@ -1596,6 +1613,9 @@ model Style {
   stockInwards         StockInward[]
   readyGoods           ReadyGoods[]
   returnGoods          ReturnGoods[]
+  purchaseBillItems    PurchaseBillItems[]
+  stockLedgers         StockLedger[]
+  stockSummaries       StockSummary[]
 }
 
 model Size {
@@ -1623,6 +1643,9 @@ model Size {
   pcsSizeDetails       PcsSizeDetails[]
   readyGoods           ReadyGoods[]
   returnGoods          ReturnGoods[]
+  purchaseBillItems    PurchaseBillItems[]
+  stockLedgers         StockLedger[]
+  stockSummaries       StockSummary[]
 }
 
 model Measurement {
@@ -1981,6 +2004,9 @@ model StyleItem {
   stockInwardItems     StockInwardItems[]
   readyGoods           ReadyGoods[]
   returnGoods          ReturnGoods[]
+  purchaseBillItems    PurchaseBillItems[]
+  stockLedgers         StockLedger[]
+  stockSummaries       StockSummary[]
 }
 
 model SalesReturn {
@@ -2567,4 +2593,116 @@ model ProcessGroupList {
   isRequired     Boolean?
   ProcessGroup   ProcessGroup? @relation(fields: [processGroupId], references: [id], onDelete: Cascade)
   processGroupId Int?
+}
+
+model PurchaseBill {
+  id                Int                 @id @default(autoincrement())
+  docId             String
+  docDate           DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  createdBy         User?               @relation("createdBy", fields: [createdById], references: [id])
+  createdById       Int?
+  updatedBy         User?               @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById       Int?
+  Branch            Branch?             @relation(fields: [branchId], references: [id])
+  branchId          Int?
+  taxTemplate       TaxTemplate?        @relation(fields: [taxTemplateId], references: [id])
+  taxTemplateId     Int?
+  Supplier          Party?              @relation(fields: [supplierId], references: [id])
+  supplierId        Int?
+  invNo             String?
+  invDate           DateTime?
+  invValue          String?
+  paymentType       String?
+  remarks           String?
+  vehicleNo         String?
+  contactPerson     String?
+  contactNumber     String?
+  purchaseBillItems PurchaseBillItems[]
+  discountType      String?
+  discountValue     Float?
+}
+
+model PurchaseBillItems {
+  id             Int                @id @default(autoincrement())
+  PurchaseBill   PurchaseBill?      @relation(fields: [purchaseBillId], references: [id], onDelete: Cascade)
+  purchaseBillId Int?
+  Style          Style?             @relation(fields: [styleId], references: [id])
+  styleId        Int?
+  Size           Size?              @relation(fields: [sizeId], references: [id])
+  sizeId         Int?
+  qty            Int?
+  StyleItem      StyleItem?         @relation(fields: [styleItemId], references: [id])
+  styleItemId    Int?
+  Color          Color?             @relation(fields: [colorId], references: [id])
+  colorId        Int?
+  Uom            UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId          Int?
+  invNo          String?
+  barcodeNo      String?
+  rate           Float?
+  discountType   String?
+  discountValue  Float?
+  taxPercent     Float?
+  stockLedgers   StockLedger[]
+}
+
+model StockLedger {
+  id                  Int                @id @default(autoincrement())
+  refType             String?
+  inOrOut             String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime?          @updatedAt
+  createdBy           User?              @relation("createdBy", fields: [createdById], references: [id])
+  createdById         Int?
+  updatedBy           User?              @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById         Int?
+  Branch              Branch?            @relation(fields: [branchId], references: [id])
+  branchId            Int?
+  Color               Color?             @relation(fields: [colorId], references: [id])
+  colorId             Int?
+  Uom                 UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId               Int?
+  Style               Style?             @relation(fields: [styleId], references: [id])
+  styleId             Int?
+  Size                Size?              @relation(fields: [sizeId], references: [id])
+  sizeId              Int?
+  qty                 Float              @default(0)
+  active              Boolean?
+  PurchaseBillItems   PurchaseBillItems? @relation(fields: [PurchaseBillItemsId], references: [id], onDelete: Cascade)
+  PurchaseBillItemsId Int?
+  barcodeNo           String?
+  StyleItem           StyleItem?         @relation(fields: [styleItemId], references: [id])
+  styleItemId         Int?
+  rate                Float?
+
+  @@index([branchId])
+}
+
+model StockSummary {
+  id          Int                @id @default(autoincrement())
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime?          @updatedAt
+  createdBy   User?              @relation("createdBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?              @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  Branch      Branch?            @relation(fields: [branchId], references: [id])
+  branchId    Int?
+  barcodeNo   String?
+  Color       Color?             @relation(fields: [colorId], references: [id])
+  colorId     Int?
+  Uom         UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId       Int?
+  Style       Style?             @relation(fields: [styleId], references: [id])
+  styleId     Int?
+  Size        Size?              @relation(fields: [sizeId], references: [id])
+  sizeId      Int?
+  qty         Float              @default(0)
+  StyleItem   StyleItem?         @relation(fields: [styleItemId], references: [id])
+  styleItemId Int?
+  rate        Float?
+
+  @@index([branchId])
 }

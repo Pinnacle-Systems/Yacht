@@ -6,15 +6,29 @@ import { FaPlus } from "react-icons/fa";
 import PurchaseBillFormReport from "./PurchaseBillFormReport";
 import { getCommonParams } from "../../../Utils/helper";
 import { useDeletePurchaseBillMutation } from "../../../redux/services/PurchaseBillService";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
+import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
+import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServices";
 const MODEL = "Purchase Bill";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
   const [id, setId] = useState("");
   const [readOnly, setReadOnly] = useState(false);
-//   const dispatch = useDispatch();
+  //   const dispatch = useDispatch();
   const { companyId, branchId } = getCommonParams();
-
+  const params = {
+    branchId,
+    companyId,
+  };
+  const { data: sizeList } = useGetSizeMasterQuery({ params });
+  const { data: colorList } = useGetColorMasterQuery({ params });
+  const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
+  const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
+  const { data: taxTypeList } =
+    useGetTaxTemplateQuery({ params });
   const [removeData] = useDeletePurchaseBillMutation();
   const handleView = (orderId) => {
     setId(orderId);
@@ -34,46 +48,46 @@ export default function Form() {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-    //   if (data?.data?.childRecordReturn > 0) {
-    //     Swal.fire({
-    //       icon: "error",
-    //       title: "This item used in Purchase Return",
-    //       text: "Data cannot be deleted!",
-    //     });
-    //   } else if (data?.data?.childRecordSales > 0) {
-    //     Swal.fire({
-    //       icon: "error",
-    //       title: "This item used in Sales Entry",
-    //       text: "Data cannot be deleted!",
-    //     });
-    //   }
-    //   else {}
-        try {
-          let deldata = await removeData(id).unwrap();
-          if (deldata?.statusCode == 1) {
-            Swal.fire({
-              icon: "error",
-              title: "Child record Exists",
-              text: deldata.data?.message || "Data cannot be deleted!",
-            });
-            return;
-          }
-          setId("");
-          Swal.fire({
-            title: "Deleted Successfully",
-            icon: "success",
-            timer: 1000,
-          });
-          setShowForm(false);
-        } catch (error) {
+      //   if (data?.data?.childRecordReturn > 0) {
+      //     Swal.fire({
+      //       icon: "error",
+      //       title: "This item used in Purchase Return",
+      //       text: "Data cannot be deleted!",
+      //     });
+      //   } else if (data?.data?.childRecordSales > 0) {
+      //     Swal.fire({
+      //       icon: "error",
+      //       title: "This item used in Sales Entry",
+      //       text: "Data cannot be deleted!",
+      //     });
+      //   }
+      //   else {}
+      try {
+        let deldata = await removeData(id).unwrap();
+        if (deldata?.statusCode == 1) {
           Swal.fire({
             icon: "error",
-            title: "Submission error",
-            text: error.data?.message || "Something went wrong!",
+            title: "Child record Exists",
+            text: deldata.data?.message || "Data cannot be deleted!",
           });
-          setShowForm(false);
+          return;
         }
-     
+        setId("");
+        Swal.fire({
+          title: "Deleted Successfully",
+          icon: "success",
+          timer: 1000,
+        });
+        setShowForm(false);
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Submission error",
+          text: error.data?.message || "Something went wrong!",
+        });
+        setShowForm(false);
+      }
+
 
     }
   };
@@ -130,6 +144,11 @@ export default function Form() {
             setReadOnly((prev) => !prev);
           }}
           setShowForm={setShowForm}
+          sizeList={sizeList}
+          styleItemList={styleItemList}
+          colorList={colorList}
+          uomList={uomList}
+          taxTypeList={taxTypeList}
         />
       )}
     </>

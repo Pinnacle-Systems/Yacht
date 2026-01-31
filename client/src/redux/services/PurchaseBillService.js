@@ -58,7 +58,7 @@ const purchaseBillApi = createApi({
     }),
     updatePurchaseBill: builder.mutation({
       query: (payload) => {
-        const { id, body } = payload;
+        const { id, ...body } = payload;
         return {
           url: `${PURCHASE_BILL_API}/${id}`,
           method: "PUT",

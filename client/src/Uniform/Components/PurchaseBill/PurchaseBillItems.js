@@ -13,30 +13,33 @@ import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMaste
 import { toast } from "react-toastify";
 import FxSelect from "../../../Inputs";
 import Swal from "sweetalert2";
-
+import { VIEW } from "../../../icons";
+import TaxDetailsFullTemplate from "../TaxDetailsCompleteTemplate";
+import Modal from "../../../UiComponents/Modal";
 export default function PurchaseBillItems({
   purchaseBillItems,
   setPurchaseBillItems,
   params,
   readOnly,
   id,
+  sizeList,
+  styleItemList,
+  colorList,
+  uomList,
+  taxTemplateId,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [styleNo, setStyleNo] = useState("");
   const [getStyleCodeDetail] = useLazyGetStyleCodeDetailQuery();
   const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
-  const { data: styleList } = useGetStyleMasterQuery({ params });
-  const { data: sizeList } = useGetSizeMasterQuery({ params });
-  const { data: colorList } = useGetColorMasterQuery({ params });
-  const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
+  const [currentSelectedIndex, setCurrentSelectedIndex] = useState(null);
 
   const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
+    sessionStorage.getItem("sessionId") + "userCompanyId",
   );
 
   const addRow = () => {
     const newRow = {
-      styleNo: "",
       styleId: "",
       sizeId: "",
       qty: "",
@@ -44,6 +47,9 @@ export default function PurchaseBillItems({
       styleItemId: "",
       colorId: "",
       selected: false,
+      barcodeNo: "",
+      uomId: "",
+      rate: "",
     };
     setPurchaseBillItems([...purchaseBillItems, newRow]);
   };
@@ -65,7 +71,7 @@ export default function PurchaseBillItems({
 
   const deleteSelectedRows = () => {
     setPurchaseBillItems((rows) =>
-      rows.filter((r) => !(r.selected && (r.stockQty ?? 0) === 0))
+      rows.filter((r) => !(r.selected && (r.stockQty ?? 0) === 0)),
     );
     setContextMenu(null);
   };
@@ -96,19 +102,21 @@ export default function PurchaseBillItems({
       setPurchaseBillItems((prev) => {
         const filledRows = prev.length;
 
-        if (filledRows < 6) {
+        if (filledRows < 3) {
           // add empty rows until total becomes 6
           return [
             ...prev,
             ...Array.from({ length: 3 - filledRows }, () => ({
-              styleNo: "",
-              fabricId: "",
               styleId: "",
               sizeId: "",
               qty: "",
               remarks: "",
               styleItemId: "",
               colorId: "",
+              selected: false,
+              barcodeNo: "",
+              uomId: "",
+              rate: "",
               selected: false,
             })),
           ];
@@ -119,8 +127,6 @@ export default function PurchaseBillItems({
       // if null/undefined, initialize with 6 empty rows
       setPurchaseBillItems(
         Array.from({ length: 3 }, () => ({
-          styleNo: "",
-          fabricId: "",
           styleId: "",
           sizeId: "",
           qty: "",
@@ -128,7 +134,11 @@ export default function PurchaseBillItems({
           styleItemId: "",
           colorId: "",
           selected: false,
-        }))
+          barcodeNo: "",
+          uomId: "",
+          rate: "",
+          selected: false,
+        })),
       );
     }
   }, [purchaseBillItems, setPurchaseBillItems]);
@@ -189,7 +199,7 @@ export default function PurchaseBillItems({
 
         // Find first empty slot index
         let startIndex = updated.findIndex(
-          (row) => !row.styleId && !row.sizeId && !row.styleNo && !row.fabricId
+          (row) => !row.styleId && !row.sizeId && !row.styleNo && !row.fabricId,
         );
         if (startIndex === -1) startIndex = updated.length;
 
@@ -226,6 +236,20 @@ export default function PurchaseBillItems({
 
   return (
     <>
+      <Modal
+        isOpen={Number.isInteger(currentSelectedIndex)}
+        onClose={() => setCurrentSelectedIndex("")}
+      >
+        <TaxDetailsFullTemplate
+          readOnly={readOnly}
+          taxTypeId={taxTemplateId}
+          currentIndex={currentSelectedIndex}
+          setCurrentSelectedIndex={setCurrentSelectedIndex}
+          purchaseBillItems={purchaseBillItems}
+          handleInputChange={handleInputChange}
+          id={id}
+        />
+      </Modal>
       <div className="border border-slate-200  bg-white rounded-md shadow-sm max-h-[450px] px-2 overflow-auto">
         <div className="flex items-center gap-4  sticky top-0 bg-white z-30 mt-2">
           <ReusableInput
@@ -250,49 +274,21 @@ export default function PurchaseBillItems({
           <table className=" border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
-                <th className="w-12 px-1 py-1 justify-center font-medium text-[13px]">
-                  {/* <tr className="flex items-center justify-center">Select</tr> */}
-                  <tr className="flex items-center justify-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={
-                        purchaseBillItems.length > 0 &&
-                        purchaseBillItems
-                          .filter((row) => (row.usedQty ?? 0) === 0)
-                          .every((row) => row.selected)
-                      }
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setPurchaseBillItems((prev) =>
-                          prev.map((row) =>
-                            (row.usedQty ?? 0) > 0
-                              ? row
-                              : { ...row, selected: checked }
-                          )
-                        );
-                      }}
-                      onContextMenu={(e) => {
-                        if (!readOnly) {
-                          handleRightClick(e, "notes");
-                        }
-                      }}
-                      tabIndex={-1}
-                      disabled={readOnly}
-                    />
-                  </tr>
-                </th>
                 <th
                   className={`w-12 px-4 py-2 text-center font-medium text-[13px]`}
                 >
                   S.No
                 </th>
-               
+                <th
+                  className={`w-40 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Barcode
+                </th>
                 <th
                   className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
                 >
-                  Style
+                  Style Item
                 </th>
-             
                 <th
                   className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                 >
@@ -304,175 +300,321 @@ export default function PurchaseBillItems({
                   Color
                 </th>
                 <th
+                  className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Unit
+                </th>
+                <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Qty
                 </th>
+                <th
+                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Rate
+                </th>
+                <th
+                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Amount
+                </th>
+                <th
+                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Tax Details
+                </th>
+                <th
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
-              {(purchaseBillItems ? purchaseBillItems : [])?.map((row, index) => (
-                <tr
-                  className="border border-blue-gray-200 cursor-pointer "
-                  key={index}
-                >
-                  <td className="border-blue-gray-200 text-[11px]  border border-gray-300 py-0.5 text-right">
-                    <input
-                      type="checkbox"
-                      checked={row.selected || false}
-                      disabled={readOnly || (row.usedQty ?? 0) > 0}
-                      onChange={(e) =>
-                        handleInputChange(e.target.checked, index, "selected")
-                      }
-                      className="justify-center flex items-center mx-auto w-full"
-                      onContextMenu={(e) => {
-                        if (!readOnly) {
-                          handleRightClick(e, index, "notes");
-                        }
-                      }}
-                    />
-                  </td>
-                  <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
-                    {index + 1}
-                  </td>
-                 
-                  <td className="py-0.5 border border-gray-300 text-[11px] ">
-                    <FxSelect
-                      value={row.styleItemId}
-                      onChange={(val) =>
-                        handleInputChange(val, index, "styleItemId")
-                      }
-                      options={(styleItemList?.data || [])
-                        .filter((item) => item.active)
-                        .map((item) => ({
-                          label: item.name,
-                          value: item.id,
-                        }))}
-                      readOnly={readOnly || (row.usedQty ?? 0) > 0}
-                      placeholder=""
-                      onBlur={() =>
-                        handleInputChange(row.styleItemId, index, "styleItemId")
-                      }
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "styleItemId");
-                        }
-                      }}
-                    />
-                  </td>
-                  
-                  <td className="py-0.5 border border-gray-300 text-[11px]">
-                    <FxSelect
-                      value={row.sizeId}
-                      onChange={(val) =>
-                        handleInputChange(val, index, "sizeId")
-                      }
-                      options={(sizeList?.data || [])
-                        .filter((item) => item.active)
-                        .map((item) => ({
-                          label: item.name,
-                          value: item.id,
-                        }))}
-                      readOnly={readOnly || (row.usedQty ?? 0) > 0}
-                      placeholder=""
-                      onBlur={() =>
-                        handleInputChange(row.sizeId, index, "sizeId")
-                      }
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "sizeId");
-                        }
-                      }}
-                    />
-                  </td>
-                  <td className="py-0.5 border border-gray-300 text-[11px]">
-                    <FxSelect
-                      value={row.colorId}
-                      onChange={(val) =>
-                        handleInputChange(val, index, "colorId")
-                      }
-                      options={(colorList?.data || [])
-                        .filter((item) => item.active)
-                        .map((item) => ({
-                          label: item.name,
-                          value: item.id,
-                        }))}
-                      readOnly={readOnly || (row.usedQty ?? 0) > 0}
-                      placeholder=""
-                      onBlur={() =>
-                        handleInputChange(row.colorId, index, "colorId")
-                      }
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "colorId");
-                        }
-                      }}
-                      inputId={`qty-input-${index}`}
-                    />
-                  </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      onKeyDown={(e) => {
-                        if (e.code === "Minus" || e.code === "NumpadSubtract")
-                          e.preventDefault();
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "qty");
-                        }
-                        if (e.key === "Enter") {
-                          e.preventDefault(); // prevent form submit or line break
-                          e.stopPropagation();
-                          const nextQtyInput = document.querySelector(
-                            `#styleId-input-${index + 1}`
-                          );
-                          if (nextQtyInput) {
-                            nextQtyInput.focus();
+              {(purchaseBillItems ? purchaseBillItems : [])?.map(
+                (row, index) => (
+                  <tr
+                    className="border border-blue-gray-200 cursor-pointer "
+                    key={index}
+                  >
+                    <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
+                      {index + 1}
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-left">
+                      <input
+                        onKeyDown={(e) => {
+                          if (e.code === "Minus" || e.code === "NumpadSubtract")
+                            e.preventDefault();
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "barcodeNo");
                           }
+                        }}
+                        type="number"
+                        className="text-left rounded py-1 px-1 w-full"
+                        onFocus={(e) => e.target.select()}
+                        value={row?.barcodeNo}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "barcodeNo")
                         }
-                      }}
-                      min={"0"}
-                      type="number"
-                      className="text-right rounded py-1 px-1 w-full table-data-input"
-                      onFocus={(e) => e.target.select()}
-                      value={row?.qty}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "qty")
-                      }
-                      onBlur={(e) => {
-                        const minQty = row.minQty || 0;
-                        if (parseFloat(minQty) > parseFloat(e.target.value)) {
-                          e.target.value = "";
-                          Swal.fire({
-                            icon: "warning",
-                            title: "Invalid Qty",
-                            text: `Inward Qty cannot be Less than Min Qty! - ${minQty}`,
-                            confirmButtonText: "OK",
-                          });
-                          return;
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "barcodeNo");
+                        }}
+                        disabled={readOnly}
+                      />
+                    </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px] ">
+                      <FxSelect
+                        value={row.styleItemId}
+                        onChange={(val) =>
+                          handleInputChange(val, index, "styleItemId")
                         }
-                        handleInputChange(e.target.value, index, "qty");
-                      }}
-                      disabled={readOnly}
-                    />
-                  </td>
-                  
-                </tr>
-              ))}
+                        options={(styleItemList?.data || [])
+                          .filter((item) => item.active)
+                          .map((item) => ({
+                            label: item.name,
+                            value: item.id,
+                          }))}
+                        readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                        placeholder=""
+                        onBlur={() =>
+                          handleInputChange(
+                            row.styleItemId,
+                            index,
+                            "styleItemId",
+                          )
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "styleItemId");
+                          }
+                        }}
+                      />
+                    </td>
+
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <FxSelect
+                        value={row.sizeId}
+                        onChange={(val) =>
+                          handleInputChange(val, index, "sizeId")
+                        }
+                        options={(sizeList?.data || [])
+                          .filter((item) => item.active)
+                          .map((item) => ({
+                            label: item.name,
+                            value: item.id,
+                          }))}
+                        readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                        placeholder=""
+                        onBlur={() =>
+                          handleInputChange(row.sizeId, index, "sizeId")
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "sizeId");
+                          }
+                        }}
+                      />
+                    </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <FxSelect
+                        value={row.colorId}
+                        onChange={(val) =>
+                          handleInputChange(val, index, "colorId")
+                        }
+                        options={(colorList?.data || [])
+                          .filter((item) => item.active)
+                          .map((item) => ({
+                            label: item.name,
+                            value: item.id,
+                          }))}
+                        readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                        placeholder=""
+                        onBlur={() =>
+                          handleInputChange(row.colorId, index, "colorId")
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "colorId");
+                          }
+                        }}
+                        inputId={`qty-input-${index}`}
+                      />
+                    </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <FxSelect
+                        value={row.uomId}
+                        onChange={(val) =>
+                          handleInputChange(val, index, "uomId")
+                        }
+                        options={(uomList?.data || [])
+                          .filter((item) => item.active)
+                          .map((item) => ({
+                            label: item.name,
+                            value: item.id,
+                          }))}
+                        readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                        placeholder=""
+                        onBlur={() =>
+                          handleInputChange(row.uomId, index, "uomId")
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "uomId");
+                          }
+                        }}
+                        inputId={`qty-input-${index}`}
+                      />
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        onKeyDown={(e) => {
+                          if (e.code === "Minus" || e.code === "NumpadSubtract")
+                            e.preventDefault();
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "qty");
+                          }
+                          // if (e.key === "Enter") {
+                          //   e.preventDefault(); // prevent form submit or line break
+                          //   e.stopPropagation();
+                          //   const nextQtyInput = document.querySelector(
+                          //     `#styleId-input-${index + 1}`,
+                          //   );
+                          //   if (nextQtyInput) {
+                          //     nextQtyInput.focus();
+                          //   }
+                          // }
+                        }}
+                        min={"0"}
+                        type="number"
+                        className="text-right rounded py-1 px-1 w-full"
+                        onFocus={(e) => e.target.select()}
+                        value={row?.qty}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "qty")
+                        }
+                        onBlur={(e) => {
+                          // const minQty = row.minQty || 0;
+                          // if (parseFloat(minQty) > parseFloat(e.target.value)) {
+                          //   e.target.value = "";
+                          //   Swal.fire({
+                          //     icon: "warning",
+                          //     title: "Invalid Qty",
+                          //     text: `Inward Qty cannot be Less than Min Qty! - ${minQty}`,
+                          //     confirmButtonText: "OK",
+                          //   });
+                          //   return;
+                          // }
+                          handleInputChange(e.target.value, index, "qty");
+                        }}
+                        disabled={readOnly}
+                      />
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        onKeyDown={(e) => {
+                          if (e.code === "Minus" || e.code === "NumpadSubtract")
+                            e.preventDefault();
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "rate");
+                          }
+                        }}
+                        min={"0"}
+                        type="number"
+                        className="text-right rounded py-1 px-1 w-full "
+                        onFocus={(e) => e.target.select()}
+                        value={row?.rate}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "rate")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "rate");
+                        }}
+                        disabled={readOnly}
+                      />
+                    </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <input
+                        type="number"
+                        onFocus={(e) => e.target.select()}
+                        className="text-right rounded py-1 px-1 w-full"
+                        value={
+                          !row.qty || !row.rate
+                            ? 0.0
+                            : (
+                                parseFloat(row.qty) * parseFloat(row.rate)
+                              ).toFixed(2)
+                        }
+                        disabled={true}
+                      />
+                    </td>
+                    <td className=" py-0.5 border border-gray-300 text-[11px] text-right">
+                      <button
+                        disabled={!row?.styleItemId}
+                        className="text-center rounded py-1 w-20"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            setCurrentSelectedIndex(index);
+                          }
+                        }}
+                        onClick={() => {
+                          if (!taxTemplateId)
+                            return toast.info("Please select Tax Type", {
+                              position: "top-center",
+                            });
+                          setCurrentSelectedIndex(index);
+                        }}
+                      >
+                        {VIEW}
+                      </button>
+                    </td>
+
+                    <td className="w-2 border border-gray-300">
+                      <input
+                        onContextMenu={(e) => {
+                          if (!readOnly) {
+                            handleRightClick(e, index, "");
+                          }
+                        }}
+                        className="w-full"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addRow();
+                          }
+                        }}
+                        disabled={readOnly}
+                      />
+                    </td>
+                  </tr>
+                ),
+              )}
             </tbody>
             <tfoot>
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={5}
+                  colSpan={6}
                 >
                   Total Qty
                 </td>
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
-                  {(Array.isArray(purchaseBillItems) ? purchaseBillItems : []).reduce(
-                    (sum, row) => sum + (Number(row.qty) || 0),
-                    0
-                  )}
+                  {(Array.isArray(purchaseBillItems)
+                    ? purchaseBillItems
+                    : []
+                  ).reduce((sum, row) => sum + (Number(row.qty) || 0), 0)}
                 </td>
                 <td className="border border-gray-300" colSpan={1}></td>
+                <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
+                  {(Array.isArray(purchaseBillItems) ? purchaseBillItems : [])
+                    .reduce((sum, row) => {
+                      const qty = parseFloat(row.qty) || 0;
+                      const rate = parseFloat(row.rate) || 0;
+                      return sum + qty * rate;
+                    }, 0)
+                    .toFixed(2)}
+                </td>
+                <td className="border border-gray-300" colSpan={2}></td>
               </tr>
             </tfoot>
           </table>
@@ -495,11 +637,21 @@ export default function PurchaseBillItems({
               <button
                 className=" text-black text-[12px] text-left rounded px-1"
                 onClick={() => {
+                  deleteRow(contextMenu.rowId);
                   deleteSelectedRows();
                   handleCloseContextMenu();
                 }}
               >
                 Delete
+              </button>
+              <button
+                className=" text-black text-[12px] text-left rounded px-1"
+                onClick={() => {
+                  handleDeleteAllRows();
+                  handleCloseContextMenu();
+                }}
+              >
+                Delete All
               </button>
             </div>
           </div>

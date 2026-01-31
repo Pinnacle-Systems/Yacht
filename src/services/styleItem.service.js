@@ -9,7 +9,7 @@ async function get(req) {
 
     let data = await prisma.styleItem.findMany({
         where: {
-            companyId: companyId ? parseInt(companyId) : undefined,
+            // companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
         }
     });

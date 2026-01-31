@@ -7,11 +7,11 @@ async function get(req) {
     const { companyId, active } = req.query
     const data = await prisma.city.findMany({
         where: {
-            state: {
-                country: {
-                    companyId: companyId ? parseInt(companyId) : undefined,
-                },
-            },
+            // state: {
+            //     country: {
+            //         companyId: companyId ? parseInt(companyId) : undefined,
+            //     },
+            // },
             active: active ? Boolean(active) : undefined,
         },
         select: {

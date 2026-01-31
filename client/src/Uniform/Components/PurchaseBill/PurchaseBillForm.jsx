@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
     DateInput,
     DropdownInput,
+    DropdownNew,
     TextInput,
 } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
@@ -29,17 +30,19 @@ import { useDispatch } from "react-redux";
 import tw from "../../../Utils/tailwind-react-pdf";
 import { Loader } from "../../../Basic/components";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
-import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
-import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService";
-import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/AccessoryMasterServices";
-import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import secureLocalStorage from "react-secure-storage";
 import { useAddPurchaseBillMutation, useDeletePurchaseBillMutation, useGetPurchaseBillByIdQuery, useGetPurchaseBillQuery, useUpdatePurchaseBillMutation } from "../../../redux/services/PurchaseBillService";
+import PurchaseBillSummary from "./PurchaseBillSummary";
 
-const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly
+const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
+    sizeList,
+    styleItemList,
+    colorList,
+    uomList,
+    taxTypeList
 }) => {
     const [docId, setDocId] = useState("New");
-    const [billType, setBillType] = useState("");
+    const [paymentType, setPaymentType] = useState("");
     const [invValue, setInvValue] = useState("");
     const [invDate, setInvDate] = useState("");
     const [supplierId, setSupplierId] = useState("");
@@ -56,22 +59,21 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly
         branchId,
         companyId,
     };
-
+    const [contactPerson, setContactPerson] = useState("");
+    const [contactNumber, setContactNumber] = useState("");
     const { data: partyList } = useGetPartyQuery({ params: { ...params } });
-    const { data: branchList } = useGetBranchQuery({ params: { companyId } });
     const { data: locationData } = useGetLocationMasterQuery({
         params: { branchId },
         searchParams: searchValue,
     });
-
+    const [taxTemplateId, setTaxTemplateId] = useState("");
+    const [summary, setSummary] = useState(false);
+    const [discountType, setDiscountType] = useState("Percentage");
+    const [discountValue, setDiscountValue] = useState();
     const finyearId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "currentFinYear"
     );
     const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
-    const { data: sizeList } = useGetSizeMasterQuery({ params: { companyId } });
-    const { data: portionList } = useGetPortionMasterQuery({ params: { companyId } });
-    const { data: accessoryList } = useGetAccessoryMasterQuery({ params: { companyId } });
-    const { data: colorList } = useGetColorMasterQuery({ params: { companyId } });
     const {
         data: allData,
         isFetching,
@@ -98,7 +100,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly
     const data = {
         docId,
         docDate,
-        billType,
+        paymentType,
         supplierId,
         invDate,
         branchId,
@@ -109,7 +111,12 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly
         vehicleNo,
         remarks,
         invNo,
-        invValue
+        invValue,
+        contactPerson,
+        contactNumber,
+        taxTemplateId,
+        discountType,
+        discountValue,
     };
 
     const syncFormWithDb = useCallback(
@@ -123,7 +130,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly
                     ? moment.utc(data.docDate).format("YYYY-MM-DD")
                     : moment.utc(today).format("YYYY-MM-DD")
             );
-            setBillType(data?.billType ? data.billType : "Fabric");
+            setPaymentType(data?.paymentType ? data.paymentType : "");
             setSupplierId(data?.supplierId ? data?.supplierId : "");
             setInvDate(
                 data?.invDate ? moment.utc(data?.invDate).format("YYYY-MM-DD") : ""
@@ -135,7 +142,12 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly
             setVehicleNo(data?.vehicleNo ? data.vehicleNo : "");
             setRemarks(data?.remarks ? data.remarks : "");
             setInvNo(data?.invNo ? data?.invNo : "");
-            setInvValue(data?.invValue ? data?.invValue : "")
+            setInvValue(data?.invValue ? data?.invValue : "");
+            setContactNumber(data?.contactNumber ? data?.contactNumber : "");
+            setContactPerson(data?.contactPerson ? data?.contactPerson : "");
+            setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "");
+            setDiscountType(data?.discountType || "Flat");
+            setDiscountValue(data?.discountValue || "0");
         },
         [id]
     );
@@ -173,6 +185,24 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly
             console.log("handle");
         }
     };
+
+    const handlePartyChange = (selectedId, field) => {
+        const selectedParty = partyList?.data?.find(
+            (p) => p.id === Number(selectedId)
+        );
+
+        if (field === "supplier") {
+            setSupplierId(selectedParty?.id);
+            setContactNumber(selectedParty?.contactNumber);
+            setContactPerson(selectedParty?.contactPersonName || "");
+        }
+    };
+
+    useEffect(() => {
+        if (supplierId && partyList?.data?.length) {
+            handlePartyChange(supplierId, "supplier");
+        }
+    }, [supplierId, setSupplierId, partyList?.data]);
 
     const findDuplicates = (items) => {
         const seen = new Map(); // key -> first index
@@ -245,7 +275,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly
             });
             return false;
         }
-        if (!(data?.storeId && data?.supplierId && data?.invNo && isGridDatasValid(data?.purchaseBillItems.filter((item) => item?.styleId), false, ["styleItemId", "sizeId", "qty"]))
+        if (!( data?.supplierId && data?.invNo && data.taxTemplateId && isGridDatasValid(data?.purchaseBillItems.filter((item) => item?.styleItemId), false, ["styleItemId", "sizeId", "qty"]))
             && data?.purchaseBillItems.length > 0) {
             toast.info("Please fill all required fields...!", {
                 position: "top-center",
@@ -283,7 +313,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly
                 });
                 return false;
             }
-          
+
         }
         if (!validateData(data)) {
             return;
@@ -344,6 +374,23 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly
                             <PDF singleData={singleData?.data} branchList={branchList} />
                         </PDFViewer >
                     </Modal > */}
+                    <Modal
+                        isOpen={summary}
+                        onClose={() => setSummary(false)}
+                        widthClass={"p-10"}
+                    >
+                        <PurchaseBillSummary
+                            remarks={remarks}
+                            setRemarks={setRemarks}
+                            discountType={discountType}
+                            setDiscountType={setDiscountType}
+                            discountValue={discountValue}
+                            setDiscountValue={setDiscountValue}
+                            purchaseBillItems={purchaseBillItems}
+                            taxTypeId={taxTemplateId}
+                            readOnly={readOnly}
+                        />
+                    </Modal>
                     <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
                         <div className="flex justify-between items-center mb-1">
                             <h1 className="text-xl font-bold text-gray-800">Purchase Bill Entry</h1>
@@ -370,8 +417,19 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly
                                         readOnly={true}
                                         disabled
                                     />
-
-
+                                    <DropdownInput
+                                        name="Tax Type"
+                                        options={dropDownListObject(
+                                            taxTypeList ? taxTypeList?.data : [],
+                                            "name",
+                                            "id",
+                                        )}
+                                        value={taxTemplateId}
+                                        setValue={setTaxTemplateId}
+                                        required={true}
+                                        readOnly={readOnly}
+                                        autoFocus={true}
+                                    />
                                 </div>
                             </div>
 
@@ -384,6 +442,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly
                                         setValue={setInvNo}
                                         readOnly={readOnly}
                                         required
+                                    // autoFocus={true}
                                     />
                                     <DateInput
                                         name="Inv Date"
@@ -402,11 +461,10 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly
                                     <DropdownInput
                                         name="Payment Type"
                                         options={PaymentTypeData}
-                                        value={billType}
-                                        setValue={setBillType}
+                                        value={paymentType}
+                                        setValue={setPaymentType}
                                         required={true}
                                         readOnly={id}
-                                        autoFocus={true}
                                     />
 
                                 </div>
@@ -416,25 +474,30 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly
                                 <div className="grid grid-cols-1 gap-1">
                                     <h2 className="font-medium text-slate-700 mb-2">Supplier Details</h2>
                                     <div className="grid grid-cols-2 gap-1">
-                                        <DropdownInput
+                                        <DropdownNew
                                             name="Supplier"
-                                            options={
-                                                partyList
-                                                    ? dropDownListObject(
-                                                        id
-                                                            ? partyList?.data
-                                                            : partyList?.data?.filter((item) => item.isSupplier),
-                                                        "name",
-                                                        "id"
-                                                    )
-                                                    : []
-                                            }
+                                            dataList={partyList?.data?.filter((item) => item.isSupplier)}
                                             value={supplierId}
                                             setValue={(value) => {
                                                 setSupplierId(value);
                                             }}
                                             required={true}
-                                            readOnly={readOnly}
+                                            disabled={readOnly}
+                                            placeholder={"Select Supplier"}
+                                        />
+                                        <ReusableInput
+                                            label="Contact Person"
+                                            value={contactPerson}
+                                            type={"text"}
+                                            readOnly={true}
+                                            disabled
+                                        />
+                                        <ReusableInput
+                                            label="Contact Number"
+                                            value={contactNumber}
+                                            type={"text"}
+                                            readOnly={true}
+                                            disabled
                                         />
                                     </div>
                                 </div>
@@ -447,6 +510,11 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly
                                 purchaseBillItems={purchaseBillItems}
                                 setPurchaseBillItems={setPurchaseBillItems}
                                 readOnly={readOnly}
+                                sizeList={sizeList}
+                                styleItemList={styleItemList}
+                                colorList={colorList}
+                                uomList={uomList}
+                                taxTemplateId={taxTemplateId}
                             />
                         </fieldset>
 
@@ -483,23 +551,25 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly
                                 />
                             </div>
 
-                            <div className="border border-slate-200 p-2 bg-white rounded-md  shadow-sm">
-                                <h2 className="font-semibold text-slate-800 mb-2 text-base">
-                                    Summary
+                            <div className="border border-slate-200 p-2 bg-white flex h-auto items-center rounded-md shadow-sm">
+                                <h2 className="font-bold text-slate-800 mb-2 text-base">
+                                    Puchase Bill Summary
                                 </h2>
 
-                                <div className="space-y-1.5">
-                                    <div className="flex justify-between  text-sm">
-                                        <span className="text-slate-600">Total Qty</span>
-                                        <span className="font-medium">
-                                            {purchaseBillItems.reduce(
-                                                (sum, row) => sum + (Number(row.qty) || 0),
-                                                0
-                                            ).toFixed(2)}
-                                        </span>
-                                    </div>
-                                </div>
-
+                                <button
+                                    className="text-sm bg-sky-500 text-white font-semibold hover:bg-sky-800 transition p-1 ml-5 rounded"
+                                    onClick={() => {
+                                        if (!taxTemplateId) {
+                                            toast.info("Please Select Tax Template !", {
+                                                position: "top-center",
+                                            });
+                                            return;
+                                        }
+                                        setSummary(true);
+                                    }}
+                                >
+                                    View Summary
+                                </button>
                             </div>
                         </div>
 

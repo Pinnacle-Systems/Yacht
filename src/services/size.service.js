@@ -7,7 +7,7 @@ async function get(req) {
   const { companyId, active } = req.query;
   let data = await prisma.size.findMany({
     where: {
-      companyId: companyId ? parseInt(companyId) : undefined,
+      // companyId: companyId ? parseInt(companyId) : undefined,
       active: active ? Boolean(active) : undefined,
     },
   });

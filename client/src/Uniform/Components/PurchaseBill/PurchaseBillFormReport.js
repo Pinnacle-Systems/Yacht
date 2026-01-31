@@ -44,13 +44,7 @@ const PurchaseBillFormReport = ({
 
   useEffect(() => {
     setCurrentPageNumber(1);
-  }, [
-    serachDocNo,
-    searchDocDate,
-    searchBillType,
-    searchSupplier,
-    searchInvNo,
-  ]);
+  }, [serachDocNo, searchDocDate, searchBillType, searchSupplier, searchInvNo]);
 
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId",
@@ -184,10 +178,10 @@ const PurchaseBillFormReport = ({
   };
 
   return (
-    <div className="flex flex-col w-full h-[93%] overflow-auto">
+    <div className="flex flex-col w-full h-[90%] overflow-auto">
       <>
         <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
-          <div className="h-[420px]">
+          <div className="h-[400px]">
             <table className="">
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">
@@ -208,7 +202,7 @@ const PurchaseBillFormReport = ({
                     <div>Supplier</div>
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <div>Bill Type</div>
+                    <div>Payment Type</div>
                   </th>
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
@@ -273,7 +267,7 @@ const PurchaseBillFormReport = ({
                       }}
                     />
                   </th>
-                  
+
                   <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center "></th>
                 </tr>
               </thead>
@@ -308,16 +302,15 @@ const PurchaseBillFormReport = ({
                             : ""}
                         </td>
                         <td className="py-1.5 text-left px-4">
-                          {dataObj?.billType}{" "}
-                        </td>
-                        <td className="py-1.5 text-left px-4">
                           {dataObj?.invNo}
                         </td>
                         <td className="py-1.5 text-left px-4">
                           {" "}
                           {dataObj?.Supplier?.name}
                         </td>
-                        
+                        <td className="py-1.5 text-left px-4">
+                          {dataObj?.paymentType}{" "}
+                        </td>
                         {rowActions && (
                           <td className=" w-[30px] border-gray-200 gap-1 px-2 justify-end">
                             <div className="flex">

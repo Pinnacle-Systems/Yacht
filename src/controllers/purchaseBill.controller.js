@@ -1,27 +1,19 @@
 import { Prisma } from '@prisma/client'
 
-import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove } from '../services/hsn.service.js';
+import { get as _get, getOne as _getOne, create as _create, update as _update, remove as _remove } from '../services/purchaseBill.service.js';
 
 async function get(req, res, next) {
+    res.json(await _get(req));
     try {
-        res.json(await _get(req));
+        console.log(res.statusCode);
     } catch (err) {
         console.error(`Error `, err.message);
     }
 }
 
-
 async function getOne(req, res, next) {
     try {
         res.json(await _getOne(req.params.id));
-    } catch (err) {
-        console.error(`Error`, err.message);
-    }
-}
-
-async function getSearch(req, res, next) {
-    try {
-        res.json(await _getSearch(req));
     } catch (err) {
         console.error(`Error`, err.message);
     }
@@ -64,6 +56,7 @@ async function update(req, res, next) {
 async function remove(req, res, next) {
     try {
         res.json(await _remove(req.params.id));
+        console.log(res.statusCode);
     } catch (error) {
         if (error.code === 'P2025') {
             res.statusCode = 200;
@@ -74,15 +67,24 @@ async function remove(req, res, next) {
             res.statusCode = 200;
             res.json({ statusCode: 1, message: "Child record Exists" })
         }
-        console.log(`Error`, (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message);
+        console.error(`Error`, (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message);
     }
 }
+
+async function getPoItems(req, res, next) {
+    try {
+        res.json(await _getPoItems(req));
+    } catch (err) {
+        console.error(`Error`, err.message);
+    }
+}
+
 
 export {
     get,
     getOne,
-    getSearch,
     create,
     update,
-    remove
+    remove,
+    getPoItems
 };

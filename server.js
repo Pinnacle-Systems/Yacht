@@ -78,6 +78,7 @@ import {
   processGroup,
   productionStock,
   hsn,
+  purchaseBill,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";
@@ -90,11 +91,11 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content, Accept, Content-Type, Authorization"
+    "Origin, X-Requested-With, Content, Accept, Content-Type, Authorization",
   );
   res.setHeader(
     "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+    "GET, POST, PUT, DELETE, PATCH, OPTIONS",
   );
   next();
 });
@@ -133,7 +134,7 @@ app.use("/finYear", finYear);
 app.use("/employeeCategories", employeeCategories);
 app.use("/partyCategories", partyCategories);
 app.use("/party", party);
-app.use("/project", project), app.use("/process", processMaster);
+(app.use("/project", project), app.use("/process", processMaster));
 app.use("/taxTemplate", taxTemplate);
 app.use("/taxTerm", taxTerm);
 app.use("/termsAndCondition", termsAndCondition);
@@ -188,7 +189,7 @@ app.use("/productionDelivery", productionDelivery);
 app.use("/processGroupSeq", processGroupSeq);
 app.use("/processGroup", processGroup);
 app.use("/hsn", hsn);
-
+app.use("/purchaseBill", purchaseBill);
 app.get("/retreiveFile/:fileName", (req, res) => {
   const { fileName } = req.params;
   res.sendFile(__dirname + "/uploads/" + fileName);

@@ -479,7 +479,7 @@ export function SalesBillForm({
                 <div className="grid grid-cols-2 gap-1">
                   <DropdownNew
                     name="Customer"
-                    dataList={partyList?.data?.filter((item) => item.active)}
+                    dataList={partyList?.data?.filter((item) => item.isClient)}
                     value={customerId}
                     setValue={(value) => {
                       setCustomerId(value);
