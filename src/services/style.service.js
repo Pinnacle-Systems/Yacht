@@ -63,7 +63,7 @@ async function get(req) {
         childRecordStock: childCount,
         childRecordPurchase: childRecord,
       };
-    })
+    }),
   );
 
   return { statusCode: 0, data: enrichedData };
@@ -78,7 +78,7 @@ async function getOne(id) {
   });
   const childRecordReadyGoods = await prisma.readyGoods.count({
     where: { styleId: parseInt(id) },
-  })
+  });
   const data = await prisma.style.findUnique({
     where: {
       id: parseInt(id),
@@ -92,7 +92,8 @@ async function getOne(id) {
       ...data,
       childRecordStock: childRecordStock,
       childRecordPurchase: childRecordPurchase,
-      childRecord : childRecordPurchase + childRecordStock + childRecordReadyGoods
+      childRecord:
+        childRecordPurchase + childRecordStock + childRecordReadyGoods,
     },
   };
 }
@@ -141,6 +142,8 @@ async function create(req) {
     sizeTemplateId,
     styleItemId,
     price,
+    salesPrice,
+    hsnId,
   } = await req;
   // const file = req.file;
   const data = await prisma.style.create({
@@ -155,6 +158,8 @@ async function create(req) {
       sizeTemplateId: sizeTemplateId ? parseInt(sizeTemplateId) : undefined,
       fabricId: fabricId ? parseInt(fabricId) : undefined,
       price: price ? parseInt(price) : undefined,
+      salesPrice: salesPrice ? parseInt(salesPrice) : undefined,
+      hsnId: hsnId ? parseInt(hsnId) : null,
     },
   });
   return { statusCode: 0, data };
@@ -172,6 +177,8 @@ async function update(id, body) {
     sizeTemplateId,
     styleItemId,
     price,
+    salesPrice,
+    hsnId,
   } = await body;
 
   const dataFound = await prisma.style.findUnique({
@@ -193,6 +200,8 @@ async function update(id, body) {
       sizeTemplateId: sizeTemplateId ? parseInt(sizeTemplateId) : undefined,
       styleItemId: styleItemId ? parseInt(styleItemId) : undefined,
       price: price ? parseInt(price) : undefined,
+      salesPrice: salesPrice ? parseInt(salesPrice) : undefined,
+      hsnId: hsnId ? parseInt(hsnId) : null,
     },
   });
   return { statusCode: 0, data };

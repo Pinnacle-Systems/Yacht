@@ -6,24 +6,27 @@ import {
 } from "../../../Utils/helper";
 import { Loader } from "../../../Basic/components";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { useGetPurchaseBillQuery } from "../../../redux/services/PurchaseBillService";
+import { useGetPurchaseReturnShowroomQuery } from "../../../redux/services/PurchaseReturnShowroomService";
 
-const PurchaseBillFormReport = ({
+
+const PurchaseReturnFormReport = ({
   onClick,
   onView,
   itemsPerPage = 10,
   onEdit,
   onDelete,
   rowActions = true,
+  searchStyleId,
 }) => {
   const branchId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "currentBranchId",
+    sessionStorage.getItem("sessionId") + "currentBranchId"
   );
 
   const [dataPerPage, setDataPerPage] = useState("10");
   const [serachDocNo, setSerachDocNo] = useState("");
   const [searchDocDate, setSearchDocDate] = useState("");
-  const [searchBillType, setSearchBillType] = useState("");
+  const [searchStore, setSearchStore] = useState("");
+  const [searchInwardType, setSearchInwardType] = useState("");
   const [searchInvNo, setSearchInvNo] = useState("");
   const [searchSupplier, setSearchSupplier] = useState("");
   const [totalCount, setTotalCount] = useState(0);
@@ -37,20 +40,30 @@ const PurchaseBillFormReport = ({
   const searchFields = {
     serachDocNo,
     searchDocDate,
-    searchBillType,
+    searchStore,
+    searchInwardType,
     searchInvNo,
     searchSupplier,
+    searchStyleId,
   };
 
   useEffect(() => {
     setCurrentPageNumber(1);
-  }, [serachDocNo, searchDocDate, searchBillType, searchSupplier, searchInvNo]);
+  }, [
+    serachDocNo,
+    searchDocDate,
+    searchStore,
+    searchInwardType,
+    searchSupplier,
+    searchInvNo,
+    searchStyleId,
+  ]);
 
   const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId",
+    sessionStorage.getItem("sessionId") + "userCompanyId"
   );
   const finyearId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "currentFinYear",
+    sessionStorage.getItem("sessionId") + "currentFinYear"
   );
   const params = {
     branchId,
@@ -61,7 +74,7 @@ const PurchaseBillFormReport = ({
     data: allData,
     isFetching,
     isLoading,
-  } = useGetPurchaseBillQuery({
+  } = useGetPurchaseReturnShowroomQuery({
     params: {
       branchId,
       ...searchFields,
@@ -178,10 +191,10 @@ const PurchaseBillFormReport = ({
   };
 
   return (
-    <div className="flex flex-col w-full h-[90%] overflow-auto">
+    <div className="flex flex-col w-full h-[93%] overflow-auto">
       <>
         <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
-          <div className="h-[400px]">
+          <div className="h-[420px]">
             <table className="">
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">
@@ -190,10 +203,10 @@ const PurchaseBillFormReport = ({
                   </th>
 
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <div>Purchase Bill No</div>
+                    <div>Return No</div>
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <div>Purchase Bill Date</div>
+                    <div>Return Date</div>
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
                     <div>Inv No</div>
@@ -201,9 +214,7 @@ const PurchaseBillFormReport = ({
                   <th className="w-64  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Supplier</div>
                   </th>
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <div>Payment Type</div>
-                  </th>
+                 
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
                   </th>
@@ -234,17 +245,6 @@ const PurchaseBillFormReport = ({
                       }}
                     />
                   </th>
-                  <th className="w-40 px-1 font-medium text-[13px]  text-gray-900  text-center">
-                    <input
-                      type="text"
-                      className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
-                      placeholder="Search"
-                      value={searchBillType}
-                      onChange={(e) => {
-                        setSearchBillType(e.target.value);
-                      }}
-                    />
-                  </th>
                   <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-40">
                     <input
                       type="text"
@@ -267,7 +267,7 @@ const PurchaseBillFormReport = ({
                       }}
                     />
                   </th>
-
+                  
                   <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center "></th>
                 </tr>
               </thead>
@@ -301,15 +301,13 @@ const PurchaseBillFormReport = ({
                             ? getDateFromDateTimeToDisplay(dataObj.docDate)
                             : ""}
                         </td>
+                       
                         <td className="py-1.5 text-left px-4">
                           {dataObj?.invNo}
                         </td>
                         <td className="py-1.5 text-left px-4">
                           {" "}
                           {dataObj?.Supplier?.name}
-                        </td>
-                        <td className="py-1.5 text-left px-4">
-                          {dataObj?.paymentType}{" "}
                         </td>
                         {rowActions && (
                           <td className=" w-[30px] border-gray-200 gap-1 px-2 justify-end">
@@ -372,7 +370,7 @@ const PurchaseBillFormReport = ({
                           </td>
                         )}
                       </tr>
-                    ),
+                    )
                   )}
                 </tbody>
               )}
@@ -387,4 +385,4 @@ const PurchaseBillFormReport = ({
   );
 };
 
-export default PurchaseBillFormReport;
+export default PurchaseReturnFormReport;

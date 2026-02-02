@@ -6,7 +6,7 @@ import {
   create as _create,
   update as _update,
   remove as _remove,
-} from "../services/purchaseReturn.service.js";
+} from "../services/purchaseReturnSR.service.js";
 
 async function get(req, res, next) {
   try {
@@ -19,22 +19,6 @@ async function get(req, res, next) {
 async function getOne(req, res, next) {
   try {
     res.json(await _getOne(req.params.id));
-  } catch (err) {
-    console.error(`Error`, err.message);
-  }
-}
-
-async function getReport(req, res, next) {
-  try {
-    res.json(await _getReport(req));
-  } catch (err) {
-    console.error(`Error `, err.message);
-  }
-}
-
-async function getSearch(req, res, next) {
-  try {
-    res.json(await _getSearch(req));
   } catch (err) {
     console.error(`Error`, err.message);
   }

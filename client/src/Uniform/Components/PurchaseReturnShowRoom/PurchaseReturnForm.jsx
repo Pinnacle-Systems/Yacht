@@ -21,7 +21,7 @@ import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import moment from "moment";
 import { toast } from "react-toastify";
-import PurchaseBillItems from "./PurchaseBillItems";
+import PurchaseReturnItems from "./PurchaseReturnItems";
 import Swal from "sweetalert2";
 import Modal from "../../../UiComponents/Modal";
 import { PDFViewer } from "@react-pdf/renderer";
@@ -31,26 +31,22 @@ import tw from "../../../Utils/tailwind-react-pdf";
 import { Loader } from "../../../Basic/components";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import secureLocalStorage from "react-secure-storage";
-import { useAddPurchaseBillMutation, useDeletePurchaseBillMutation, useGetPurchaseBillByIdQuery, useGetPurchaseBillQuery, useUpdatePurchaseBillMutation } from "../../../redux/services/PurchaseBillService";
-import PurchaseBillSummary from "./PurchaseBillSummary";
+import { useAddPurchaseReturnShowroomMutation, useDeletePurchaseReturnShowroomMutation, useGetPurchaseReturnShowroomByIdQuery, useGetPurchaseReturnShowroomQuery, useUpdatePurchaseReturnShowroomMutation } from "../../../redux/services/PurchaseReturnShowroomService";
+import { useGetPurchaseBillQuery } from "../../../redux/services/PurchaseBillService";
 
-const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
+const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
     sizeList,
     styleItemList,
     colorList,
     uomList,
-    taxTypeList
 }) => {
     const [docId, setDocId] = useState("New");
-    const [paymentType, setPaymentType] = useState("");
-    const [invValue, setInvValue] = useState("");
-    const [invDate, setInvDate] = useState("");
     const [supplierId, setSupplierId] = useState("");
-    const [vehicleNo, setVehicleNo] = useState("");
+    const [termsAndCondition, setTermsAndCondition] = useState("");
     const [remarks, setRemarks] = useState("");
     const [searchValue, setSearchValue] = useState("");
     const [invNo, setInvNo] = useState("")
-    const [purchaseBillItems, setPurchaseBillItems] = useState([]);
+    const [purchaseReturnItems, setPurchaseReturnItems] = useState([]);
     const [docDate, setDocDate] = useState("")
     const { branchId, companyId, userId, finYearId } = getCommonParams();
     const branchIdFromApi = useRef(branchId);
@@ -66,10 +62,6 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         params: { branchId },
         searchParams: searchValue,
     });
-    const [taxTemplateId, setTaxTemplateId] = useState("");
-    const [summary, setSummary] = useState(false);
-    const [discountType, setDiscountType] = useState("Percentage");
-    const [discountValue, setDiscountValue] = useState();
     const finyearId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "currentFinYear"
     );
@@ -78,7 +70,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         data: allData,
         isFetching,
         isLoading,
-    } = useGetPurchaseBillQuery({
+    } = useGetPurchaseReturnShowroomQuery({
         params: {
             branchId,
             finyearId,
@@ -88,35 +80,33 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         data: singleData,
         isFetching: isSingleFetching,
         isLoading: isSingleLoading,
-    } = useGetPurchaseBillByIdQuery(id, { skip: !id });
+    } = useGetPurchaseReturnShowroomByIdQuery(id, { skip: !id });
 
-    const [addData] = useAddPurchaseBillMutation();
-    const [updateData] = useUpdatePurchaseBillMutation();
-    const [removeData] = useDeletePurchaseBillMutation();
+    const [addData] = useAddPurchaseReturnShowroomMutation();
+    const [updateData] = useUpdatePurchaseReturnShowroomMutation();
+    const [removeData] = useDeletePurchaseReturnShowroomMutation();
     const dispatch = useDispatch();
 
     const isLoadingIndicator = isSingleFetching || isSingleLoading;
 
+    const { data: purchaseList } = useGetPurchaseBillQuery({
+        params: { companyId, branchId },
+    });
+
     const data = {
         docId,
         docDate,
-        paymentType,
         supplierId,
-        invDate,
         branchId,
         id,
         userId,
-        purchaseBillItems: purchaseBillItems?.filter((item) => item.styleItemId),
+        purchaseReturnItems: purchaseReturnItems?.filter((item) => item.styleItemId),
         finYearId,
-        vehicleNo,
+        termsAndCondition,
         remarks,
         invNo,
-        invValue,
         contactPerson,
         contactNumber,
-        taxTemplateId,
-        discountType,
-        discountValue,
     };
 
     const syncFormWithDb = useCallback(
@@ -130,24 +120,17 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                     ? moment.utc(data.docDate).format("YYYY-MM-DD")
                     : moment.utc(today).format("YYYY-MM-DD")
             );
-            setPaymentType(data?.paymentType ? data.paymentType : "");
             setSupplierId(data?.supplierId ? data?.supplierId : "");
-            setInvDate(
-                data?.invDate ? moment.utc(data?.invDate).format("YYYY-MM-DD") : ""
-            );
             if (data?.branchId) {
                 branchIdFromApi.current = data?.branchId;
             }
-            setPurchaseBillItems(data?.purchaseBillItems ? data?.purchaseBillItems : []);
-            setVehicleNo(data?.vehicleNo ? data.vehicleNo : "");
+            setPurchaseReturnItems(data?.purchasReturnItemsSR ? data?.purchasReturnItemsSR : []);
+            setTermsAndCondition(data?.termsAndCondition ? data.termsAndCondition : "");
             setRemarks(data?.remarks ? data.remarks : "");
             setInvNo(data?.invNo ? data?.invNo : "");
-            setInvValue(data?.invValue ? data?.invValue : "");
             setContactNumber(data?.contactNumber ? data?.contactNumber : "");
             setContactPerson(data?.contactPerson ? data?.contactPerson : "");
-            setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "");
-            setDiscountType(data?.discountType || "Flat");
-            setDiscountValue(data?.discountValue || "0");
+            setTermsAndCondition(data?.termsAndCondition ? data?.termsAndCondition : "")
         },
         [id]
     );
@@ -252,59 +235,67 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     };
 
     const validateData = (data) => {
-        // 1️⃣ Mandatory header fields
-        if (!data?.supplierId || !data?.invNo || !data?.taxTemplateId) {
+        if (!data.supplierId || !data.invNo) {
             toast.info("Please fill all required fields...!", {
                 position: "top-center",
             });
             return false;
         }
-
-        // 2️⃣ At least one item required
-        if (!data?.purchaseBillItems || data.purchaseBillItems.length === 0) {
+        if (!data.purchaseReturnItems || data.purchaseReturnItems.length === 0) {
             toast.info("Please add at least one item...!", {
                 position: "top-center",
             });
             return false;
         }
-
-        // 3️⃣ Validate filled grid rows
-        const filledGoodsItems = data.purchaseBillItems.filter(
+        const validRows = data.purchaseReturnItems.filter(
             (item) => item?.styleItemId
         );
 
         if (
-            !isGridDatasValid(
-                filledGoodsItems,
-                false,
-                ["styleItemId", "sizeId", "qty", "uomId", "rate","barcodeNo"]
-            )
+            !isGridDatasValid(validRows, false, [
+                "styleItemId",
+                "sizeId",
+                "returnQty",
+                "uomId",
+                "barcodeNo"
+            ])
         ) {
             toast.info("Please fill all required item details...!", {
                 position: "top-center",
             });
             return false;
         }
-
-        // 4️⃣ Duplicate check
+        const goodsITems = data?.purchaseReturnItems || [];
+        const filledGoodsItems = goodsITems.filter(
+            (item) =>
+                item.styleItemId
+        );
         const duplicatesGoods = findDuplicateGoodss(filledGoodsItems);
+        // duplicate check
         if (duplicatesGoods.length > 0) {
-            const dup = duplicatesGoods[0];
+            const dup = duplicatesGoods[0]; // show first duplicate
             Swal.fire({
                 icon: "warning",
                 title: "Duplicate Item Found",
                 html: `
-        StyleItem - ${findFromList(dup?.styleItemId, styleItemList?.data, "name")},
+       StyleItem - ${findFromList(dup?.styleItemId, styleItemList?.data, "name")},
        Barcode - ${dup?.barcodeNo},
-        Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
-      `,
+       Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
+     `,
+                confirmButtonText: "OK",
             });
             return false;
         }
+        // if (!(data?.supplierId && data?.invNo && isGridDatasValid(data?.purchaseReturnItems.filter((item) => item?.styleItemId), false, ["styleItemId", "sizeId", "returnQty", "uomId"]))
+        //     && data?.purchaseReturnItems.length > 0) {
+        //     toast.info("Please fill all required fields...!", {
+        //         position: "top-center",
+        //     });
+        //     return false
+        // }
 
         return true;
     };
-
 
     const saveData = (nextProcess) => {
         if (!validateData(data)) {
@@ -322,8 +313,8 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         // }
         // if (foundItem) {
 
-        //     const hasDuplicateGoods = foundItem.purchaseBillItems?.some(existing =>
-        //         purchaseBillItems?.some(
+        //     const hasDuplicateGoods = foundItem.purchaseReturnItems?.some(existing =>
+        //         purchaseReturnItems?.some(
         //             current => Number(current.styleId) === Number(existing.styleId) && Number(current.sizeId) === Number(existing.sizeId)
         //         )
         //     );
@@ -386,35 +377,9 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                 <Loader />
             ) : (
                 <div onKeyDown={handleKeyDown}>
-                    {/* <Modal
-                        isOpen={pdfOpen}
-                        onClose={() => setPdfOpen(false)}
-                        widthClass={"w-[90%] h-[90%]"}
-                    >
-                        <PDFViewer style={tw("w-full h-full")}>
-                            <PDF singleData={singleData?.data} branchList={branchList} />
-                        </PDFViewer >
-                    </Modal > */}
-                    <Modal
-                        isOpen={summary}
-                        onClose={() => setSummary(false)}
-                        widthClass={"p-10"}
-                    >
-                        <PurchaseBillSummary
-                            remarks={remarks}
-                            setRemarks={setRemarks}
-                            discountType={discountType}
-                            setDiscountType={setDiscountType}
-                            discountValue={discountValue}
-                            setDiscountValue={setDiscountValue}
-                            purchaseBillItems={purchaseBillItems}
-                            taxTypeId={taxTemplateId}
-                            readOnly={readOnly}
-                        />
-                    </Modal>
                     <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
                         <div className="flex justify-between items-center mb-1">
-                            <h1 className="text-xl font-bold text-gray-800">Purchase Bill Entry</h1>
+                            <h1 className="text-xl font-bold text-gray-800">Purchase Return</h1>
                             <button
                                 onClick={onClose}
                                 className="text-indigo-600 hover:text-indigo-700"
@@ -429,68 +394,17 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                                 <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
                                 <div className="grid grid-cols-2 gap-1">
-                                    <ReusableInput label="Purchase Bill No" readOnly value={docId} />
+                                    <ReusableInput label="Purchase Return No" readOnly value={docId} />
                                     <ReusableInput
-                                        label="Purchase Bill Date"
+                                        label="Purchase Return Date"
                                         value={docDate}
                                         type={"date"}
                                         required={true}
                                         readOnly={true}
                                         disabled
                                     />
-                                    <DropdownInput
-                                        name="Tax Type"
-                                        options={dropDownListObject(
-                                            taxTypeList ? taxTypeList?.data : [],
-                                            "name",
-                                            "id",
-                                        )}
-                                        value={taxTemplateId}
-                                        setValue={setTaxTemplateId}
-                                        required={true}
-                                        readOnly={readOnly}
-                                        autoFocus={true}
-                                    />
                                 </div>
                             </div>
-
-                            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                                <h2 className="font-medium text-slate-700 mb-2">Bill Details</h2>
-                                <div className="grid grid-cols-2 gap-1">
-                                    <TextInput
-                                        name={"Inv No"}
-                                        value={invNo}
-                                        setValue={setInvNo}
-                                        readOnly={readOnly}
-                                        required
-                                    // autoFocus={true}
-                                    />
-                                    <DateInput
-                                        name="Inv Date"
-                                        value={invDate}
-                                        setValue={setInvDate}
-                                        required={true}
-                                        readOnly={readOnly}
-                                    />
-                                    <TextInput
-                                        name={"Inv Value"}
-                                        value={invValue}
-                                        setValue={setInvValue}
-                                        readOnly={readOnly}
-                                        required
-                                    />
-                                    <DropdownInput
-                                        name="Payment Type"
-                                        options={PaymentTypeData}
-                                        value={paymentType}
-                                        setValue={setPaymentType}
-                                        required={true}
-                                        readOnly={id}
-                                    />
-
-                                </div>
-                            </div>
-
                             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                                 <div className="grid grid-cols-1 gap-1">
                                     <h2 className="font-medium text-slate-700 mb-2">Supplier Details</h2>
@@ -503,8 +417,9 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                                 setSupplierId(value);
                                             }}
                                             required={true}
-                                            disabled={readOnly}
+                                            disabled={id}
                                             placeholder={"Select Supplier"}
+                                            autoFocus={true}
                                         />
                                         <ReusableInput
                                             label="Contact Person"
@@ -523,35 +438,65 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                     </div>
                                 </div>
                             </div>
+
+                            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                                <h2 className="font-medium text-slate-700 mb-2">Return Details</h2>
+                                <div className="grid grid-cols-2 gap-1">
+                                    {/* <TextInput
+                                        name={"Inv No"}
+                                        value={invNo}
+                                        setValue={setInvNo}
+                                        readOnly={readOnly}
+                                        required
+                                    // autoFocus={true}
+                                    /> */}
+                                    <DropdownNew
+                                        name="Inv No"
+                                        dataList={purchaseList?.data}
+                                        value={invNo}
+                                        setValue={setInvNo}
+                                        required={true}
+                                        readOnly={readOnly}
+                                        placeholder={"Select Inv"}
+                                        otherField={"invNo"}
+                                        otherValue={"invNo"}
+                                        disabled={id}
+                                    />
+                                </div>
+                            </div>
+
+
                         </div>
                         <fieldset>
-                            <PurchaseBillItems
+                            <PurchaseReturnItems
                                 id={id}
                                 params={params}
-                                purchaseBillItems={purchaseBillItems}
-                                setPurchaseBillItems={setPurchaseBillItems}
+                                purchaseReturnItems={purchaseReturnItems}
+                                setPurchaseReturnItems={setPurchaseReturnItems}
                                 readOnly={readOnly}
                                 sizeList={sizeList}
                                 styleItemList={styleItemList}
                                 colorList={colorList}
                                 uomList={uomList}
-                                taxTemplateId={taxTemplateId}
+                                supplierId={supplierId}
+                                invNo={invNo}
+                                branchId={branchId}
                             />
                         </fieldset>
 
                         <div className="grid grid-cols-3 gap-3">
                             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                                 <h2 className="font-medium text-slate-700 mb-2 text-base">
-                                    Vehicle No
+                                    Terms and Condition
                                 </h2>
                                 <textarea
                                     readOnly={readOnly}
-                                    value={vehicleNo}
+                                    value={termsAndCondition}
                                     onChange={(e) => {
-                                        setVehicleNo(e.target.value);
+                                        setTermsAndCondition(e.target.value);
                                     }}
                                     className="w-full overflow-auto h-10 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-                                    placeholder="Vehicle Details..."
+                                    placeholder="Terms Details..."
                                     disabled={readOnly}
                                 />
                             </div>
@@ -572,25 +517,21 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                 />
                             </div>
 
-                            <div className="border border-slate-200 p-2 bg-white flex h-auto items-center rounded-md shadow-sm">
-                                <h2 className="font-bold text-slate-800 mb-2 text-base">
-                                    Puchase Bill Summary
+                            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
+                                <h2 className="font-semibold text-slate-800 mb-2 text-base">
+                                    Qty Summary
                                 </h2>
 
-                                <button
-                                    className="text-sm bg-sky-500 text-white font-semibold hover:bg-sky-800 transition p-1 ml-5 rounded"
-                                    onClick={() => {
-                                        if (!taxTemplateId) {
-                                            toast.info("Please Select Tax Template !", {
-                                                position: "top-center",
-                                            });
-                                            return;
-                                        }
-                                        setSummary(true);
-                                    }}
-                                >
-                                    View Summary
-                                </button>
+                                <div className="space-y-1.5">
+                                    <div className="flex justify-between  text-sm">
+                                        <span className="text-slate-600">Total Return Qty</span>
+                                        <span className="font-medium">
+                                            {purchaseReturnItems
+                                                .reduce((sum, row) => sum + (Number(row.returnQty) || 0), 0)
+                                                .toFixed(2)}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -644,4 +585,4 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     );
 };
 
-export default PurchaseBillForm;
+export default PurchaseReturnForm;

@@ -32,6 +32,7 @@ export const MATERIAL_STOCK_API = "materialStock";
 export const PRODUCTION_STOCK_API = "productionStock";
 export const SALES_BILL_API = "salesBill";
 export const PURCHASE_RETURN_API = "purchaseReturn";
+export const PURCHASE_RETURN_SHOWROOM_API = "purchaseReturnSR";
 export const SALES_RETURN_API = "salesReturn";
 export const UOM_API = "uom";
 export const QUOTES_API = "quotes";

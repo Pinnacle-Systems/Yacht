@@ -25,9 +25,12 @@ import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 import StyleReport from "./StyleReport";
+import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterService";
 
 const StyleMaster = () => {
   const [form, setForm] = useState(false);
+  const [salesPrice, setSalesPrice] = useState("");
+  const [hsnId, setHsnId] = useState("");
   const [readOnly, setReadOnly] = useState(false);
   const [id, setId] = useState("");
   const [name, setName] = useState("");
@@ -51,7 +54,7 @@ const StyleMaster = () => {
 
   const params = {
     companyId: secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "userCompanyId"
+      sessionStorage.getItem("sessionId") + "userCompanyId",
     ),
   };
   const {
@@ -73,6 +76,9 @@ const StyleMaster = () => {
   const { data: styleItemList } = useGetStyleItemMasterQuery({
     params,
   });
+   const { data: hsnList } = useGetHsnMasterQuery({
+    params,
+  });
 
   const data = {
     id,
@@ -81,12 +87,14 @@ const StyleMaster = () => {
     name,
     alias,
     companyId: secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "userCompanyId"
+      sessionStorage.getItem("sessionId") + "userCompanyId",
     ),
     sizeTemplateId,
     fabricId,
     styleItemId,
     price,
+    salesPrice,
+    hsnId
   };
 
   const validateData = (data) => {
@@ -101,11 +109,12 @@ const StyleMaster = () => {
       foundItem = allData?.data
         ?.filter((i) => i.id !== id)
         ?.some(
-          (item) => item.sku?.trim().toLowerCase() === sku?.trim().toLowerCase()
+          (item) =>
+            item.sku?.trim().toLowerCase() === sku?.trim().toLowerCase(),
         );
     } else {
       foundItem = allData?.data?.some(
-        (item) => item.sku?.trim().toLowerCase() === sku?.trim().toLowerCase()
+        (item) => item.sku?.trim().toLowerCase() === sku?.trim().toLowerCase(),
       );
     }
 
@@ -141,11 +150,13 @@ const StyleMaster = () => {
     formData.append(
       "companyId",
       secureLocalStorage.getItem(
-        sessionStorage.getItem("sessionId") + "userCompanyId"
-      )
+        sessionStorage.getItem("sessionId") + "userCompanyId",
+      ),
     );
     formData.append("sizeTemplateId", sizeTemplateId);
     formData.append("fabricId", fabricId);
+    formData.append("salesPrice",salesPrice);
+    formData.append("hsnId",hsnId)
     // if (img instanceof File) formData.append("img", img);
     if (img instanceof File) {
       formData.append("img", img);
@@ -182,9 +193,11 @@ const StyleMaster = () => {
       setFabricId(data?.fabricId ? data?.fabricId : "");
       setStyleItemId(data?.styleItemId ? data?.styleItemId : "");
       setPrice(data?.price ? data?.price : "");
+      setSalesPrice(data?.salesPrice ? data?.salesPrice : "") ;
+      setHsnId(data?.hsnId ? data?.hsnId : "")
       childRecord.current = data?.childRecord ? data?.childRecord : 0;
     },
-    [id]
+    [id],
   );
 
   useEffect(() => {
@@ -450,10 +463,10 @@ const StyleMaster = () => {
                                       id
                                         ? styleItemList?.data
                                         : styleItemList?.data?.filter(
-                                            (item) => item.active
+                                            (item) => item.active,
                                           ),
                                       "name",
-                                      "id"
+                                      "id",
                                     )
                                   : []
                               }
@@ -484,10 +497,10 @@ const StyleMaster = () => {
                                       id
                                         ? fabricList?.data
                                         : fabricList?.data?.filter(
-                                            (item) => item.active
+                                            (item) => item.active,
                                           ),
                                       "name",
-                                      "id"
+                                      "id",
                                     )
                                   : []
                               }
@@ -507,10 +520,10 @@ const StyleMaster = () => {
                                       id
                                         ? sizeTemplateList?.data
                                         : sizeTemplateList?.data?.filter(
-                                            (item) => item.active
+                                            (item) => item.active,
                                           ),
                                       "name",
-                                      "id"
+                                      "id",
                                     )
                                   : []
                               }
@@ -522,12 +535,45 @@ const StyleMaster = () => {
                           </div>
                           <div className="mb-5 w-48">
                             <TextInput
-                              name="Rate"
+                              name="Purchase Rate"
                               type="number"
                               value={price}
                               setValue={setPrice}
                               required={false}
                               readOnly={readOnly}
+                            />
+                          </div>
+                            <div className="mb-5 w-48">
+                            <TextInput
+                              name="Sales Rate"
+                              type="number"
+                              value={salesPrice}
+                              setValue={setSalesPrice}
+                              required={false}
+                              readOnly={readOnly}
+                            />
+                          </div>
+                          <div className="mb-5 w-48">
+                            <DropdownInput
+                              name="HSN"
+                              options={
+                                hsnList
+                                  ? dropDownListObject(
+                                      id
+                                        ? hsnList?.data
+                                        : hsnList?.data?.filter(
+                                            (item) => item.active,
+                                          ),
+                                      "name",
+                                      "id",
+                                    )
+                                  : []
+                              }
+                              value={hsnId}
+                              setValue={setHsnId}
+                              required={false}
+                              readOnly={readOnly}
+                              // disabled={childRecord.current > 0}
                             />
                           </div>
                         </div>

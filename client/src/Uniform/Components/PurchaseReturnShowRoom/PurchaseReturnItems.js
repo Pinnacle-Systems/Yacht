@@ -8,12 +8,12 @@ import secureLocalStorage from "react-secure-storage";
 import { toast } from "react-toastify";
 import FxSelect from "../../../Inputs";
 import Swal from "sweetalert2";
-import { VIEW } from "../../../icons";
 import TaxDetailsFullTemplate from "../TaxDetailsCompleteTemplate";
 import Modal from "../../../UiComponents/Modal";
-export default function PurchaseBillItems({
-  purchaseBillItems,
-  setPurchaseBillItems,
+import PurchaseBillItemsSelection from "./PurchaseBillItemsSelection";
+export default function PurchaseReturnItems({
+  purchaseReturnItems,
+  setPurchaseReturnItems,
   params,
   readOnly,
   id,
@@ -21,13 +21,15 @@ export default function PurchaseBillItems({
   styleItemList,
   colorList,
   uomList,
-  taxTemplateId,
+  supplierId,
+  invNo,
+  branchId,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [styleNo, setStyleNo] = useState("");
   const [getStyleCodeDetail] = useLazyGetStyleCodeDetailQuery();
   const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
-  const [currentSelectedIndex, setCurrentSelectedIndex] = useState(null);
+  const [fillGrid, setFillGrid] = useState(false);
 
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId",
@@ -37,25 +39,44 @@ export default function PurchaseBillItems({
     const newRow = {
       styleId: "",
       sizeId: "",
-      qty: "",
+      stkQty: "",
       remarks: "",
       styleItemId: "",
       colorId: "",
       selected: false,
       barcodeNo: "",
       uomId: "",
-      rate: "",
+      returnQty: "",
     };
-    setPurchaseBillItems([...purchaseBillItems, newRow]);
+    setPurchaseReturnItems([...purchaseReturnItems, newRow]);
   };
   const [triggerGetStyle, { data: styleData }] =
     useLazyGetStyleMasterByIdQuery();
   const handleInputChange = async (value, index, field) => {
-    const newBlend = structuredClone(purchaseBillItems);
+    if (field === "returnQty") {
+      const row = purchaseReturnItems[index];
+      const balanceQty = row?.stkQty || 0;
+
+      if (parseFloat(balanceQty) < parseFloat(value)) {
+        Swal.fire({
+          icon: "warning",
+          title: "Invalid Quantity",
+          text: "Return Qty cannot be more than Stock Qty!",
+          confirmButtonText: "OK",
+        });
+        setPurchaseReturnItems((prev) => {
+          const newItems = structuredClone(prev);
+          newItems[index].returnQty = ""; // or null
+          return newItems;
+        });
+        return;
+      }
+    }
+    const newBlend = structuredClone(purchaseReturnItems);
     if (field === "styleId") {
       // 1️⃣ update immediately
       newBlend[index].styleItemId = value;
-      setPurchaseBillItems([...newBlend]); // 🔥 maintain UI instantly
+      setPurchaseReturnItems([...newBlend]); // 🔥 maintain UI instantly
 
       try {
         // 2️⃣ fetch style data
@@ -65,7 +86,7 @@ export default function PurchaseBillItems({
         newBlend[index].hsnId = response?.data?.hsnId;
         newBlend[index].taxPercent = response?.data?.Hsn?.taxPerc;
         // 4️⃣ update again after API fetch
-        setPurchaseBillItems([...newBlend]);
+        setPurchaseReturnItems([...newBlend]);
       } catch (e) {
         console.error("Style fetch failed", e);
       }
@@ -73,11 +94,11 @@ export default function PurchaseBillItems({
       return; // stop here
     }
     newBlend[index][field] = value;
-    setPurchaseBillItems(newBlend);
+    setPurchaseReturnItems(newBlend);
   };
 
   const deleteRow = (id) => {
-    setPurchaseBillItems((currentRows) => {
+    setPurchaseReturnItems((currentRows) => {
       if (currentRows.length > 1) {
         return currentRows.filter((row, index) => index !== parseInt(id));
       }
@@ -86,25 +107,25 @@ export default function PurchaseBillItems({
   };
 
   const deleteSelectedRows = () => {
-    setPurchaseBillItems((rows) =>
-      rows.filter((r) => !(r.selected && (r.stockQty ?? 0) === 0)),
+    setPurchaseReturnItems((rows) =>
+      rows.filter((r) => !(r.selected && (r.stkQty ?? 0) === 0)),
     );
     setContextMenu(null);
   };
 
   const handleDeleteAllRows = () => {
-    setPurchaseBillItems(
+    setPurchaseReturnItems(
       Array.from({ length: 3 }, () => ({
         styleId: "",
         sizeId: "",
-        qty: "",
+        stkQty: "",
         remarks: "",
         styleItemId: "",
         colorId: "",
         selected: false,
         barcodeNo: "",
         uomId: "",
-        rate: "",
+        returnQty: "",
       })),
     );
   };
@@ -124,8 +145,8 @@ export default function PurchaseBillItems({
   };
 
   useEffect(() => {
-    if (purchaseBillItems) {
-      setPurchaseBillItems((prev) => {
+    if (purchaseReturnItems) {
+      setPurchaseReturnItems((prev) => {
         const filledRows = prev.length;
 
         if (filledRows < 3) {
@@ -135,14 +156,14 @@ export default function PurchaseBillItems({
             ...Array.from({ length: 3 - filledRows }, () => ({
               styleId: "",
               sizeId: "",
-              qty: "",
+              stkQty: "",
               remarks: "",
               styleItemId: "",
               colorId: "",
               selected: false,
               barcodeNo: "",
               uomId: "",
-              rate: "",
+              returnQty: "",
               selected: false,
             })),
           ];
@@ -151,36 +172,36 @@ export default function PurchaseBillItems({
       });
     } else {
       // if null/undefined, initialize with 6 empty rows
-      setPurchaseBillItems(
+      setPurchaseReturnItems(
         Array.from({ length: 3 }, () => ({
           styleId: "",
           sizeId: "",
-          qty: "",
+          stkQty: "",
           remarks: "",
           styleItemId: "",
           colorId: "",
           selected: false,
           barcodeNo: "",
           uomId: "",
-          rate: "",
+          returnQty: "",
           selected: false,
         })),
       );
     }
-  }, [purchaseBillItems, setPurchaseBillItems]);
+  }, [purchaseReturnItems, setPurchaseReturnItems]);
 
   const handleAddRow = async () => {
-    const isFirstTime = purchaseBillItems.every((row) => !row.styleNo);
+    const isFirstTime = purchaseReturnItems.every((row) => !row.styleNo);
 
     if (!isFirstTime) {
-      // const hasEmpty = PurchaseBillItems.some((row) => !row.qty);
-      const hasEmpty = purchaseBillItems.some((row) => {
+      // const hasEmpty = PurchaseReturnItems.some((row) => !row.qty);
+      const hasEmpty = purchaseReturnItems.some((row) => {
         const hasStyle =
           row.styleNo !== "" &&
           row.styleNo !== null &&
           row.styleNo !== undefined;
 
-        return hasStyle && (!row.styleItemId || !row.qty);
+        return hasStyle && (!row.styleItemId || !row.stkQty);
       });
       if (hasEmpty) {
         toast.info("Please fill all required fields...!", {
@@ -211,7 +232,7 @@ export default function PurchaseBillItems({
             fabricId: style.fabricId || "",
             styleId: style.id || "",
             sizeId: s.sizeId,
-            qty: "",
+            stkQty: "",
             remarks: "",
             colorId: "",
             styleItemId: style.styleItemId || "",
@@ -220,7 +241,7 @@ export default function PurchaseBillItems({
           }));
         }
       }
-      setPurchaseBillItems((prev) => {
+      setPurchaseReturnItems((prev) => {
         const updated = [...prev];
 
         // Find first empty slot index
@@ -245,7 +266,7 @@ export default function PurchaseBillItems({
             fabricId: "",
             styleId: "",
             sizeId: "",
-            qty: "",
+            stkQty: "",
             remarks: "",
             styleItemId: "",
             colorId: "",
@@ -263,20 +284,20 @@ export default function PurchaseBillItems({
   return (
     <>
       <Modal
-        isOpen={Number.isInteger(currentSelectedIndex)}
-        onClose={() => setCurrentSelectedIndex("")}
+        isOpen={fillGrid}
+        onClose={() => setFillGrid(false)}
+        widthClass={"w-[95%]"}
       >
-        <TaxDetailsFullTemplate
-          readOnly={readOnly}
-          taxTypeId={taxTemplateId}
-          currentIndex={currentSelectedIndex}
-          setCurrentSelectedIndex={setCurrentSelectedIndex}
-          purchaseBillItems={purchaseBillItems}
-          handleInputChange={handleInputChange}
-          id={id}
+        <PurchaseBillItemsSelection
+          setFillGrid={setFillGrid}
+          supplierId={supplierId}
+          purchaseReturnItems={purchaseReturnItems}
+          setPurchaseReturnItems={setPurchaseReturnItems}
+          branchId={branchId}
+          invNo={invNo}
         />
       </Modal>
-      <div className="border border-slate-200  bg-white rounded-md shadow-sm max-h-[450px] px-2 overflow-auto">
+      <div className="border border-slate-200  bg-white rounded-md shadow-sm max-h-[400px] px-2 overflow-auto">
         {/* <div className="flex items-center gap-4  sticky top-0 bg-white z-30 mt-2">
           <ReusableInput
             label="Style No"
@@ -293,10 +314,35 @@ export default function PurchaseBillItems({
             }}
           />
         </div> */}
-        <div className="flex justify-between items-center mb-2">
+        <div className="flex items-center mb-2">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
+          <button
+            className="font-bold text-slate-700 bord ml-[840px] text-sm bg-blue-500 rounded rounded-md text-white px-2"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                setFillGrid(true);
+              }
+            }}
+            onClick={() => {
+              if (!supplierId || !invNo) {
+                Swal.fire({
+                  icon: "success",
+                  title: ` Choose Supplier and Inv No`,
+                  showConfirmButton: false,
+                  timer: 2000,
+                });
+              } else {
+                setFillGrid(true);
+              }
+            }}
+          >
+            Fill Purchase Items
+          </button>
         </div>
-        <div className={`w-full max-h-[150px] min-h-[150px]   overflow-y-auto  my-1`}>
+        <div
+          className={`w-full max-h-[150px] min-h-[150px] overflow-y-auto  my-1`}
+        >
           <table className=" border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
@@ -333,22 +379,12 @@ export default function PurchaseBillItems({
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Qty
+                  Stock Qty
                 </th>
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Rate
-                </th>
-                <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
-                >
-                  Amount
-                </th>
-                <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
-                >
-                  Tax Details
+                  Return Qty
                 </th>
                 <th
                   className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
@@ -358,7 +394,7 @@ export default function PurchaseBillItems({
               </tr>
             </thead>
             <tbody>
-              {(purchaseBillItems ? purchaseBillItems : [])?.map(
+              {(purchaseReturnItems ? purchaseReturnItems : [])?.map(
                 (row, index) => (
                   <tr
                     className="border border-blue-gray-200 cursor-pointer "
@@ -385,7 +421,7 @@ export default function PurchaseBillItems({
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "barcodeNo");
                         }}
-                        disabled={readOnly}
+                        disabled={true}
                       />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
@@ -400,7 +436,7 @@ export default function PurchaseBillItems({
                             label: item.name,
                             value: item.id,
                           }))}
-                        readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                        readOnly={true}
                         placeholder=""
                         onBlur={() =>
                           handleInputChange(
@@ -429,7 +465,7 @@ export default function PurchaseBillItems({
                             label: item.name,
                             value: item.id,
                           }))}
-                        readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                        readOnly={true}
                         placeholder=""
                         onBlur={() =>
                           handleInputChange(row.sizeId, index, "sizeId")
@@ -453,7 +489,7 @@ export default function PurchaseBillItems({
                             label: item.name,
                             value: item.id,
                           }))}
-                        readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                        readOnly={true}
                         placeholder=""
                         onBlur={() =>
                           handleInputChange(row.colorId, index, "colorId")
@@ -478,7 +514,7 @@ export default function PurchaseBillItems({
                             label: item.name,
                             value: item.id,
                           }))}
-                        readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                        readOnly={true}
                         placeholder=""
                         onBlur={() =>
                           handleInputChange(row.uomId, index, "uomId")
@@ -497,7 +533,7 @@ export default function PurchaseBillItems({
                           if (e.code === "Minus" || e.code === "NumpadSubtract")
                             e.preventDefault();
                           if (e.key === "Delete") {
-                            handleInputChange("", index, "qty");
+                            handleInputChange("", index, "stkQty");
                           }
                           // if (e.key === "Enter") {
                           //   e.preventDefault(); // prevent form submit or line break
@@ -514,9 +550,9 @@ export default function PurchaseBillItems({
                         type="number"
                         className="text-right rounded py-1 px-1 w-full"
                         onFocus={(e) => e.target.select()}
-                        value={row?.qty}
+                        value={row?.stkQty}
                         onChange={(e) =>
-                          handleInputChange(e.target.value, index, "qty")
+                          handleInputChange(e.target.value, index, "stkQty")
                         }
                         onBlur={(e) => {
                           // const minQty = row.minQty || 0;
@@ -530,9 +566,9 @@ export default function PurchaseBillItems({
                           //   });
                           //   return;
                           // }
-                          handleInputChange(e.target.value, index, "qty");
+                          handleInputChange(e.target.value, index, "stkQty");
                         }}
-                        disabled={readOnly}
+                        disabled={true}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
@@ -541,57 +577,33 @@ export default function PurchaseBillItems({
                           if (e.code === "Minus" || e.code === "NumpadSubtract")
                             e.preventDefault();
                           if (e.key === "Delete") {
-                            handleInputChange("", index, "rate");
+                            handleInputChange("", index, "returnQty");
+                          }
+                          if (e.key === "Enter") {
+                            e.preventDefault(); // prevent form submit or line break
+                            e.stopPropagation();
+                            const nextQtyInput = document.querySelector(
+                              `#returnQty-input-${index + 1}`,
+                            );
+                            if (nextQtyInput) {
+                              nextQtyInput.focus();
+                            }
                           }
                         }}
                         min={"0"}
                         type="number"
-                        className="text-right rounded py-1 px-1 w-full "
+                        className="text-right rounded py-1 px-1 w-full"
                         onFocus={(e) => e.target.select()}
-                        value={row?.rate}
+                        value={row?.returnQty}
                         onChange={(e) =>
-                          handleInputChange(e.target.value, index, "rate")
+                          handleInputChange(e.target.value, index, "returnQty")
                         }
                         onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "rate");
+                          handleInputChange(e.target.value, index, "returnQty");
                         }}
                         disabled={readOnly}
+                        id={`returnQty-input-${index}`}
                       />
-                    </td>
-                    <td className="py-0.5 border border-gray-300 text-[11px]">
-                      <input
-                        type="number"
-                        onFocus={(e) => e.target.select()}
-                        className="text-right rounded py-1 px-1 w-full"
-                        value={
-                          !row.qty || !row.rate
-                            ? 0.0
-                            : (
-                                parseFloat(row.qty) * parseFloat(row.rate)
-                              ).toFixed(2)
-                        }
-                        disabled={true}
-                      />
-                    </td>
-                    <td className=" py-0.5 border border-gray-300 text-[11px] text-right">
-                      <button
-                        disabled={!row?.styleItemId}
-                        className="text-center rounded py-1 w-20"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            setCurrentSelectedIndex(index);
-                          }
-                        }}
-                        onClick={() => {
-                          if (!taxTemplateId)
-                            return toast.info("Please select Tax Type", {
-                              position: "top-center",
-                            });
-                          setCurrentSelectedIndex(index);
-                        }}
-                      >
-                        {VIEW}
-                      </button>
                     </td>
 
                     <td className="w-2 border border-gray-300">
@@ -624,22 +636,18 @@ export default function PurchaseBillItems({
                   Total Qty
                 </td>
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
-                  {(Array.isArray(purchaseBillItems)
-                    ? purchaseBillItems
+                  {(Array.isArray(purchaseReturnItems)
+                    ? purchaseReturnItems
                     : []
-                  ).reduce((sum, row) => sum + (Number(row.qty) || 0), 0)}
+                  ).reduce((sum, row) => sum + (Number(row.stkQty) || 0), 0)}
+                </td>
+                <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
+                  {(Array.isArray(purchaseReturnItems)
+                    ? purchaseReturnItems
+                    : []
+                  ).reduce((sum, row) => sum + (Number(row.returnQty) || 0), 0)}
                 </td>
                 <td className="border border-gray-300" colSpan={1}></td>
-                <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
-                  {(Array.isArray(purchaseBillItems) ? purchaseBillItems : [])
-                    .reduce((sum, row) => {
-                      const qty = parseFloat(row.qty) || 0;
-                      const rate = parseFloat(row.rate) || 0;
-                      return sum + qty * rate;
-                    }, 0)
-                    .toFixed(2)}
-                </td>
-                <td className="border border-gray-300" colSpan={2}></td>
               </tr>
             </tfoot>
           </table>

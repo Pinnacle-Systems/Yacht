@@ -1,19 +1,22 @@
 import { Router } from "express";
 const router = Router();
 import {
-  create,
   get,
   getOne,
+  create,
   update,
   remove,
-  getpurchaseBillItems,
-} from "../controllers/purchaseBill.controller.js";
+} from "../controllers/purchaseReturnSR.controller.js";
 
 router.post("/", create);
+
 router.get("/", get);
-router.get("/purBillItemDetails", getpurchaseBillItems);
+
 router.get("/:id", getOne);
+
 router.put("/:id", update);
+
 router.delete("/:id", remove);
+
 
 export default router;

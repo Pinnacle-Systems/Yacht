@@ -79,6 +79,7 @@ import {
   productionStock,
   hsn,
   purchaseBill,
+  purchaseReturnSR,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";
@@ -190,6 +191,8 @@ app.use("/processGroupSeq", processGroupSeq);
 app.use("/processGroup", processGroup);
 app.use("/hsn", hsn);
 app.use("/purchaseBill", purchaseBill);
+app.use("/purchaseReturnSR", purchaseReturnSR);
+
 app.get("/retreiveFile/:fileName", (req, res) => {
   const { fileName } = req.params;
   res.sendFile(__dirname + "/uploads/" + fileName);

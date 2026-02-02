@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE `style` ADD COLUMN `hsnId` INTEGER NULL,
+    ADD COLUMN `salesPrice` DOUBLE NULL;
+
+-- AddForeignKey
+ALTER TABLE `Style` ADD CONSTRAINT `Style_hsnId_fkey` FOREIGN KEY (`hsnId`) REFERENCES `Hsn`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

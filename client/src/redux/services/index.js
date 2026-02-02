@@ -24,6 +24,7 @@ export { default as purchaseBillApi } from "./PurchaseBillService";
 export { default as stockApi } from "./StockService";
 export { default as salesBillApi } from "./SalesBillService";
 export { default as purchaseReturnApi } from "./PurchaseReturnService";
+export { default as purchaseReturnShowroomApi } from "./PurchaseReturnShowroomService";
 export { default as salesReturnApi } from "./SalesReturnService";
 export { default as uomMasterApi } from "./UomMasterService";
 export { default as quotesApi } from "./QuotesService";

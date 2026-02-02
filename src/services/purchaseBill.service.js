@@ -228,7 +228,7 @@ async function create(body) {
       purchaseBillItems,
       discountType,
       discountValue,
-      vehicleNo,
+      termsAndCondition,
     } = await body;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate
@@ -259,7 +259,7 @@ async function create(body) {
           supplierId: parseInt(supplierId),
           contactPerson,
           contactNumber,
-          vehicleNo,
+          termsAndCondition,
           remarks,
           discountType,
           discountValue:
@@ -400,7 +400,7 @@ async function update(id, body) {
     purchaseBillItems,
     discountType,
     discountValue,
-    vehicleNo,
+    termsAndCondition,
   } = await body;
   let data;
   const dataFound = await prisma.purchaseBill.findUnique({
@@ -436,7 +436,7 @@ async function update(id, body) {
         supplierId: parseInt(supplierId),
         contactPerson,
         contactNumber,
-        vehicleNo,
+        termsAndCondition,
         remarks,
         discountType,
         discountValue:
@@ -451,7 +451,7 @@ async function update(id, body) {
       data,
       userId,
       branchId,
-      invNo
+      invNo,
     );
   });
   return { statusCode: 0, data };
@@ -463,7 +463,7 @@ async function updatePurchaseBillItems(
   purchaseBill,
   userId,
   branchId,
-  invNo
+  invNo,
 ) {
   const promises = purchaseBillItems.map(async (itemDetails) => {
     const qty = itemDetails?.qty
@@ -611,90 +611,52 @@ async function remove(id) {
 }
 
 function manualFilterSearchDatapurchaseBillItems(
-  searchPoDate,
+  searchDocDate,
   searchinvDate,
-  searchPoType,
   data,
 ) {
   return data.filter(
     (item) =>
-      (searchPoDate
-        ? String(getDateFromDateTime(item.Po.docDate)).includes(searchPoDate)
+      (searchDocDate
+        ? String(getDateFromDateTime(item.PurchaseBill.docDate)).includes(
+            searchDocDate,
+          )
         : true) &&
       (searchinvDate
-        ? String(getDateFromDateTime(item.Po.invDate)).includes(searchinvDate)
-        : true) &&
-      (searchPoType
-        ? item.Po.poType.toLowerCase().includes(searchPoType.toLowerCase())
+        ? String(getDateFromDateTime(item.PurchaseBill.invDate)).includes(
+            searchinvDate,
+          )
         : true),
   );
 }
 
 async function getAllDatapurchaseBillItems(data) {
   let promises = data?.map(async (item) => {
-    let data = await getPoItemById(item.id);
+    let data = await getPurchaseBillItemById(item.id);
     return data.data;
   });
   return Promise.all(promises);
 }
 
-async function getPoItemById(id) {
+async function getPurchaseBillItemById(id) {
   const data = await prisma.purchaseBillItems.findUnique({
     where: { id: parseInt(id) },
     include: {
-      Po: { select: { docId: true, invDate: true, docDate: true } },
-      Uom: { select: { name: true } },
+      PurchaseBill: { select: { docId: true, invDate: true, docDate: true } },
       StyleItem: { select: { name: true } },
-      Hsn: { select: { name: true } },
+      Size: { select: { name: true } },
+      Color: { select: { name: true } },
     },
   });
 
-  if (!data) return NoRecordFound("Purchase Order");
-
-  // 1️⃣ All inward rows
-  const inwardItems = await prisma.inwardItems.findMany({
-    where: {
-      styleItemId: data.styleItemId,
-      poId: data.poId,
-      uomId: data.uomId,
-      hsnId: data.hsnId,
-    },
-    select: {
-      purchaseInwardId: true,
-      inwardQty: true,
-    },
-  });
-
-  const inwardQty = inwardItems.reduce(
-    (sum, item) => sum + (item.inwardQty ?? 0),
-    0,
-  );
-
-  // 2️⃣ Return qty using purchaseInwardId
-  const inwardIds = inwardItems.map((i) => i.purchaseInwardId).filter(Boolean);
-
-  let returnQty = 0;
-
-  if (inwardIds.length > 0) {
-    const returnAgg = await prisma.purchaseReturnItems.aggregate({
-      where: {
-        styleItemId: data.styleItemId,
-        uomId: data.uomId,
-        hsnId: data.hsnId,
-        purchaseInwardId: { in: inwardIds },
-      },
-      _sum: { returnQty: true },
-    });
-
-    returnQty = returnAgg._sum.returnQty ?? 0;
-  }
+  if (!data) return NoRecordFound("Purchase Bill");
 
   // 3️⃣ Stock balance
-  const totalStkQty = await prisma.stock.aggregate({
+  const totalStkQty = await prisma.stockLedger.aggregate({
     where: {
       styleItemId: data.styleItemId,
       uomId: data.uomId,
-      hsnId: data.hsnId,
+      barcodeNo: data.barcodeNo
     },
     _sum: { qty: true },
   });
@@ -703,10 +665,10 @@ async function getPoItemById(id) {
     statusCode: 0,
     data: {
       ...data,
-      poQty: data.qty,
-      inwardQty,
-      returnQty,
-      balQty: totalStkQty._sum.qty ?? 0,
+      // poQty: data.qty,
+      // inwardQty,
+      // returnQty,
+      stkQty: totalStkQty._sum.qty ?? 0,
     },
   };
 }
@@ -716,19 +678,12 @@ async function getpurchaseBillItems(req) {
     branchId,
     active,
     supplierId,
-    inwardType,
     pagination,
     dataPerPage,
     searchDocId,
-    searchPoDate,
-    searchSupplierAliasName,
-    searchInwardType,
+    searchDocDate,
     searchinvDate,
-    isPurchaseInwardFilter,
-    isPurchaseCancelFilter,
-    isPurchaseReturnFilter,
-    poInwardOrDirectInward,
-    poMaterial,
+    invNo,
   } = req.query;
 
   let data;
@@ -736,22 +691,22 @@ async function getpurchaseBillItems(req) {
   if (pagination) {
     data = await prisma.purchaseBillItems.findMany({
       where: {
-        Po: {
+        PurchaseBill: {
           docId: Boolean(searchDocId)
             ? {
                 contains: searchDocId,
               }
             : undefined,
           supplierId: supplierId ? parseInt(supplierId) : undefined,
+          invNo: invNo ? invNo : undefined,
         },
       },
       include: {
-        Po: {
+        PurchaseBill: {
           select: {
             supplierId: true,
             docDate: true,
             invDate: true,
-            poType: true,
           },
         },
 
@@ -763,14 +718,13 @@ async function getpurchaseBillItems(req) {
       },
     });
     data = manualFilterSearchDatapurchaseBillItems(
-      searchPoDate,
+      searchDocDate,
       searchinvDate,
-      searchInwardType,
       data,
     );
 
     data = data?.filter(
-      (i) => i.Po.supplierId == supplierId,
+      (i) => i.PurchaseBill.supplierId == supplierId,
       // && i.Po.inwardType === po,
     );
 

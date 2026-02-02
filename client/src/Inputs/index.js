@@ -22,6 +22,7 @@ import { useModal } from "../Basic/pages/home/context/ModalContext";
 import DynamicRenderer from "../Uniform/Components/common/DynamicComponent";
 import secureLocalStorage from "react-secure-storage";
 import useOutsideClick from "../CustomHooks/handleOutsideClick";
+import Swal from "sweetalert2";
 
 export const handleOnChange = (event, setValue, type) => {
   const inputValue = event.target.value;
@@ -222,7 +223,7 @@ export const TextInput = forwardRef(
         const val = Number(e.target.value);
 
         if (!isNaN(val) && val < 0) {
-          alert(`${name} cannot be negative`);
+         Swal.fire(`${name} cannot be negative`);
           setValue(""); // or "" if you prefer
           return;
         }

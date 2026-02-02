@@ -50,6 +50,7 @@ import {
   companyPayCodeApi,
   materialStockApi,
   HsnMasterApi,
+  purchaseReturnShowroomApi,
 } from "./services";
 import projectPaymentFormApi from "./services/ProjectPaymentService";
 import {
@@ -140,6 +141,7 @@ const commonReducers = {
   materialStock: materialStockApi.reducer,
   salesBill: salesBillApi.reducer,
   purchaseReturn: purchaseReturnApi.reducer,
+  purchaseReturnShowroom: purchaseReturnShowroomApi.reducer,
   salesReturn: SalesReturnApi.reducer,
   uomMaster: uomMasterApi.reducer,
   quotes: quotesApi.reducer,
@@ -250,6 +252,7 @@ const commonMiddleware = [
   materialStockApi.middleware,
   salesBillApi.middleware,
   purchaseReturnApi.middleware,
+  purchaseReturnShowroomApi.middleware,
   SalesReturnApi.middleware,
   uomMasterApi.middleware,
   quotesApi.middleware,
@@ -330,7 +333,7 @@ const commonMiddleware = [
   StockInwardApi.middleware,
   StyleItemMasterApi.middleware,
   ProcessGroupApi.middleware,
-  HsnMasterApi.middleware
+  HsnMasterApi.middleware,
 ];
 
 const store = configureStore({

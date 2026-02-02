@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { PURCHASE_BILL_API} from "../../Api";
+import { PURCHASE_BILL_API } from "../../Api";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -11,15 +11,15 @@ const purchaseBillApi = createApi({
   tagTypes: ["PurchaseBill"],
   endpoints: (builder) => ({
     getPurchaseBill: builder.query({
-      query: ({params, searchParams}) => {
-        if(searchParams){
+      query: ({ params, searchParams }) => {
+        if (searchParams) {
           return {
-            url: PURCHASE_BILL_API +"/search/"+searchParams,
+            url: PURCHASE_BILL_API + "/search/" + searchParams,
             method: "GET",
             headers: {
               "Content-type": "application/json; charset=UTF-8",
             },
-            params
+            params,
           };
         }
         return {
@@ -28,7 +28,7 @@ const purchaseBillApi = createApi({
           headers: {
             "Content-type": "application/json; charset=UTF-8",
           },
-          params
+          params,
         };
       },
       providesTags: ["PurchaseBill"],
@@ -44,6 +44,19 @@ const purchaseBillApi = createApi({
         };
       },
       providesTags: ["PurchaseBill"],
+    }),
+    getPurBillItems: builder.query({
+      query: ({ params }) => {
+        return {
+          url: `${PURCHASE_BILL_API}/purBillItemDetails`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["purchaseInwardEntry"],
     }),
     addPurchaseBill: builder.mutation({
       query: (payload) => ({
@@ -80,6 +93,7 @@ const purchaseBillApi = createApi({
 export const {
   useGetPurchaseBillQuery,
   useGetPurchaseBillByIdQuery,
+  useGetPurBillItemsQuery,
   useAddPurchaseBillMutation,
   useUpdatePurchaseBillMutation,
   useDeletePurchaseBillMutation,

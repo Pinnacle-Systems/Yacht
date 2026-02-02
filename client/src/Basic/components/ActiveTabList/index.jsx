@@ -83,6 +83,7 @@ import {
   TagTypeMater,
   SummaryReport,
   PurchaseBill,
+  PurchaseReturnShowRoom,
 } from "../../../Uniform/Components";
 import NewOrder from "../../../Uniform/Components/NewOrder";
 import Manufacture from "../../../Uniform/Components/styleesheet/Manufacture";
@@ -180,7 +181,8 @@ const ActiveTabList = () => {
     "PROCESS GROUP MASTER": <ProcessGroupMaster />,
     "STOCK SUMMARY REPORT": <SummaryReport />,
     "HSN MASTER": <HsnMaster />,
-    "PURCHASE BILL": <PurchaseBill />
+    "PURCHASE BILL": <PurchaseBill />,
+    "PURCHASE  RETURN": <PurchaseReturnShowRoom />,
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

@@ -67,3 +67,4 @@ export { default as ProcessGroupSeqMaster } from "./ProcessGroupSeqMaster";
 export { default as ProcessGroupMaster } from "./ProcessGroupMaster";
 export { default as SummaryReport } from "./SummaryReport";
 export { default as PurchaseBill } from "./PurchaseBill";
+export { default as PurchaseReturnShowRoom } from "./PurchaseReturnShowRoom";
