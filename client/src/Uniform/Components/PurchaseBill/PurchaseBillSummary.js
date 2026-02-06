@@ -10,32 +10,36 @@ const PurchaseBillSummary = ({
   discountValue,
   setDiscountValue,
 }) => {
-  // =================== CALCULATIONS ===================
-
-  // 1️⃣ GROSS = price * qty
-  const grossAmount = purchaseBillItems.reduce(
-    (sum, row) => sum + (Number(row.rate) || 0) * (Number(row.qty) || 0),
+  const totalAmount = purchaseBillItems.reduce(
+    (sum, row) => sum + (Number(row.taxable) || 0),
     0,
   );
 
-  // 2️⃣ DISCOUNT
+  // const grossAmount = purchaseBillItems.reduce(
+  //   (sum, row) => sum + (Number(row.rate) || 0) * (Number(row.qty) || 0),
+  //   0,
+  // );
   const discountValueNum = Number(discountValue) || 0;
 
   let discountAmount = 0;
   if (discountType === "Flat") {
     discountAmount = discountValueNum;
   } else if (discountType === "Percentage") {
-    discountAmount = (grossAmount * discountValueNum) / 100;
+    discountAmount = (totalAmount * discountValueNum) / 100;
   }
 
+  const grossAmount = totalAmount - discountAmount;
+
+  // 2️⃣ DISCOUNT
+
   // 3️⃣ NET & ROUNDING
-  const netValue = grossAmount - discountAmount;
+  const netValue = grossAmount;
   const netAmount = Math.round(netValue);
   const roundoff = netAmount - netValue;
 
   const taxGroupWise = groupBy(purchaseBillItems, "taxPercent");
   const displayTaxRows = Object.entries(taxGroupWise)
-    .filter(([taxPercent]) =>  Number(taxPercent) > 0) // ignore null / 0
+    .filter(([taxPercent]) => Number(taxPercent) > 0) // ignore null / 0
     .map(([taxPercent, items]) => {
       const taxable = items.reduce(
         (sum, item) => sum + item.qty * item.rate,
@@ -100,7 +104,23 @@ const PurchaseBillSummary = ({
               />
             </td>
           </tr>
-
+          <tr>
+            <td className="border border-gray-500 font-semibold">Total</td>
+            <td />
+            <td className="border border-gray-500 text-right">
+              {totalAmount.toFixed(2)}
+            </td>
+          </tr>
+          {/* DISCOUNT AMOUNT */}
+          <tr>
+            <td className="border border-gray-500 font-semibold">
+              Discount Amount
+            </td>
+            <td />
+            <td className="border border-gray-500 text-right">
+              {discountAmount.toFixed(2)}
+            </td>
+          </tr>
           {/* GROSS */}
           <tr>
             <td className="border border-gray-500 font-semibold">Gross</td>
@@ -114,9 +134,7 @@ const PurchaseBillSummary = ({
           {displayTaxRows.map((tax, index) => (
             <React.Fragment key={index}>
               <tr>
-                <td className="border border-gray-500 font-semibold">
-                  SGST
-                </td>
+                <td className="border border-gray-500 font-semibold">SGST</td>
                 <td className="border border-gray-500 text-right">
                   {tax.halfTax}
                 </td>
@@ -126,9 +144,7 @@ const PurchaseBillSummary = ({
               </tr>
 
               <tr>
-                <td className="border border-gray-500 font-semibold">
-                  CGST
-                </td>
+                <td className="border border-gray-500 font-semibold">CGST</td>
                 <td className="border border-gray-500 text-right">
                   {tax.halfTax}
                 </td>
@@ -138,17 +154,6 @@ const PurchaseBillSummary = ({
               </tr>
             </React.Fragment>
           ))}
-
-          {/* DISCOUNT AMOUNT */}
-          <tr>
-            <td className="border border-gray-500 font-semibold">
-              Discount Amount
-            </td>
-            <td />
-            <td className="border border-gray-500 text-right">
-              {discountAmount.toFixed(2)}
-            </td>
-          </tr>
 
           {/* NET */}
           <tr>

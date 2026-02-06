@@ -33,6 +33,7 @@ import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMaste
 import secureLocalStorage from "react-secure-storage";
 import { useAddPurchaseBillMutation, useDeletePurchaseBillMutation, useGetPurchaseBillByIdQuery, useGetPurchaseBillQuery, useUpdatePurchaseBillMutation } from "../../../redux/services/PurchaseBillService";
 import PurchaseBillSummary from "./PurchaseBillSummary";
+import { useGetSalesEntryQuery, useLazyGetSalesDCDetailQuery } from "../../../redux/uniformService/SalesEntryService";
 
 const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     sizeList,
@@ -61,6 +62,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     };
     const [contactPerson, setContactPerson] = useState("");
     const [contactNumber, setContactNumber] = useState("");
+    const [dcNo, setDcNo] = useState("")
     const { data: partyList } = useGetPartyQuery({ params: { ...params } });
     const { data: locationData } = useGetLocationMasterQuery({
         params: { branchId },
@@ -70,10 +72,15 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     const [summary, setSummary] = useState(false);
     const [discountType, setDiscountType] = useState("Percentage");
     const [discountValue, setDiscountValue] = useState();
+    const [termsAndCondition, setTermsAndCondition] = useState("");
+    const [getSalesDCDetail] = useLazyGetSalesDCDetailQuery();
+
+    const { data: salesList } = useGetSalesEntryQuery({
+        params: { companyId, branchId },
+    });
     const finyearId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "currentFinYear"
     );
-    const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
     const {
         data: allData,
         isFetching,
@@ -117,6 +124,8 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         taxTemplateId,
         discountType,
         discountValue,
+        termsAndCondition,
+        dcNo
     };
 
     const syncFormWithDb = useCallback(
@@ -148,6 +157,8 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
             setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "");
             setDiscountType(data?.discountType || "Flat");
             setDiscountValue(data?.discountValue || "0");
+            setTermsAndCondition(data?.termsAndCondition ? data.termsAndCondition : "");
+            setDcNo(data?.dcNo ? data?.dcNo : "")
         },
         [id]
     );
@@ -204,35 +215,13 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         }
     }, [supplierId, setSupplierId, partyList?.data]);
 
-    const findDuplicates = (items) => {
-        const seen = new Map(); // key -> first index
-        const duplicates = [];
-
-        items.forEach((row, index) => {
-            const key = [row.styleId || "", row.sizeId || ""].join(
-                "-"
-            );
-
-            if (seen.has(key)) {
-                duplicates.push({
-                    firstIndex: seen.get(key),
-                    duplicateIndex: index,
-                    styleId: row.styleId,
-                });
-            } else {
-                seen.set(key, index);
-            }
-        });
-
-        return duplicates; // empty array = no duplicates
-    };
 
     const findDuplicateGoodss = (items) => {
         const seen = new Map(); // key -> first index
         const duplicates = [];
 
         items.forEach((row, index) => {
-            const key = [row.styleItemId || "", row.barcodeNo || ""].join(
+            const key = [row.styleItemId || "", row.barcodeNo || "", row.styleId || "", row.sizeId || ""].join(
                 "-"
             );
 
@@ -241,6 +230,8 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                     firstIndex: seen.get(key),
                     duplicateIndex: index,
                     styleItemId: row.styleItemId,
+                    styleId: row.styleId,
+                    sizeId: row.styleId,
                     barcodeNo: row.barcodeNo
                 });
             } else {
@@ -256,6 +247,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         if (!data?.supplierId || !data?.invNo || !data?.taxTemplateId) {
             toast.info("Please fill all required fields...!", {
                 position: "top-center",
+                autoClose: 2000
             });
             return false;
         }
@@ -277,7 +269,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
             !isGridDatasValid(
                 filledGoodsItems,
                 false,
-                ["styleItemId", "sizeId", "qty", "uomId", "rate","barcodeNo"]
+                ["styleItemId", "sizeId", "qty", "uomId", "rate", "styleId"]
             )
         ) {
             toast.info("Please fill all required item details...!", {
@@ -377,6 +369,66 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         if ((event.ctrlKey || event.metaKey) && charCode === "s") {
             event.preventDefault();
             saveData();
+        }
+    };
+
+    const handleAddRow = async (newValue) => {
+        setDcNo(newValue);
+        const hasUnfilledRequired = purchaseBillItems.some((row) => {
+            return row.styleId && !row.qty;
+        });
+
+        if (hasUnfilledRequired) {
+            toast.info("Please fill all required fields before adding...!", {
+                position: "top-center",
+            });
+            return;
+        }
+        try {
+            const { data: salesData } = await getSalesDCDetail({
+                params: {
+                    dcNo: newValue,
+                },
+            });
+            const salesItems = salesData?.data?.SalesEntryItems;
+            if (!salesItems) return;
+            setPurchaseBillItems((prev) => {
+                const updated = [...prev];
+                // Find first empty slot index
+                let startIndex = updated.findIndex(
+                    (row) =>
+                        !row.styleId &&
+                        !row.sizeId &&
+                        !row.barcodeNo &&
+                        !row.styleItemId
+                );
+                if (startIndex === -1) startIndex = updated.length;
+
+                // Fill in sizeRows starting at first empty slot
+                salesItems.forEach((row, i) => {
+                    if (startIndex + i < updated.length) {
+                        updated[startIndex + i] = row;
+                    } else {
+                        updated.push(row); // append if no empty slot
+                    }
+                });
+
+                // Ensure at least 6 rows
+                while (updated.length < 3) {
+                    updated.push({
+                        styleId: "",
+                        sizeId: "",
+                        qty: "",
+                        styleItemId: "",
+                        colorId: "",
+                        selected: false,
+                    });
+                }
+
+                return updated;
+            });
+        } catch (error) {
+            console.error("Error adding row:", error);
         }
     };
 
@@ -520,6 +572,18 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                             readOnly={true}
                                             disabled
                                         />
+                                        <DropdownNew
+                                            name="Sales DC No"
+                                            dataList={salesList?.data}
+                                            value={dcNo}
+                                            setValue={handleAddRow}
+                                            readOnly={readOnly}
+                                            placeholder={"Select DC"}
+                                            otherField={"docId"}
+                                            otherValue={"docId"}
+                                            disabled={id}
+                                            clear={true}
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -536,22 +600,23 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                 colorList={colorList}
                                 uomList={uomList}
                                 taxTemplateId={taxTemplateId}
+                                dcNo={dcNo}
                             />
                         </fieldset>
 
                         <div className="grid grid-cols-3 gap-3">
                             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                                 <h2 className="font-medium text-slate-700 mb-2 text-base">
-                                    Vehicle No
+                                    Terms and Condition
                                 </h2>
                                 <textarea
                                     readOnly={readOnly}
-                                    value={vehicleNo}
+                                    value={termsAndCondition}
                                     onChange={(e) => {
-                                        setVehicleNo(e.target.value);
+                                        setTermsAndCondition(e.target.value);
                                     }}
                                     className="w-full overflow-auto h-10 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-                                    placeholder="Vehicle Details..."
+                                    placeholder="Terms Details..."
                                     disabled={readOnly}
                                 />
                             </div>

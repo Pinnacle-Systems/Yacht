@@ -229,7 +229,9 @@ async function create(body) {
       discountType,
       discountValue,
       termsAndCondition,
+      dcNo,
     } = await body;
+    console.log(dcNo,"dcNo")
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate
       ? getYearShortCodeForFinYear(
@@ -266,6 +268,7 @@ async function create(body) {
             discountValue === "" || discountValue == null
               ? null
               : Number(discountValue),
+          dcNo,
         },
       });
       await createPurchaseBillItems(
@@ -275,6 +278,7 @@ async function create(body) {
         userId,
         branchId,
         invNo,
+        dcNo,
       );
     });
     return { statusCode: 0, data };
@@ -293,6 +297,7 @@ async function createPurchaseBillItems(
   userId,
   branchId,
   invNo,
+  dcNo
 ) {
   const promises = purchaseBillItems.map(async (itemDetails, index) => {
     const qty = itemDetails?.qty
@@ -311,6 +316,7 @@ async function createPurchaseBillItems(
         colorId: itemDetails?.colorId ? parseInt(itemDetails.colorId) : null,
         qty,
         invNo: invNo,
+        dcNo: dcNo ? dcNo : undefined,
         barcodeNo: itemDetails?.barcodeNo ?? undefined,
         rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
         discountType: itemDetails?.discountType ?? undefined,
@@ -401,6 +407,7 @@ async function update(id, body) {
     discountType,
     discountValue,
     termsAndCondition,
+    dcNo,
   } = await body;
   let data;
   const dataFound = await prisma.purchaseBill.findUnique({
@@ -430,6 +437,7 @@ async function update(id, body) {
         invNo,
         invDate: invDate ? new Date(invDate) : null,
         invValue,
+        dcNo,
         branchId: parseInt(branchId),
         updatedById: parseInt(userId),
         paymentType,
@@ -452,6 +460,7 @@ async function update(id, body) {
       userId,
       branchId,
       invNo,
+      dcNo
     );
   });
   return { statusCode: 0, data };
@@ -464,6 +473,7 @@ async function updatePurchaseBillItems(
   userId,
   branchId,
   invNo,
+  dcNo,
 ) {
   const promises = purchaseBillItems.map(async (itemDetails) => {
     const qty = itemDetails?.qty
@@ -494,6 +504,7 @@ async function updatePurchaseBillItems(
           taxPercent: itemDetails?.taxPercent
             ? parseInt(itemDetails.taxPercent)
             : null,
+          dcNo: dcNo ? dcNo : undefined,
         },
       });
       const existingStock = await tx.stockLedger.findFirst({
@@ -571,6 +582,7 @@ async function updatePurchaseBillItems(
           taxPercent: itemDetails?.taxPercent
             ? parseInt(itemDetails.taxPercent)
             : null,
+          dcNo: dcNo ? dcNo : undefined,
         },
       });
 
@@ -656,7 +668,9 @@ async function getPurchaseBillItemById(id) {
     where: {
       styleItemId: data.styleItemId,
       uomId: data.uomId,
-      barcodeNo: data.barcodeNo
+      barcodeNo: data.barcodeNo,
+      sizeId: data.sizeId,
+      styleId: data.styleId
     },
     _sum: { qty: true },
   });

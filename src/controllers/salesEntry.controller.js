@@ -1,5 +1,4 @@
-import { Prisma } from "@prisma/client";
-
+import { prisma } from "../lib/prisma.js";
 import {
   get as _get,
   getOne as _getOne,
@@ -9,6 +8,7 @@ import {
   remove as _remove,
   getSalesReport as _getReport,
   getSalesInvDetail as _getSalesInvDetail,
+  getSalesDcDetail as _getSalesDcDetail,
   getSalesInvStyleDetail as _getSalesInvStyleDetail,
 } from "../services/salesEntry.service.js";
 
@@ -50,9 +50,9 @@ async function create(req, res, next) {
   } catch (error) {
     console.error(
       `Error`,
-      error?.message?.match(/message: "(.*?)"/)?.[1] || error?.message
+      error?.message?.match(/message: "(.*?)"/)?.[1] || error?.message,
     );
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error instanceof prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         res.statusCode = 200;
         res.json({
@@ -79,9 +79,9 @@ async function update(req, res, next) {
   } catch (error) {
     console.error(
       `Error`,
-      error?.message?.match(/message: "(.*?)"/)?.[1] || error?.message
+      error?.message?.match(/message: "(.*?)"/)?.[1] || error?.message,
     );
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error instanceof prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         res.statusCode = 200;
         res.json({
@@ -116,7 +116,7 @@ async function remove(req, res, next) {
     }
     console.error(
       `Error`,
-      error?.message?.match(/message: "(.*?)"/)?.[1] || error?.message
+      error?.message?.match(/message: "(.*?)"/)?.[1] || error?.message,
     );
   }
 }
@@ -124,6 +124,14 @@ async function remove(req, res, next) {
 async function getSalesInvDetail(req, res, next) {
   try {
     res.json(await _getSalesInvDetail(req));
+  } catch (err) {
+    console.error(`Error`, err.message);
+  }
+}
+
+async function getSalesDCDetail(req, res, next) {
+  try {
+    res.json(await _getSalesDcDetail(req));
   } catch (err) {
     console.error(`Error`, err.message);
   }
@@ -146,5 +154,6 @@ export {
   remove,
   getReport,
   getSalesInvDetail,
-  getSalesInvStyleDetail
+  getSalesDCDetail,
+  getSalesInvStyleDetail,
 };

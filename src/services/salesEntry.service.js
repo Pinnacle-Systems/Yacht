@@ -6,8 +6,7 @@ import {
   getYearShortCodeForFinYear,
 } from "../utils/helper.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prisma.js";
 
 async function getNextDocId(
   branchId,
@@ -16,7 +15,7 @@ async function getNextDocId(
   endTime,
   saveType,
   docId,
-  isUpdate
+  isUpdate,
 ) {
   // Case 1: Draft save
   if (saveType) {
@@ -35,7 +34,7 @@ async function getNextDocId(
     });
     const branchObj = await getTableRecordWithId(branchId, "branch");
     let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
+      new Date(),
     )}/SBE/1`;
 
     if (lastObject) {
@@ -69,7 +68,7 @@ async function getNextDocId(
 
     const branchObj = await getTableRecordWithId(branchId, "branch");
     let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
+      new Date(),
     )}/SBE/1`;
     if (lastObject) {
       newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SBE/${
@@ -88,7 +87,7 @@ function manualFilterSearchData(searchDelDate, searchDueDate, data) {
         : true) &&
       (searchDueDate
         ? String(getDateFromDateTime(item.dueDate)).includes(searchDueDate)
-        : true)
+        : true),
   );
 }
 
@@ -114,13 +113,13 @@ async function get(req) {
     branchId,
     shortCode,
     finYearDate?.startDateStartTime,
-    finYearDate?.endDateEndTime
+    finYearDate?.endDateEndTime,
   );
   let data;
   let totalCount;
   data = await prisma.salesEntry.findMany({
     where: {
-      branchId: branchId ? parseInt(branchId) : undefined,
+      // branchId: branchId ? parseInt(branchId) : undefined,
       AND: finYearDate
         ? [
             {
@@ -167,13 +166,13 @@ async function get(req) {
   totalCount = data.length;
   if (searchDocDate) {
     data = data?.filter((item) =>
-      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate)
+      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate),
     );
   }
   if (pagination) {
     data = data.slice(
       (pageNumber - 1) * parseInt(dataPerPage),
-      pageNumber * dataPerPage
+      pageNumber * dataPerPage,
     );
   }
   return {
@@ -226,8 +225,8 @@ async function getSalesReport(req) {
             ...(from && to ? [{ docDate: { gte: from, lte: to } }] : []),
           ]
         : from && to
-        ? [{ docDate: { gte: from, lte: to } }]
-        : undefined,
+          ? [{ docDate: { gte: from, lte: to } }]
+          : undefined,
     },
     include: {
       SalesEntryItems: true,
@@ -333,10 +332,10 @@ async function getOne(id) {
         returnQty: totalReturnQty,
         usedQty: usedQty._sum.returnQty,
       };
-    })
+    }),
   );
   const styleNos = data.SalesEntryItems.map((item) => item.styleNo).filter(
-    Boolean
+    Boolean,
   );
   const childRecordReturn = await prisma.salesReturn.count({
     where: {
@@ -397,7 +396,7 @@ async function create(body) {
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(
         finYearDate?.startDateStartTime,
-        finYearDate?.endDateEndTime
+        finYearDate?.endDateEndTime,
       )
     : "";
   let newDocId = await getNextDocId(
@@ -405,7 +404,7 @@ async function create(body) {
     shortCode,
     finYearDate?.startDateStartTime,
     finYearDate?.endDateEndTime,
-    draftSave
+    draftSave,
   );
   let data;
   await prisma.$transaction(async (tx) => {
@@ -433,7 +432,7 @@ async function create(body) {
       data,
       userId,
       branchId,
-      storeId
+      storeId,
     );
   });
   return { statusCode: 0, data };
@@ -505,7 +504,7 @@ async function update(id, body) {
       data,
       userId,
       branchId,
-      storeId
+      storeId,
     );
   });
   return { statusCode: 0, data };
@@ -517,7 +516,7 @@ async function updateSalesEntryItems(
   salesEntry,
   userId,
   branchId,
-  storeId
+  storeId,
 ) {
   const promises = salesEntryItems.map(async (stockDetail) => {
     const qty =
@@ -693,7 +692,7 @@ async function createSalesEntryItems(
   salesEntry,
   userId,
   branchId,
-  storeId
+  storeId,
 ) {
   const promises = salesEntryItems.map(async (itemDetail) => {
     const createdItem = await tx.salesEntryItems.create({
@@ -763,7 +762,7 @@ async function createSalesEntryItems(
 function findRemovedItems(dataFound, salesEntryItems) {
   let removedItems = dataFound.SalesEntryItems.filter((oldItem) => {
     let result = salesEntryItems.find(
-      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id)
+      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id),
     );
     if (result) return false;
     return true;
@@ -807,23 +806,37 @@ async function getSalesInvDetail(req) {
       storeId: parseInt(storeId),
       branchId: parseInt(branchId),
     },
-    // include: {
-    //   SalesEntryItems: {
-    //     select: {
-    //       id: true,
-    //       salesEntryId: true,
-    //       barcode: true,
-    //       styleId: true,
-    //       sizeId: true,
-    //       qty: true,
-    //       remarks: true,
-    //       styleNo: true,
-    //       fabricId: true,
-    //       styleItemId: true,
-    //       colorId: true,
-    //     },
-    //   },
-    // },
+  });
+
+  if (!data) return NoRecordFound("Sales Entry");
+  return {
+    statusCode: 0,
+    data: {
+      ...data,
+    },
+  };
+}
+
+async function getSalesDcDetail(req) {
+  const { dcNo } = req.query;
+
+  let data = await prisma.salesEntry.findFirst({
+    where: {
+      docId: dcNo,
+    },
+    select: {
+      SalesEntryItems: {
+        select: {
+          id: true,
+          salesEntryId: true,
+          styleId: true,
+          sizeId: true,
+          qty: true,
+          styleItemId: true,
+          colorId: true,
+        },
+      },
+    },
   });
 
   if (!data) return NoRecordFound("Sales Entry");
@@ -867,7 +880,7 @@ async function getSalesInvStyleDetail(req) {
 
   // 1️⃣ First try fetching by styleNo
   let data = salesEntry.SalesEntryItems.filter(
-    (item) => item.styleNo === styleNo
+    (item) => item.styleNo === styleNo,
   );
 
   if (data.length === 0) {
@@ -892,5 +905,6 @@ export {
   remove,
   getSalesReport,
   getSalesInvDetail,
+  getSalesDcDetail,
   getSalesInvStyleDetail,
 };

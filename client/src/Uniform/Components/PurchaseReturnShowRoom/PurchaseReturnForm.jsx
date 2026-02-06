@@ -125,7 +125,6 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                 branchIdFromApi.current = data?.branchId;
             }
             setPurchaseReturnItems(data?.purchasReturnItemsSR ? data?.purchasReturnItemsSR : []);
-            setTermsAndCondition(data?.termsAndCondition ? data.termsAndCondition : "");
             setRemarks(data?.remarks ? data.remarks : "");
             setInvNo(data?.invNo ? data?.invNo : "");
             setContactNumber(data?.contactNumber ? data?.contactNumber : "");
@@ -187,35 +186,12 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
         }
     }, [supplierId, setSupplierId, partyList?.data]);
 
-    const findDuplicates = (items) => {
-        const seen = new Map(); // key -> first index
-        const duplicates = [];
-
-        items.forEach((row, index) => {
-            const key = [row.styleId || "", row.sizeId || ""].join(
-                "-"
-            );
-
-            if (seen.has(key)) {
-                duplicates.push({
-                    firstIndex: seen.get(key),
-                    duplicateIndex: index,
-                    styleId: row.styleId,
-                });
-            } else {
-                seen.set(key, index);
-            }
-        });
-
-        return duplicates; // empty array = no duplicates
-    };
-
     const findDuplicateGoodss = (items) => {
         const seen = new Map(); // key -> first index
         const duplicates = [];
 
         items.forEach((row, index) => {
-            const key = [row.styleItemId || "", row.barcodeNo || ""].join(
+            const key = [row.styleItemId || "", row.barcodeNo || "", row.styleId || "", row.sizeId || ""].join(
                 "-"
             );
 
@@ -224,6 +200,8 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                     firstIndex: seen.get(key),
                     duplicateIndex: index,
                     styleItemId: row.styleItemId,
+                    styleId: row.styleId,
+                    sizeId: row.styleId,
                     barcodeNo: row.barcodeNo
                 });
             } else {
@@ -257,7 +235,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                 "sizeId",
                 "returnQty",
                 "uomId",
-                "barcodeNo"
+                "styleId"
             ])
         ) {
             toast.info("Please fill all required item details...!", {

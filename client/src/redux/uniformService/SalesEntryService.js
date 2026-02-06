@@ -81,6 +81,19 @@ const SalesEntryApi = createApi({
       },
       providesTags: ["SalesEntry"],
     }),
+    getSalesDCDetail: builder.query({
+      query: ({ params }) => {
+        return {
+          url: `${SALES_ENTRY_API}/salesDCDetail`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["SalesEntry"],
+    }),
     getSalesInvStyleDetail: builder.query({
       query: ({ params }) => {
         return {
@@ -132,6 +145,7 @@ export const {
   useLazyGetSalesEntryByIdQuery,
   useGetSalesReportQuery,
   useLazyGetSalesInvDetailQuery,
+  useLazyGetSalesDCDetailQuery,
   useLazyGetSalesInvStyleDetailQuery,
   useAddSalesEntryMutation,
   useUpdateSalesEntryMutation,

@@ -2637,6 +2637,7 @@ model PurchaseBill {
   discountType          String?
   discountValue         Float?
   purchasReturnItemsSRs PurchasReturnItemsSR[]
+  dcNo                  String?
 }
 
 model PurchaseBillItems {
@@ -2661,6 +2662,7 @@ model PurchaseBillItems {
   discountValue  Float?
   taxPercent     Float?
   stockLedgers   StockLedger[]
+  dcNo           String?
 }
 
 model StockLedger {

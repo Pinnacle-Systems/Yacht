@@ -9,7 +9,8 @@ import {
   remove,
   getReport,
   getSalesInvDetail,
-  getSalesInvStyleDetail
+  getSalesInvStyleDetail,
+  getSalesDCDetail
 } from "../controllers/salesEntry.controller.js";
 
 router.post("/", create);
@@ -18,6 +19,8 @@ router.get("/", get);
 
 router.get("/salesReport", getReport);
 router.get("/salesInvDetail", getSalesInvDetail);
+router.get("/salesDCDetail", getSalesDCDetail);
+
 router.get("/salesInvStyleDetail", getSalesInvStyleDetail);
 
 router.get("/:id", getOne);

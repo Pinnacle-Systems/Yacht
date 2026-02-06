@@ -22,6 +22,7 @@ export default function PurchaseBillItems({
   colorList,
   uomList,
   taxTemplateId,
+  dcNo
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [styleNo, setStyleNo] = useState("");
@@ -38,13 +39,13 @@ export default function PurchaseBillItems({
       styleId: "",
       sizeId: "",
       qty: "",
-      remarks: "",
       styleItemId: "",
       colorId: "",
       selected: false,
       barcodeNo: "",
       uomId: "",
       rate: "",
+      netAmount: 0,
     };
     setPurchaseBillItems([...purchaseBillItems, newRow]);
   };
@@ -98,13 +99,13 @@ export default function PurchaseBillItems({
         styleId: "",
         sizeId: "",
         qty: "",
-        remarks: "",
         styleItemId: "",
         colorId: "",
         selected: false,
         barcodeNo: "",
         uomId: "",
         rate: "",
+        netAmount: 0,
       })),
     );
   };
@@ -136,7 +137,6 @@ export default function PurchaseBillItems({
               styleId: "",
               sizeId: "",
               qty: "",
-              remarks: "",
               styleItemId: "",
               colorId: "",
               selected: false,
@@ -144,6 +144,7 @@ export default function PurchaseBillItems({
               uomId: "",
               rate: "",
               selected: false,
+              netAmount: 0,
             })),
           ];
         }
@@ -156,7 +157,6 @@ export default function PurchaseBillItems({
           styleId: "",
           sizeId: "",
           qty: "",
-          remarks: "",
           styleItemId: "",
           colorId: "",
           selected: false,
@@ -164,6 +164,7 @@ export default function PurchaseBillItems({
           uomId: "",
           rate: "",
           selected: false,
+          netAmount: 0,
         })),
       );
     }
@@ -212,11 +213,11 @@ export default function PurchaseBillItems({
             styleId: style.id || "",
             sizeId: s.sizeId,
             qty: "",
-            remarks: "",
             colorId: "",
             styleItemId: style.styleItemId || "",
-            price: style.price || "",
+            rate: style.rate || "",
             selected: false,
+            netAmount: 0,
           }));
         }
       }
@@ -246,10 +247,10 @@ export default function PurchaseBillItems({
             styleId: "",
             sizeId: "",
             qty: "",
-            remarks: "",
             styleItemId: "",
             colorId: "",
             selected: false,
+            netAmount: 0,
           });
         }
 
@@ -259,6 +260,49 @@ export default function PurchaseBillItems({
       console.error("Error adding row:", error);
     }
   };
+
+  useEffect(() => {
+    // Recalculate net amount for all rows whenever dependent fields change
+    const updatedRows = purchaseBillItems.map((row) => {
+      const rate = parseFloat(row.rate) || 0;
+      const qty = parseFloat(row.qty) || 0;
+      const taxPercent = parseFloat(row.taxPercent) || 0;
+      const discountValue = parseFloat(row.discountValue) || 0;
+      const discountType = row.discountType;
+
+      const gross = rate * qty;
+
+      let discountAmount = 0;
+      if (discountType) {
+        if (discountType === "Flat") {
+          discountAmount = discountValue;
+        } else {
+          discountAmount = (gross * discountValue) / 100;
+        }
+      }
+
+      const taxable = gross - discountAmount;
+      const sgst = (taxable * (taxPercent / 2)) / 100;
+      const cgst = (taxable * (taxPercent / 2)) / 100;
+
+      const net = taxable;
+
+      return {
+        ...row,
+        netAmount: Math.round(net),
+        taxable: taxable,
+      };
+    });
+
+    // Only update if net amounts actually changed
+    const needsUpdate = updatedRows.some(
+      (row, index) => row.netAmount !== (purchaseBillItems[index]?.netAmount || 0),
+    );
+
+    if (needsUpdate) {
+      setPurchaseBillItems(updatedRows);
+    }
+  }, [purchaseBillItems]);
 
   return (
     <>
@@ -296,7 +340,9 @@ export default function PurchaseBillItems({
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
         </div>
-        <div className={`w-full max-h-[150px] min-h-[150px]   overflow-y-auto  my-1`}>
+        <div
+          className={`w-full max-h-[150px] min-h-[150px]   overflow-y-auto  my-1`}
+        >
           <table className=" border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
@@ -306,7 +352,7 @@ export default function PurchaseBillItems({
                   S.No
                 </th>
                 <th
-                  className={`w-40 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Barcode
                 </th>
@@ -343,7 +389,12 @@ export default function PurchaseBillItems({
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Amount
+                  Gross Amount
+                </th>
+                <th
+                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Net Amount
                 </th>
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
@@ -385,7 +436,7 @@ export default function PurchaseBillItems({
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "barcodeNo");
                         }}
-                        disabled={readOnly}
+                        disabled={readOnly || dcNo}
                       />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
@@ -400,7 +451,7 @@ export default function PurchaseBillItems({
                             label: item.name,
                             value: item.id,
                           }))}
-                        readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                        readOnly={readOnly || (row.usedQty ?? 0) > 0 || dcNo}
                         placeholder=""
                         onBlur={() =>
                           handleInputChange(
@@ -429,7 +480,7 @@ export default function PurchaseBillItems({
                             label: item.name,
                             value: item.id,
                           }))}
-                        readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                        readOnly={readOnly || (row.usedQty ?? 0) > 0 || dcNo}
                         placeholder=""
                         onBlur={() =>
                           handleInputChange(row.sizeId, index, "sizeId")
@@ -453,7 +504,7 @@ export default function PurchaseBillItems({
                             label: item.name,
                             value: item.id,
                           }))}
-                        readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                        readOnly={readOnly || (row.usedQty ?? 0) > 0 || dcNo}
                         placeholder=""
                         onBlur={() =>
                           handleInputChange(row.colorId, index, "colorId")
@@ -532,7 +583,7 @@ export default function PurchaseBillItems({
                           // }
                           handleInputChange(e.target.value, index, "qty");
                         }}
-                        disabled={readOnly}
+                        disabled={readOnly || dcNo}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
@@ -571,6 +622,19 @@ export default function PurchaseBillItems({
                               ).toFixed(2)
                         }
                         disabled={true}
+                      />
+                    </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <input
+                        type="number"
+                        className="text-right rounded py-1 px-1 w-full"
+                        value={
+                          row?.netAmount !== undefined &&
+                          row?.netAmount !== null
+                            ? Number(row.netAmount).toFixed(2)
+                            : "0"
+                        }
+                        disabled
                       />
                     </td>
                     <td className=" py-0.5 border border-gray-300 text-[11px] text-right">
@@ -637,6 +701,14 @@ export default function PurchaseBillItems({
                       const rate = parseFloat(row.rate) || 0;
                       return sum + qty * rate;
                     }, 0)
+                    .toFixed(2)}
+                </td>
+                <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
+                  {purchaseBillItems
+                    ?.reduce(
+                      (sum, row) => sum + (Number(row.netAmount) || 0),
+                      0,
+                    )
                     .toFixed(2)}
                 </td>
                 <td className="border border-gray-300" colSpan={2}></td>
