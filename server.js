@@ -80,6 +80,7 @@ import {
   hsn,
   purchaseBill,
   purchaseReturnSR,
+  salesBill,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";
@@ -192,7 +193,7 @@ app.use("/processGroup", processGroup);
 app.use("/hsn", hsn);
 app.use("/purchaseBill", purchaseBill);
 app.use("/purchaseReturnSR", purchaseReturnSR);
-
+app.use("/salesBill", salesBill);
 app.get("/retreiveFile/:fileName", (req, res) => {
   const { fileName } = req.params;
   res.sendFile(__dirname + "/uploads/" + fileName);

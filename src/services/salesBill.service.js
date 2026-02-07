@@ -15,7 +15,7 @@ import { styleItem } from "../routes/index.js";
 const prisma = new PrismaClient();
 
 async function getNextDocId(branchId, shortCode, startTime, endTime) {
-  let lastObject = await prisma.purchaseBill.findFirst({
+  let lastObject = await prisma.salesBill.findFirst({
     where: {
       branchId: parseInt(branchId),
     },
@@ -24,32 +24,30 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
     },
   });
   const branchObj = await getTableRecordWithId(branchId, "branch");
-  let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/PB/1`;
+  let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SB/1`;
   if (lastObject) {
-    newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/PB/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`;
+    newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SB/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`;
   }
   return newDocId;
 }
 
-function manualFilterSearchData(
-  searchPoDate,
-  searchinvDate,
-  searchPoType,
-  data,
-) {
-  return data.filter(
-    (item) =>
-      (searchPoDate
-        ? String(getDateFromDateTime(item.createdAt)).includes(searchPoDate)
-        : true) &&
-      (searchinvDate
-        ? String(getDateFromDateTime(item.invDate)).includes(searchinvDate)
-        : true) &&
-      (searchPoType
-        ? item.poType.toLowerCase().includes(searchPoType.toLowerCase())
-        : true),
-  );
-}
+// function manualFilterSearchData(
+//   searchBillDate,
+//   searchinvDate,
+//   searchPoType,
+//   data,
+// ) {
+//   return data.filter(
+//     (item) =>
+//       searchBillDate
+//         ? String(getDateFromDateTime(item.createdAt)).includes(searchBillDate)
+//         : true,
+//     //     &&
+//     //   (searchPoType
+//     //     ? item.poType.toLowerCase().includes(searchPoType.toLowerCase())
+//     //     : true),
+//   );
+// }
 
 async function get(req) {
   const {
@@ -60,11 +58,9 @@ async function get(req) {
     dataPerPage,
     finYearId,
     searchDocId,
-    searchPoDate,
-    searchSupplierAliasName,
-    searchPoType,
+    searchBillDate,
     searchinvDate,
-    supplierId,
+    customerId,
     startDate,
     endDate,
     filterParties,
@@ -84,7 +80,7 @@ async function get(req) {
         finYearDate?.endDateEndTime,
       )
     : "";
-  let data = await prisma.purchaseBill.findMany({
+  let data = await prisma.salesBill.findMany({
     where: {
       AND: [
         {
@@ -129,13 +125,13 @@ async function get(req) {
           }
         : undefined,
       OR:
-        supplierId || Boolean(filterParties)
+        customerId || Boolean(filterParties)
           ? [
               {
-                supplierId: supplierId ? parseInt(supplierId) : undefined,
+                customerId: customerId ? parseInt(customerId) : undefined,
               },
               {
-                supplierId: Boolean(filterParties)
+                customerId: Boolean(filterParties)
                   ? {
                       in: filterParties.split(",").map((i) => parseInt(i)),
                     }
@@ -143,25 +139,25 @@ async function get(req) {
               },
             ]
           : undefined,
-      Supplier: {
+      Customer: {
         name: Boolean(supplier) ? { contains: supplier } : undefined,
       },
     },
     include: {
-      Supplier: {
+      Customer: {
         select: {
           name: true,
         },
       },
 
-      purchaseBillItems: {
+      salesBillItems: {
         select: {
           qty: true,
         },
       },
     },
   });
-  data = manualFilterSearchData(searchDate, searchinvDate, searchPoType, data);
+  // data = manualFilterSearchData(searchBillDate, data);
   const totalCount = data.length;
 
   let docId = finYearDate
@@ -179,31 +175,25 @@ async function getOne(id) {
   const childRecord = 0;
 
   // Fetch PO with relations
-  let purchaseBill = await prisma.purchaseBill.findUnique({
+  let salesBill = await prisma.salesBill.findUnique({
     where: { id: parseInt(id) },
     include: {
-      purchaseBillItems: true,
-      Supplier: {
+      salesBillItems: true,
+      Customer: {
         select: {
-          aliasName: true,
-          contactPersonName: true,
-          gstNo: true,
-          address: true,
-          pincode: true,
-          City: {
-            select: { name: true },
-          },
+          name: true,
+          mobileNo: true,
         },
       },
     },
   });
 
-  if (!purchaseBill) return NoRecordFound("purchaseBill");
+  if (!salesBill) return NoRecordFound("salesBill");
 
   return {
     statusCode: 0,
     data: {
-      ...purchaseBill,
+      ...salesBill,
       childRecord,
     },
   };
@@ -217,19 +207,15 @@ async function create(body) {
       finYearId,
       docDate,
       taxTemplateId,
-      invNo,
-      invDate,
-      invValue,
       paymentType,
-      supplierId,
-      contactPerson,
-      contactNumber,
+      paymentValue,
+      customerId,
+      mobileNo,
       remarks,
-      purchaseBillItems,
+      salesBillItems,
       discountType,
       discountValue,
       termsAndCondition,
-      dcNo,
     } = await body;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate
@@ -246,20 +232,17 @@ async function create(body) {
     );
     let data;
     await prisma.$transaction(async (tx) => {
-      data = await tx.purchaseBill.create({
+      data = await tx.salesBill.create({
         data: {
           docId: newDocId,
           docDate: docDate ? new Date(docDate) : null,
           taxTemplateId: parseInt(taxTemplateId),
-          invNo,
-          invDate: invDate ? new Date(invDate) : null,
-          invValue,
+          paymentValue: parseFloat(paymentValue),
           branchId: parseInt(branchId),
           createdById: parseInt(userId),
           paymentType,
-          supplierId: parseInt(supplierId),
-          contactPerson,
-          contactNumber,
+          customerId: customerId ? parseInt(customerId) : undefined,
+          mobileNo,
           termsAndCondition,
           remarks,
           discountType,
@@ -267,18 +250,9 @@ async function create(body) {
             discountValue === "" || discountValue == null
               ? null
               : Number(discountValue),
-          dcNo,
         },
       });
-      await createPurchaseBillItems(
-        tx,
-        purchaseBillItems,
-        data,
-        userId,
-        branchId,
-        invNo,
-        dcNo,
-      );
+      await createSalesBillItems(tx, salesBillItems, data, userId, branchId);
     });
     return { statusCode: 0, data };
   } catch (err) {
@@ -289,23 +263,21 @@ async function create(body) {
   }
 }
 
-async function createPurchaseBillItems(
+async function createSalesBillItems(
   tx,
-  purchaseBillItems,
-  purchaseBill,
+  salesBillItems,
+  salesBill,
   userId,
   branchId,
-  invNo,
-  dcNo
 ) {
-  const promises = purchaseBillItems.map(async (itemDetails, index) => {
+  const promises = salesBillItems.map(async (itemDetails, index) => {
     const qty = itemDetails?.qty
       ? Math.round(parseFloat(itemDetails.qty))
       : null;
 
-    const createdItem = await tx.purchaseBillItems.create({
+    const createdItem = await tx.salesBillItems.create({
       data: {
-        purchaseBillId: parseInt(purchaseBill.id),
+        salesBillId: parseInt(salesBill.id),
         styleItemId: itemDetails?.styleItemId
           ? parseInt(itemDetails.styleItemId)
           : null,
@@ -314,8 +286,6 @@ async function createPurchaseBillItems(
         uomId: itemDetails?.uomId ? parseInt(itemDetails.uomId) : null,
         colorId: itemDetails?.colorId ? parseInt(itemDetails.colorId) : null,
         qty,
-        invNo: invNo,
-        dcNo: dcNo ? dcNo : undefined,
         barcodeNo: itemDetails?.barcodeNo ?? undefined,
         rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
         discountType: itemDetails?.discountType ?? undefined,
@@ -329,8 +299,8 @@ async function createPurchaseBillItems(
     });
     await tx.stockLedger.create({
       data: {
-        inOrOut: "In",
-        refType: "PurchaseBill",
+        inOrOut: "Out",
+        refType: "salesBill",
         createdById: parseInt(userId),
         branchId: parseInt(branchId),
         styleId: itemDetails?.styleId ? parseInt(itemDetails.styleId) : null,
@@ -340,8 +310,11 @@ async function createPurchaseBillItems(
         styleItemId: itemDetails?.styleItemId
           ? parseInt(itemDetails.styleItemId)
           : null,
-        qty,
-        PurchaseBillItemsId: createdItem.id,
+        qty:
+          itemDetails?.qty && !isNaN(parseFloat(itemDetails.qty))
+            ? -Math.abs(parseInt(itemDetails.qty))
+            : null,
+        salesBillItemsId: createdItem.id,
         barcodeNo: itemDetails?.barcodeNo ?? undefined,
         rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
       },
@@ -377,9 +350,9 @@ async function createPurchaseBillItems(
   return Promise.all(promises);
 }
 
-function findRemovedItems(dataFound, purchaseBillItems) {
-  let removedItems = dataFound.purchaseBillItems.filter((oldItem) => {
-    let result = purchaseBillItems.find(
+function findRemovedItems(dataFound, salesBillItems) {
+  let removedItems = dataFound.salesBillItems.filter((oldItem) => {
+    let result = salesBillItems.find(
       (newItem) => parseInt(newItem.id) === parseInt(oldItem.id),
     );
     if (result) return false;
@@ -394,55 +367,48 @@ async function update(id, body) {
     branchId,
     docDate,
     taxTemplateId,
-    invNo,
-    invDate,
-    invValue,
+    paymentValue,
     paymentType,
-    supplierId,
-    contactPerson,
-    contactNumber,
+    customerId,
+    mobileNo,
     remarks,
-    purchaseBillItems,
+    salesBillItems,
     discountType,
     discountValue,
     termsAndCondition,
-    dcNo,
   } = await body;
   let data;
-  const dataFound = await prisma.purchaseBill.findUnique({
+  const dataFound = await prisma.salesBill.findUnique({
     where: {
       id: parseInt(id),
     },
     include: {
-      purchaseBillItems: true,
+      salesBillItems: true,
     },
   });
-  if (!dataFound) return NoRecordFound("Purchase Bill");
-  let removedItems = findRemovedItems(dataFound, purchaseBillItems);
+  if (!dataFound) return NoRecordFound("Sales Bill");
+  let removedItems = findRemovedItems(dataFound, salesBillItems);
   let removeItemsIds = removedItems.map((item) => parseInt(item.id));
   await prisma.$transaction(async (tx) => {
     if (removeItemsIds.length > 0) {
-      await tx.purchaseBillItems.deleteMany({
+      await tx.salesBillItems.deleteMany({
         where: { id: { in: removeItemsIds } },
       });
     }
-    data = await tx.purchaseBill.update({
+    data = await tx.salesBill.update({
       where: {
         id: parseInt(id),
       },
       data: {
         docDate: docDate ? new Date(docDate) : null,
         taxTemplateId: parseInt(taxTemplateId),
-        invNo,
-        invDate: invDate ? new Date(invDate) : null,
-        invValue,
-        dcNo,
+        paymentValue: parseFloat(paymentValue),
         branchId: parseInt(branchId),
         updatedById: parseInt(userId),
         paymentType,
-        supplierId: parseInt(supplierId),
+        customerId: parseInt(customerId),
         contactPerson,
-        contactNumber,
+        mobileNo,
         termsAndCondition,
         remarks,
         discountType,
@@ -452,39 +418,29 @@ async function update(id, body) {
             : Number(discountValue),
       },
     });
-    await updatePurchaseBillItems(
-      tx,
-      purchaseBillItems,
-      data,
-      userId,
-      branchId,
-      invNo,
-      dcNo
-    );
+    await updateSalesBillItems(tx, salesBillItems, data, userId, branchId);
   });
   return { statusCode: 0, data };
 }
 
-async function updatePurchaseBillItems(
+async function updateSalesBillItems(
   tx,
-  purchaseBillItems,
-  purchaseBill,
+  salesBillItems,
+  salesBill,
   userId,
   branchId,
-  invNo,
-  dcNo,
 ) {
-  const promises = purchaseBillItems.map(async (itemDetails) => {
+  const promises = salesBillItems.map(async (itemDetails) => {
     const qty = itemDetails?.qty
       ? Math.round(parseFloat(itemDetails.qty))
       : null;
 
     if (itemDetails.id) {
       // Update existing poItem
-      const updatedItem = await tx.purchaseBillItems.update({
+      const updatedItem = await tx.salesBillItems.update({
         where: { id: parseInt(itemDetails.id) },
         data: {
-          purchaseBillId: parseInt(purchaseBill.id),
+          salesBillId: parseInt(salesBill.id),
           styleItemId: itemDetails?.styleItemId
             ? parseInt(itemDetails.styleItemId)
             : null,
@@ -493,7 +449,6 @@ async function updatePurchaseBillItems(
           uomId: itemDetails?.uomId ? parseInt(itemDetails.uomId) : null,
           colorId: itemDetails?.colorId ? parseInt(itemDetails.colorId) : null,
           qty,
-          invNo: invNo,
           barcodeNo: itemDetails?.barcodeNo ?? undefined,
           rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
           discountType: itemDetails?.discountType ?? undefined,
@@ -503,11 +458,10 @@ async function updatePurchaseBillItems(
           taxPercent: itemDetails?.taxPercent
             ? parseInt(itemDetails.taxPercent)
             : null,
-          dcNo: dcNo ? dcNo : undefined,
         },
       });
       const existingStock = await tx.stockLedger.findFirst({
-        where: { PurchaseBillItemsId: updatedItem.id },
+        where: { salesBillItemsId: updatedItem.id },
       });
 
       if (existingStock) {
@@ -527,7 +481,10 @@ async function updatePurchaseBillItems(
             styleItemId: itemDetails?.styleItemId
               ? parseInt(itemDetails.styleItemId)
               : null,
-            qty,
+            qty:
+              itemDetails?.qty && !isNaN(parseFloat(itemDetails.qty))
+                ? -Math.abs(parseInt(itemDetails.qty))
+                : null,
             barcodeNo: itemDetails?.barcodeNo ?? undefined,
             rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
           },
@@ -535,11 +492,11 @@ async function updatePurchaseBillItems(
       } else {
         await tx.stockLedger.create({
           data: {
-            inOrOut: "In",
-            refType: "PurchaseBill",
+            inOrOut: "Out",
+            refType: "salesBill",
             createdById: parseInt(userId),
             branchId: parseInt(branchId),
-            PurchaseBillItemsId: updatedItem.id,
+            salesBillItemsId: updatedItem.id,
             styleId: itemDetails?.styleId
               ? parseInt(itemDetails.styleId)
               : null,
@@ -551,7 +508,10 @@ async function updatePurchaseBillItems(
             styleItemId: itemDetails?.styleItemId
               ? parseInt(itemDetails.styleItemId)
               : null,
-            qty,
+            qty:
+              itemDetails?.qty && !isNaN(parseFloat(itemDetails.qty))
+                ? -Math.abs(parseInt(itemDetails.qty))
+                : null,
             barcodeNo: itemDetails?.barcodeNo ?? undefined,
             rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
           },
@@ -560,9 +520,9 @@ async function updatePurchaseBillItems(
       return updatedItem;
     } else {
       // Create new poItem
-      const createdItem = await tx.purchaseBillItems.create({
+      const createdItem = await tx.salesBillItems.create({
         data: {
-          purchaseBillId: parseInt(purchaseBill.id),
+          salesBillId: parseInt(salesBill.id),
           styleItemId: itemDetails?.styleItemId
             ? parseInt(itemDetails.styleItemId)
             : null,
@@ -571,7 +531,6 @@ async function updatePurchaseBillItems(
           uomId: itemDetails?.uomId ? parseInt(itemDetails.uomId) : null,
           colorId: itemDetails?.colorId ? parseInt(itemDetails.colorId) : null,
           qty,
-          invNo: invNo,
           barcodeNo: itemDetails?.barcodeNo ?? undefined,
           rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
           discountType: itemDetails?.discountType ?? undefined,
@@ -581,14 +540,13 @@ async function updatePurchaseBillItems(
           taxPercent: itemDetails?.taxPercent
             ? parseInt(itemDetails.taxPercent)
             : null,
-          dcNo: dcNo ? dcNo : undefined,
         },
       });
 
       await tx.stockLedger.create({
         data: {
-          inOrOut: "In",
-          refType: "PurchaseBill",
+          inOrOut: "Out",
+          refType: "salesBill",
           createdById: parseInt(userId),
           branchId: parseInt(branchId),
           styleId: itemDetails?.styleId ? parseInt(itemDetails.styleId) : null,
@@ -598,8 +556,11 @@ async function updatePurchaseBillItems(
           styleItemId: itemDetails?.styleItemId
             ? parseInt(itemDetails.styleItemId)
             : null,
-          qty,
-          PurchaseBillItemsId: createdItem.id,
+          qty:
+            itemDetails?.qty && !isNaN(parseFloat(itemDetails.qty))
+              ? -Math.abs(parseInt(itemDetails.qty))
+              : null,
+          salesBillItemsId: createdItem.id,
           barcodeNo: itemDetails?.barcodeNo ?? undefined,
           rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
         },
@@ -613,7 +574,7 @@ async function updatePurchaseBillItems(
 }
 
 async function remove(id) {
-  const data = await prisma.purchaseBill.delete({
+  const data = await prisma.salesBill.delete({
     where: {
       id: parseInt(id),
     },
@@ -621,7 +582,7 @@ async function remove(id) {
   return { statusCode: 0, data };
 }
 
-function manualFilterSearchDatapurchaseBillItems(
+function manualFilterSearchDatasalesBillItems(
   searchDocDate,
   searchinvDate,
   data,
@@ -629,38 +590,38 @@ function manualFilterSearchDatapurchaseBillItems(
   return data.filter(
     (item) =>
       (searchDocDate
-        ? String(getDateFromDateTime(item.PurchaseBill.docDate)).includes(
+        ? String(getDateFromDateTime(item.salesBill.docDate)).includes(
             searchDocDate,
           )
         : true) &&
       (searchinvDate
-        ? String(getDateFromDateTime(item.PurchaseBill.invDate)).includes(
+        ? String(getDateFromDateTime(item.salesBill.invDate)).includes(
             searchinvDate,
           )
         : true),
   );
 }
 
-async function getAllDatapurchaseBillItems(data) {
+async function getAllDatasalesBillItems(data) {
   let promises = data?.map(async (item) => {
-    let data = await getPurchaseBillItemById(item.id);
+    let data = await getsalesBillItemById(item.id);
     return data.data;
   });
   return Promise.all(promises);
 }
 
-async function getPurchaseBillItemById(id) {
-  const data = await prisma.purchaseBillItems.findUnique({
+async function getsalesBillItemById(id) {
+  const data = await prisma.salesBillItems.findUnique({
     where: { id: parseInt(id) },
     include: {
-      PurchaseBill: { select: { docId: true, invDate: true, docDate: true } },
+      salesBill: { select: { docId: true, invDate: true, docDate: true } },
       StyleItem: { select: { name: true } },
       Size: { select: { name: true } },
       Color: { select: { name: true } },
     },
   });
 
-  if (!data) return NoRecordFound("Purchase Bill");
+  if (!data) return NoRecordFound("Sales Bill");
 
   // 3️⃣ Stock balance
   const totalStkQty = await prisma.stockLedger.aggregate({
@@ -669,7 +630,7 @@ async function getPurchaseBillItemById(id) {
       uomId: data.uomId,
       barcodeNo: data.barcodeNo,
       sizeId: data.sizeId,
-      styleId: data.styleId
+      styleId: data.styleId,
     },
     _sum: { qty: true },
   });
@@ -686,38 +647,36 @@ async function getPurchaseBillItemById(id) {
   };
 }
 
-async function getpurchaseBillItems(req) {
+async function getsalesBillItems(req) {
   const {
     branchId,
     active,
-    supplierId,
+    customerId,
     pagination,
     dataPerPage,
     searchDocId,
     searchDocDate,
     searchinvDate,
-    invNo,
   } = req.query;
 
   let data;
   let totalCount;
   if (pagination) {
-    data = await prisma.purchaseBillItems.findMany({
+    data = await prisma.salesBillItems.findMany({
       where: {
-        PurchaseBill: {
+        salesBill: {
           docId: Boolean(searchDocId)
             ? {
                 contains: searchDocId,
               }
             : undefined,
-          supplierId: supplierId ? parseInt(supplierId) : undefined,
-          invNo: invNo ? invNo : undefined,
+          customerId: customerId ? parseInt(customerId) : undefined,
         },
       },
       include: {
-        PurchaseBill: {
+        salesBill: {
           select: {
-            supplierId: true,
+            customerId: true,
             docDate: true,
             invDate: true,
           },
@@ -730,20 +689,20 @@ async function getpurchaseBillItems(req) {
         },
       },
     });
-    data = manualFilterSearchDatapurchaseBillItems(
+    data = manualFilterSearchDatasalesBillItems(
       searchDocDate,
       searchinvDate,
       data,
     );
 
     data = data?.filter(
-      (i) => i.PurchaseBill.supplierId == supplierId,
+      (i) => i.salesBill.customerId == customerId,
       // && i.Po.inwardType === po,
     );
 
-    data = await getAllDatapurchaseBillItems(data);
+    data = await getAllDatasalesBillItems(data);
   } else {
-    data = await prisma.purchaseBillItems.findMany({
+    data = await prisma.salesBillItems.findMany({
       where: {
         branchId: branchId ? parseInt(branchId) : undefined,
         active: active ? Boolean(active) : undefined,
@@ -753,4 +712,4 @@ async function getpurchaseBillItems(req) {
   return { statusCode: 0, data, totalCount };
 }
 
-export { get, getOne, create, update, remove, getpurchaseBillItems };
+export { get, getOne, create, update, remove, getsalesBillItems };

@@ -72,3 +72,4 @@ export { default as productionStock } from "./productionStock.route.js";
 export { default as hsn } from "./hsn.route.js";
 export { default as purchaseBill } from "./purchaseBill.route.js";
 export { default as purchaseReturnSR } from "./purchaseReturnSR.route.js";
+export { default as salesBill } from "./salesBill.route.js"

@@ -146,6 +146,7 @@ model Branch {
   stockLedgers            StockLedger[]
   stockSummaries          StockSummary[]
   purchaseReturnShowRooms PurchaseReturnShowRoom[]
+  salesBills              SalesBill[]
 }
 
 model UserOnBranch {
@@ -278,6 +279,8 @@ model User {
   stockSummariesUpdatedBy          StockSummary[]           @relation(name: "updatedBy")
   purchaseReturnShowRoomsCreatedBy PurchaseReturnShowRoom[] @relation(name: "createdBy")
   purchaseReturnShowRoomsUpdatedBy PurchaseReturnShowRoom[] @relation(name: "updatedBy")
+  salesBillsCreatedBy              SalesBill[]              @relation(name: "createdBy")
+  salesBillsUpdatedBy              SalesBill[]              @relation(name: "updatedBy")
 }
 
 model Employee {
@@ -700,6 +703,7 @@ model TaxTemplate {
   TaxTemplateDetails TaxTemplateDetails[]
   SalesEntry         SalesEntry[]
   purchaseBills      PurchaseBill[]
+  salesBills         SalesBill[]
 }
 
 model TaxTemplateDetails {
@@ -1199,6 +1203,7 @@ model Color {
   stockLedgers               StockLedger[]
   stockSummaries             StockSummary[]
   purchasReturnItemsSRs      PurchasReturnItemsSR[]
+  salesBillItems             SalesBillItems[]
 }
 
 model UnitOfMeasurement {
@@ -1223,6 +1228,7 @@ model UnitOfMeasurement {
   stockLedgers               StockLedger[]
   stockSummaries             StockSummary[]
   purchasReturnItemsSRs      PurchasReturnItemsSR[]
+  salesBillItems             SalesBillItems[]
 }
 
 model purchaseInwardEntry {
@@ -1627,6 +1633,7 @@ model Style {
   stockLedgers          StockLedger[]
   stockSummaries        StockSummary[]
   purchasReturnItemsSRs PurchasReturnItemsSR[]
+  salesBillItems        SalesBillItems[]
 }
 
 model Size {
@@ -1658,6 +1665,7 @@ model Size {
   stockLedgers          StockLedger[]
   stockSummaries        StockSummary[]
   purchasReturnItemsSRs PurchasReturnItemsSR[]
+  salesBillItems        SalesBillItems[]
 }
 
 model Measurement {
@@ -2020,6 +2028,7 @@ model StyleItem {
   stockLedgers          StockLedger[]
   stockSummaries        StockSummary[]
   purchasReturnItemsSRs PurchasReturnItemsSR[]
+  salesBillItems        SalesBillItems[]
 }
 
 model SalesReturn {
@@ -2696,6 +2705,8 @@ model StockLedger {
   purchasReturnItemsSR   PurchasReturnItemsSR? @relation(fields: [purchasReturnItemsSRId], references: [id], onDelete: Cascade)
   purchasReturnItemsSRId Int?
   invNo                  String?
+  SalesBillItems         SalesBillItems?       @relation(fields: [salesBillItemsId], references: [id], onDelete: Cascade)
+  salesBillItemsId       Int?
 
   @@index([branchId])
 }
@@ -2769,4 +2780,60 @@ model PurchasReturnItemsSR {
   PurchaseBill             PurchaseBill?           @relation(fields: [purchaseBillId], references: [id], onDelete: Cascade)
   purchaseBillId           Int?
   stockLedgers             StockLedger[]
+}
+
+model Customer {
+  id         Int         @id @default(autoincrement())
+  name       String?
+  mobileNo   String?
+  salesBills SalesBill[]
+}
+
+model SalesBill {
+  id                Int              @id @default(autoincrement())
+  docId             String
+  docDate           DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  createdBy         User?            @relation("createdBy", fields: [createdById], references: [id])
+  createdById       Int?
+  updatedBy         User?            @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById       Int?
+  Branch            Branch?          @relation(fields: [branchId], references: [id])
+  branchId          Int?
+  taxTemplate       TaxTemplate?     @relation(fields: [taxTemplateId], references: [id])
+  taxTemplateId     Int?
+  Customer          Customer?        @relation(fields: [customerId], references: [id])
+  customerId        Int?
+  paymentType       String?
+  paymentValue      Float?
+  remarks           String?
+  termsAndCondition String?
+  mobileNo          String?
+  discountType      String?
+  discountValue     Float?
+  salesBillItems    SalesBillItems[]
+}
+
+model SalesBillItems {
+  id            Int                @id @default(autoincrement())
+  SalesBill     SalesBill?         @relation(fields: [salesBillId], references: [id], onDelete: Cascade)
+  salesBillId   Int?
+  Style         Style?             @relation(fields: [styleId], references: [id])
+  styleId       Int?
+  Size          Size?              @relation(fields: [sizeId], references: [id])
+  sizeId        Int?
+  qty           Int?
+  StyleItem     StyleItem?         @relation(fields: [styleItemId], references: [id])
+  styleItemId   Int?
+  Color         Color?             @relation(fields: [colorId], references: [id])
+  colorId       Int?
+  Uom           UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId         Int?
+  barcodeNo     String?
+  rate          Float?
+  discountType  String?
+  discountValue Float?
+  taxPercent    Float?
+  stockLedgers  StockLedger[]
 }

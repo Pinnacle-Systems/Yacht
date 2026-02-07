@@ -530,15 +530,16 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                         setValue={setInvValue}
                                         readOnly={readOnly}
                                         required
+                                        type="number"
                                     />
-                                    <DropdownInput
+                                    {/* <DropdownInput
                                         name="Payment Type"
                                         options={PaymentTypeData}
                                         value={paymentType}
                                         setValue={setPaymentType}
                                         required={true}
                                         readOnly={id}
-                                    />
+                                    /> */}
 
                                 </div>
                             </div>

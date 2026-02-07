@@ -183,6 +183,7 @@ const ActiveTabList = () => {
     "HSN MASTER": <HsnMaster />,
     "PURCHASE BILL": <PurchaseBill />,
     "PURCHASE  RETURN": <PurchaseReturnShowRoom />,
+    "SALES BILL": <SalesBill />
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

@@ -52,6 +52,7 @@ export { default as NewPurchaseInward } from "./NewPurchaseInward";
 export { default as OpeningStockForm } from "./OpeningStock";
 export { default as StockAdjustment } from "./StockAdjustment";
 export { default as SalesEntry } from "./SalesDelivery";
+export { default as SalesBill } from "./SalesBill";
 export { default as SizeTemplateMaster } from "./SizeTemplateMaster";
 export { default as StockInward } from "./StockInward";
 export { default as StockReport } from "./StockReport";
