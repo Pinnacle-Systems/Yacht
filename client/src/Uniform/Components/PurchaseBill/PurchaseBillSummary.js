@@ -15,10 +15,6 @@ const PurchaseBillSummary = ({
     0,
   );
 
-  // const grossAmount = purchaseBillItems.reduce(
-  //   (sum, row) => sum + (Number(row.rate) || 0) * (Number(row.qty) || 0),
-  //   0,
-  // );
   const discountValueNum = Number(discountValue) || 0;
 
   let discountAmount = 0;

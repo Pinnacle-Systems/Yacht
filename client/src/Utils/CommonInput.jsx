@@ -1,3 +1,5 @@
+import { forwardRef } from "react";
+
 export function ReusableDropdown({
   label,
   options = [],
@@ -92,9 +94,9 @@ export const handleOnChange = (event, setValue) => {
 
 
 
-export function ReusableInput(
-  { setValue, label, type, value, className = "", placeholder, readOnly, disabled, autoFocus, onKeyDown, required }
-) {
+export const ReusableInput = forwardRef((
+  { setValue, label, type, value, className = "", placeholder, readOnly, disabled, autoFocus, onKeyDown, required }, ref
+) => {
   return (
     <div className="mb-2">
       {required ? (
@@ -106,6 +108,7 @@ export function ReusableInput(
 
       )}
       <input
+        ref={ref}
         type={type}
         value={value}
         onChange={(e) =>
@@ -123,4 +126,4 @@ export function ReusableInput(
       />
     </div>
   );
-}
+})

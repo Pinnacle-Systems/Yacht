@@ -1,22 +1,22 @@
-import { useState } from "react";
-import PurchaseReturnForm from "./PurchaseReturnForm";
-import { useDispatch } from "react-redux";
-import Swal from "sweetalert2";
+import SalesReturnReport from "./SalesReturnReport";
+import { SalesReturnForm } from "./SalesReturnForm";
 import { FaPlus } from "react-icons/fa";
+import { useState } from "react";
+import Swal from "sweetalert2";
 import { getCommonParams } from "../../../Utils/helper";
-import { useDeletePurchaseReturnShowroomMutation } from "../../../redux/services/PurchaseReturnShowroomService";
+import { useDispatch } from "react-redux";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
-import PurchaseReturnFormReport from "./PurchaseReturnFormReport";
-const MODEL = "Purchase Return";
+import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServices";
+import { useDeleteSalesReturnSRMutation } from "../../../redux/uniformService/SalesReturnShowroom.service";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
   const [id, setId] = useState("");
   const [readOnly, setReadOnly] = useState(false);
-  //   const dispatch = useDispatch();
+  const dispatch = useDispatch();
   const { companyId, branchId } = getCommonParams();
   const params = {
     branchId,
@@ -26,8 +26,9 @@ export default function Form() {
   const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
- 
-  const [removeData] = useDeletePurchaseReturnShowroomMutation();
+  const { data: taxTypeList } = useGetTaxTemplateQuery({ params });
+  const [removeData] = useDeleteSalesReturnSRMutation();
+
   const handleView = (orderId) => {
     setId(orderId);
     setShowForm(true);
@@ -46,6 +47,7 @@ export default function Form() {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
+
       try {
         let deldata = await removeData(id).unwrap();
         if (deldata?.statusCode == 1) {
@@ -71,16 +73,13 @@ export default function Form() {
         });
         setShowForm(false);
       }
-
-
     }
   };
-
   const onNew = () => {
     setId("");
     setReadOnly(false);
+    // setOrderDetails([]);
   };
-
   return (
     <>
       <div
@@ -90,25 +89,23 @@ export default function Form() {
         <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
           <div>
             <h1 className="text-xl font-bold text-gray-800">
-              Purchase Return Report
+              Sales Return Report
             </h1>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
-              onClick={() => {
-                setShowForm(true);
-                onNew();
-              }}
-            >
-              <FaPlus /> Create New
-            </button>
-          </div>
+          <button
+            className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
+            onClick={() => {
+              setShowForm(true);
+              onNew();
+            }}
+          >
+            <FaPlus /> Create New
+          </button>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <PurchaseReturnFormReport
+          <SalesReturnReport
             onView={handleView}
             onEdit={handleEdit}
             onDelete={handleDelete}
@@ -118,7 +115,7 @@ export default function Form() {
       </div>
 
       {showForm && (
-        <PurchaseReturnForm
+        <SalesReturnForm
           readOnly={readOnly}
           setReadOnly={setReadOnly}
           id={id}
@@ -132,9 +129,9 @@ export default function Form() {
           styleItemList={styleItemList}
           colorList={colorList}
           uomList={uomList}
+          taxTypeList={taxTypeList}
         />
       )}
     </>
   );
-
 }

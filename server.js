@@ -81,6 +81,7 @@ import {
   purchaseBill,
   purchaseReturnSR,
   salesBill,
+  customer,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";
@@ -194,6 +195,7 @@ app.use("/hsn", hsn);
 app.use("/purchaseBill", purchaseBill);
 app.use("/purchaseReturnSR", purchaseReturnSR);
 app.use("/salesBill", salesBill);
+app.use("/customer", customer);
 app.get("/retreiveFile/:fileName", (req, res) => {
   const { fileName } = req.params;
   res.sendFile(__dirname + "/uploads/" + fileName);

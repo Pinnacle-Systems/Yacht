@@ -535,16 +535,6 @@ export default function PurchaseReturnItems({
                           if (e.key === "Delete") {
                             handleInputChange("", index, "stkQty");
                           }
-                          // if (e.key === "Enter") {
-                          //   e.preventDefault(); // prevent form submit or line break
-                          //   e.stopPropagation();
-                          //   const nextQtyInput = document.querySelector(
-                          //     `#styleId-input-${index + 1}`,
-                          //   );
-                          //   if (nextQtyInput) {
-                          //     nextQtyInput.focus();
-                          //   }
-                          // }
                         }}
                         min={"0"}
                         type="number"
@@ -555,17 +545,6 @@ export default function PurchaseReturnItems({
                           handleInputChange(e.target.value, index, "stkQty")
                         }
                         onBlur={(e) => {
-                          // const minQty = row.minQty || 0;
-                          // if (parseFloat(minQty) > parseFloat(e.target.value)) {
-                          //   e.target.value = "";
-                          //   Swal.fire({
-                          //     icon: "warning",
-                          //     title: "Invalid Qty",
-                          //     text: `Inward Qty cannot be Less than Min Qty! - ${minQty}`,
-                          //     confirmButtonText: "OK",
-                          //   });
-                          //   return;
-                          // }
                           handleInputChange(e.target.value, index, "stkQty");
                         }}
                         disabled={true}

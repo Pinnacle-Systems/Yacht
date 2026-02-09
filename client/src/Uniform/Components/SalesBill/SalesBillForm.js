@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
-import { DropdownInput, DropdownNew, TextInput } from "../../../Inputs";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { DropdownInput } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import {
   findFromList,
@@ -8,32 +8,26 @@ import {
 } from "../../../Utils/helper";
 import { ReusableInput } from "../../../Utils/CommonInput";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
-import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
-import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import moment from "moment";
-import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { PDFViewer } from "@react-pdf/renderer";
 import Modal from "../../../UiComponents/Modal";
 import tw from "../../../Utils/tailwind-react-pdf";
 // import PDF from "./PrintFormat/PDF";
-import { PaymentTypeData, paymentTypes } from "../../../Utils/DropdownData";
-import { useGetCityQuery } from "../../../redux/services/CityMasterService";
 import { useDispatch } from "react-redux";
-import OpeningStockApi from "../../../redux/uniformService/OpeningStockService";
-import StockAdjustmentApi from "../../../redux/uniformService/StockAdjustmentService";
 import { Loader } from "../../../Basic/components";
 import {
   useAddSalesBillMutation,
   useGetSalesBillByIdQuery,
-  useGetSalesBillQuery,
   useUpdateSalesBillMutation,
 } from "../../../redux/services/SalesBillService";
 import SalesBillItems from "./SalesBillItems";
 import SalesBillSummary from "./SalesBillSummary";
+import CustomerSearchComponent from "./CustomerSearchComponent";
+import { useGetCustomerByIdQuery } from "../../../redux/services/CustomerMasterService";
 
 export function SalesBillForm({
   onClose,
@@ -48,15 +42,13 @@ export function SalesBillForm({
   taxTypeList,
 }) {
   const [pdfOpen, setPdfOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
   const [docId, setDocId] = useState("New");
   const [docDate, setDocDate] = useState("");
   const [salesBillItems, setSalesBillItems] = useState([]);
   const [customerId, setCustomerId] = useState("");
   const [customerName, setCustomerName] = useState("");
-  const [mobileNo, setMobileNo] = useState("");
   const [paymentType, setPaymentType] = useState("");
-  const [paymentValue, setpaymentValue] = useState("")
+  const [paymentValue, setPaymentValue] = useState("");
   const { companyId, userId, finYearId, branchId } = getCommonParams();
   const [taxTemplateId, setTaxTemplateId] = useState("");
   const [summary, setSummary] = useState(false);
@@ -64,37 +56,43 @@ export function SalesBillForm({
   const [remarks, setRemarks] = useState("");
   const [discountType, setDiscountType] = useState("Percentage");
   const [discountValue, setDiscountValue] = useState();
+  const [isCash, setIsCash] = useState(true);
+  const [isCard, setIsCard] = useState(false);
+  const [isUpI, setIsUpI] = useState(false);
+  const [cardAmount, setCardAmount] = useState(0);
+  const [upiAmount, setUpiAmount] = useState(0);
   const dispatch = useDispatch();
-
+  const customerNameRef = useRef(null);
   const {
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetSalesBillByIdQuery(id, { skip: !id });
 
+  const {
+    data: singleCustomerData,
+    isFetching: isSingleCustomerFetching,
+    isLoading: isSingleCustomerLoading,
+  } = useGetCustomerByIdQuery(customerId, { skip: !customerId });
+
   const isLoadingIndicator = isSingleFetching || isSingleLoading;
-
-  const { data: branchList } = useGetBranchQuery({ params: { companyId } });
-
-  const { data: partyList } = useGetPartyQuery({
-    params: { companyId },
-    searchParams: searchValue,
-  });
 
   const findDuplicates = (items) => {
     const seen = new Map(); // key -> first index
     const duplicates = [];
 
     items.forEach((row, index) => {
-      const key = [row.styleId || "", row.sizeId || "", row.colorId || ""].join(
-        "-",
-      );
+      const key = [
+        row.styleItemId || "",
+        row.sizeId || "",
+        row.colorId || "",
+      ].join("-");
 
       if (seen.has(key)) {
         duplicates.push({
           firstIndex: seen.get(key),
           duplicateIndex: index,
-          styleId: row.styleId,
+          styleItemId: row.styleItemId,
           sizeId: row.sizeId,
           colorId: row.colorId,
         });
@@ -111,7 +109,7 @@ export function SalesBillForm({
 
     // remove blank rows
     const filledItems = items.filter(
-      (item) => item.styleId || item.styleItemId || item.fabricId,
+      (item) => item.styleId || item.styleItemId || item.sizeId,
     );
 
     const duplicates = findDuplicates(filledItems);
@@ -133,37 +131,26 @@ export function SalesBillForm({
     }
     if (
       !(
-        // data?.customerId &&
-        data?.paymentType &&
-        data?.paymentValue &&
+        data?.customerId &&
+        data?.customerName &&
+        // data?.paymentValue &&
         data?.taxTemplateId &&
-        data?.salesBillItems.length > 0 
-        &&
+        data?.salesBillItems.length > 0 &&
         isGridDatasValid(
           data?.salesBillItems.filter((item) => item?.styleItemId),
           false,
-          ["qty","rate"],
+          ["qty", "rate"],
         )
       )
     ) {
       toast.info("Please fill all required fields...!", {
         position: "top-center",
-        autoClose: 2000
+        autoClose: 2000,
       });
       return false;
     }
     return true;
   };
-
-  const {
-    data: allData,
-    isFetching,
-    isLoading,
-  } = useGetSalesBillQuery({
-    params: {
-      branchId,
-    },
-  });
 
   const data = {
     id,
@@ -174,13 +161,18 @@ export function SalesBillForm({
     finYearId,
     customerId,
     customerName,
-    mobileNo,
     paymentType,
     termsAndCondition,
     discountType,
     discountValue,
     paymentValue,
-    taxTemplateId
+    taxTemplateId,
+    remarks,
+    isCash,
+    isCard,
+    isUpI,
+    cardAmount,
+    upiAmount,
   };
 
   const syncFormWithDb = useCallback(
@@ -191,12 +183,11 @@ export function SalesBillForm({
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
           : moment.utc(today).format("YYYY-MM-DD"),
       );
-      setSalesBillItems(data?.SalesBillItems ? data.SalesBillItems : []);
+      setSalesBillItems(data?.salesBillItems ? data.salesBillItems : []);
       if (data?.docId) {
         setDocId(data?.docId);
       }
       setCustomerId(data?.customerId ? data?.customerId : "");
-      setMobileNo(data?.mobileNo ? data?.mobileNo : "");
       setCustomerName(data?.customerName ? data?.customerName : "");
       setPaymentType(data?.paymentType ? data?.paymentType : "");
       setTermsAndCondition(
@@ -205,7 +196,15 @@ export function SalesBillForm({
       setRemarks(data?.remarks ? data.remarks : "");
       setDiscountType(data?.discountType || "Flat");
       setDiscountValue(data?.discountValue || "0");
-      setPaymentType(data?.paymentValue ? data?.paymentValue : "")
+      setPaymentType(data?.paymentValue ? data?.paymentValue : "");
+      setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "");
+      setPaymentValue(data?.paymentValue ? data?.paymentValue : "");
+      setPaymentType(data?.paymentType ? data?.paymentType : "");
+      setIsCash(data?.isCash || true);
+      setIsCard(data?.isCard || false);
+      setIsUpI(data?.isUpI || false);
+      setCardAmount(data?.cardAmount || 0);
+      setUpiAmount(data?.upiAmount || 0);
     },
     [id],
   );
@@ -283,24 +282,6 @@ export function SalesBillForm({
     }
   };
 
-  const handlePartyChange = (selectedId, field) => {
-    const selectedParty = partyList?.data?.find(
-      (p) => p.id === Number(selectedId),
-    );
-
-    if (field === "customer") {
-      setCustomerId(selectedParty?.id);
-      setMobileNo(selectedParty?.mobileNo);
-      setCustomerName(selectedParty?.customerNameName || "");
-    }
-  };
-
-  useEffect(() => {
-    if (customerId && partyList?.data?.length) {
-      handlePartyChange(customerId, "customer");
-    }
-  }, [customerId, setCustomerId, partyList?.data]);
-
   const handleKeyDown = (event) => {
     let charCode = String.fromCharCode(event.which).toLowerCase();
     if ((event.ctrlKey || event.metaKey) && charCode === "s") {
@@ -340,6 +321,24 @@ export function SalesBillForm({
       .toFixed(2);
   }, [salesBillItems]);
 
+  useEffect(() => {
+    if (!taxTemplateId && taxTypeList?.data?.length > 0) {
+      setTaxTemplateId(taxTypeList.data[0].id);
+    }
+  }, [taxTypeList, taxTemplateId]);
+
+  useEffect(() => {
+    if (!customerId) return;
+
+    if (id) return;
+
+    if (singleCustomerData?.data?.name) {
+      setCustomerName(singleCustomerData?.data?.name);
+    } else {
+      setCustomerName(singleCustomerData?.data?.name);
+    }
+  }, [customerId, singleCustomerData]);
+
   return (
     <>
       {isLoadingIndicator ? (
@@ -361,6 +360,18 @@ export function SalesBillForm({
               salesBillItems={salesBillItems}
               taxTypeId={taxTemplateId}
               readOnly={readOnly}
+              isCard={isCard}
+              setIsCard={setIsCard}
+              setIsCash={setIsCash}
+              setIsUpI={setIsUpI}
+              setPaymentValue={setPaymentValue}
+              setCardAmount={setCardAmount}
+              setUpiAmount={setUpiAmount}
+              isCash={isCash}
+              isUpI={isUpI}
+              cardAmount={cardAmount}
+              upiAmount={upiAmount}
+              paymentValue={paymentValue}
             />
           </Modal>
           <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
@@ -376,12 +387,12 @@ export function SalesBillForm({
             </div>
           </div>
           <div className="space-y-2 mt-3">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                 <h2 className="font-medium text-slate-700 mb-2">
                   Basic Details
                 </h2>
-                <div className="grid grid-cols-2 gap-1">
+                <div className="grid grid-cols-3 gap-1">
                   <ReusableInput label="Sales Bill No" readOnly value={docId} />
                   <ReusableInput
                     label="Sales Bill Date"
@@ -402,30 +413,7 @@ export function SalesBillForm({
                     setValue={setTaxTemplateId}
                     required={true}
                     readOnly={readOnly}
-                    autoFocus={true}
-                  />
-                </div>
-              </div>
-              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                <h2 className="font-medium text-slate-700 mb-2">
-                  Payment Details
-                </h2>
-                <div className="grid grid-cols-2 gap-1">
-                  <DropdownInput
-                    name="Payment Type"
-                    options={PaymentTypeData}
-                    value={paymentType}
-                    setValue={setPaymentType}
-                    required={true}
-                    readOnly={readOnly}
-                  />
-                  <TextInput
-                    name={"Payment Value"}
-                    value={paymentValue}
-                    setValue={setpaymentValue}
-                    readOnly={readOnly}
-                    required
-                    type="number"
+                    // autoFocus={true}
                   />
                 </div>
               </div>
@@ -433,24 +421,24 @@ export function SalesBillForm({
                 <h2 className="font-medium text-slate-700 mb-2">
                   Customer Details
                 </h2>
-                <div className="grid grid-cols-2 gap-1">
-                  <DropdownNew
-                    name="Customer"
-                    dataList={partyList?.data?.filter((item) => item.isClient)}
-                    value={customerId}
-                    setValue={(value) => {
-                      setCustomerId(value);
-                    }}
-                    required={true}
-                    disabled={readOnly}
-                    placeholder={"Select Contact Person"}
+                <div className="grid grid-cols-3 gap-2">
+                  <CustomerSearchComponent
+                    setCustomerId={setCustomerId}
+                    customerId={customerId}
+                    name="Contact No"
+                    readOnly={readOnly}
+                    id={id}
+                    autoFocus={id ? false : true}
+                    focusNext={() => customerNameRef.current?.focus()}
                   />
                   <ReusableInput
-                    label="Contact Number"
-                    value={mobileNo}
-                    setValue={setMobileNo}
+                    ref={customerNameRef}
+                    label="Customer Name"
+                    value={customerName}
+                    setValue={setCustomerName}
                     type={"text"}
                     readOnly={readOnly}
+                    required={true}
                   />
                 </div>
               </div>
@@ -470,7 +458,7 @@ export function SalesBillForm({
             </fieldset>
             <div className="grid grid-cols-3 gap-3">
               <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-                <h2 className="font-medium text-slate-700 mb-2 text-base">
+                <h2 className="font-medium text-slate-700 mb-1 text-base">
                   Terms and Condition
                 </h2>
                 <textarea
@@ -479,14 +467,14 @@ export function SalesBillForm({
                   onChange={(e) => {
                     setTermsAndCondition(e.target.value);
                   }}
-                  className="w-full overflow-auto h-10 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                  className="w-full overflow-auto h-9 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
                   placeholder="Terms Details..."
                   disabled={readOnly}
                 />
               </div>
 
               <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
-                <h2 className="font-medium text-slate-700 mb-2 text-base">
+                <h2 className="font-medium text-slate-700 mb-1 text-base">
                   Remarks
                 </h2>
                 <textarea
@@ -495,7 +483,7 @@ export function SalesBillForm({
                   onChange={(e) => {
                     setRemarks(e.target.value);
                   }}
-                  className="w-full  overflow-auto h-10 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                  className="w-full  overflow-auto h-9 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
                   placeholder="Additional remarks..."
                   disabled={readOnly}
                 />
@@ -538,13 +526,6 @@ export function SalesBillForm({
                   <HiOutlineRefresh className="w-4 h-4 mr-2" />
                   Save & Close
                 </button>
-                {/* <button
-                  onClick={() => saveData("draft")}
-                  className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
-                >
-                  <HiOutlineRefresh className="w-4 h-4 mr-2" />
-                  Draft Save
-                </button> */}
               </div>
               <div className="flex gap-2 flex-wrap">
                 <button

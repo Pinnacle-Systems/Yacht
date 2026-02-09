@@ -1,20 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import Swal from "sweetalert2";
 import { ReusableInput } from "../../../Utils/CommonInput";
 import { useLazyGetStyleDetailQuery } from "../../../redux/services/StockService";
 import { toast } from "react-toastify";
-import Modal from "../../../UiComponents/Modal";
-import { VIEW } from "../../../icons";
-import FxSelect, { DropdownNew } from "../../../Inputs";
-import TaxDetailsFullTemplate from "./TaxDetailsFullTemplate";
+import FxSelect from "../../../Inputs";
 
-export default function SalesBillItems({
-  salesBillItems,
-  setSalesBillItems,
+export default function SalesReturnItems({
+  salesReturnItems,
+  setSalesReturnItems,
   params,
   readOnly,
   id,
-  taxTemplateId,
   sizeList,
   styleItemList,
   colorList,
@@ -35,24 +30,18 @@ export default function SalesBillItems({
       barcode: "",
       styleId: "",
       sizeId: "",
-      stkQty: "",
-      qty: "",
+      returnQty: "",
       remarks: "",
       barcodeNo: "",
-      rate: "",
-      taxPercent: "",
-      discountType: "",
-      discountValue: "",
-      amount: "",
       styleItemId: "",
       colorId: "",
       selected: false,
     };
-    setSalesBillItems([...salesBillItems, newRow]);
+    setSalesReturnItems([...salesReturnItems, newRow]);
   };
 
   const deleteRow = (id) => {
-    setSalesBillItems((currentRows) => {
+    setSalesReturnItems((currentRows) => {
       if (currentRows.length > 1) {
         return currentRows.filter((row, index) => index !== Number(id));
       }
@@ -61,14 +50,14 @@ export default function SalesBillItems({
   };
 
   const handleDeleteAllRows = () => {
-    setSalesBillItems((prevRows) => {
+    setSalesReturnItems((prevRows) => {
       if (prevRows.length <= 1) return prevRows;
       return [prevRows[0]];
     });
   };
 
   const deleteSelectedRows = () => {
-    setSalesBillItems((rows) =>
+    setSalesReturnItems((rows) =>
       rows.filter((r) => !(r.selected && (r.returnQty ?? 0) === 0)),
     );
     setContextMenu(null);
@@ -89,8 +78,8 @@ export default function SalesBillItems({
   };
 
   useEffect(() => {
-    if (salesBillItems) {
-      setSalesBillItems((prev) => {
+    if (salesReturnItems) {
+      setSalesReturnItems((prev) => {
         const count = prev.length;
 
         if (count < 3) {
@@ -100,15 +89,9 @@ export default function SalesBillItems({
               barcode: "",
               styleId: "",
               sizeId: "",
-              stkQty: "",
-              qty: "",
+              returnQty: "",
               remarks: "",
               barcodeNo: "",
-              rate: "",
-              taxPercent: "",
-              discountType: "",
-              discountValue: "",
-              amount: "",
               styleItemId: "",
               colorId: "",
               selected: false,
@@ -119,78 +102,37 @@ export default function SalesBillItems({
         return prev; // keep as-is if already >= 6
       });
     } else {
-      setSalesBillItems(
+      setSalesReturnItems(
         Array.from({ length: 3 }, () => ({
           barcode: "",
           styleId: "",
           sizeId: "",
-          stkQty: "",
-          qty: "",
+          returnQty: "",
           remarks: "",
           barcodeNo: "",
-          rate: "",
-          taxPercent: "",
-          discountType: "",
-          discountValue: "",
-          amount: "",
           styleItemId: "",
           colorId: "",
           selected: false,
         })),
       );
     }
-  }, [salesBillItems, setSalesBillItems]);
+  }, [salesReturnItems, setSalesReturnItems]);
 
   const handleInputChange = async (value, index, field) => {
-    if (field === "qty") {
-      const row = salesBillItems[index];
+    if (field === "returnQty") {
+      const row = salesReturnItems[index];
       const balanceQty = row?.stkQty || 0;
 
     }
-    setSalesBillItems((prev) => {
+    setSalesReturnItems((prev) => {
       const newItems = structuredClone(prev);
       newItems[index][field] = value;
-      // if (["qty", "rate", "discountValue"].includes(field)) {
-      //   const qty = parseFloat(newItems[index].qty) || 0;
-      //   const rate = parseFloat(newItems[index].rate) || 0;
-      //   const discountValue = parseFloat(newItems[index].discountValue) || 0;
-
-      //   const grossAmount = qty * rate;
-      //   const netAmount = grossAmount - discountValue;
-
-      //   newItems[index].amount = netAmount.toFixed(2);
-      // }
       return newItems;
     });
   };
 
-  const calculateNetAmount = (item) => {
-    const qty = parseFloat(item.qty) || 0;
-    const rate = parseFloat(item.rate) || 0;
-    const taxPercent = parseFloat(item.taxPercent) || 0;
-    const discountValue = parseFloat(item.discountValue) || 0;
-    const discountType = item.discountType || "";
-
-    // Gross amount
-    const grossAmount = qty * rate;
-
-    // GST Subtracted
-    const amountAfterGST = grossAmount - (grossAmount * taxPercent) / 100;
-
-    // Apply Discount
-    let discountAmt = 0;
-    if (discountType === "Flat") discountAmt = discountValue;
-    else if (discountType === "Percent")
-      discountAmt = (amountAfterGST * discountValue) / 100;
-
-    // Final net amount
-    const netAmount = amountAfterGST - discountAmt;
-
-    return netAmount.toFixed(2);
-  };
-
   const fillRows = (rowsToFill) => {
-    setSalesBillItems((prev) => {
+    setSalesReturnItems((prev) => {
       const updated = [...prev];
 
       let startIndex = updated.findIndex(
@@ -212,14 +154,9 @@ export default function SalesBillItems({
           barcodeNo: "",
           styleId: "",
           sizeId: "",
-          qty: "",
+          returnQty: "",
           remarks: "",
-          stkQty: "",
           barcode: "",
-          rate: "",
-          taxPercent: "",
-          discountType: "",
-          discountValue: "",
           styleItemId: "",
           colorId: "",
           selected: false,
@@ -231,18 +168,18 @@ export default function SalesBillItems({
   };
 
   const handleAddRow = async () => {
-    const isFirstTime = salesBillItems.every(
-      (row) => !row.qty && !row.rate && !row.styleId && !row.styleItemId,
+    const isFirstTime = salesReturnItems.every(
+      (row) => !row.returnQty && !row.rate && !row.styleId && !row.styleItemId,
     );
 
     if (!isFirstTime) {
-      const hasEmpty = salesBillItems.some((row) => {
+      const hasEmpty = salesReturnItems.some((row) => {
         const hasStyle =
           row.styleItemId !== "" &&
           row.styleItemId !== null &&
           row.styleItemId !== undefined;
 
-        return hasStyle && !row.qty;
+        return hasStyle && !row.returnQty;
       });
 
       if (hasEmpty) {
@@ -285,122 +222,8 @@ export default function SalesBillItems({
     }
   };
 
-  const totalNetAmount = useMemo(() => {
-    return salesBillItems
-      .reduce((sum, row) => sum + (parseFloat(calculateNetAmount(row)) || 0), 0)
-      .toFixed(2);
-  }, [salesBillItems]);
-
-  useEffect(() => {
-    // Recalculate net amount for all rows whenever dependent fields change
-    const updatedRows = salesBillItems.map((row) => {
-      const rate = parseFloat(row.rate) || 0;
-      const qty = parseFloat(row.qty) || 0;
-      const taxPercent = parseFloat(row.taxPercent) || 0;
-      const discountValue = parseFloat(row.discountValue) || 0;
-      const discountType = row.discountType;
-
-      const gross = rate * qty;
-
-      let discountAmount = 0;
-      if (discountType) {
-        if (discountType === "Flat") {
-          discountAmount = discountValue;
-        } else {
-          discountAmount = (gross * discountValue) / 100;
-        }
-      }
-
-      const taxable = gross - discountAmount;
-      const sgst = (taxable * (taxPercent / 2)) / 100;
-      const cgst = (taxable * (taxPercent / 2)) / 100;
-
-      const net = taxable;
-
-      return {
-        ...row,
-        netAmount: Math.round(net),
-        taxable: taxable,
-      };
-    });
-
-    // Only update if net amounts actually changed
-    const needsUpdate = updatedRows.some(
-      (row, index) => row.netAmount !== (salesBillItems[index]?.netAmount || 0),
-    );
-
-    if (needsUpdate) {
-      setSalesBillItems(updatedRows);
-    }
-  }, [salesBillItems]);
-
   return (
     <>
-      <Modal
-        isOpen={Number.isInteger(currentSelectedIndex)}
-        onClose={() => setCurrentSelectedIndex("")}
-      >
-        <TaxDetailsFullTemplate
-          readOnly={readOnly}
-          taxTypeId={taxTemplateId}
-          currentIndex={currentSelectedIndex}
-          setCurrentSelectedIndex={setCurrentSelectedIndex}
-          salesBillItems={salesBillItems}
-          handleInputChange={handleInputChange}
-        />
-      </Modal>
-      <Modal
-        isOpen={showColorPopup}
-        onClose={() => setShowColorPopup(false)}
-        widthClass={"w-[220px]"}
-      >
-        <p className="text-md font-medium">Select Color</p>
-        <div className="w-40 my-4">
-          <DropdownNew
-            name="Color"
-            dataList={
-              colorList?.data?.filter(
-                (item) =>
-                  Array.isArray(uniqueColorIds) &&
-                  uniqueColorIds.includes(item.id),
-              ) || []
-            }
-            value={colorId}
-            setValue={(value) => {
-              setColorId(value);
-            }}
-            required={false}
-            clear={true}
-            autoFocus={true}
-          />
-        </div>
-        <div className="flex justify-end mt-6">
-          <button
-            className="bg-green-700 text-white px-2 text-md rounded hover:bg-green-800"
-            onClick={() => {
-              const filtered = pendingStyleRows.filter(
-                (row) => row.colorId === colorId,
-              );
-              fillRows(filtered);
-              setShowColorPopup(false);
-              setColorId("");
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                const filtered = pendingStyleRows.filter(
-                  (row) => row.colorId === colorId,
-                );
-                fillRows(filtered);
-                setShowColorPopup(false);
-                setColorId("");
-              }
-            }}
-          >
-            Add
-          </button>
-        </div>
-      </Modal>
       <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[450px] overflow-auto overflow-x-auto w-full">
         <div className="flex items-center gap-4 sticky top-0 bg-white z-30 mt-2">
           <ReusableInput
@@ -419,10 +242,10 @@ export default function SalesBillItems({
           />
         </div>
         <div className="flex justify-between items-center mb-2">
-          <h2 className="font-medium text-slate-700">Sales Item Details</h2>
+          <h2 className="font-medium text-slate-700">Return Item Details</h2>
         </div>
         <div className={`w-full  max-h-[300px] overflow-y-auto  my-1`}>
-          <table className=" border-collapse table-fixed w-full">
+          <table className=" border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
                 <th className="w-12 px-1 py-1 text-center font-medium text-[13px]">
@@ -430,14 +253,14 @@ export default function SalesBillItems({
                     <input
                       type="checkbox"
                       checked={
-                        salesBillItems.length > 0 &&
-                        salesBillItems
+                        salesReturnItems.length > 0 &&
+                        salesReturnItems
                           .filter((row) => (row.returnQty ?? 0) === 0)
                           .every((row) => row.selected)
                       }
                       onChange={(e) => {
                         const checked = e.target.checked;
-                        setSalesBillItems((prev) =>
+                        setSalesReturnItems((prev) =>
                           prev.map((row) =>
                             (row.returnQty ?? 0) > 0
                               ? row
@@ -487,29 +310,9 @@ export default function SalesBillItems({
                   Unit
                 </th>
                 <th
-                  className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
-                >
-                  Qty
-                </th>
-                <th
-                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
-                >
-                  Rate
-                </th>
-                <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Gross Amount
-                </th>
-                <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
-                >
-                  Net Amount
-                </th>
-                <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
-                >
-                  Tax Details
+                 Return Qty
                 </th>
                 <th
                   className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
@@ -519,7 +322,7 @@ export default function SalesBillItems({
               </tr>
             </thead>
             <tbody>
-              {(salesBillItems ? salesBillItems : [])?.map((row, index) => (
+              {(salesReturnItems ? salesReturnItems : [])?.map((row, index) => (
                 <tr
                   className="border border-blue-gray-200 cursor-pointer "
                   key={index}
@@ -667,94 +470,23 @@ export default function SalesBillItems({
                         if (e.code === "Minus" || e.code === "NumpadSubtract")
                           e.preventDefault();
                         if (e.key === "Delete") {
-                          handleInputChange("", index, "qty");
+                          handleInputChange("", index, "returnQty");
                         }
                       }}
                       min={"0"}
                       type="number"
                       className="text-right rounded py-1 px-1 w-full"
                       onFocus={(e) => e.target.select()}
-                      value={row?.qty}
+                      value={row?.returnQty}
                       onChange={(e) =>
-                        handleInputChange(e.target.value, index, "qty")
+                        handleInputChange(e.target.value, index, "returnQty")
                       }
                       onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "qty");
+                        handleInputChange(e.target.value, index, "returnQty");
                       }}
                       disabled={readOnly}
                     />
                   </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      onKeyDown={(e) => {
-                        if (e.code === "Minus" || e.code === "NumpadSubtract")
-                          e.preventDefault();
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "rate");
-                        }
-                      }}
-                      min={"0"}
-                      type="number"
-                      className="text-right rounded py-1 px-1 w-full "
-                      onFocus={(e) => e.target.select()}
-                      value={row?.rate}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "rate")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "rate");
-                      }}
-                      disabled={readOnly}
-                    />
-                  </td>
-                  <td className="py-0.5 border border-gray-300 text-[11px]">
-                    <input
-                      type="number"
-                      onFocus={(e) => e.target.select()}
-                      className="text-right rounded py-1 px-1 w-full"
-                      value={
-                        !row.qty || !row.rate
-                          ? 0.0
-                          : (
-                              parseFloat(row.qty) * parseFloat(row.rate)
-                            ).toFixed(2)
-                      }
-                      disabled={true}
-                    />
-                  </td>
-                  <td className="py-0.5 border border-gray-300 text-[11px]">
-                    <input
-                      type="number"
-                      className="text-right rounded py-1 px-1 w-full"
-                      value={
-                        row?.netAmount !== undefined && row?.netAmount !== null
-                          ? Number(row.netAmount).toFixed(2)
-                          : "0"
-                      }
-                      disabled
-                    />
-                  </td>
-                  <td className=" py-0.5 border border-gray-300 text-[11px] text-right">
-                    <button
-                      disabled={!row?.styleItemId}
-                      className="text-center rounded py-1 w-20"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          setCurrentSelectedIndex(index);
-                        }
-                      }}
-                      onClick={() => {
-                        if (!taxTemplateId)
-                          return toast.info("Please select Tax Type", {
-                            position: "top-center",
-                          });
-                        setCurrentSelectedIndex(index);
-                      }}
-                    >
-                      {VIEW}
-                    </button>
-                  </td>
-
                   <td className="w-2 border border-gray-300">
                     <input
                       className="w-full"
@@ -776,33 +508,15 @@ export default function SalesBillItems({
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
                   colSpan={7}
                 >
-                  Total Qty
+                  Total 
                 </td>
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
-                  {(Array.isArray(salesBillItems) ? salesBillItems : []).reduce(
-                    (sum, row) => sum + (Number(row.qty) || 0),
+                  {(Array.isArray(salesReturnItems) ? salesReturnItems : []).reduce(
+                    (sum, row) => sum + (Number(row.returnQty) || 0),
                     0,
                   )}
                 </td>
                 <td className="border border-gray-300" colSpan={1}></td>
-                <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
-                  {(Array.isArray(salesBillItems) ? salesBillItems : [])
-                    .reduce((sum, row) => {
-                      const qty = parseFloat(row.qty) || 0;
-                      const rate = parseFloat(row.rate) || 0;
-                      return sum + qty * rate;
-                    }, 0)
-                    .toFixed(2)}
-                </td>
-                <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
-                  {salesBillItems
-                    ?.reduce(
-                      (sum, row) => sum + (Number(row.netAmount) || 0),
-                      0,
-                    )
-                    .toFixed(2)}
-                </td>
-                <td className="border border-gray-300" colSpan={2}></td>
               </tr>
             </tfoot>
           </table>

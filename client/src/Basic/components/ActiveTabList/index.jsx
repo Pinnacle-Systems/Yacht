@@ -84,6 +84,7 @@ import {
   SummaryReport,
   PurchaseBill,
   PurchaseReturnShowRoom,
+  SalesReturnSR
 } from "../../../Uniform/Components";
 import NewOrder from "../../../Uniform/Components/NewOrder";
 import Manufacture from "../../../Uniform/Components/styleesheet/Manufacture";
@@ -171,6 +172,7 @@ const ActiveTabList = () => {
     "SALES REPORT": <SalesReport />,
     "SALES RETURN": <SalesReturn />,
     "SALES RETURN REPORT": <SalesReturnReport />,
+    "SALES  RETURN": <SalesReturnSR />,
     "PURCHASE RETURN": <PurchaseReturn />,
     "PORTION MASTER": <PortionMaster />,
     "CUTTING PLAN": <CuttingOrder />,

@@ -79,6 +79,7 @@ model Company {
   processes           Process[]
   processGroupSeqs    ProcessGroupSeq[]
   processGroups       ProcessGroup[]
+  customers           Customer[]
 }
 
 model Subscription {
@@ -147,6 +148,7 @@ model Branch {
   stockSummaries          StockSummary[]
   purchaseReturnShowRooms PurchaseReturnShowRoom[]
   salesBills              SalesBill[]
+  customers               Customer[]
 }
 
 model UserOnBranch {
@@ -2787,6 +2789,11 @@ model Customer {
   name       String?
   mobileNo   String?
   salesBills SalesBill[]
+  Company    Company     @relation(fields: [companyId], references: [id])
+  companyId  Int
+  Branch     Branch?     @relation(fields: [branchId], references: [id])
+  branchId   Int?
+  active     Boolean     @default(true)
 }
 
 model SalesBill {
@@ -2810,9 +2817,15 @@ model SalesBill {
   remarks           String?
   termsAndCondition String?
   mobileNo          String?
+  customerName      String?
   discountType      String?
   discountValue     Float?
   salesBillItems    SalesBillItems[]
+  isCash            Boolean?         @default(false)
+  isCard            Boolean?         @default(false)
+  isUpI             Boolean?         @default(false)
+  cardAmount        Float?
+  upiAmount         Float?
 }
 
 model SalesBillItems {

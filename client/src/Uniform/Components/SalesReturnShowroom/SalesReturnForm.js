@@ -1,6 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
-import { DropdownInput, DropdownNew, TextInput } from "../../../Inputs";
-import { dropDownListObject } from "../../../Utils/contructObject";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   findFromList,
   getCommonParams,
@@ -8,87 +6,75 @@ import {
 } from "../../../Utils/helper";
 import { ReusableInput } from "../../../Utils/CommonInput";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
-import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
-import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import moment from "moment";
-import {
-  useAddSalesReturnMutation,
-  useGetSalesReturnByIdQuery,
-  useUpdateSalesReturnMutation,
-} from "../../../redux/uniformService/SalesReturnService";
-import SalesItems from "./SalesItems";
-import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
-import Modal from "../../../UiComponents/Modal";
-import { PDFViewer } from "@react-pdf/renderer";
-import tw from "../../../Utils/tailwind-react-pdf";
-import PDF from "./PrintFormat/PDF";
-import SalesEntryApi, {
-  useGetSalesEntryQuery,
-  useLazyGetSalesInvDetailQuery,
-} from "../../../redux/uniformService/SalesEntryService";
 import { useDispatch } from "react-redux";
 import { Loader } from "../../../Basic/components";
-import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
-import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
-import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
-export default function SalesReturnForm({
+import SalesReturnItems from "./SalesReturnItems";
+import {
+  useAddSalesReturnSRMutation,
+  useGetSalesReturnSRByIdQuery,
+  useUpdateSalesReturnSRMutation,
+} from "../../../redux/uniformService/SalesReturnShowroom.service";
+import { useGetSalesBillQuery } from "../../../redux/services/SalesBillService";
+import { DropdownNew } from "../../../Inputs";
+
+export function SalesReturnForm({
   onClose,
   id,
   setId,
   readOnly,
   setReadOnly,
+  sizeList,
+  styleItemList,
+  colorList,
+  uomList,
+  taxTypeList,
 }) {
-  const [searchValue, setSearchValue] = useState("");
   const [docId, setDocId] = useState("New");
   const [docDate, setDocDate] = useState("");
-  const [locationId, setLocationId] = useState("");
-  const [storeId, setStoreId] = useState("");
   const [salesReturnItems, setSalesReturnItems] = useState([]);
   const [customerId, setCustomerId] = useState("");
-  const [pdfOpen, setPdfOpen] = useState("");
-  const [invNo, setInvNo] = useState("");
-  const [getSalesInvDetail] = useLazyGetSalesInvDetailQuery();
-  const dispatch = useDispatch();
+  const [customerName, setCustomerName] = useState("");
+  const [mobileNo, setMobileNo] = useState("");
   const { companyId, userId, finYearId, branchId } = getCommonParams();
+  const [termsAndCondition, setTermsAndCondition] = useState("");
+  const [remarks, setRemarks] = useState("");
+  const [invNo, setInvNo] = useState("");
 
-  const { data: branchList } = useGetBranchQuery({ params: { companyId } });
+  const dispatch = useDispatch();
+  const customerNameRef = useRef(null);
+  const {
+    data: singleData,
+    isFetching: isSingleFetching,
+    isLoading: isSingleLoading,
+  } = useGetSalesReturnSRByIdQuery(id, { skip: !id });
 
-  const { data: locationData } = useGetLocationMasterQuery({
+  const { data: salesList } = useGetSalesBillQuery({
     params: { branchId },
-    searchParams: searchValue,
   });
 
-  const { data: partyList } = useGetPartyQuery({ params: { companyId } });
-  const { data: salesList } = useGetSalesEntryQuery({
-    params: { companyId, branchId },
-  });
-  const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
-  const { data: sizeList } = useGetSizeMasterQuery({ params: { companyId } });
-  const { data: colorList } = useGetColorMasterQuery({ params: { companyId } });
-  const storeOptions = locationData
-    ? locationData.data.filter(
-        (item) => parseInt(item.locationId) === parseInt(locationId)
-      )
-    : [];
+  const isLoadingIndicator = isSingleFetching || isSingleLoading;
 
   const findDuplicates = (items) => {
     const seen = new Map(); // key -> first index
     const duplicates = [];
 
     items.forEach((row, index) => {
-      const key = [row.styleId || "", row.sizeId || "", row.colorId || ""].join(
-        "-"
-      );
+      const key = [
+        row.styleItemId || "",
+        row.sizeId || "",
+        row.colorId || "",
+      ].join("-");
 
       if (seen.has(key)) {
         duplicates.push({
           firstIndex: seen.get(key),
           duplicateIndex: index,
-          styleId: row.styleId,
+          styleItemId: row.styleItemId,
           sizeId: row.sizeId,
           colorId: row.colorId,
         });
@@ -99,12 +85,13 @@ export default function SalesReturnForm({
 
     return duplicates; // empty array = no duplicates
   };
+
   const validateData = (data) => {
     const items = data?.salesReturnItems || [];
 
     // remove blank rows
     const filledItems = items.filter(
-      (item) => item.styleId || item.styleItemId || item.fabricId
+      (item) => item.styleId || item.styleItemId || item.sizeId,
     );
 
     const duplicates = findDuplicates(filledItems);
@@ -115,56 +102,48 @@ export default function SalesReturnForm({
         icon: "warning",
         title: "Duplicate Item Found",
         html: `
-    Style - ${findFromList(dup?.styleId, styleList?.data, "sku")},
-    Size - ${findFromList(dup?.sizeId, sizeList?.data, "name")},
-    Color - ${findFromList(dup?.colorId, colorList?.data, "name")},
-    Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
-  `,
+       Style - ${findFromList(dup?.styleItemId, styleItemList?.data, "name")},
+       Size - ${findFromList(dup?.sizeId, sizeList?.data, "name")},
+       Color - ${findFromList(dup?.colorId, colorList?.data, "name")},
+       Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
+     `,
         confirmButtonText: "OK",
       });
       return false;
     }
-
     if (
       !(
-        data?.storeId &&
         data?.customerId &&
+        data?.customerName &&
         data?.salesReturnItems.length > 0 &&
         isGridDatasValid(
-          data?.salesReturnItems.filter((item) => item?.styleId),
+          data?.salesReturnItems.filter((item) => item?.styleItemId),
           false,
-          ["returnQty"]
+          ["retuenQty"],
         )
       )
     ) {
       toast.info("Please fill all required fields...!", {
         position: "top-center",
+        autoClose: 2000,
       });
       return false;
     }
-
     return true;
   };
-
-  const {
-    data: singleData,
-    isFetching: isSingleFetching,
-    isLoading: isSingleLoading,
-  } = useGetSalesReturnByIdQuery(id, { skip: !id });
-
-  const isLoadingIndicator = isSingleFetching || isSingleLoading;
 
   const data = {
     id,
     docDate,
     branchId,
-    storeId,
-    salesReturnItems: salesReturnItems?.filter((item) => item?.styleId),
+    salesReturnItems: salesReturnItems?.filter((item) => item?.styleItemId),
     userId,
     finYearId,
-    locationId,
     customerId,
-    invNo,
+    customerName,
+    mobileNo,
+    termsAndCondition,
+    remarks,
   };
 
   const syncFormWithDb = useCallback(
@@ -173,18 +152,21 @@ export default function SalesReturnForm({
       setDocDate(
         data?.docDate
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
-          : moment.utc(today).format("YYYY-MM-DD")
+          : moment.utc(today).format("YYYY-MM-DD"),
       );
       setSalesReturnItems(data?.salesReturnItems ? data.salesReturnItems : []);
       if (data?.docId) {
         setDocId(data?.docId);
       }
-      setLocationId(data?.locationId ? data?.locationId : branchId);
-      setStoreId(data?.storeId ? data.storeId : "");
       setCustomerId(data?.customerId ? data?.customerId : "");
-      setInvNo(data?.invNo ? data?.invNo : "");
+      setMobileNo(data?.mobileNo ? data?.mobileNo : "");
+      setCustomerName(data?.customerName ? data?.customerName : "");
+      setTermsAndCondition(
+        data?.termsAndCondition ? data.termsAndCondition : "",
+      );
+      setRemarks(data?.remarks ? data.remarks : "");
     },
-    [id]
+    [id],
   );
 
   useEffect(() => {
@@ -195,8 +177,8 @@ export default function SalesReturnForm({
     }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-  const [addData] = useAddSalesReturnMutation();
-  const [updateData] = useUpdateSalesReturnMutation();
+  const [addData] = useAddSalesReturnSRMutation();
+  const [updateData] = useUpdateSalesReturnSRMutation();
 
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
@@ -244,21 +226,20 @@ export default function SalesReturnForm({
         addData,
         { ...data, draftSave: true },
         "Added",
-        nextProcess
+        nextProcess,
       );
     } else if (id && nextProcess == "draft") {
       handleSubmitCustom(
         updateData,
         { ...data, draftSave: true },
         "Updated",
-        nextProcess
+        nextProcess,
       );
     } else if (id) {
       handleSubmitCustom(updateData, data, "Updated", nextProcess);
     } else {
       handleSubmitCustom(addData, data, "Added", nextProcess);
     }
-    dispatch(SalesEntryApi.util.invalidateTags(["SalesEntry"]));
   };
 
   const handleKeyDown = (event) => {
@@ -271,25 +252,70 @@ export default function SalesReturnForm({
 
   const handleAddRow = async (newValue) => {
     setInvNo(newValue);
-    if (!storeId) {
-      toast.info("Please Choose Location...!", {
+    const hasUnfilledRequired = salesReturnItems.some((row) => {
+      return row.styleItemId && !row.returnQty;
+    });
+
+    if (hasUnfilledRequired) {
+      toast.info("Please fill all required fields before adding...!", {
         position: "top-center",
-        autoClose: 2000,
       });
       return;
     }
-    try {
-      const { data: salesData } = await getSalesInvDetail({
-        params: {
-          invNo: newValue,
-          storeId,
-          branchId,
-        },
-      });
-      setCustomerId(salesData?.data?.customerId);
-    } catch (error) {
-      console.error("Error adding row:", error);
-    }
+    // try {
+    //   const { data: salesData } = await getSalesInvDetail({
+    //     params: {
+    //       invNo: newValue,
+    //       branchId,
+    //     },
+    //   });
+    //   setCustomerId(salesData?.data?.customerId);
+    // const salesItems = salesData?.data?.SalesEntryItems;
+    // if (!salesItems) return;
+    // setSalesReturnItems((prev) => {
+    //   const updated = [...prev];
+    //   // Find first empty slot index
+    //   let startIndex = updated.findIndex(
+    //     (row) =>
+    //       !row.styleId &&
+    //       !row.sizeId &&
+    //       !row.styleNo &&
+    //       !row.fabricId &&
+    //       !row.barcode
+    //   );
+    //   if (startIndex === -1) startIndex = updated.length;
+
+    //   // Fill in sizeRows starting at first empty slot
+    //   salesItems.forEach((row, i) => {
+    //     if (startIndex + i < updated.length) {
+    //       updated[startIndex + i] = row;
+    //     } else {
+    //       updated.push(row); // append if no empty slot
+    //     }
+    //   });
+
+    //   // Ensure at least 6 rows
+    //   while (updated.length < 6) {
+    //     updated.push({
+    //       styleNo: "",
+    //       fabricId: "",
+    //       styleId: "",
+    //       sizeId: "",
+    //       qty: "",
+    //       remarks: "",
+    //       stkQty: "",
+    //       barcode: "",
+    //       styleItemId: "",
+    //       colorId: "",
+    //       selected: false,
+    //     });
+    //   }
+
+    //   return updated;
+    // });
+    // } catch (error) {
+    //   console.error("Error adding row:", error);
+    // }
   };
 
   return (
@@ -298,15 +324,6 @@ export default function SalesReturnForm({
         <Loader />
       ) : (
         <div className="" onKeyDown={handleKeyDown}>
-          <Modal
-            isOpen={pdfOpen}
-            onClose={() => setPdfOpen(false)}
-            widthClass={"w-[90%] h-[90%]"}
-          >
-            <PDFViewer style={tw("w-full h-full")}>
-              <PDF singleData={singleData?.data} />
-            </PDFViewer>
-          </Modal>
           <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
             <div className="flex justify-between items-center mb-1">
               <h1 className="text-xl font-bold text-gray-800">Sales Return</h1>
@@ -319,15 +336,15 @@ export default function SalesReturnForm({
               </button>
             </div>
           </div>
-          <div className="space-y-3 mt-3">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div className="space-y-2 mt-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                 <h2 className="font-medium text-slate-700 mb-2">
                   Basic Details
                 </h2>
-                <div className="grid grid-cols-2 gap-1">
+                <div className="grid grid-cols-3 gap-1">
                   <ReusableInput
-                    label="Sales Return no"
+                    label="Sales Return No"
                     readOnly
                     value={docId}
                   />
@@ -339,47 +356,8 @@ export default function SalesReturnForm({
                     readOnly={true}
                     disabled
                   />
-                </div>
-              </div>
-
-              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                <h2 className="font-medium text-slate-700 mb-2">
-                  Location Details
-                </h2>
-                <div className="grid grid-cols-2 gap-1">
                   <DropdownNew
-                    name="Branch"
-                    dataList={branchList?.data?.filter((item) => item.active)}
-                    value={locationId}
-                    setValue={(value) => {
-                      setLocationId(value);
-                      setStoreId("");
-                    }}
-                    required={true}
-                    disabled={id}
-                    otherField={"branchName"}
-                    placeholder={"Select Branch"}
-                  />
-                  <DropdownNew
-                    name="Location"
-                    dataList={storeOptions?.filter((item) => item.active)}
-                    value={storeId}
-                    setValue={setStoreId}
-                    required={true}
-                    disabled={id}
-                    otherField={"storeName"}
-                    placeholder={"Select Location"}
-                    autoFocus={true}
-                  />
-                </div>
-              </div>
-              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                <h2 className="font-medium text-slate-700 mb-2">
-                  Sales Delivery Details
-                </h2>
-                <div className="grid grid-cols-2 gap-1">
-                  <DropdownNew
-                    name="Sales Delivery No"
+                    name="Sales Bill No"
                     dataList={salesList?.data}
                     value={invNo}
                     setValue={handleAddRow}
@@ -390,32 +368,92 @@ export default function SalesReturnForm({
                     otherValue={"docId"}
                     disabled={id}
                   />
-                  <DropdownNew
-                    name="Customer"
-                    dataList={partyList?.data?.filter((item) => item.active)}
-                    value={customerId}
-                    setValue={(value) => {
-                      setCustomerId(value);
-                    }}
+                </div>
+              </div>
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                <h2 className="font-medium text-slate-700 mb-2">
+                  Customer Details
+                </h2>
+                <div className="grid grid-cols-3 gap-2">
+                  <ReusableInput
+                    label="Customer Name"
+                    value={customerName}
+                    setValue={setCustomerName}
+                    type={"text"}
+                    readOnly={readOnly}
                     required={true}
-                    disabled={id}
-                    placeholder={"Select Customer"}
-                    clear={true}
+                  />
+                  <ReusableInput
+                    label="Contact No"
+                    value={mobileNo}
+                    setValue={setMobileNo}
+                    type={"text"}
+                    readOnly={readOnly}
+                    required={true}
                   />
                 </div>
               </div>
             </div>
             <fieldset className="w-full  min-w-[1200px]">
-              <SalesItems
+              <SalesReturnItems
                 salesReturnItems={salesReturnItems}
                 setSalesReturnItems={setSalesReturnItems}
                 readOnly={readOnly}
                 branchId={branchId}
-                storeId={storeId}
-                customerId={customerId}
-                invNo={invNo}
+                sizeList={sizeList}
+                styleItemList={styleItemList}
+                colorList={colorList}
+                uomList={uomList}
               />
             </fieldset>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
+                <h2 className="font-medium text-slate-700 mb-2 text-base">
+                  Terms and Condition
+                </h2>
+                <textarea
+                  readOnly={readOnly}
+                  value={termsAndCondition}
+                  onChange={(e) => {
+                    setTermsAndCondition(e.target.value);
+                  }}
+                  className="w-full overflow-auto h-9 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                  placeholder="Terms Details..."
+                  disabled={readOnly}
+                />
+              </div>
+
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
+                <h2 className="font-medium text-slate-700 mb-2 text-base">
+                  Remarks
+                </h2>
+                <textarea
+                  readOnly={readOnly}
+                  value={remarks}
+                  onChange={(e) => {
+                    setRemarks(e.target.value);
+                  }}
+                  className="w-full  overflow-auto h-9 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                  placeholder="Additional remarks..."
+                  disabled={readOnly}
+                />
+              </div>
+              <div className="border border-slate-200 p-2 bg-white rounded-md  shadow-sm">
+                <h2 className="font-semibold text-slate-800 mb-2 text-base">
+                  Summary
+                </h2>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between  text-sm">
+                    <span className="text-slate-600">Total Return Qty</span>
+                    <span className="font-medium">
+                      {salesReturnItems
+                        .reduce((sum, row) => sum + (Number(row.returnQty) || 0), 0)
+                        .toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">
               <div className="flex gap-2 flex-wrap">
                 <button
@@ -444,16 +482,6 @@ export default function SalesReturnForm({
                 <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
                   <FaWhatsapp className="w-4 h-4 mr-2" />
                   WhatsApp
-                </button>
-                <button
-                  className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
-                  disabled={!id}
-                  onClick={() => {
-                    setPdfOpen(true);
-                  }}
-                >
-                  <FiPrinter className="w-4 h-4 mr-2" />
-                  Print
                 </button>
               </div>
             </div>

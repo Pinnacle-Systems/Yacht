@@ -9,6 +9,18 @@ const SalesBillSummary = ({
   setDiscountType,
   discountValue,
   setDiscountValue,
+  isCash,
+  isCard,
+  isUpI,
+  cardAmount,
+  upiAmount,
+  paymentValue,
+  setIsCash,
+  setIsCard,
+  setIsUpI,
+  setCardAmount,
+  setUpiAmount,
+  setPaymentValue,
 }) => {
   const totalAmount = salesBillItems.reduce(
     (sum, row) => sum + (Number(row.taxable) || 0),
@@ -180,6 +192,85 @@ const SalesBillSummary = ({
             </td>
             <td colSpan={2} className="border border-gray-500 text-right">
               {numberToWords.toWords(netAmount)} Only
+            </td>
+          </tr>
+          {/* PAYMENT MODE */}
+          <tr>
+            <td className="border border-gray-500 font-semibold">
+              Payment Mode
+            </td>
+            <td colSpan={2} className="border border-gray-500 p-1">
+              <div className="flex gap-3 items-center text-xs">
+                <label className="flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    checked={isCash}
+                    disabled={readOnly}
+                    onChange={(e) => setIsCash(e.target.checked)}
+                  />
+                  Cash
+                </label>
+
+                <label className="flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    checked={isUpI}
+                    disabled={readOnly}
+                    onChange={(e) => setIsUpI(e.target.checked)}
+                  />
+                  UPI
+                </label>
+
+                <label className="flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    checked={isCard}
+                    disabled={readOnly}
+                    onChange={(e) => setIsCard(e.target.checked)}
+                  />
+                  Card
+                </label>
+              </div>
+            </td>
+          </tr>
+
+          {/* PAYMENT INPUTS */}
+          <tr>
+            <td className="border border-gray-500 font-semibold">Cash Amount</td>
+            <td colSpan={2} className="border border-gray-500">
+              <input
+                type="number"
+                className="w-full h-7 text-right"
+                value={paymentValue}
+                disabled={readOnly || !isCash}
+                onChange={(e) => setPaymentValue(e.target.value)}
+              />
+            </td>
+          </tr>
+
+          <tr>
+            <td className="border border-gray-500 font-semibold">UPI Amount</td>
+            <td colSpan={2} className="border border-gray-500">
+              <input
+                type="number"
+                className="w-full h-7 text-right"
+                value={upiAmount}
+                disabled={readOnly || !isUpI}
+                onChange={(e) => setUpiAmount(e.target.value)}
+              />
+            </td>
+          </tr>
+
+          <tr>
+            <td className="border border-gray-500 font-semibold">Card Amount</td>
+            <td colSpan={2} className="border border-gray-500">
+              <input
+                type="number"
+                className="w-full h-7 text-right"
+                value={cardAmount}
+                disabled={readOnly || !isCard}
+                onChange={(e) => setCardAmount(e.target.value)}
+              />
             </td>
           </tr>
         </tbody>

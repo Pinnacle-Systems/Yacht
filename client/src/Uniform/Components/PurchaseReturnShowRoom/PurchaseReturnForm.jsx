@@ -1,21 +1,14 @@
 
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../../../Utils/CommonInput";
-import { PaymentTypeData } from "../../../Utils/DropdownData";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-    DateInput,
-    DropdownInput,
     DropdownNew,
     TextInput,
 } from "../../../Inputs";
-import { dropDownListObject } from "../../../Utils/contructObject";
 import {
-    useGetPartyByIdQuery,
     useGetPartyQuery,
 } from "../../../redux/services/PartyMasterService";
-import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
-import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import { findFromList, getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
@@ -23,13 +16,8 @@ import moment from "moment";
 import { toast } from "react-toastify";
 import PurchaseReturnItems from "./PurchaseReturnItems";
 import Swal from "sweetalert2";
-import Modal from "../../../UiComponents/Modal";
-import { PDFViewer } from "@react-pdf/renderer";
 import { useDispatch } from "react-redux";
-// import PDF from "./PrintFormat/PDF";
-import tw from "../../../Utils/tailwind-react-pdf";
 import { Loader } from "../../../Basic/components";
-import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import secureLocalStorage from "react-secure-storage";
 import { useAddPurchaseReturnShowroomMutation, useDeletePurchaseReturnShowroomMutation, useGetPurchaseReturnShowroomByIdQuery, useGetPurchaseReturnShowroomQuery, useUpdatePurchaseReturnShowroomMutation } from "../../../redux/services/PurchaseReturnShowroomService";
 import { useGetPurchaseBillQuery } from "../../../redux/services/PurchaseBillService";
@@ -58,14 +46,9 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
     const [contactPerson, setContactPerson] = useState("");
     const [contactNumber, setContactNumber] = useState("");
     const { data: partyList } = useGetPartyQuery({ params: { ...params } });
-    const { data: locationData } = useGetLocationMasterQuery({
-        params: { branchId },
-        searchParams: searchValue,
-    });
     const finyearId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "currentFinYear"
     );
-    const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
     const {
         data: allData,
         isFetching,
@@ -264,14 +247,6 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
             });
             return false;
         }
-        // if (!(data?.supplierId && data?.invNo && isGridDatasValid(data?.purchaseReturnItems.filter((item) => item?.styleItemId), false, ["styleItemId", "sizeId", "returnQty", "uomId"]))
-        //     && data?.purchaseReturnItems.length > 0) {
-        //     toast.info("Please fill all required fields...!", {
-        //         position: "top-center",
-        //     });
-        //     return false
-        // }
-
         return true;
     };
 
@@ -279,35 +254,6 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
         if (!validateData(data)) {
             return;
         }
-        // let foundItem;
-        // if (id) {
-        //     foundItem = allData?.data
-        //         ?.filter((i) => i.id !== id)
-        //         ?.find((item) => item.invNo?.trim().toLowerCase() === invNo?.trim().toLowerCase());
-        // } else {
-        //     foundItem = allData?.data?.find(
-        //         (item) => item.invNo?.trim().toLowerCase() === invNo?.trim().toLowerCase()
-        //     );
-        // }
-        // if (foundItem) {
-
-        //     const hasDuplicateGoods = foundItem.purchaseReturnItems?.some(existing =>
-        //         purchaseReturnItems?.some(
-        //             current => Number(current.styleId) === Number(existing.styleId) && Number(current.sizeId) === Number(existing.sizeId)
-        //         )
-        //     );
-        //     if (hasDuplicateGoods) {
-        //         Swal.fire({
-        //             text: `Duplicate Style and Size already exists in this Invoice.`,
-        //             icon: "warning",
-        //             timer: 2000,
-        //             showConfirmButton: false,
-        //         });
-        //         return false;
-        //     }
-
-        // }
-
         if (!window.confirm("Are you sure save the details ...?")) {
             return;
         }
@@ -420,14 +366,6 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                                 <h2 className="font-medium text-slate-700 mb-2">Return Details</h2>
                                 <div className="grid grid-cols-2 gap-1">
-                                    {/* <TextInput
-                                        name={"Inv No"}
-                                        value={invNo}
-                                        setValue={setInvNo}
-                                        readOnly={readOnly}
-                                        required
-                                    // autoFocus={true}
-                                    /> */}
                                     <DropdownNew
                                         name="Inv No"
                                         dataList={purchaseList?.data}
@@ -464,7 +402,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
 
                         <div className="grid grid-cols-3 gap-3">
                             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-                                <h2 className="font-medium text-slate-700 mb-2 text-base">
+                                <h2 className="font-medium text-slate-700 mb-1 text-base">
                                     Terms and Condition
                                 </h2>
                                 <textarea
@@ -473,14 +411,14 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                     onChange={(e) => {
                                         setTermsAndCondition(e.target.value);
                                     }}
-                                    className="w-full overflow-auto h-10 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                                    className="w-full overflow-auto h-9 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
                                     placeholder="Terms Details..."
                                     disabled={readOnly}
                                 />
                             </div>
 
                             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
-                                <h2 className="font-medium text-slate-700 mb-2 text-base">
+                                <h2 className="font-medium text-slate-700 mb-1 text-base">
                                     Remarks
                                 </h2>
                                 <textarea
@@ -489,7 +427,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                     onChange={(e) => {
                                         setRemarks(e.target.value);
                                     }}
-                                    className="w-full  overflow-auto h-10 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                                    className="w-full  overflow-auto h-9 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
                                     placeholder="Additional remarks..."
                                     disabled={readOnly}
                                 />

@@ -6,9 +6,9 @@ import {
 } from "../../../Utils/helper";
 import { Loader } from "../../../Basic/components";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { useGetSalesBillQuery } from "../../../redux/services/SalesBillService";
+import { useGetSalesReturnSRQuery } from "../../../redux/uniformService/SalesReturnShowroom.service";
 
-const SalesBillReport = ({
+const SalesReturnReport = ({
   onClick,
   onView,
   itemsPerPage = 10,
@@ -61,7 +61,7 @@ const SalesBillReport = ({
     data: allData,
     isFetching,
     isLoading,
-  } = useGetSalesBillQuery({
+  } = useGetSalesReturnSRQuery({
     params: {
       branchId,
       ...searchFields,
@@ -185,13 +185,10 @@ const SalesBillReport = ({
                   </th>
 
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <div>Bill No</div>
+                    <div>Return No</div>
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <div>Bill Date</div>
-                  </th>
-                  <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                    <div>Payment Type</div>
+                    <div>Return Date</div>
                   </th>
                   <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Customer</div>
@@ -283,11 +280,6 @@ const SalesBillReport = ({
                         </td>
                         <td className="py-1.5 text-left px-4">
                           {" "}
-                          {dataObj?.paymentType}
-                        </td>
-                       
-                        <td className="py-1.5 text-left px-4">
-                          {" "}
                           {dataObj?.Customer?.name}
                         </td>
                         {rowActions && (
@@ -366,4 +358,4 @@ const SalesBillReport = ({
   );
 };
 
-export default SalesBillReport;
+export default SalesReturnReport;

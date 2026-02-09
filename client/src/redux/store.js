@@ -113,6 +113,8 @@ import SalesEntryApi from "./uniformService/SalesEntryService";
 import StockInwardApi from "./uniformService/StockInwardService";
 import StyleItemMasterApi from "./uniformService/StyleItemMasterService";
 import SalesReturnApi from "./uniformService/SalesReturnService";
+import customerMasterApi from "./services/CustomerMasterService";
+import SalesReturnSRApi from "./uniformService/SalesReturnShowroom.service";
 
 const commonReducers = {
   openTabs,
@@ -134,6 +136,7 @@ const commonReducers = {
   productSubCategoryMaster: productSubCategoryMasterApi.reducer,
   productMaster: productMasterApi.reducer,
   partyMaster: partyMasterApi.reducer,
+  customerMaster: customerMasterApi.reducer,
   partyCategoryMaster: partyCategoryMasterApi.reducer,
   purchaseBill: purchaseBillApi.reducer,
   styleSheet: styleSheetApi.reducer,
@@ -143,6 +146,7 @@ const commonReducers = {
   purchaseReturn: purchaseReturnApi.reducer,
   purchaseReturnShowroom: purchaseReturnShowroomApi.reducer,
   salesReturn: SalesReturnApi.reducer,
+  salesReturnSR: SalesReturnSRApi.reducer,
   uomMaster: uomMasterApi.reducer,
   quotes: quotesApi.reducer,
   leadForm: leadFormApi.reducer,
@@ -245,6 +249,7 @@ const commonMiddleware = [
   productSubCategoryMasterApi.middleware,
   productMasterApi.middleware,
   partyMasterApi.middleware,
+  customerMasterApi.middleware,
   partyCategoryMasterApi.middleware,
   purchaseBillApi.middleware,
   styleSheetApi.middleware,
@@ -254,6 +259,7 @@ const commonMiddleware = [
   purchaseReturnApi.middleware,
   purchaseReturnShowroomApi.middleware,
   SalesReturnApi.middleware,
+  SalesReturnSRApi.middleware,
   uomMasterApi.middleware,
   quotesApi.middleware,
   leadFormApi.middleware,

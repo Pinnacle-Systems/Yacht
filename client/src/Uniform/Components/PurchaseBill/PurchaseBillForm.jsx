@@ -1,7 +1,6 @@
 
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../../../Utils/CommonInput";
-import { PaymentTypeData } from "../../../Utils/DropdownData";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
     DateInput,
@@ -11,11 +10,8 @@ import {
 } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import {
-    useGetPartyByIdQuery,
     useGetPartyQuery,
 } from "../../../redux/services/PartyMasterService";
-import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
-import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import { findFromList, getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
@@ -24,12 +20,8 @@ import { toast } from "react-toastify";
 import PurchaseBillItems from "./PurchaseBillItems";
 import Swal from "sweetalert2";
 import Modal from "../../../UiComponents/Modal";
-import { PDFViewer } from "@react-pdf/renderer";
 import { useDispatch } from "react-redux";
-// import PDF from "./PrintFormat/PDF";
-import tw from "../../../Utils/tailwind-react-pdf";
 import { Loader } from "../../../Basic/components";
-import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import secureLocalStorage from "react-secure-storage";
 import { useAddPurchaseBillMutation, useDeletePurchaseBillMutation, useGetPurchaseBillByIdQuery, useGetPurchaseBillQuery, useUpdatePurchaseBillMutation } from "../../../redux/services/PurchaseBillService";
 import PurchaseBillSummary from "./PurchaseBillSummary";
@@ -55,7 +47,6 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     const [docDate, setDocDate] = useState("")
     const { branchId, companyId, userId, finYearId } = getCommonParams();
     const branchIdFromApi = useRef(branchId);
-    const [pdfOpen, setPdfOpen] = useState(false);
     const params = {
         branchId,
         companyId,
@@ -64,10 +55,6 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     const [contactNumber, setContactNumber] = useState("");
     const [dcNo, setDcNo] = useState("")
     const { data: partyList } = useGetPartyQuery({ params: { ...params } });
-    const { data: locationData } = useGetLocationMasterQuery({
-        params: { branchId },
-        searchParams: searchValue,
-    });
     const [taxTemplateId, setTaxTemplateId] = useState("");
     const [summary, setSummary] = useState(false);
     const [discountType, setDiscountType] = useState("Percentage");
@@ -432,21 +419,18 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         }
     };
 
+    useEffect(() => {
+        if (!taxTemplateId && taxTypeList?.data?.length > 0) {
+            setTaxTemplateId(taxTypeList.data[0].id);
+        }
+    }, [taxTypeList, taxTemplateId]);
+
     return (
         <>
             {isLoadingIndicator ? (
                 <Loader />
             ) : (
                 <div onKeyDown={handleKeyDown}>
-                    {/* <Modal
-                        isOpen={pdfOpen}
-                        onClose={() => setPdfOpen(false)}
-                        widthClass={"w-[90%] h-[90%]"}
-                    >
-                        <PDFViewer style={tw("w-full h-full")}>
-                            <PDF singleData={singleData?.data} branchList={branchList} />
-                        </PDFViewer >
-                    </Modal > */}
                     <Modal
                         isOpen={summary}
                         onClose={() => setSummary(false)}
@@ -501,7 +485,6 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                         setValue={setTaxTemplateId}
                                         required={true}
                                         readOnly={readOnly}
-                                        autoFocus={true}
                                     />
                                 </div>
                             </div>
@@ -515,7 +498,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                         setValue={setInvNo}
                                         readOnly={readOnly}
                                         required
-                                    // autoFocus={true}
+                                    autoFocus={true}
                                     />
                                     <DateInput
                                         name="Inv Date"
@@ -532,15 +515,6 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                         required
                                         type="number"
                                     />
-                                    {/* <DropdownInput
-                                        name="Payment Type"
-                                        options={PaymentTypeData}
-                                        value={paymentType}
-                                        setValue={setPaymentType}
-                                        required={true}
-                                        readOnly={id}
-                                    /> */}
-
                                 </div>
                             </div>
 
@@ -607,7 +581,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
 
                         <div className="grid grid-cols-3 gap-3">
                             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-                                <h2 className="font-medium text-slate-700 mb-2 text-base">
+                                <h2 className="font-medium text-slate-700 mb-1 text-base">
                                     Terms and Condition
                                 </h2>
                                 <textarea
@@ -616,14 +590,14 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                     onChange={(e) => {
                                         setTermsAndCondition(e.target.value);
                                     }}
-                                    className="w-full overflow-auto h-10 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                                    className="w-full overflow-auto h-9 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
                                     placeholder="Terms Details..."
                                     disabled={readOnly}
                                 />
                             </div>
 
                             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
-                                <h2 className="font-medium text-slate-700 mb-2 text-base">
+                                <h2 className="font-medium text-slate-700 mb-1 text-base">
                                     Remarks
                                 </h2>
                                 <textarea
@@ -632,7 +606,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                     onChange={(e) => {
                                         setRemarks(e.target.value);
                                     }}
-                                    className="w-full  overflow-auto h-10 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                                    className="w-full  overflow-auto h-9 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
                                     placeholder="Additional remarks..."
                                     disabled={readOnly}
                                 />
@@ -690,7 +664,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                     <FaWhatsapp className="w-4 h-4 mr-2" />
                                     WhatsApp
                                 </button>
-                                <button
+                                {/* <button
                                     className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
                                     disabled={!id}
                                     onClick={() => {
@@ -699,7 +673,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                 >
                                     <FiPrinter className="w-4 h-4 mr-2" />
                                     PDF
-                                </button>
+                                </button> */}
                             </div>
                         </div>
                     </div>

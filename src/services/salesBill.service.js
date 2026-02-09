@@ -216,6 +216,12 @@ async function create(body) {
       discountType,
       discountValue,
       termsAndCondition,
+      customerName,
+      isCash,
+      isCard,
+      isUpI,
+      cardAmount,
+      upiAmount,
     } = await body;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate
@@ -237,10 +243,10 @@ async function create(body) {
           docId: newDocId,
           docDate: docDate ? new Date(docDate) : null,
           taxTemplateId: parseInt(taxTemplateId),
-          paymentValue: parseFloat(paymentValue),
+          paymentValue: paymentValue ? parseFloat(paymentValue) : null,
           branchId: parseInt(branchId),
           createdById: parseInt(userId),
-          paymentType,
+          // paymentType,
           customerId: customerId ? parseInt(customerId) : undefined,
           mobileNo,
           termsAndCondition,
@@ -250,6 +256,18 @@ async function create(body) {
             discountValue === "" || discountValue == null
               ? null
               : Number(discountValue),
+          customerName: customerName ? customerName : undefined,
+          isCash: Boolean(isCash),
+          isCard: Boolean(isCard),
+          isUpI: Boolean(isUpI),
+          cardAmount: cardAmount ? parseFloat(cardAmount) : null,
+          upiAmount: upiAmount ? parseFloat(upiAmount) : null,
+        },
+      });
+      await tx.customer.update({
+        where: { id: customerId ? parseInt(customerId) : undefined },
+        data: {
+          name : customerName ? customerName : undefined,
         },
       });
       await createSalesBillItems(tx, salesBillItems, data, userId, branchId);
@@ -376,6 +394,12 @@ async function update(id, body) {
     discountType,
     discountValue,
     termsAndCondition,
+    customerName,
+    isCash,
+    isCard,
+    isUpI,
+    cardAmount,
+    upiAmount,
   } = await body;
   let data;
   const dataFound = await prisma.salesBill.findUnique({
@@ -402,12 +426,17 @@ async function update(id, body) {
       data: {
         docDate: docDate ? new Date(docDate) : null,
         taxTemplateId: parseInt(taxTemplateId),
-        paymentValue: parseFloat(paymentValue),
+        paymentValue:  paymentValue ? parseFloat(paymentValue) : null,
         branchId: parseInt(branchId),
         updatedById: parseInt(userId),
+        isCash: Boolean(isCash),
+        isCard: Boolean(isCard),
+        isUpI: Boolean(isUpI),
+        cardAmount: cardAmount ? parseFloat(cardAmount) : null,
+        upiAmount: upiAmount ? parseFloat(upiAmount) : null,
         paymentType,
-        customerId: parseInt(customerId),
-        contactPerson,
+        customerId: customerId ? parseInt(customerId) : null,
+        customerName: customerName ? customerName : undefined,
         mobileNo,
         termsAndCondition,
         remarks,

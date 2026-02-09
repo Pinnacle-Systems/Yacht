@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE `salesbill` ADD COLUMN `cardAmount` DOUBLE NULL,
+    ADD COLUMN `customerName` VARCHAR(191) NULL,
+    ADD COLUMN `isCard` BOOLEAN NULL DEFAULT false,
+    ADD COLUMN `isCash` BOOLEAN NULL DEFAULT false,
+    ADD COLUMN `isUpI` BOOLEAN NULL DEFAULT false,
+    ADD COLUMN `upiAmount` DOUBLE NULL;
