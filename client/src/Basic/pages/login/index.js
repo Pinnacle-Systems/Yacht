@@ -150,9 +150,6 @@ const Login = () => {
         data: data,
       }).then(
         (result) => {
-          console.log(result, "result");
-          console.log(isGlobalOpen, "isGlobalOpen");
-
           if (result.status === 200) {  
             if (result.data.statusCode === 0) {
               secureLocalStorage.clear();
@@ -167,7 +164,6 @@ const Login = () => {
                   sessionStorage.getItem("sessionId") + "username",
                   result.data.userInfo.username
                 );
-                console.log(result.data.userInfo, " result.data.userInfo");
 
                 secureLocalStorage.setItem(
                   sessionStorage.getItem("sessionId") + "userType",
@@ -245,7 +241,6 @@ const Login = () => {
               setLoading(false);
             }
           }
-          console.log("result", result.data.data);
         },
         (error) => {
           console.log(error);

@@ -57,7 +57,6 @@ const BranchAndFinYearForm = ({ setIsGlobalOpen }) => {
         useEffect(() => {
         setCurrentBranch(branches[0]?.id || "");
         let selectedFinYears = dropDownFinYear(finYears?.filter(val => val?.active));
-        console.log(selectedFinYears, "selectedFinYears")
         setcurrentFinYear(selectedFinYears[0]?.value || "");
     }, [branches, finYears])
     useEffect(retrieveBranchData, [retrieveBranchData]);
@@ -80,8 +79,6 @@ const BranchAndFinYearForm = ({ setIsGlobalOpen }) => {
         return finYears.find((finYr) => finYr.id === parseInt(currentFinYear)).active;
     }
 
-
-    console.log(finYears, "finYears", branches, "branches")
 
     return (
         <div className="flex flex-col items-center justify-center bg-gray-100 w-[400px] h-[280px]">

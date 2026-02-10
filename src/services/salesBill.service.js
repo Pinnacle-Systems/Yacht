@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma.js";
 import { NoRecordFound } from "../configs/Responses.js";
 import {
   getDateFromDateTime,
@@ -9,10 +9,7 @@ import {
 } from "../utils/helper.js";
 import { getTableRecordWithId } from "../utils/helperQueries.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
-import { poUpdateValidator } from "../validators/po.validator.js";
-import { styleItem } from "../routes/index.js";
-// import { getTotalQty } from '../utils/poHelpers/getTotalQuantity.js';
-const prisma = new PrismaClient();
+
 
 async function getNextDocId(branchId, shortCode, startTime, endTime) {
   let lastObject = await prisma.salesBill.findFirst({
@@ -31,24 +28,6 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
   return newDocId;
 }
 
-// function manualFilterSearchData(
-//   searchBillDate,
-//   searchinvDate,
-//   searchPoType,
-//   data,
-// ) {
-//   return data.filter(
-//     (item) =>
-//       searchBillDate
-//         ? String(getDateFromDateTime(item.createdAt)).includes(searchBillDate)
-//         : true,
-//     //     &&
-//     //   (searchPoType
-//     //     ? item.poType.toLowerCase().includes(searchPoType.toLowerCase())
-//     //     : true),
-//   );
-// }
-
 async function get(req) {
   const {
     branchId,
@@ -58,18 +37,14 @@ async function get(req) {
     dataPerPage,
     finYearId,
     searchDocId,
-    searchBillDate,
-    searchinvDate,
+    serachDocNo,
+    searchDocDate,
+    searchCustomer,
+    searchMobile,
     customerId,
     startDate,
     endDate,
-    filterParties,
     supplier,
-    filterPoTypes,
-    serachDocNo,
-    searchClientName,
-    searchDate,
-    searchMaterial,
   } = req.query;
   const { startTime: startDateStartTime } = getDateTimeRange(startDate);
   const { endTime: endDateEndTime } = getDateTimeRange(endDate);
@@ -124,29 +99,20 @@ async function get(req) {
             contains: serachDocNo,
           }
         : undefined,
-      OR:
-        customerId || Boolean(filterParties)
-          ? [
-              {
-                customerId: customerId ? parseInt(customerId) : undefined,
-              },
-              {
-                customerId: Boolean(filterParties)
-                  ? {
-                      in: filterParties.split(",").map((i) => parseInt(i)),
-                    }
-                  : undefined,
-              },
-            ]
-          : undefined,
       Customer: {
-        name: Boolean(supplier) ? { contains: supplier } : undefined,
+        name: Boolean(searchCustomer)
+          ? { contains: searchCustomer }
+          : undefined,
+        mobileNo: Boolean(searchMobile)
+          ? { contains: searchMobile }
+          : undefined,
       },
     },
     include: {
       Customer: {
         select: {
           name: true,
+          mobileNo: true,
         },
       },
 
@@ -157,7 +123,11 @@ async function get(req) {
       },
     },
   });
-  // data = manualFilterSearchData(searchBillDate, data);
+  if (searchDocDate) {
+    data = data?.filter((item) =>
+      String(getDateFromDateTime(item.docDate)).includes(searchDocDate),
+    );
+  }
   const totalCount = data.length;
 
   let docId = finYearDate
@@ -238,6 +208,15 @@ async function create(body) {
     );
     let data;
     await prisma.$transaction(async (tx) => {
+      await tx.customer.update({
+        where: { id: customerId ? parseInt(customerId) : undefined },
+        data: {
+          name: customerName ? customerName : undefined,
+        },
+      });
+      const customerObj = await tx.customer.findUnique({
+        where: { id: customerId ? parseInt(customerId) : undefined },
+      });
       data = await tx.salesBill.create({
         data: {
           docId: newDocId,
@@ -248,7 +227,7 @@ async function create(body) {
           createdById: parseInt(userId),
           // paymentType,
           customerId: customerId ? parseInt(customerId) : undefined,
-          mobileNo,
+          mobileNo: customerObj ? customerObj.mobileNo : undefined,
           termsAndCondition,
           remarks,
           discountType,
@@ -264,12 +243,7 @@ async function create(body) {
           upiAmount: upiAmount ? parseFloat(upiAmount) : null,
         },
       });
-      await tx.customer.update({
-        where: { id: customerId ? parseInt(customerId) : undefined },
-        data: {
-          name : customerName ? customerName : undefined,
-        },
-      });
+
       await createSalesBillItems(tx, salesBillItems, data, userId, branchId);
     });
     return { statusCode: 0, data };
@@ -426,7 +400,7 @@ async function update(id, body) {
       data: {
         docDate: docDate ? new Date(docDate) : null,
         taxTemplateId: parseInt(taxTemplateId),
-        paymentValue:  paymentValue ? parseFloat(paymentValue) : null,
+        paymentValue: paymentValue ? parseFloat(paymentValue) : null,
         branchId: parseInt(branchId),
         updatedById: parseInt(userId),
         isCash: Boolean(isCash),
@@ -611,134 +585,66 @@ async function remove(id) {
   return { statusCode: 0, data };
 }
 
-function manualFilterSearchDatasalesBillItems(
-  searchDocDate,
-  searchinvDate,
-  data,
-) {
-  return data.filter(
-    (item) =>
-      (searchDocDate
-        ? String(getDateFromDateTime(item.salesBill.docDate)).includes(
-            searchDocDate,
-          )
-        : true) &&
-      (searchinvDate
-        ? String(getDateFromDateTime(item.salesBill.invDate)).includes(
-            searchinvDate,
-          )
-        : true),
-  );
-}
+async function getSalesBillDetail(req) {
+  const { billNo, branchId } = req.query;
 
-async function getAllDatasalesBillItems(data) {
-  let promises = data?.map(async (item) => {
-    let data = await getsalesBillItemById(item.id);
-    return data.data;
-  });
-  return Promise.all(promises);
-}
-
-async function getsalesBillItemById(id) {
-  const data = await prisma.salesBillItems.findUnique({
-    where: { id: parseInt(id) },
+  let data = await prisma.salesBill.findFirst({
+    where: {
+      docId: billNo,
+      branchId: parseInt(branchId),
+    },
     include: {
-      salesBill: { select: { docId: true, invDate: true, docDate: true } },
-      StyleItem: { select: { name: true } },
-      Size: { select: { name: true } },
-      Color: { select: { name: true } },
+      salesBillItems: {
+        select: {
+          id: true,
+          salesBillId: true,
+          styleId: true,
+          sizeId: true,
+          colorId: true,
+          uomId: true,
+          rate: true,
+          qty: true,
+          styleItemId: true,
+          Size: {
+            select: {
+              name: true,
+            },
+          },
+          StyleItem: {
+            select: {
+              name: true,
+            },
+          },
+          Color: {
+            select: {
+              name: true,
+            },
+          },
+          Uom: {
+            select: {
+              name: true,
+            },
+          },
+          barcodeNo: true,
+          id: true,
+        },
+      },
+      Customer: {
+        select: {
+          name: true,
+          mobileNo: true,
+        },
+      },
     },
   });
 
   if (!data) return NoRecordFound("Sales Bill");
-
-  // 3️⃣ Stock balance
-  const totalStkQty = await prisma.stockLedger.aggregate({
-    where: {
-      styleItemId: data.styleItemId,
-      uomId: data.uomId,
-      barcodeNo: data.barcodeNo,
-      sizeId: data.sizeId,
-      styleId: data.styleId,
-    },
-    _sum: { qty: true },
-  });
-
   return {
     statusCode: 0,
     data: {
       ...data,
-      // poQty: data.qty,
-      // inwardQty,
-      // returnQty,
-      stkQty: totalStkQty._sum.qty ?? 0,
     },
   };
 }
 
-async function getsalesBillItems(req) {
-  const {
-    branchId,
-    active,
-    customerId,
-    pagination,
-    dataPerPage,
-    searchDocId,
-    searchDocDate,
-    searchinvDate,
-  } = req.query;
-
-  let data;
-  let totalCount;
-  if (pagination) {
-    data = await prisma.salesBillItems.findMany({
-      where: {
-        salesBill: {
-          docId: Boolean(searchDocId)
-            ? {
-                contains: searchDocId,
-              }
-            : undefined,
-          customerId: customerId ? parseInt(customerId) : undefined,
-        },
-      },
-      include: {
-        salesBill: {
-          select: {
-            customerId: true,
-            docDate: true,
-            invDate: true,
-          },
-        },
-
-        Uom: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    });
-    data = manualFilterSearchDatasalesBillItems(
-      searchDocDate,
-      searchinvDate,
-      data,
-    );
-
-    data = data?.filter(
-      (i) => i.salesBill.customerId == customerId,
-      // && i.Po.inwardType === po,
-    );
-
-    data = await getAllDatasalesBillItems(data);
-  } else {
-    data = await prisma.salesBillItems.findMany({
-      where: {
-        branchId: branchId ? parseInt(branchId) : undefined,
-        active: active ? Boolean(active) : undefined,
-      },
-    });
-  }
-  return { statusCode: 0, data, totalCount };
-}
-
-export { get, getOne, create, update, remove, getsalesBillItems };
+export { get, getOne, create, update, remove, getSalesBillDetail };

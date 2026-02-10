@@ -1,9 +1,7 @@
-import { PrismaClient } from '@prisma/client'
+import { prisma } from "../lib/prisma.js";
 import { NoRecordFound } from '../configs/Responses.js';
 import { generateSubscriptionCode } from '../utils/helper.js';
 import bcrypt from "bcrypt";
-
-const prisma = new PrismaClient()
 
 
 async function get() {

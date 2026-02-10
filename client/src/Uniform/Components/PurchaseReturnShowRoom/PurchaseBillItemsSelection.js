@@ -1,33 +1,89 @@
-import React, { useEffect, useState } from "react";
-import {
-  getDateFromDateTimeToDisplay,
-} from "../../../Utils/helper";
+import React, { useCallback, useEffect, useState } from "react";
+import { getDateFromDateTimeToDisplay } from "../../../Utils/helper";
 import { useGetPurBillItemsQuery } from "../../../redux/services/PurchaseBillService";
 
 const PurchaseBillItemsSelection = ({
-  purchaseReturnItems,
+  purchaseReturnItems = [],
   setPurchaseReturnItems,
+  tempItems,
+  setTempItems,
+  onClose,
   setFillGrid,
   branchId,
   supplierId,
   invNo,
 }) => {
   const [localpurchaseReturnItems, setLocalpurchaseReturnItems] = useState([]);
-  const [searchDocId, setSearchDocId] = useState("");
-  const [searchDocDate, setSearchDocDate] = useState("");
-  const [searchSupplier, setSearchSupplier] = useState("");
-  const [dataPerPage, setDataPerPage] = useState("10");
-  const [totalCount, setTotalCount] = useState(0);
-  const [currentPageNumber, setCurrentPageNumber] = useState(1);
-  const searchFields = {
-    searchDocId,
-    searchDocDate,
-    searchSupplier,
+  function addItem(id, obj) {
+    setPurchaseReturnItems((prevItems) => {
+      let newItems = structuredClone(prevItems);
+      const index = newItems?.findIndex((v) => v?.styleItemId === "");
+
+      if (index !== -1) {
+        newItems[index] = obj;
+      } else {
+        newItems.push(obj);
+      }
+
+      return newItems;
+    });
+  }
+
+  const EMPTY_ROW = {
+    styleId: "",
+    sizeId: "",
+    stkQty: "",
+    remarks: "",
+    styleItemId: "",
+    colorId: "",
+    selected: false,
+    barcodeNo: "",
+    uomId: "",
+    returnQty: "",
   };
 
-  useEffect(() => {
-    setCurrentPageNumber(1);
-  }, [searchDocId, searchDocDate, searchSupplier]);
+  function removeItem(id) {
+    setPurchaseReturnItems((prev) => {
+      // 1️⃣ Remove the item
+      let updated = prev.filter((item) => String(item.id) !== String(id));
+
+      // 2️⃣ Ensure minimum 3 rows
+      while (updated.length < 3) {
+        updated.push({
+          ...EMPTY_ROW,
+        });
+      }
+
+      return updated;
+    });
+  }
+
+  function handleChangee(id, obj) {
+    if (isItemAddedd(id)) {
+      removeItem(id);
+    } else {
+      addItem(id, obj);
+    }
+  }
+  function isItemAddedd(id) {
+    return (
+      (purchaseReturnItems || [])?.findIndex(
+        (item) => parseInt(item?.id) === parseInt(id),
+      ) !== -1
+    );
+  }
+
+  function handleSelectAllChange(value, purchaseReturnItems) {
+    if (value) {
+      purchaseReturnItems?.forEach((item) => addItem(item.id, item));
+    } else {
+      purchaseReturnItems?.forEach((item) => removeItem(item.id));
+    }
+  }
+
+  function getSelectAll(purchaseReturnItems) {
+    return purchaseReturnItems?.every((item) => isItemAddedd(item.id));
+  }
 
   const {
     data: purBillItemsData,
@@ -38,272 +94,183 @@ const PurchaseBillItemsSelection = ({
       branchId,
       supplierId,
       invNo,
-      ...searchFields,
       pagination: true,
-      dataPerPage,
-      pageNumber: currentPageNumber,
     },
   });
-  const isRowEmpty = (row) =>
-    !row.styleItemId && !row.uomId && !row.stkQty;
 
-  const purBillItems = purBillItemsData?.data || [];
+  const syncFormWithDb = useCallback(
+    (data) => {
+      setTempItems(data);
+    },
+    [supplierId],
+  );
 
-  function handleDone() {
-    setPurchaseReturnItems((prev) => {
-      let updated = [...prev];
-
-      // 1️⃣ Find ALL empty rows first
-      const emptyRowIndices = updated.reduce((indices, row, index) => {
-        if (isRowEmpty(row)) {
-          indices.push(index);
-        }
-        return indices;
-      }, []);
-
-      // 2️⃣ Fill empty rows with our items
-      localpurchaseReturnItems.forEach((item, i) => {
-        const newRow = {
-          ...item,
-          styleItemId: item.styleItemId ?? "",
-          uomId: item.uomId ?? "",
-          stkQty: item.stkQty ?? "",
-          purchaseBillId: item.purchaseBillId ?? "",
-        };
-
-        // If we have an empty row at this position, use it
-        if (i < emptyRowIndices.length) {
-          updated[emptyRowIndices[i]] = newRow;
-        }
-        // Otherwise, append to the end
-        else {
-          updated.push(newRow);
-        }
-      });
-
-      return updated;
-    });
-
-    setFillGrid(false);
-  }
-
-  function handleCancel() {
-    setLocalpurchaseReturnItems([]);
-    setFillGrid(false);
-  }
-
-  // if (!data?.data || isFetching || isLoading) return <Loader />
-
-  function addItem(item) {
-    setLocalpurchaseReturnItems((localpurchaseReturnItems) => {
-      let newItems = structuredClone(localpurchaseReturnItems);
-      newItems.push(item);
-      // newItems = newItems?.map(j => { return { ...j, delQty: j.qty } })
-      return newItems;
-    });
-  }
-
-  function removeItem(removeItem) {
-    setLocalpurchaseReturnItems((localpurchaseReturnItems) => {
-      return localpurchaseReturnItems.filter(
-        (item) =>
-          !(
-            removeItem.styleItemId === item.styleItemId &&
-            removeItem.uomId === item.uomId &&
-            removeItem.stkQty === item.stkQty
-          ),
-      );
-    });
-  }
-
-  function isItemChecked(checkItem) {
-    let item = localpurchaseReturnItems.find(
-      (item) =>
-        checkItem.styleItemId === item.styleItemId &&
-        checkItem.uomId === item.uomId &&
-        checkItem.stkQty === item.stkQty,
-    );
-    if (!item) return false;
-    return true;
-  }
-
-  function handleCheckBoxChange(value, item) {
-    if (value) {
-      addItem(item);
-    } else {
-      removeItem(item);
+  useEffect(() => {
+    if (purBillItemsData?.data) {
+      syncFormWithDb(purBillItemsData?.data);
     }
-  }
-
-  function handleSelectAllChange(value) {
-    if (value) {
-      (purBillItems ? purBillItems : []).forEach((item) => addItem(item));
-    } else {
-      (purBillItems ? purBillItems : []).forEach((item) => removeItem(item));
-    }
-  }
-
-  function getSelectAll() {
-    return (purBillItems ? purBillItems : []).every((item) =>
-      isItemChecked(item),
-    );
-  }
+  }, [
+    isPurBillItemsFetching,
+    isPurBillItemsLoading,
+    syncFormWithDb,
+    purBillItemsData,
+  ]);
 
   return (
-    <div className="bg-black/30 backdrop-blur-sm flex items-center justify-center ">
-      <div className="w-full bg-white  shadow-2xl overflow-hidden">
-        {/* HEADER */}
-        <div className="bg-gradient-to-r from-gray-400 to-gray-500 text-white px-4 py-2 flex justify-between items-center">
-          <h2 className="text-sm font-semibold tracking-wide">
-            Purchase Bill Items
-          </h2>
-        </div>
+    <div className="h-full flex flex-col bg-[#f1f1f0]">
+      {/* HEADER */}
+      <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3">
+        <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+          Purchase Bill Items
+        </h2>
 
-        {/* TABLE CONTENT */}
-        <div className="overflow-auto h-[450px]">
-          <table className="w-full text-xs border border-gray-200">
-            <thead className="bg-gray-200 text-gray-800">
-              <tr>
-                <th className="px-2 py-1 w-10 border border-gray-300">
-                  <div className="flex flex-col items-center">
-                    <span className="text-[10px] font-medium mb-[2px]">
-                      Select
-                    </span>
-                    <input
-                      type="checkbox"
-                      className="cursor-pointer"
-                      onChange={(e) => handleSelectAllChange(e.target.checked)}
-                      checked={getSelectAll()}
-                    />
-                  </div>
-                </th>
-                <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">
-                  S No
-                </th>
-                {/* <th className="px-4 py-1.5 border border-gray-300 text-center text-xs w-36">Po Type</th> */}
-                <th className="px-1 py-1.5 border border-gray-300 text-center text-xs w-32">
-                  <label>Bill No</label>
-                  {/* <input
-                    type="text"
-                    className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg w-full"
-                    placeholder="Search"
-                    onFocus={(e) => e.target.select()}
-                    value={searchDocId}
-                    onChange={(e) => {
-                      setSearchDocId(e.target.value);
-                    }}
-                  /> */}
-                </th>
-                <th className="px-1 py-1.5 border border-gray-300 text-center text-xs w-32">
-                  <label> Bill Date</label>
-                  {/* <input
-                    type="text"
-                    className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg w-full"
-                    placeholder="Search"
-                    value={searchDocDate}
-                    onChange={(e) => {
-                      setSearchDocDate(e.target.value);
-                    }}
-                    onFocus={(e) => {
-                      e.target.select();
-                    }}
-                  /> */}
-                </th>
-                <th className="px-1 py-1.5 border border-gray-300 text-xs text-gray-800  w-40">
-                  <label>Barcode No</label>
-                </th>
-                <th className="px-1 py-1.5 border border-gray-300 text-xs text-gray-800  w-64">
-                  <label>Style Item</label>
-                </th>
-                <th className="px-1 py-1.5 border border-gray-300 text-xs  w-28">
-                  <label>Size</label>
-                </th>
-                <th className="px-1 py-1.5 border border-gray-300 text-xs  w-20">
-                  <label>Color</label>
-                </th>
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                   border border-green-600 flex items-center gap-1 text-xs"
+        >
+          Done
+        </button>
+      </div>
 
-                <th className="px-1 py-1.5 border border-gray-300 text-xs  w-20">
-                  <label>Inward Qty</label>
-                </th>
-                <th className="px-1 py-1.5 border border-gray-300 text-xs  w-20">
-                  <label>Stock Qty</label>
-                </th>
-              </tr>
-            </thead>
+      {/* CONTENT */}
+      <div className="flex-1 p-3">
+        <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
+            <div className="relative w-full max-h-[420px] overflow-y-auto py-1">
+              <table className="w-full border-collapse table-fixed">
+                <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
+                  <tr>
+                    <th className="px-2 py-1 w-10 border border-gray-300">
+                      <div className="flex flex-col items-center">
+                        <span className="text-[10px] font-medium mb-[2px]">
+                          Select
+                        </span>
+                        <input
+                          type="checkbox"
+                          className="cursor-pointer"
+                          onChange={(e) =>
+                            handleSelectAllChange(
+                              e.target.checked,
+                              tempItems ? tempItems : [],
+                            )
+                          }
+                          checked={getSelectAll(tempItems ? tempItems : [])}
+                        />
+                      </div>
+                    </th>
 
-            <tbody>
-              {purBillItems?.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={9}
-                    className="px-4 py-4 text-center text-gray-500"
-                  >
-                    No data found
-                  </td>
-                </tr>
-              ) : (
-                (purBillItems || []).map((item, index) => (
-                  <tr
-                    key={index}
-                    className={`border-b hover:bg-gray-50 cursor-pointer ${
-                      isItemChecked(item) ? "bg-gray-50" : ""
-                    }`}
-                    onClick={() =>
-                      handleCheckBoxChange(!isItemChecked(item), item)
-                    }
-                  >
-                    <td className="text-center py-2 border border-gray-300">
-                      <input
-                        type="checkbox"
-                        className="cursor-pointer"
-                        checked={isItemChecked(item)}
-                      />
-                    </td>
+                    <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">
+                      S No
+                    </th>
 
-                    <td className="text-center border border-gray-300">
-                      {index + 1}
-                    </td>
-                    <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
-                      {item?.PurchaseBill?.docId}
-                    </td>
-                    <td className=" border border-gray-300 px-2 py-1 text-left text-xs">
-                      {getDateFromDateTimeToDisplay(
-                        item?.PurchaseBill?.docDate,
-                      )}
-                    </td>
-                    <td className=" border border-gray-300 text-[11px]  py-1.5 px-2">
-                      {item?.barcodeNo}
-                    </td>
-                    <td className=" border border-gray-300 text-[11px]  py-1.5 px-2">
-                      {item?.StyleItem?.name}
-                    </td>
-                    <td className=" border border-gray-300 text-[11px]  py-1.5 px-2">
-                      {item?.Size?.name}
-                    </td>
-                    <td className=" border border-gray-300 text-[11px]  py-1.5 px-2">
-                      {item?.Color?.name}
-                    </td>
-                    <td className=" border border-gray-300 text-[11px] text-right  py-1.5 px-2">
-                      {item?.qty}
-                    </td>
-                    <td className=" border border-gray-300 text-[11px] text-right  py-1.5 px-2">
-                      {item?.stkQty}
-                    </td>
+                    <th className="px-1 py-1.5 border border-gray-300 text-xs w-28">
+                      Bill No
+                    </th>
+
+                    <th className="px-1 py-1.5 border border-gray-300 text-xs w-28">
+                      Bill Date
+                    </th>
+
+                    <th className="px-1 py-1.5 border border-gray-300 text-xs w-32">
+                      Barcode
+                    </th>
+
+                    <th className="px-1 py-1.5 border border-gray-300 text-xs w-56">
+                      Style Item
+                    </th>
+
+                    <th className="px-1 py-1.5 border border-gray-300 text-xs w-20">
+                      Size
+                    </th>
+
+                    <th className="px-1 py-1.5 border border-gray-300 text-xs w-24">
+                      Color
+                    </th>
+
+                    <th className="px-1 py-1.5 border border-gray-300 text-xs w-20 text-right">
+                      Inward Qty
+                    </th>
+
+                    <th className="px-1 py-1.5 border border-gray-300 text-xs w-20 text-right">
+                      Stock Qty
+                    </th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                </thead>
 
-        {/* FOOTER */}
-        <div className="flex justify-end p-3 bg-gray-50">
-          <button
-            className="px-4 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
-            onClick={handleDone}
-          >
-            Done
-          </button>
+                <tbody>
+                  {tempItems?.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={10}
+                        className="px-4 py-4 text-center text-gray-500"
+                      >
+                        No data found
+                      </td>
+                    </tr>
+                  ) : (
+                    tempItems.map((item, index) => (
+                      <tr
+                        key={index}
+                        className={`${
+                          index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                        } border-b cursor-pointer hover:bg-gray-50`}
+                        onClick={() => handleChangee(item?.id, item)}
+                      >
+                        <td className="text-center py-2 border border-gray-300">
+                          <input
+                                  type="checkbox"
+                                  className="cursor-pointer"
+                                  checked={isItemAddedd(item.id, item)}
+                                  readOnly
+                                />
+                        </td>
+
+                        <td className="text-center border border-gray-300 text-[11px]">
+                          {index + 1}
+                        </td>
+
+                        <td className="border border-gray-300 text-[11px] px-2 py-1.5">
+                          {item?.PurchaseBill?.docId}
+                        </td>
+
+                        <td className="border border-gray-300 text-[11px] px-2 py-1.5">
+                          {getDateFromDateTimeToDisplay(
+                            item?.PurchaseBill?.docDate,
+                          )}
+                        </td>
+
+                        <td className="border border-gray-300 text-[11px] px-2 py-1.5">
+                          {item?.barcodeNo}
+                        </td>
+
+                        <td className="border border-gray-300 text-[11px] px-2 py-1.5">
+                          {item?.StyleItem?.name}
+                        </td>
+
+                        <td className="border border-gray-300 text-[11px] px-2 py-1.5">
+                          {item?.Size?.name}
+                        </td>
+
+                        <td className="border border-gray-300 text-[11px] px-2 py-1.5">
+                          {item?.Color?.name}
+                        </td>
+
+                        <td className="border border-gray-300 text-[11px] px-2 py-1.5 text-right">
+                          {item?.qty}
+                        </td>
+
+                        <td className="border border-gray-300 text-[11px] px-2 py-1.5 text-right">
+                          {item?.stkQty}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>

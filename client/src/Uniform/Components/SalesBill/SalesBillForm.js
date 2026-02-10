@@ -386,7 +386,7 @@ export function SalesBillForm({
               </button>
             </div>
           </div>
-          <div className="space-y-2 mt-3">
+          <div className="space-y-1.5 mt-1.5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                 <h2 className="font-medium text-slate-700 mb-2">
@@ -412,7 +412,7 @@ export function SalesBillForm({
                     value={taxTemplateId}
                     setValue={setTaxTemplateId}
                     required={true}
-                    readOnly={readOnly}
+                    readOnly={readOnly || id}
                     // autoFocus={true}
                   />
                 </div>
@@ -456,7 +456,7 @@ export function SalesBillForm({
                 taxTemplateId={taxTemplateId}
               />
             </fieldset>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                 <h2 className="font-medium text-slate-700 mb-1 text-base">
                   Terms and Condition
@@ -510,7 +510,7 @@ export function SalesBillForm({
                 </button>
               </div>
             </div>
-            <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">
+            <div className="flex flex-col md:flex-row gap-2 justify-between">
               <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => saveData("new")}

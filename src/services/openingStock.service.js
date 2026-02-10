@@ -6,11 +6,10 @@ import {
   getYearShortCodeForFinYear,
 } from "../utils/helper.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
-import { PrismaClient } from "@prisma/client";
 import fs from "fs";
 import { exec } from "child_process";
 
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prisma.js";
 
 async function getNextDocId(
   branchId,

@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma.js";
 import { NoRecordFound } from "../configs/Responses.js";
 import { getStockProperty } from "../utils/helper.js";
 import {
@@ -8,7 +8,6 @@ import {
 } from "../utils/stockHelper.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 
-const prisma = new PrismaClient();
 
 const xprisma = prisma.$extends({
   result: {

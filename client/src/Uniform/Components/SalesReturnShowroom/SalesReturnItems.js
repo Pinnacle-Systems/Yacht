@@ -3,6 +3,9 @@ import { ReusableInput } from "../../../Utils/CommonInput";
 import { useLazyGetStyleDetailQuery } from "../../../redux/services/StockService";
 import { toast } from "react-toastify";
 import FxSelect from "../../../Inputs";
+import Modal from "../../../UiComponents/Modal";
+import SalesBillItemsSelection from "./SalesBillItemsSelection";
+import Swal from "sweetalert2";
 
 export default function SalesReturnItems({
   salesReturnItems,
@@ -14,24 +17,18 @@ export default function SalesReturnItems({
   styleItemList,
   colorList,
   uomList,
+  tempItems,
+  setTempItems,
+  billNo,
 }) {
-  const [barcodeNo, setbarcodeNo] = useState("");
   const [contextMenu, setContextMenu] = useState(null);
-  const [getStyleDetail] = useLazyGetStyleDetailQuery();
-  const [focusedRowIndex, setFocusedRowIndex] = useState(null);
-  const [previewImage, setPreviewImage] = useState(null);
-  const [currentSelectedIndex, setCurrentSelectedIndex] = useState("");
-  const [pendingStyleRows, setPendingStyleRows] = useState([]);
-  const [showColorPopup, setShowColorPopup] = useState(false);
-  const [colorId, setColorId] = useState("");
-  const [uniqueColorIds, setUniqueColorIds] = useState([]);
+  const [fillGrid, setFillGrid] = useState(false);
   const addRow = () => {
     const newRow = {
       barcode: "",
       styleId: "",
       sizeId: "",
       returnQty: "",
-      remarks: "",
       barcodeNo: "",
       styleItemId: "",
       colorId: "",
@@ -40,26 +37,8 @@ export default function SalesReturnItems({
     setSalesReturnItems([...salesReturnItems, newRow]);
   };
 
-  const deleteRow = (id) => {
-    setSalesReturnItems((currentRows) => {
-      if (currentRows.length > 1) {
-        return currentRows.filter((row, index) => index !== Number(id));
-      }
-      return currentRows;
-    });
-  };
-
-  const handleDeleteAllRows = () => {
-    setSalesReturnItems((prevRows) => {
-      if (prevRows.length <= 1) return prevRows;
-      return [prevRows[0]];
-    });
-  };
-
   const deleteSelectedRows = () => {
-    setSalesReturnItems((rows) =>
-      rows.filter((r) => !(r.selected && (r.returnQty ?? 0) === 0)),
-    );
+    setSalesReturnItems((rows) => rows.filter((r) => !r.selected));
     setContextMenu(null);
   };
 
@@ -82,15 +61,14 @@ export default function SalesReturnItems({
       setSalesReturnItems((prev) => {
         const count = prev.length;
 
-        if (count < 3) {
+        if (count < 4) {
           return [
             ...prev,
-            ...Array.from({ length: 3 - count }, () => ({
+            ...Array.from({ length: 4 - count }, () => ({
               barcode: "",
               styleId: "",
               sizeId: "",
               returnQty: "",
-              remarks: "",
               barcodeNo: "",
               styleItemId: "",
               colorId: "",
@@ -103,12 +81,11 @@ export default function SalesReturnItems({
       });
     } else {
       setSalesReturnItems(
-        Array.from({ length: 3 }, () => ({
+        Array.from({ length: 4 }, () => ({
           barcode: "",
           styleId: "",
           sizeId: "",
           returnQty: "",
-          remarks: "",
           barcodeNo: "",
           styleItemId: "",
           colorId: "",
@@ -119,11 +96,6 @@ export default function SalesReturnItems({
   }, [salesReturnItems, setSalesReturnItems]);
 
   const handleInputChange = async (value, index, field) => {
-    if (field === "returnQty") {
-      const row = salesReturnItems[index];
-      const balanceQty = row?.stkQty || 0;
-
-    }
     setSalesReturnItems((prev) => {
       const newItems = structuredClone(prev);
       newItems[index][field] = value;
@@ -149,13 +121,12 @@ export default function SalesReturnItems({
         }
       });
 
-      while (updated.length < 3) {
+      while (updated.length < 4) {
         updated.push({
           barcodeNo: "",
           styleId: "",
           sizeId: "",
           returnQty: "",
-          remarks: "",
           barcode: "",
           styleItemId: "",
           colorId: "",
@@ -167,84 +138,61 @@ export default function SalesReturnItems({
     });
   };
 
-  const handleAddRow = async () => {
-    const isFirstTime = salesReturnItems.every(
-      (row) => !row.returnQty && !row.rate && !row.styleId && !row.styleItemId,
-    );
-
-    if (!isFirstTime) {
-      const hasEmpty = salesReturnItems.some((row) => {
-        const hasStyle =
-          row.styleItemId !== "" &&
-          row.styleItemId !== null &&
-          row.styleItemId !== undefined;
-
-        return hasStyle && !row.returnQty;
-      });
-
-      if (hasEmpty) {
-        toast.info("Please fill all required fields...!", {
-          position: "top-center",
-        });
-        return;
-      }
-    }
-    try {
-      const { data: styleData } = await getStyleDetail({
-        params: {
-          barcodeNo: barcodeNo,
-        },
-      });
-      if (styleData?.statusCode === 1) {
-        toast.info(styleData.message, {
-          position: "top-center",
-          autoClose: 2000,
-        });
-      }
-      const styleRows = styleData?.data;
-      if (!styleRows) return;
-      const colorIds = [
-        ...new Set(styleRows.map((row) => row.colorId).filter(Boolean)),
-      ];
-      setUniqueColorIds(colorIds);
-      if (
-        colorIds.length < 1 ||
-        colorIds.length === 1 ||
-        colorIds.length === null
-      ) {
-        fillRows(styleRows);
-      } else if (colorIds.length > 1) {
-        setPendingStyleRows(styleRows);
-        setShowColorPopup(true);
-      }
-    } catch (error) {
-      console.error("Error adding row:", error);
-    }
-  };
-
   return (
     <>
+      <Modal
+        isOpen={fillGrid}
+        onClose={() => setFillGrid(false)}
+        widthClass={"w-[90%] h-[80%]"}
+      >
+        <SalesBillItemsSelection
+          setFillGrid={setFillGrid}
+          salesReturnItems={salesReturnItems}
+          setSalesReturnItems={setSalesReturnItems}
+          tempItems={tempItems}
+          setTempItems={setTempItems}
+          onClose={() => setFillGrid(false)}
+        />
+      </Modal>
       <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[450px] overflow-auto overflow-x-auto w-full">
-        <div className="flex items-center gap-4 sticky top-0 bg-white z-30 mt-2">
-          <ReusableInput
-            label="Style No"
-            value={barcodeNo}
-            setValue={setbarcodeNo}
-            type={"text"}
-            required={true}
-            readOnly={readOnly}
+        <div className="flex items-center mt-1">
+          <h2 className="font-medium text-slate-700">List of Items</h2>
+          <button
+            className={`font-bold text-slate-700 bord ml-[780px] text-sm bg-blue-500 rounded rounded-md text-white px-2
+              `}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                e.stopPropagation();
-                handleAddRow();
+                if (!billNo) {
+                  Swal.fire({
+                    icon: "warning",
+                    title: ` Choose Bill No`,
+                    showConfirmButton: false,
+                    timer: 2000,
+                  });
+                } else {
+                  e.preventDefault();
+                  setFillGrid(true);
+                }
               }
             }}
-          />
+            onClick={() => {
+              if (!billNo) {
+                Swal.fire({
+                  icon: "warning",
+                  title: ` Choose Bill No`,
+                  showConfirmButton: false,
+                  timer: 2000,
+                });
+              } else {
+                setFillGrid(true);
+              }
+            }}
+            // disabled={id}
+          >
+            Fill Items
+          </button>
         </div>
-        <div className="flex justify-between items-center mb-2">
-          <h2 className="font-medium text-slate-700">Return Item Details</h2>
-        </div>
-        <div className={`w-full  max-h-[300px] overflow-y-auto  my-1`}>
+        <div className={`w-full  min-h-[190px] max-h-[190px] overflow-y-auto  mt-1 mb-2`}>
           <table className=" border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
@@ -254,18 +202,12 @@ export default function SalesReturnItems({
                       type="checkbox"
                       checked={
                         salesReturnItems.length > 0 &&
-                        salesReturnItems
-                          .filter((row) => (row.returnQty ?? 0) === 0)
-                          .every((row) => row.selected)
+                        salesReturnItems.every((row) => row.selected)
                       }
                       onChange={(e) => {
                         const checked = e.target.checked;
                         setSalesReturnItems((prev) =>
-                          prev.map((row) =>
-                            (row.returnQty ?? 0) > 0
-                              ? row
-                              : { ...row, selected: checked },
-                          ),
+                          prev.map((row) => ({ ...row, selected: checked })),
                         );
                       }}
                       onContextMenu={(e) => {
@@ -312,7 +254,7 @@ export default function SalesReturnItems({
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                 Return Qty
+                  Return Qty
                 </th>
                 <th
                   className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
@@ -331,7 +273,7 @@ export default function SalesReturnItems({
                     <input
                       type="checkbox"
                       checked={row.selected || false}
-                      disabled={readOnly || (row.returnQty ?? 0) > 0}
+                      disabled={readOnly}
                       onChange={(e) =>
                         handleInputChange(e.target.checked, index, "selected")
                       }
@@ -364,7 +306,7 @@ export default function SalesReturnItems({
                       onBlur={(e) => {
                         handleInputChange(e.target.value, index, "barcodeNo");
                       }}
-                      disabled={readOnly}
+                      disabled={true}
                     />
                   </td>
                   <td className="py-0.5 border border-gray-300 text-[11px] ">
@@ -379,7 +321,7 @@ export default function SalesReturnItems({
                           label: item.name,
                           value: item.id,
                         }))}
-                      readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                      readOnly={true}
                       placeholder=""
                       onBlur={() =>
                         handleInputChange(row.styleItemId, index, "styleItemId")
@@ -404,7 +346,7 @@ export default function SalesReturnItems({
                           label: item.name,
                           value: item.id,
                         }))}
-                      readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                      readOnly={true}
                       placeholder=""
                       onBlur={() =>
                         handleInputChange(row.sizeId, index, "sizeId")
@@ -428,7 +370,7 @@ export default function SalesReturnItems({
                           label: item.name,
                           value: item.id,
                         }))}
-                      readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                      readOnly={true}
                       placeholder=""
                       onBlur={() =>
                         handleInputChange(row.colorId, index, "colorId")
@@ -451,7 +393,7 @@ export default function SalesReturnItems({
                           label: item.name,
                           value: item.id,
                         }))}
-                      readOnly={readOnly || (row.usedQty ?? 0) > 0}
+                      readOnly={  true}
                       placeholder=""
                       onBlur={() =>
                         handleInputChange(row.uomId, index, "uomId")
@@ -484,7 +426,7 @@ export default function SalesReturnItems({
                       onBlur={(e) => {
                         handleInputChange(e.target.value, index, "returnQty");
                       }}
-                      disabled={readOnly}
+                      disabled={true}
                     />
                   </td>
                   <td className="w-2 border border-gray-300">
@@ -508,13 +450,13 @@ export default function SalesReturnItems({
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
                   colSpan={7}
                 >
-                  Total 
+                  Total
                 </td>
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
-                  {(Array.isArray(salesReturnItems) ? salesReturnItems : []).reduce(
-                    (sum, row) => sum + (Number(row.returnQty) || 0),
-                    0,
-                  )}
+                  {(Array.isArray(salesReturnItems)
+                    ? salesReturnItems
+                    : []
+                  ).reduce((sum, row) => sum + (Number(row.returnQty) || 0), 0)}
                 </td>
                 <td className="border border-gray-300" colSpan={1}></td>
               </tr>

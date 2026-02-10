@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma.js";
 import { getTableRecordWithId } from "../utils/helperQueries.js";
 import {
   getDateFromDateTime,
@@ -7,8 +7,6 @@ import {
 } from "../utils/helper.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 import { NoRecordFound } from "../configs/Responses.js";
-
-const prisma = new PrismaClient();
 
 async function getNextDocId(
   branchId,
@@ -174,7 +172,7 @@ async function getOne(id) {
       Supplier: true,
     },
   });
-  console.log(data,"data")
+  console.log(data, "data");
   if (!data) return NoRecordFound("purchaseReturnShowRoom");
   const purchaseReturnStkQty = await Promise.all(
     data.purchasReturnItemsSRs?.map(async (item) => {
@@ -314,6 +312,7 @@ async function createPurchaseReturnItems(
           ? parseInt(stockDetail.styleItemId)
           : null,
         barcodeNo: stockDetail?.barcodeNo ?? undefined,
+        invNo: invNo ? invNo : undefined,
       },
     });
 
@@ -460,6 +459,7 @@ async function updatePurchaseReturnItems(
                 ? -Math.abs(parseInt(stockDetail.returnQty))
                 : null,
             barcodeNo: stockDetail?.barcodeNo ?? undefined,
+            invNo: invNo ? invNo : undefined,
           },
         });
       } else {
@@ -488,6 +488,7 @@ async function updatePurchaseReturnItems(
               ? parseInt(stockDetail.styleItemId)
               : null,
             barcodeNo: stockDetail?.barcodeNo ?? undefined,
+            invNo: invNo ? invNo : undefined,
           },
         });
       }
@@ -531,7 +532,7 @@ async function updatePurchaseReturnItems(
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
           colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
           uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
-
+          invNo: invNo ? invNo : undefined,
           qty:
             stockDetail?.returnQty && !isNaN(parseFloat(stockDetail.returnQty))
               ? -Math.abs(parseInt(stockDetail.returnQty))

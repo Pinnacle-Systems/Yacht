@@ -1,7 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma.js";
 import { CustomError, NoRecordFound } from "../configs/Responses.js";
 
-const prisma = new PrismaClient();
 
 async function getStyleDetail(req) {
   const { styleId, branchId, fromProcessId, toProcessId, storeId } = req.query;

@@ -17,13 +17,13 @@ const SalesBillReport = ({
   rowActions = true,
 }) => {
   const branchId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "currentBranchId"
+    sessionStorage.getItem("sessionId") + "currentBranchId",
   );
 
   const [dataPerPage, setDataPerPage] = useState("10");
   const [serachDocNo, setSerachDocNo] = useState("");
   const [searchDocDate, setSearchDocDate] = useState("");
-  const [searchStore, setSearchStore] = useState("");
+  const [searchMobile, setSearchMobile] = useState("");
   const [totalCount, setTotalCount] = useState(0);
   const [currentPageNumber, setCurrentPageNumber] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,20 +37,20 @@ const SalesBillReport = ({
   const searchFields = {
     serachDocNo,
     searchDocDate,
-    searchStore,
+    searchMobile,
     searchType,
     searchCustomer,
   };
 
   useEffect(() => {
     setCurrentPageNumber(1);
-  }, [serachDocNo, searchDocDate, searchStore, searchType, searchCustomer]);
+  }, [serachDocNo, searchDocDate, searchMobile, searchType, searchCustomer]);
 
   const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
+    sessionStorage.getItem("sessionId") + "userCompanyId",
   );
   const finyearId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "currentFinYear"
+    sessionStorage.getItem("sessionId") + "currentFinYear",
   );
   const params = {
     branchId,
@@ -190,11 +190,14 @@ const SalesBillReport = ({
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
                     <div>Bill Date</div>
                   </th>
-                  <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                  {/* <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Payment Type</div>
-                  </th>
+                  </th> */}
                   <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Customer</div>
+                  </th>
+                  <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                    <div>Contact No</div>
                   </th>
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
@@ -226,7 +229,7 @@ const SalesBillReport = ({
                       }}
                     />
                   </th>
-                  <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                  {/* <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
                     <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -236,7 +239,7 @@ const SalesBillReport = ({
                         setSearchType(e.target.value);
                       }}
                     />
-                  </th>
+                  </th> */}
                   <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
                     <input
                       type="text"
@@ -245,6 +248,17 @@ const SalesBillReport = ({
                       value={searchCustomer}
                       onChange={(e) => {
                         setSearchCustomer(e.target.value);
+                      }}
+                    />
+                  </th>
+                  <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                    <input
+                      type="text"
+                      className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                      placeholder="Search"
+                      value={searchMobile}
+                      onChange={(e) => {
+                        setSearchMobile(e.target.value);
                       }}
                     />
                   </th>
@@ -281,14 +295,18 @@ const SalesBillReport = ({
                             ? getDateFromDateTimeToDisplay(dataObj.docDate)
                             : ""}
                         </td>
-                        <td className="py-1.5 text-left px-4">
+                        {/* <td className="py-1.5 text-left px-4">
                           {" "}
                           {dataObj?.paymentType}
-                        </td>
-                       
+                        </td> */}
+
                         <td className="py-1.5 text-left px-4">
                           {" "}
                           {dataObj?.Customer?.name}
+                        </td>
+                         <td className="py-1.5 text-left px-4">
+                          {" "}
+                          {dataObj?.Customer?.mobileNo}
                         </td>
                         {rowActions && (
                           <td className=" w-[30px] border-gray-200 gap-1 px-2 justify-end">
@@ -351,7 +369,7 @@ const SalesBillReport = ({
                           </td>
                         )}
                       </tr>
-                    )
+                    ),
                   )}
                 </tbody>
               )}

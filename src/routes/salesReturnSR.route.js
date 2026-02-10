@@ -1,18 +1,16 @@
 import { Router } from "express";
 const router = Router();
 import {
-  create,
   get,
   getOne,
-  update,
   remove,
-  getSaleBillDetail,
-} from "../controllers/salesBill.controller.js";
+  create,
+  update,
+} from "../controllers/salesReturnSR.controller.js";
 
-router.post("/", create);
 router.get("/", get);
-router.get("/salesBillDetail", getSaleBillDetail);
 router.get("/:id", getOne);
+router.post("/", create);
 router.put("/:id", update);
 router.delete("/:id", remove);
 

@@ -6,8 +6,7 @@ import {
   getYearShortCodeForFinYear,
 } from "../utils/helper.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prisma.js";
 
 async function getNextDocId(
   branchId,

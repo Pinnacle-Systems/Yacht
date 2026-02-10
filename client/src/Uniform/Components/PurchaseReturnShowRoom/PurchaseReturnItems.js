@@ -1,14 +1,7 @@
-import {
-  useLazyGetStyleCodeDetailQuery,
-  useLazyGetStyleMasterByIdQuery,
-} from "../../../redux/uniformService/StyleMasterService";
 import { useEffect, useState } from "react";
-import { useLazyGetSizeTemplateByIdQuery } from "../../../redux/uniformService/SizeTemplateMasterServices";
-import secureLocalStorage from "react-secure-storage";
 import { toast } from "react-toastify";
 import FxSelect from "../../../Inputs";
 import Swal from "sweetalert2";
-import TaxDetailsFullTemplate from "../TaxDetailsCompleteTemplate";
 import Modal from "../../../UiComponents/Modal";
 import PurchaseBillItemsSelection from "./PurchaseBillItemsSelection";
 export default function PurchaseReturnItems({
@@ -24,16 +17,11 @@ export default function PurchaseReturnItems({
   supplierId,
   invNo,
   branchId,
+  tempItems,
+  setTempItems,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
-  const [styleNo, setStyleNo] = useState("");
-  const [getStyleCodeDetail] = useLazyGetStyleCodeDetailQuery();
-  const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
   const [fillGrid, setFillGrid] = useState(false);
-
-  const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId",
-  );
 
   const addRow = () => {
     const newRow = {
@@ -50,8 +38,6 @@ export default function PurchaseReturnItems({
     };
     setPurchaseReturnItems([...purchaseReturnItems, newRow]);
   };
-  const [triggerGetStyle, { data: styleData }] =
-    useLazyGetStyleMasterByIdQuery();
   const handleInputChange = async (value, index, field) => {
     if (field === "returnQty") {
       const row = purchaseReturnItems[index];
@@ -73,61 +59,13 @@ export default function PurchaseReturnItems({
       }
     }
     const newBlend = structuredClone(purchaseReturnItems);
-    if (field === "styleId") {
-      // 1️⃣ update immediately
-      newBlend[index].styleItemId = value;
-      setPurchaseReturnItems([...newBlend]); // 🔥 maintain UI instantly
-
-      try {
-        // 2️⃣ fetch style data
-        const response = await triggerGetStyle(value).unwrap();
-
-        // 3️⃣ update fabricId
-        newBlend[index].hsnId = response?.data?.hsnId;
-        newBlend[index].taxPercent = response?.data?.Hsn?.taxPerc;
-        // 4️⃣ update again after API fetch
-        setPurchaseReturnItems([...newBlend]);
-      } catch (e) {
-        console.error("Style fetch failed", e);
-      }
-
-      return; // stop here
-    }
     newBlend[index][field] = value;
     setPurchaseReturnItems(newBlend);
   };
 
-  const deleteRow = (id) => {
-    setPurchaseReturnItems((currentRows) => {
-      if (currentRows.length > 1) {
-        return currentRows.filter((row, index) => index !== parseInt(id));
-      }
-      return currentRows;
-    });
-  };
-
   const deleteSelectedRows = () => {
-    setPurchaseReturnItems((rows) =>
-      rows.filter((r) => !(r.selected && (r.stkQty ?? 0) === 0)),
-    );
+    setPurchaseReturnItems((rows) => rows.filter((r) => !r.selected));
     setContextMenu(null);
-  };
-
-  const handleDeleteAllRows = () => {
-    setPurchaseReturnItems(
-      Array.from({ length: 3 }, () => ({
-        styleId: "",
-        sizeId: "",
-        stkQty: "",
-        remarks: "",
-        styleItemId: "",
-        colorId: "",
-        selected: false,
-        barcodeNo: "",
-        uomId: "",
-        returnQty: "",
-      })),
-    );
   };
 
   const handleRightClick = (event, rowIndex = 0, type) => {
@@ -149,11 +87,11 @@ export default function PurchaseReturnItems({
       setPurchaseReturnItems((prev) => {
         const filledRows = prev.length;
 
-        if (filledRows < 3) {
+        if (filledRows < 4) {
           // add empty rows until total becomes 6
           return [
             ...prev,
-            ...Array.from({ length: 3 - filledRows }, () => ({
+            ...Array.from({ length: 4 - filledRows }, () => ({
               styleId: "",
               sizeId: "",
               stkQty: "",
@@ -173,7 +111,7 @@ export default function PurchaseReturnItems({
     } else {
       // if null/undefined, initialize with 6 empty rows
       setPurchaseReturnItems(
-        Array.from({ length: 3 }, () => ({
+        Array.from({ length: 4 }, () => ({
           styleId: "",
           sizeId: "",
           stkQty: "",
@@ -190,134 +128,30 @@ export default function PurchaseReturnItems({
     }
   }, [purchaseReturnItems, setPurchaseReturnItems]);
 
-  const handleAddRow = async () => {
-    const isFirstTime = purchaseReturnItems.every((row) => !row.styleNo);
-
-    if (!isFirstTime) {
-      // const hasEmpty = PurchaseReturnItems.some((row) => !row.qty);
-      const hasEmpty = purchaseReturnItems.some((row) => {
-        const hasStyle =
-          row.styleNo !== "" &&
-          row.styleNo !== null &&
-          row.styleNo !== undefined;
-
-        return hasStyle && (!row.styleItemId || !row.stkQty);
-      });
-      if (hasEmpty) {
-        toast.info("Please fill all required fields...!", {
-          position: "top-center",
-        });
-        return;
-      }
-    }
-    try {
-      const { data: styleData } = await getStyleCodeDetail({
-        params: {
-          styleNo: styleNo,
-          companyId,
-        },
-      });
-      const style = styleData?.data && Object.values(styleData.data)[0];
-      if (!style) return;
-
-      const sizeTemplateId = style.sizeTemplateId;
-      let sizeRows = [];
-
-      if (sizeTemplateId) {
-        const { data: sizeData } = await styleTemplateDetail(sizeTemplateId);
-
-        if (sizeData?.data?.SizeTemplateList?.length) {
-          sizeRows = sizeData.data.SizeTemplateList.map((s) => ({
-            styleNo: style.sku || "",
-            fabricId: style.fabricId || "",
-            styleId: style.id || "",
-            sizeId: s.sizeId,
-            stkQty: "",
-            remarks: "",
-            colorId: "",
-            styleItemId: style.styleItemId || "",
-            price: style.price || "",
-            selected: false,
-          }));
-        }
-      }
-      setPurchaseReturnItems((prev) => {
-        const updated = [...prev];
-
-        // Find first empty slot index
-        let startIndex = updated.findIndex(
-          (row) => !row.styleId && !row.sizeId && !row.styleNo && !row.fabricId,
-        );
-        if (startIndex === -1) startIndex = updated.length;
-
-        // Fill in sizeRows starting at first empty slot
-        sizeRows.forEach((row, i) => {
-          if (startIndex + i < updated.length) {
-            updated[startIndex + i] = row;
-          } else {
-            updated.push(row); // append if no empty slot
-          }
-        });
-
-        // Ensure at least 6 rows
-        while (updated.length < 3) {
-          updated.push({
-            styleNo: "",
-            fabricId: "",
-            styleId: "",
-            sizeId: "",
-            stkQty: "",
-            remarks: "",
-            styleItemId: "",
-            colorId: "",
-            selected: false,
-          });
-        }
-
-        return updated;
-      });
-    } catch (error) {
-      console.error("Error adding row:", error);
-    }
-  };
-
   return (
     <>
       <Modal
         isOpen={fillGrid}
         onClose={() => setFillGrid(false)}
-        widthClass={"w-[95%]"}
+        widthClass={"w-[90%] h-[85%]"}
       >
         <PurchaseBillItemsSelection
           setFillGrid={setFillGrid}
           supplierId={supplierId}
           purchaseReturnItems={purchaseReturnItems}
           setPurchaseReturnItems={setPurchaseReturnItems}
+          tempItems={tempItems}
+          setTempItems={setTempItems}
           branchId={branchId}
           invNo={invNo}
+          onClose={() => setFillGrid(false)}
         />
       </Modal>
       <div className="border border-slate-200  bg-white rounded-md shadow-sm max-h-[400px] px-2 overflow-auto">
-        {/* <div className="flex items-center gap-4  sticky top-0 bg-white z-30 mt-2">
-          <ReusableInput
-            label="Style No"
-            value={styleNo}
-            setValue={setStyleNo}
-            type={"text"}
-            required={true}
-            readOnly={readOnly}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.stopPropagation();
-                handleAddRow();
-              }
-            }}
-          />
-        </div> */}
-        <div className="flex items-center mb-2">
+        <div className="flex items-center mt-1">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
           <button
-            className="font-bold text-slate-700 bord ml-[840px] text-sm bg-blue-500 rounded rounded-md text-white px-2"
+            className="font-bold text-slate-700 bord ml-[935px] text-sm bg-blue-500 rounded rounded-md text-white px-2"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -327,7 +161,7 @@ export default function PurchaseReturnItems({
             onClick={() => {
               if (!supplierId || !invNo) {
                 Swal.fire({
-                  icon: "success",
+                  icon: "warning",
                   title: ` Choose Supplier and Inv No`,
                   showConfirmButton: false,
                   timer: 2000,
@@ -337,15 +171,43 @@ export default function PurchaseReturnItems({
               }
             }}
           >
-            Fill Purchase Items
+            Fill Items
           </button>
         </div>
         <div
-          className={`w-full max-h-[150px] min-h-[150px] overflow-y-auto  my-1`}
+          className={`w-full max-h-[192px] min-h-[192px] overflow-y-auto  mb-2 mt-1`}
         >
           <table className=" border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
+                <th className="w-12 px-1 py-1 text-center font-medium text-[13px]">
+                  <div className="flex items-center justify-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={
+                        purchaseReturnItems.length > 0 &&
+                        purchaseReturnItems.every((row) => row.selected)
+                      }
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setPurchaseReturnItems((prev) =>
+                          prev.map((row) =>
+                            (row.returnQty ?? 0) > 0
+                              ? row
+                              : { ...row, selected: checked },
+                          ),
+                        );
+                      }}
+                      onContextMenu={(e) => {
+                        if (!readOnly) {
+                          handleRightClick(e, "notes");
+                        }
+                      }}
+                      disabled={readOnly}
+                      tabIndex={-1}
+                    />
+                  </div>
+                </th>
                 <th
                   className={`w-12 px-4 py-2 text-center font-medium text-[13px]`}
                 >
@@ -372,7 +234,7 @@ export default function PurchaseReturnItems({
                   Color
                 </th>
                 <th
-                  className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Unit
                 </th>
@@ -400,6 +262,22 @@ export default function PurchaseReturnItems({
                     className="border border-blue-gray-200 cursor-pointer "
                     key={index}
                   >
+                    <td className="border-blue-gray-200 text-[11px]  border border-gray-300 py-0.5 text-right">
+                      <input
+                        type="checkbox"
+                        checked={row.selected || false}
+                        disabled={readOnly}
+                        onChange={(e) =>
+                          handleInputChange(e.target.checked, index, "selected")
+                        }
+                        className="justify-center flex items-center mx-auto w-full"
+                        onContextMenu={(e) => {
+                          if (!readOnly) {
+                            handleRightClick(e, index, "notes");
+                          }
+                        }}
+                      />
+                    </td>
                     <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
                       {index + 1}
                     </td>
@@ -580,18 +458,13 @@ export default function PurchaseReturnItems({
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "returnQty");
                         }}
-                        disabled={readOnly}
+                        disabled={true}
                         id={`returnQty-input-${index}`}
                       />
                     </td>
 
                     <td className="w-2 border border-gray-300">
                       <input
-                        onContextMenu={(e) => {
-                          if (!readOnly) {
-                            handleRightClick(e, index, "");
-                          }
-                        }}
                         className="w-full"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
@@ -610,15 +483,9 @@ export default function PurchaseReturnItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={6}
+                  colSpan={8}
                 >
                   Total Qty
-                </td>
-                <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
-                  {(Array.isArray(purchaseReturnItems)
-                    ? purchaseReturnItems
-                    : []
-                  ).reduce((sum, row) => sum + (Number(row.stkQty) || 0), 0)}
                 </td>
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
                   {(Array.isArray(purchaseReturnItems)
@@ -649,21 +516,11 @@ export default function PurchaseReturnItems({
               <button
                 className=" text-black text-[12px] text-left rounded px-1"
                 onClick={() => {
-                  deleteRow(contextMenu.rowId);
                   deleteSelectedRows();
                   handleCloseContextMenu();
                 }}
               >
                 Delete
-              </button>
-              <button
-                className=" text-black text-[12px] text-left rounded px-1"
-                onClick={() => {
-                  handleDeleteAllRows();
-                  handleCloseContextMenu();
-                }}
-              >
-                Delete All
               </button>
             </div>
           </div>

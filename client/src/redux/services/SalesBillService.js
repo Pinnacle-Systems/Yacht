@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { SALES_BILL_API} from "../../Api";
+import { SALES_BILL_API } from "../../Api";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -11,15 +11,15 @@ const salesBillApi = createApi({
   tagTypes: ["SalesBill"],
   endpoints: (builder) => ({
     getSalesBill: builder.query({
-      query: ({params, searchParams}) => {
-        if(searchParams){
+      query: ({ params, searchParams }) => {
+        if (searchParams) {
           return {
-            url: SALES_BILL_API +"/search/"+searchParams,
+            url: SALES_BILL_API + "/search/" + searchParams,
             method: "GET",
             headers: {
               "Content-type": "application/json; charset=UTF-8",
             },
-            params
+            params,
           };
         }
         return {
@@ -28,7 +28,7 @@ const salesBillApi = createApi({
           headers: {
             "Content-type": "application/json; charset=UTF-8",
           },
-          params
+          params,
         };
       },
       providesTags: ["SalesBill"],
@@ -41,6 +41,19 @@ const salesBillApi = createApi({
           headers: {
             "Content-type": "application/json; charset=UTF-8",
           },
+        };
+      },
+      providesTags: ["SalesBill"],
+    }),
+    getSalesBillDetail: builder.query({
+      query: ({ params }) => {
+        return {
+          url: `${SALES_BILL_API}/salesBillDetail`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
         };
       },
       providesTags: ["SalesBill"],
@@ -80,6 +93,7 @@ const salesBillApi = createApi({
 export const {
   useGetSalesBillQuery,
   useGetSalesBillByIdQuery,
+  useLazyGetSalesBillDetailQuery,
   useAddSalesBillMutation,
   useUpdateSalesBillMutation,
   useDeleteSalesBillMutation,

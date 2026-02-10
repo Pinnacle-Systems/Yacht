@@ -35,6 +35,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
     const [searchValue, setSearchValue] = useState("");
     const [invNo, setInvNo] = useState("")
     const [purchaseReturnItems, setPurchaseReturnItems] = useState([]);
+    const [tempItems, setTempItems] = useState([]);
     const [docDate, setDocDate] = useState("")
     const { branchId, companyId, userId, finYearId } = getCommonParams();
     const branchIdFromApi = useRef(branchId);
@@ -67,7 +68,6 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
 
     const [addData] = useAddPurchaseReturnShowroomMutation();
     const [updateData] = useUpdatePurchaseReturnShowroomMutation();
-    const [removeData] = useDeletePurchaseReturnShowroomMutation();
     const dispatch = useDispatch();
 
     const isLoadingIndicator = isSingleFetching || isSingleLoading;
@@ -313,11 +313,11 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                             </button>
                         </div>
                     </div>
-                    <div className="space-y-3  mt-2">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <div className="space-y-2  mt-1.5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                                 <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
-                                <div className="grid grid-cols-2 gap-1">
+                                <div className="grid grid-cols-3 gap-1">
                                     <ReusableInput label="Purchase Return No" readOnly value={docId} />
                                     <ReusableInput
                                         label="Purchase Return Date"
@@ -327,12 +327,25 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                         readOnly={true}
                                         disabled
                                     />
+                                    <DropdownNew
+                                        name="Inv No"
+                                        dataList={purchaseList?.data}
+                                        value={invNo}
+                                        setValue={setInvNo}
+                                        required={true}
+                                        readOnly={readOnly}
+                                        placeholder={"Select Inv"}
+                                        otherField={"invNo"}
+                                        otherValue={"invNo"}
+                                        disabled={id}
+                                        autoFocus={true}
+                                    />
                                 </div>
                             </div>
                             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                                 <div className="grid grid-cols-1 gap-1">
                                     <h2 className="font-medium text-slate-700 mb-2">Supplier Details</h2>
-                                    <div className="grid grid-cols-2 gap-1">
+                                    <div className="grid grid-cols-3 gap-1">
                                         <DropdownNew
                                             name="Supplier"
                                             dataList={partyList?.data?.filter((item) => item.isSupplier)}
@@ -343,7 +356,6 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                             required={true}
                                             disabled={id}
                                             placeholder={"Select Supplier"}
-                                            autoFocus={true}
                                         />
                                         <ReusableInput
                                             label="Contact Person"
@@ -363,25 +375,6 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                 </div>
                             </div>
 
-                            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                                <h2 className="font-medium text-slate-700 mb-2">Return Details</h2>
-                                <div className="grid grid-cols-2 gap-1">
-                                    <DropdownNew
-                                        name="Inv No"
-                                        dataList={purchaseList?.data}
-                                        value={invNo}
-                                        setValue={setInvNo}
-                                        required={true}
-                                        readOnly={readOnly}
-                                        placeholder={"Select Inv"}
-                                        otherField={"invNo"}
-                                        otherValue={"invNo"}
-                                        disabled={id}
-                                    />
-                                </div>
-                            </div>
-
-
                         </div>
                         <fieldset>
                             <PurchaseReturnItems
@@ -397,10 +390,12 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                 supplierId={supplierId}
                                 invNo={invNo}
                                 branchId={branchId}
+                                tempItems={tempItems}
+                                setTempItems={setTempItems}
                             />
                         </fieldset>
 
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-3 gap-2">
                             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                                 <h2 className="font-medium text-slate-700 mb-1 text-base">
                                     Terms and Condition

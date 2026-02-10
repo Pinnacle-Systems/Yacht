@@ -1,7 +1,6 @@
-import { PrismaClient } from "@prisma/client";
-import { NoRecordFound } from "../configs/Responses.js";
+import { prisma } from "../lib/prisma.js";
 
-const prisma = new PrismaClient();
+import { NoRecordFound } from "../configs/Responses.js";
 
 async function get(req) {
   const { companyId, active } = req.query;

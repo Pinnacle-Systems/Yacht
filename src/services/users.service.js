@@ -1,4 +1,5 @@
-import { PrismaClient } from '@prisma/client'
+import { prisma } from "../lib/prisma.js";
+
 import { NoRecordFound } from '../configs/Responses.js';
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -6,7 +7,6 @@ import { findDateInRange, generateSubscriptionCode, exclude } from '../utils/hel
 import { sendMail } from '../utils/mailer.js';
 import { getSubscriptionDetails } from '../utils/subscriptionCall.js';
 
-const prisma = new PrismaClient()
 
 const xprisma = prisma.$extends({
     result: {

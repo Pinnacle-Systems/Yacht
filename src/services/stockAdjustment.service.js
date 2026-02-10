@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma.js";
 import { getTableRecordWithId } from "../utils/helperQueries.js";
 import {
   getDateFromDateTime,
@@ -8,7 +8,6 @@ import {
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 import { NoRecordFound } from "../configs/Responses.js";
 
-const prisma = new PrismaClient();
 
 // async function getOneBarcode(req) {
 //   const { barcode, styleId, sizeId } = req.query;

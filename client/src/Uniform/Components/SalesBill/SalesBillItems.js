@@ -23,8 +23,6 @@ export default function SalesBillItems({
   const [barcodeNo, setbarcodeNo] = useState("");
   const [contextMenu, setContextMenu] = useState(null);
   const [getStyleDetail] = useLazyGetStyleDetailQuery();
-  const [focusedRowIndex, setFocusedRowIndex] = useState(null);
-  const [previewImage, setPreviewImage] = useState(null);
   const [currentSelectedIndex, setCurrentSelectedIndex] = useState("");
   const [pendingStyleRows, setPendingStyleRows] = useState([]);
   const [showColorPopup, setShowColorPopup] = useState(false);
@@ -51,21 +49,6 @@ export default function SalesBillItems({
     setSalesBillItems([...salesBillItems, newRow]);
   };
 
-  const deleteRow = (id) => {
-    setSalesBillItems((currentRows) => {
-      if (currentRows.length > 1) {
-        return currentRows.filter((row, index) => index !== Number(id));
-      }
-      return currentRows;
-    });
-  };
-
-  const handleDeleteAllRows = () => {
-    setSalesBillItems((prevRows) => {
-      if (prevRows.length <= 1) return prevRows;
-      return [prevRows[0]];
-    });
-  };
 
   const deleteSelectedRows = () => {
     setSalesBillItems((rows) =>
@@ -93,10 +76,10 @@ export default function SalesBillItems({
       setSalesBillItems((prev) => {
         const count = prev.length;
 
-        if (count < 3) {
+        if (count < 5) {
           return [
             ...prev,
-            ...Array.from({ length: 3 - count }, () => ({
+            ...Array.from({ length: 5 - count }, () => ({
               barcode: "",
               styleId: "",
               sizeId: "",
@@ -120,7 +103,7 @@ export default function SalesBillItems({
       });
     } else {
       setSalesBillItems(
-        Array.from({ length: 3 }, () => ({
+        Array.from({ length: 5 }, () => ({
           barcode: "",
           styleId: "",
           sizeId: "",
@@ -207,7 +190,7 @@ export default function SalesBillItems({
         }
       });
 
-      while (updated.length < 3) {
+      while (updated.length < 5) {
         updated.push({
           barcodeNo: "",
           styleId: "",
@@ -402,8 +385,8 @@ export default function SalesBillItems({
         </div>
       </Modal>
       <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[450px] overflow-auto overflow-x-auto w-full">
-        <div className="flex items-center gap-4 sticky top-0 bg-white z-30 mt-2">
-          <ReusableInput
+        <div className="flex items-center gap-4 sticky top-0 bg-white z-30">
+          {/* <ReusableInput
             label="Style No"
             value={barcodeNo}
             setValue={setbarcodeNo}
@@ -416,13 +399,13 @@ export default function SalesBillItems({
                 handleAddRow();
               }
             }}
-          />
+          /> */}
         </div>
-        <div className="flex justify-between items-center mb-2">
-          <h2 className="font-medium text-slate-700">Sales Item Details</h2>
+        <div className="flex justify-between items-center">
+          <h2 className="font-medium text-slate-700">List of Items</h2>
         </div>
-        <div className={`w-full  max-h-[300px] overflow-y-auto  my-1`}>
-          <table className=" border-collapse table-fixed w-full">
+        <div className={`w-full  max-h-[204px] min-h-[204px]  overflow-y-auto  mb-2 mt-1`}>
+          <table className=" border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
                 <th className="w-12 px-1 py-1 text-center font-medium text-[13px]">
@@ -472,7 +455,7 @@ export default function SalesBillItems({
                   Style Item
                 </th>
                 <th
-                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Size
                 </th>
@@ -482,7 +465,7 @@ export default function SalesBillItems({
                   Color
                 </th>
                 <th
-                  className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Unit
                 </th>
@@ -499,15 +482,15 @@ export default function SalesBillItems({
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Gross Amount
+                  Gross Amt
                 </th>
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Net Amount
+                  Net Amt
                 </th>
                 <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Tax Details
                 </th>

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { prisma } from "../lib/prisma.js";
 import { NoRecordFound } from '../configs/Responses.js';
 import { read, utils } from "xlsx";
 import { convertToImportFormat } from "../utils/excelDataTransform.js";
@@ -7,7 +7,6 @@ import { getDateFromDateTime, getDateTimeRangeForCurrentYear, getYearShortCode, 
 import { getTableRecordWithId } from "../utils/helperQueries.js";
 import { createAllClass, createAllColor, createAllSize, getAllClass, getAllColor, getAllSize } from '../query/masters.js';
 import moment from 'moment';
-const prisma = new PrismaClient()
 
 
 async function getNextDocId(branchId) {

@@ -1,6 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prisma.js";
 
 async function create(body) {
   const { date, submitter, submittingTo, supplierId, sampleEntryGrid } = body;

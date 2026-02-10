@@ -201,9 +201,9 @@ const PurchaseBillFormReport = ({
                   <th className="w-64  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Supplier</div>
                   </th>
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
+                  {/* <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
                     <div>Payment Type</div>
-                  </th>
+                  </th> */}
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
                   </th>
@@ -234,17 +234,6 @@ const PurchaseBillFormReport = ({
                       }}
                     />
                   </th>
-                  <th className="w-40 px-1 font-medium text-[13px]  text-gray-900  text-center">
-                    <input
-                      type="text"
-                      className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
-                      placeholder="Search"
-                      value={searchBillType}
-                      onChange={(e) => {
-                        setSearchBillType(e.target.value);
-                      }}
-                    />
-                  </th>
                   <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-40">
                     <input
                       type="text"
@@ -256,6 +245,7 @@ const PurchaseBillFormReport = ({
                       }}
                     />
                   </th>
+
                   <th className="w-64  px-1 font-medium text-[13px]  text-gray-900  text-center ">
                     <input
                       type="text"
@@ -267,6 +257,17 @@ const PurchaseBillFormReport = ({
                       }}
                     />
                   </th>
+                  {/* <th className="w-40 px-1 font-medium text-[13px]  text-gray-900  text-center">
+                    <input
+                      type="text"
+                      className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                      placeholder="Search"
+                      value={searchBillType}
+                      onChange={(e) => {
+                        setSearchBillType(e.target.value);
+                      }}
+                    />
+                  </th> */}
 
                   <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center "></th>
                 </tr>
@@ -308,9 +309,9 @@ const PurchaseBillFormReport = ({
                           {" "}
                           {dataObj?.Supplier?.name}
                         </td>
-                        <td className="py-1.5 text-left px-4">
+                        {/* <td className="py-1.5 text-left px-4">
                           {dataObj?.paymentType}{" "}
-                        </td>
+                        </td> */}
                         {rowActions && (
                           <td className=" w-[30px] border-gray-200 gap-1 px-2 justify-end">
                             <div className="flex">

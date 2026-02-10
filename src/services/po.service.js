@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma.js";
 import { NoRecordFound } from "../configs/Responses.js";
 import {
   balanceCancelQtyCalculation,
@@ -13,7 +13,6 @@ import { getTableRecordWithId } from "../utils/helperQueries.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 import { poUpdateValidator } from "../validators/po.validator.js";
 import { getTotalQty } from "../utils/poHelpers/getTotalQuantity.js";
-const prisma = new PrismaClient();
 
 async function getNextDocId(branchId, shortCode, startTime, endTime) {
 

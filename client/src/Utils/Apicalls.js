@@ -123,7 +123,6 @@ export const getData = (API, setData, setIsLoading, params = {}, setDataLength) 
         url: BASE_URL + API,
         params: params
     }).then((result) => {
-        console.log("result", result.data.data);
         if(setDataLength){
             setDataLength(result.data.data.length)
         }

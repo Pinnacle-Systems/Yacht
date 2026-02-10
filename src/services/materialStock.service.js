@@ -1,8 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma.js";
 import { NoRecordFound } from "../configs/Responses.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 
-const prisma = new PrismaClient();
 async function get(req) {
   const {
     branchId,

@@ -19,7 +19,7 @@ import {
   useGetSalesReturnSRByIdQuery,
   useUpdateSalesReturnSRMutation,
 } from "../../../redux/uniformService/SalesReturnShowroom.service";
-import { useGetSalesBillQuery } from "../../../redux/services/SalesBillService";
+import { useGetSalesBillQuery, useLazyGetSalesBillDetailQuery } from "../../../redux/services/SalesBillService";
 import { DropdownNew } from "../../../Inputs";
 
 export function SalesReturnForm({
@@ -32,21 +32,21 @@ export function SalesReturnForm({
   styleItemList,
   colorList,
   uomList,
-  taxTypeList,
 }) {
   const [docId, setDocId] = useState("New");
   const [docDate, setDocDate] = useState("");
   const [salesReturnItems, setSalesReturnItems] = useState([]);
+  const [tempItems, setTempItems] = useState([]);
+
   const [customerId, setCustomerId] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [mobileNo, setMobileNo] = useState("");
   const { companyId, userId, finYearId, branchId } = getCommonParams();
   const [termsAndCondition, setTermsAndCondition] = useState("");
   const [remarks, setRemarks] = useState("");
-  const [invNo, setInvNo] = useState("");
+  const [billNo, setBillNo] = useState("");
 
   const dispatch = useDispatch();
-  const customerNameRef = useRef(null);
   const {
     data: singleData,
     isFetching: isSingleFetching,
@@ -113,13 +113,13 @@ export function SalesReturnForm({
     }
     if (
       !(
-        data?.customerId &&
         data?.customerName &&
+        data?.billNo &&
         data?.salesReturnItems.length > 0 &&
         isGridDatasValid(
           data?.salesReturnItems.filter((item) => item?.styleItemId),
           false,
-          ["retuenQty"],
+          ["returnQty"],
         )
       )
     ) {
@@ -131,6 +131,8 @@ export function SalesReturnForm({
     }
     return true;
   };
+
+  const [getSalesBillDetail] = useLazyGetSalesBillDetailQuery();
 
   const data = {
     id,
@@ -144,6 +146,7 @@ export function SalesReturnForm({
     mobileNo,
     termsAndCondition,
     remarks,
+    billNo,
   };
 
   const syncFormWithDb = useCallback(
@@ -154,7 +157,10 @@ export function SalesReturnForm({
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
           : moment.utc(today).format("YYYY-MM-DD"),
       );
-      setSalesReturnItems(data?.salesReturnItems ? data.salesReturnItems : []);
+      setSalesReturnItems(
+        data?.salesReturnSRItems ? data.salesReturnSRItems : [],
+      );
+      setBillNo(data?.billNo ? data.billNo : "");
       if (data?.docId) {
         setDocId(data?.docId);
       }
@@ -251,71 +257,23 @@ export function SalesReturnForm({
   };
 
   const handleAddRow = async (newValue) => {
-    setInvNo(newValue);
-    const hasUnfilledRequired = salesReturnItems.some((row) => {
-      return row.styleItemId && !row.returnQty;
-    });
-
-    if (hasUnfilledRequired) {
-      toast.info("Please fill all required fields before adding...!", {
-        position: "top-center",
+    setBillNo(newValue);
+    try {
+      const { data: salesData } = await getSalesBillDetail({
+        params: {
+          billNo: newValue,
+          branchId,
+        },
       });
-      return;
+      setCustomerId(salesData?.data?.customerId);
+      setCustomerName(salesData?.data?.customerName);
+      setMobileNo(salesData?.data?.mobileNo);
+      const salesItems = salesData?.data?.salesBillItems;
+      if (!salesItems) return;
+      setTempItems(salesItems);
+    } catch (error) {
+      console.error("Error Fetching Data:", error);
     }
-    // try {
-    //   const { data: salesData } = await getSalesInvDetail({
-    //     params: {
-    //       invNo: newValue,
-    //       branchId,
-    //     },
-    //   });
-    //   setCustomerId(salesData?.data?.customerId);
-    // const salesItems = salesData?.data?.SalesEntryItems;
-    // if (!salesItems) return;
-    // setSalesReturnItems((prev) => {
-    //   const updated = [...prev];
-    //   // Find first empty slot index
-    //   let startIndex = updated.findIndex(
-    //     (row) =>
-    //       !row.styleId &&
-    //       !row.sizeId &&
-    //       !row.styleNo &&
-    //       !row.fabricId &&
-    //       !row.barcode
-    //   );
-    //   if (startIndex === -1) startIndex = updated.length;
-
-    //   // Fill in sizeRows starting at first empty slot
-    //   salesItems.forEach((row, i) => {
-    //     if (startIndex + i < updated.length) {
-    //       updated[startIndex + i] = row;
-    //     } else {
-    //       updated.push(row); // append if no empty slot
-    //     }
-    //   });
-
-    //   // Ensure at least 6 rows
-    //   while (updated.length < 6) {
-    //     updated.push({
-    //       styleNo: "",
-    //       fabricId: "",
-    //       styleId: "",
-    //       sizeId: "",
-    //       qty: "",
-    //       remarks: "",
-    //       stkQty: "",
-    //       barcode: "",
-    //       styleItemId: "",
-    //       colorId: "",
-    //       selected: false,
-    //     });
-    //   }
-
-    //   return updated;
-    // });
-    // } catch (error) {
-    //   console.error("Error adding row:", error);
-    // }
   };
 
   return (
@@ -336,7 +294,7 @@ export function SalesReturnForm({
               </button>
             </div>
           </div>
-          <div className="space-y-2 mt-3">
+          <div className="space-y-2 mt-1.5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                 <h2 className="font-medium text-slate-700 mb-2">
@@ -359,7 +317,7 @@ export function SalesReturnForm({
                   <DropdownNew
                     name="Sales Bill No"
                     dataList={salesList?.data}
-                    value={invNo}
+                    value={billNo}
                     setValue={handleAddRow}
                     required={true}
                     readOnly={readOnly}
@@ -367,6 +325,7 @@ export function SalesReturnForm({
                     otherField={"docId"}
                     otherValue={"docId"}
                     disabled={id}
+                    autoFocus={true}
                   />
                 </div>
               </div>
@@ -380,7 +339,7 @@ export function SalesReturnForm({
                     value={customerName}
                     setValue={setCustomerName}
                     type={"text"}
-                    readOnly={readOnly}
+                    readOnly={true}
                     required={true}
                   />
                   <ReusableInput
@@ -388,7 +347,7 @@ export function SalesReturnForm({
                     value={mobileNo}
                     setValue={setMobileNo}
                     type={"text"}
-                    readOnly={readOnly}
+                    readOnly={true}
                     required={true}
                   />
                 </div>
@@ -404,9 +363,12 @@ export function SalesReturnForm({
                 styleItemList={styleItemList}
                 colorList={colorList}
                 uomList={uomList}
+                tempItems={tempItems}
+                setTempItems={setTempItems}
+                billNo={billNo}
               />
             </fieldset>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                 <h2 className="font-medium text-slate-700 mb-2 text-base">
                   Terms and Condition
@@ -447,14 +409,17 @@ export function SalesReturnForm({
                     <span className="text-slate-600">Total Return Qty</span>
                     <span className="font-medium">
                       {salesReturnItems
-                        .reduce((sum, row) => sum + (Number(row.returnQty) || 0), 0)
+                        .reduce(
+                          (sum, row) => sum + (Number(row.returnQty) || 0),
+                          0,
+                        )
                         .toFixed(2)}
                     </span>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">
+            <div className="flex flex-col md:flex-row gap-2 justify-between">
               <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => saveData("new")}

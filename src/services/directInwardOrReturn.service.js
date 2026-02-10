@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma.js";
 import { NoRecordFound } from "../configs/Responses.js";
 
 import {
@@ -23,7 +23,7 @@ import {
 } from "../utils/directInwardReturnQueries.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 import dataIntegrityValidation from "../validators/DataIntegregityValidation/index.js";
-const prisma = new PrismaClient();
+
 function getInwardOrReturnShortCode(poInwardOrDirectInward) {
   switch (poInwardOrDirectInward) {
     case "DirectInward":

@@ -460,8 +460,8 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                             </button>
                         </div>
                     </div>
-                    <div className="space-y-3  mt-2">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <div className="space-y-1  mt-1.5">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
                             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                                 <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
                                 <div className="grid grid-cols-2 gap-1">
@@ -484,7 +484,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                         value={taxTemplateId}
                                         setValue={setTaxTemplateId}
                                         required={true}
-                                        readOnly={readOnly}
+                                        readOnly={readOnly || id}
                                     />
                                 </div>
                             </div>
@@ -530,7 +530,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                                 setSupplierId(value);
                                             }}
                                             required={true}
-                                            disabled={readOnly}
+                                            disabled={readOnly || id}
                                             placeholder={"Select Supplier"}
                                         />
                                         <ReusableInput
@@ -579,7 +579,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                             />
                         </fieldset>
 
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-3 gap-1">
                             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                                 <h2 className="font-medium text-slate-700 mb-1 text-base">
                                     Terms and Condition

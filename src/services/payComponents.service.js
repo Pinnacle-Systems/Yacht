@@ -1,8 +1,6 @@
-// import prisma from "../models/getPrisma.js"
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma.js";
 import { NoRecordFound } from "../configs/Responses.js";
 
-const prisma = new PrismaClient();
 async function get(req) {
   const { companyId } = req.query;
   const data = await prisma.payComponents.findMany({

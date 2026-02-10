@@ -1,10 +1,7 @@
 import {
-  useLazyGetStyleCodeDetailQuery,
   useLazyGetStyleMasterByIdQuery,
 } from "../../../redux/uniformService/StyleMasterService";
 import { useEffect, useState } from "react";
-import { useLazyGetSizeTemplateByIdQuery } from "../../../redux/uniformService/SizeTemplateMasterServices";
-import secureLocalStorage from "react-secure-storage";
 import { toast } from "react-toastify";
 import FxSelect from "../../../Inputs";
 import Swal from "sweetalert2";
@@ -22,17 +19,10 @@ export default function PurchaseBillItems({
   colorList,
   uomList,
   taxTemplateId,
-  dcNo
+  dcNo,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
-  const [styleNo, setStyleNo] = useState("");
-  const [getStyleCodeDetail] = useLazyGetStyleCodeDetailQuery();
-  const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
   const [currentSelectedIndex, setCurrentSelectedIndex] = useState(null);
-
-  const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId",
-  );
 
   const addRow = () => {
     const newRow = {
@@ -77,15 +67,6 @@ export default function PurchaseBillItems({
     setPurchaseBillItems(newBlend);
   };
 
-  const deleteRow = (id) => {
-    setPurchaseBillItems((currentRows) => {
-      if (currentRows.length > 1) {
-        return currentRows.filter((row, index) => index !== parseInt(id));
-      }
-      return currentRows;
-    });
-  };
-
   const deleteSelectedRows = () => {
     setPurchaseBillItems((rows) =>
       rows.filter((r) => !(r.selected && (r.stockQty ?? 0) === 0)),
@@ -93,22 +74,6 @@ export default function PurchaseBillItems({
     setContextMenu(null);
   };
 
-  const handleDeleteAllRows = () => {
-    setPurchaseBillItems(
-      Array.from({ length: 3 }, () => ({
-        styleId: "",
-        sizeId: "",
-        qty: "",
-        styleItemId: "",
-        colorId: "",
-        selected: false,
-        barcodeNo: "",
-        uomId: "",
-        rate: "",
-        netAmount: 0,
-      })),
-    );
-  };
 
   const handleRightClick = (event, rowIndex = 0, type) => {
     event.preventDefault();
@@ -170,97 +135,6 @@ export default function PurchaseBillItems({
     }
   }, [purchaseBillItems, setPurchaseBillItems]);
 
-  const handleAddRow = async () => {
-    const isFirstTime = purchaseBillItems.every((row) => !row.styleNo);
-
-    if (!isFirstTime) {
-      // const hasEmpty = PurchaseBillItems.some((row) => !row.qty);
-      const hasEmpty = purchaseBillItems.some((row) => {
-        const hasStyle =
-          row.styleNo !== "" &&
-          row.styleNo !== null &&
-          row.styleNo !== undefined;
-
-        return hasStyle && (!row.styleItemId || !row.qty);
-      });
-      if (hasEmpty) {
-        toast.info("Please fill all required fields...!", {
-          position: "top-center",
-        });
-        return;
-      }
-    }
-    try {
-      const { data: styleData } = await getStyleCodeDetail({
-        params: {
-          styleNo: styleNo,
-          companyId,
-        },
-      });
-      const style = styleData?.data && Object.values(styleData.data)[0];
-      if (!style) return;
-
-      const sizeTemplateId = style.sizeTemplateId;
-      let sizeRows = [];
-
-      if (sizeTemplateId) {
-        const { data: sizeData } = await styleTemplateDetail(sizeTemplateId);
-
-        if (sizeData?.data?.SizeTemplateList?.length) {
-          sizeRows = sizeData.data.SizeTemplateList.map((s) => ({
-            styleNo: style.sku || "",
-            fabricId: style.fabricId || "",
-            styleId: style.id || "",
-            sizeId: s.sizeId,
-            qty: "",
-            colorId: "",
-            styleItemId: style.styleItemId || "",
-            rate: style.rate || "",
-            selected: false,
-            netAmount: 0,
-          }));
-        }
-      }
-      setPurchaseBillItems((prev) => {
-        const updated = [...prev];
-
-        // Find first empty slot index
-        let startIndex = updated.findIndex(
-          (row) => !row.styleId && !row.sizeId && !row.styleNo && !row.fabricId,
-        );
-        if (startIndex === -1) startIndex = updated.length;
-
-        // Fill in sizeRows starting at first empty slot
-        sizeRows.forEach((row, i) => {
-          if (startIndex + i < updated.length) {
-            updated[startIndex + i] = row;
-          } else {
-            updated.push(row); // append if no empty slot
-          }
-        });
-
-        // Ensure at least 6 rows
-        while (updated.length < 3) {
-          updated.push({
-            styleNo: "",
-            fabricId: "",
-            styleId: "",
-            sizeId: "",
-            qty: "",
-            styleItemId: "",
-            colorId: "",
-            selected: false,
-            netAmount: 0,
-          });
-        }
-
-        return updated;
-      });
-    } catch (error) {
-      console.error("Error adding row:", error);
-    }
-  };
-
   useEffect(() => {
     // Recalculate net amount for all rows whenever dependent fields change
     const updatedRows = purchaseBillItems.map((row) => {
@@ -296,7 +170,8 @@ export default function PurchaseBillItems({
 
     // Only update if net amounts actually changed
     const needsUpdate = updatedRows.some(
-      (row, index) => row.netAmount !== (purchaseBillItems[index]?.netAmount || 0),
+      (row, index) =>
+        row.netAmount !== (purchaseBillItems[index]?.netAmount || 0),
     );
 
     if (needsUpdate) {
@@ -337,15 +212,45 @@ export default function PurchaseBillItems({
             }}
           />
         </div> */}
-        <div className="flex justify-between items-center mb-2">
+        <div className="flex justify-between items-center">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
         </div>
         <div
-          className={`w-full max-h-[150px] min-h-[150px]   overflow-y-auto  my-1`}
+          className={`w-full max-h-[150px] min-h-[150px]   overflow-y-auto  mb-2 mt-1`}
         >
           <table className=" border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
+                <th className="w-12 px-1 py-1 text-center font-medium text-[13px]">
+                  <div className="flex items-center justify-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={
+                        purchaseBillItems.length > 0 &&
+                        purchaseBillItems
+                          .filter((row) => (row.returnQty ?? 0) === 0)
+                          .every((row) => row.selected)
+                      }
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setPurchaseBillItems((prev) =>
+                          prev.map((row) =>
+                            (row.returnQty ?? 0) > 0
+                              ? row
+                              : { ...row, selected: checked },
+                          ),
+                        );
+                      }}
+                      onContextMenu={(e) => {
+                        if (!readOnly) {
+                          handleRightClick(e, "notes");
+                        }
+                      }}
+                      disabled={readOnly}
+                      tabIndex={-1}
+                    />
+                  </div>
+                </th>
                 <th
                   className={`w-12 px-4 py-2 text-center font-medium text-[13px]`}
                 >
@@ -362,7 +267,7 @@ export default function PurchaseBillItems({
                   Style Item
                 </th>
                 <th
-                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Size
                 </th>
@@ -372,12 +277,12 @@ export default function PurchaseBillItems({
                   Color
                 </th>
                 <th
-                  className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Unit
                 </th>
                 <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Qty
                 </th>
@@ -389,15 +294,15 @@ export default function PurchaseBillItems({
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Gross Amount
+                  Gross Amt
                 </th>
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Net Amount
+                  Net Amt
                 </th>
                 <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Tax Details
                 </th>
@@ -415,6 +320,22 @@ export default function PurchaseBillItems({
                     className="border border-blue-gray-200 cursor-pointer "
                     key={index}
                   >
+                    <td className="border-blue-gray-200 text-[11px]  border border-gray-300 py-0.5 text-right">
+                      <input
+                        type="checkbox"
+                        checked={row.selected || false}
+                        disabled={readOnly || (row.returnQty ?? 0) > 0}
+                        onChange={(e) =>
+                          handleInputChange(e.target.checked, index, "selected")
+                        }
+                        className="justify-center flex items-center mx-auto w-full"
+                        onContextMenu={(e) => {
+                          if (!readOnly) {
+                            handleRightClick(e, index, "notes");
+                          }
+                        }}
+                      />
+                    </td>
                     <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
                       {index + 1}
                     </td>
@@ -616,7 +537,7 @@ export default function PurchaseBillItems({
                         disabled
                       />
                     </td>
-                    <td className=" py-0.5 border border-gray-300 text-[11px] text-right">
+                    <td className=" py-0.5 border border-gray-300 text-[11px] justify-center">
                       <button
                         disabled={!row?.styleItemId}
                         className="text-center rounded py-1 w-20"
@@ -639,11 +560,6 @@ export default function PurchaseBillItems({
 
                     <td className="w-2 border border-gray-300">
                       <input
-                        onContextMenu={(e) => {
-                          if (!readOnly) {
-                            handleRightClick(e, index, "");
-                          }
-                        }}
                         className="w-full"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
@@ -662,7 +578,7 @@ export default function PurchaseBillItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={6}
+                  colSpan={7}
                 >
                   Total Qty
                 </td>
@@ -713,21 +629,12 @@ export default function PurchaseBillItems({
               <button
                 className=" text-black text-[12px] text-left rounded px-1"
                 onClick={() => {
-                  deleteRow(contextMenu.rowId);
+                  // deleteRow(contextMenu.rowId);
                   deleteSelectedRows();
                   handleCloseContextMenu();
                 }}
               >
                 Delete
-              </button>
-              <button
-                className=" text-black text-[12px] text-left rounded px-1"
-                onClick={() => {
-                  handleDeleteAllRows();
-                  handleCloseContextMenu();
-                }}
-              >
-                Delete All
               </button>
             </div>
           </div>
