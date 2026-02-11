@@ -88,6 +88,7 @@ import {
   ProcessGroupSeqApi,
   ProcessGroupApi,
   productionStockApi,
+  barcodeSeqMasterApi,
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -125,6 +126,7 @@ const commonReducers = {
   departmentMaster: departmentMasterApi.reducer,
   employeeCategoryMaster: employeeCategoryMasterApi.reducer,
   finYearMaster: finYearMasterApi.reducer,
+  barcodeSeqMasterApi: barcodeSeqMasterApi.reducer,
   roleMaster: rolesMasterApi.reducer,
   userMaster: userMasterApi.reducer,
   employeeMaster: employeeMasterApi.reducer,
@@ -238,6 +240,7 @@ const commonMiddleware = [
   departmentMasterApi.middleware,
   employeeCategoryMasterApi.middleware,
   finYearMasterApi.middleware,
+  barcodeSeqMasterApi.middleware,
   rolesMasterApi.middleware,
   userMasterApi.middleware,
   employeeMasterApi.middleware,

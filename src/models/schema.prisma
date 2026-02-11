@@ -80,6 +80,7 @@ model Company {
   processGroupSeqs    ProcessGroupSeq[]
   processGroups       ProcessGroup[]
   customers           Customer[]
+  barcodeSequences    BarcodeSequence[]
 }
 
 model Subscription {
@@ -2901,4 +2902,17 @@ model SalesReturnSRItems {
   Uom             UnitOfMeasurement? @relation(fields: [uomId], references: [id])
   uomId           Int?
   stockLedgers    StockLedger[]
+}
+
+model BarcodeSequence {
+  id        Int      @id @default(autoincrement())
+  prefix    String?
+  code      Int?
+  digits    Int?
+  seqStart  Int?
+  barcodeNo Int?
+  active    Boolean? @default(true)
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+  barcode   String?
 }

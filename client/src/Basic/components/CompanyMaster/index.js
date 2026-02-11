@@ -211,8 +211,8 @@ export default function Form() {
                     <legend className='sub-heading'>Current Subscription details</legend>
                     {Boolean(maxUsers) ?
                       <div className='row-span-2'>
-                        <DateInput name="Valid From" value={validFrom} setValue={setValidFrom} readOnly={true} disabled={(childRecord.current > 0)}/>
-                        <DateInput name="Valid To" value={expireAt} setValue={setExpireAt} readOnly={true} disabled={(childRecord.current > 0)}/>
+                        <DateInput name="Valid From" value={validFrom} setValue={setValidFrom} readOnly={false} disabled={(childRecord.current > 0)}/>
+                        <DateInput name="Valid To" value={expireAt} setValue={setExpireAt} readOnly={false} disabled={(childRecord.current > 0)}/>
                         <TextInput name="Max Users" type="number" value={maxUsers} setValue={setMaxUsers} readOnly={true} disabled={(childRecord.current > 0)}/>
                         <TextInput name="Subcription Code" type="text" value={subscriptionCode} setValue={setSubscriptionCode} readOnly={true} disabled={(childRecord.current > 0)}/>
                       </div>

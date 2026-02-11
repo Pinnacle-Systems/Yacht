@@ -70,3 +70,4 @@ export { default as SummaryReport } from "./SummaryReport";
 export { default as PurchaseBill } from "./PurchaseBill";
 export { default as PurchaseReturnShowRoom } from "./PurchaseReturnShowRoom";
 export { default as SalesReturnSR } from "./SalesReturnShowroom";
+export { default as BarcodeSeqmaster } from "./BarcodeSeqmaster";

@@ -75,3 +75,4 @@ export { default as purchaseReturnSR } from "./purchaseReturnSR.route.js";
 export { default as salesBill } from "./salesBill.route.js";
 export { default as customer } from "./customer.route.js";
 export { default as salesReturnSR } from "./salesReturnSR.route.js";
+export { default as barcodeSeq } from "./barcodeSeq.route.js";

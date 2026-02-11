@@ -115,4 +115,4 @@ export const STOCK_ADJUSTMENT_API = "stockAdjustment";
 export const SALES_ENTRY_API = "salesEntry";
 export const STOCK_INWARD_API = "stockInward";
 export const HSN_API = "hsn"
-
+export const BARCODE_SEQ_API = "barcodeSeq";
