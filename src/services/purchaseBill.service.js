@@ -1,5 +1,9 @@
 import { prisma } from "../lib/prisma.js";
-import { NoRecordFound } from "../configs/Responses.js";
+import {
+  CustomError,
+  ErrorResponse,
+  NoRecordFound,
+} from "../configs/Responses.js";
 import {
   getDateFromDateTime,
   getDateTimeRange,
@@ -9,8 +13,6 @@ import {
 } from "../utils/helper.js";
 import { getTableRecordWithId } from "../utils/helperQueries.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
-import { poUpdateValidator } from "../validators/po.validator.js";
-import { styleItem } from "../routes/index.js";
 // import { getTotalQty } from '../utils/poHelpers/getTotalQuantity.js';
 
 async function getNextDocId(branchId, shortCode, startTime, endTime) {
@@ -206,6 +208,24 @@ async function getOne(id) {
   };
 }
 
+function validateUniqueBarcode(purchaseBillItems) {
+  const seen = new Set();
+
+  for (let i = 0; i < purchaseBillItems.length; i++) {
+    const barcodeId = purchaseBillItems[i]?.barcodeId;
+
+    if (!barcodeId) continue; // skip empty if needed
+
+    if (seen.has(barcodeId)) {
+      throw new Error(
+        `Duplicate Barcode No ${purchaseBillItems[i].barcodeNo} found in row ${i + 1}`,
+      );
+    }
+
+    seen.add(barcodeId);
+  }
+}
+
 async function create(body) {
   try {
     const {
@@ -242,6 +262,7 @@ async function create(body) {
       finYearDate?.endDateEndTime,
     );
     let data;
+    validateUniqueBarcode(purchaseBillItems);
     await prisma.$transaction(async (tx) => {
       data = await tx.purchaseBill.create({
         data: {
@@ -267,6 +288,7 @@ async function create(body) {
           dcNo,
         },
       });
+
       await createPurchaseBillItems(
         tx,
         purchaseBillItems,
@@ -286,6 +308,23 @@ async function create(body) {
   }
 }
 
+async function existItemCheck(tx, branchId, barcodeId, barcodeNo) {
+  const result = await tx.stockLedger.aggregate({
+    where: {
+      branchId: parseInt(branchId),
+      barcodeId: parseInt(barcodeId),
+    },
+    _sum: {
+      qty: true,
+    },
+  });
+  const currentQty = result._sum.qty ?? 0;
+
+  if (currentQty > 0) {
+    throw new Error(`The BarcodeNo - ${barcodeNo} Already Exist`);
+  }
+}
+
 async function createPurchaseBillItems(
   tx,
   purchaseBillItems,
@@ -296,6 +335,12 @@ async function createPurchaseBillItems(
   dcNo,
 ) {
   const promises = purchaseBillItems.map(async (itemDetails, index) => {
+    await existItemCheck(
+      tx,
+      branchId,
+      itemDetails?.barcodeId,
+      itemDetails?.barcodeNo,
+    );
     const qty = itemDetails?.qty
       ? Math.round(parseFloat(itemDetails.qty))
       : null;
@@ -314,6 +359,9 @@ async function createPurchaseBillItems(
         invNo: invNo,
         dcNo: dcNo ? dcNo : undefined,
         barcodeNo: itemDetails?.barcodeNo ?? undefined,
+        barcodeId: itemDetails?.barcodeId
+          ? parseInt(itemDetails.barcodeId)
+          : null,
         rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
         discountType: itemDetails?.discountType ?? undefined,
         discountValue: itemDetails?.discountValue
@@ -340,35 +388,39 @@ async function createPurchaseBillItems(
         qty,
         PurchaseBillItemsId: createdItem.id,
         barcodeNo: itemDetails?.barcodeNo ?? undefined,
+        barcodeId: itemDetails?.barcodeId
+          ? parseInt(itemDetails.barcodeId)
+          : null,
         rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
         invNo: invNo ? invNo : undefined,
       },
     });
-    // await prisma.stockSummary.upsert({
-    //   where: {
-    //     branchId_barcodeNo: {
-    //       branchId: parseInt(branchId),
-    //       barcodeNo: itemDetails.barcodeNo,
-    //     },
-    //   },
-    //   update: {
-    //     qty: { increment: qty },
-    //   },
-    //   create: {
-    //     createdById: parseInt(userId),
-    //     branchId: parseInt(branchId),
-    //     styleId: itemDetails?.styleId ? parseInt(itemDetails.styleId) : null,
-    //     sizeId: itemDetails?.sizeId ? parseInt(itemDetails.sizeId) : null,
-    //     colorId: itemDetails?.colorId ? parseInt(itemDetails.colorId) : null,
-    //     uomId: itemDetails?.uomId ? parseInt(itemDetails.uomId) : null,
-    //     styleItemId: itemDetails?.styleItemId
-    //       ? parseInt(itemDetails.styleItemId)
-    //       : null,
-    //     qty,
-    //     barcodeNo: itemDetails?.barcodeNo ?? undefined,
-    //     rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
-    //   },
-    // });
+    await tx.stockSummary.upsert({
+      where: {
+        branchId_barcodeId: {
+          branchId: parseInt(branchId),
+          barcodeId: parseInt(itemDetails.barcodeId),
+        },
+      },
+      update: {
+        qty: { increment: qty },
+      },
+      create: {
+        createdById: parseInt(userId),
+        branchId: parseInt(branchId),
+        styleId: itemDetails?.styleId ? parseInt(itemDetails.styleId) : null,
+        sizeId: itemDetails?.sizeId ? parseInt(itemDetails.sizeId) : null,
+        colorId: itemDetails?.colorId ? parseInt(itemDetails.colorId) : null,
+        uomId: itemDetails?.uomId ? parseInt(itemDetails.uomId) : null,
+        styleItemId: itemDetails?.styleItemId
+          ? parseInt(itemDetails.styleItemId)
+          : null,
+        qty,
+        barcodeNo: itemDetails?.barcodeNo ?? undefined,
+        barcodeId: parseInt(itemDetails.barcodeId),
+        rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
+      },
+    });
     return createdItem;
   });
 
@@ -407,6 +459,7 @@ async function update(id, body) {
     dcNo,
   } = await body;
   let data;
+  validateUniqueBarcode(purchaseBillItems);
   const dataFound = await prisma.purchaseBill.findUnique({
     where: {
       id: parseInt(id),
@@ -754,4 +807,39 @@ async function getpurchaseBillItems(req) {
   return { statusCode: 0, data, totalCount };
 }
 
-export { get, getOne, create, update, remove, getpurchaseBillItems };
+async function getBarcodeDetail(req) {
+  const { barcodeNo } = req.query;
+
+  // 1️⃣ First try fetching by styleNo
+  let data = await prisma.barcode.findUnique({
+    where: {
+      barcodeNo: barcodeNo,
+    },
+  });
+
+  // 2️⃣ If no data found, try fetching by barCode
+  if (!data || data.length === 0 || data === null) {
+    return ErrorResponse("Failed to fetch barcode details");
+  }
+
+  const style = await prisma.style.findUnique({
+    where: {
+      id: data.styleId,
+    },
+  });
+
+  return {
+    statusCode: 0,
+    data: { ...data, rate: style?.salesPrice ?? null, qty: 1 },
+  };
+}
+
+export {
+  get,
+  getOne,
+  create,
+  update,
+  remove,
+  getpurchaseBillItems,
+  getBarcodeDetail,
+};

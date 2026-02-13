@@ -40,7 +40,7 @@ async function create(body) {
 }
 
 async function update(id, body) {
-  const { companyId, code, seqStart, active, digits, barcodeNo } = await body;
+  const { companyId, code, seqStart, active, digits, barcodeNo,prefix } = await body;
   const dataFound = await prisma.barcodeSequence.findUnique({
     where: {
       id: parseInt(id),

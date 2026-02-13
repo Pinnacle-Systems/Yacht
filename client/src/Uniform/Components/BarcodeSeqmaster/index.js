@@ -105,41 +105,50 @@ export default function Form() {
       typeof data.prefix !== "string" ||
       data.prefix.trim().length < 2
     ) {
-      return Swal.fire({
+      Swal.fire({
         icon: "error",
         title: "Validation error",
         text: "Prefix must be a string and at least 2 characters long.",
       });
+      return false;
     }
     if (data.prefix.length > 3) {
-      return Swal.fire({
+      Swal.fire({
         icon: "error",
         title: "Validation error",
-        text: "Prefix  should be at Maximum 4 character .",
+        text: "Prefix  should be at Maximum 3 character .",
       });
+      return false;
     }
     if (data.code > 99) {
-      return Swal.fire({
+      Swal.fire({
         icon: "error",
         title: "Validation error",
         text: "Code should be Two Digits .",
       });
+      return false;
     }
     if (data.digits > 9) {
-      return Swal.fire({
+      Swal.fire({
         icon: "error",
         title: "Validation error",
         text: "Digits should be Maximum 9 .",
       });
+      return false;
     }
     if (
       data.prefix &&
-      data.digits &&
-      data.seqStart &&
       data.code &&
+      data.digits &&
       data.seqStart
     ) {
       return true;
+    }else{
+      Swal.fire({
+        icon: "error",
+        title: "Validation error",
+        text: "Please fill all required fields...!",
+      });
     }
     return false;
   };
@@ -183,19 +192,19 @@ export default function Form() {
   };
 
   const saveData = () => {
-    // if (!validateOneActiveBarcode(data.active)) {
-    //   Swal.fire({
-    //     icon: "error",
-    //     title: "Submission error",
-    //     text: "Only one Barcode can be active",
-    //   });
-    //   return;
-    // }
     if (!validateData(data)) {
+      // Swal.fire({
+      //   icon: "error",
+      //   title: "Submission error",
+      //   text: "Please fill all required fields...!",
+      // });
+      return;
+    }
+    if (!validateOneActiveBarcode(data.active)) {
       Swal.fire({
         icon: "error",
         title: "Submission error",
-        text: "Please fill all required fields...!",
+        text: "Only one Barcode can be active",
       });
       return;
     }
@@ -281,24 +290,25 @@ export default function Form() {
       <Power size={10} />
     </div>
   );
+
   const columns = [
     {
       header: "S.No",
-      accessor: (item, index) => index + 1,
-      className: " text-gray-900 w-12  text-center",
+      accessor: (item, index) => parseInt(index) + parseInt(1),
+      className: "font-medium text-gray-900 text-center w-[10px] py-1",
+      search: "",
     },
-
     {
       header: "Barcode No",
       accessor: (item) => item.barcode,
-      //   cellClass: () => "font-medium text-gray-900",
-      className: " text-gray-900 text-center uppercase w-28",
+      className: "font-medium text-gray-900  w-[200px]  py-1  px-2",
+      search: "Barcode No",
     },
     {
       header: "Status",
       accessor: (item) => (item.active ? ACTIVE : INACTIVE),
-      //   cellClass: () => "font-medium text-gray-900",
-      className: " text-gray-900 text-center uppercase w-28",
+      className: "font-medium text-gray-900 text-center w-[10px] py-1",
+      search: "",
     },
   ];
 
@@ -322,7 +332,7 @@ export default function Form() {
       <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
         <ReusableTable
           columns={columns}
-          data={allData?.data}
+          data={allData?.data || []}
           onView={handleView}
           onEdit={handleEdit}
           onDelete={deleteData}

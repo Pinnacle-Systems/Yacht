@@ -11,6 +11,7 @@ import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMaste
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServices";
+import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 const MODEL = "Purchase Bill";
 
 export default function Form() {
@@ -26,6 +27,8 @@ export default function Form() {
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
+  const { data: styleList } = useGetStyleMasterQuery({ params });
+
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
   const { data: taxTypeList } =
     useGetTaxTemplateQuery({ params });
@@ -149,6 +152,7 @@ export default function Form() {
           colorList={colorList}
           uomList={uomList}
           taxTypeList={taxTypeList}
+          styleList={styleList}
         />
       )}
     </>

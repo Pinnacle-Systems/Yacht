@@ -151,6 +151,7 @@ model Branch {
   salesBills              SalesBill[]
   customers               Customer[]
   salesReturnSRs          SalesReturnSR[]
+  barcodes                Barcode[]
 }
 
 model UserOnBranch {
@@ -1211,6 +1212,7 @@ model Color {
   purchasReturnItemsSRs      PurchasReturnItemsSR[]
   salesBillItems             SalesBillItems[]
   salesReturnSRItems         SalesReturnSRItems[]
+  barcodes                   Barcode[]
 }
 
 model UnitOfMeasurement {
@@ -1237,6 +1239,9 @@ model UnitOfMeasurement {
   purchasReturnItemsSRs      PurchasReturnItemsSR[]
   salesBillItems             SalesBillItems[]
   salesReturnSRItems         SalesReturnSRItems[]
+  styles                     Style[]
+  salesEntryItems            SalesEntryItems[]
+  barcodes                   Barcode[]
 }
 
 model purchaseInwardEntry {
@@ -1618,6 +1623,8 @@ model Style {
   salesPrice            Float?
   Hsn                   Hsn?                   @relation(fields: [hsnId], references: [id])
   hsnId                 Int?
+  Uom                   UnitOfMeasurement?     @relation(fields: [uomId], references: [id])
+  uomId                 Int?
   Stock                 Stock[]
   OpeningStockItems     OpeningStockItems[]
   StockAdjustmentItems  StockAdjustmentItems[]
@@ -1643,6 +1650,7 @@ model Style {
   purchasReturnItemsSRs PurchasReturnItemsSR[]
   salesBillItems        SalesBillItems[]
   salesReturnSRItems    SalesReturnSRItems[]
+  barcodes              Barcode[]
 }
 
 model Size {
@@ -1676,6 +1684,7 @@ model Size {
   purchasReturnItemsSRs PurchasReturnItemsSR[]
   salesBillItems        SalesBillItems[]
   salesReturnSRItems    SalesReturnSRItems[]
+  barcodes              Barcode[]
 }
 
 model Measurement {
@@ -1921,31 +1930,34 @@ model SalesEntry {
 }
 
 model SalesEntryItems {
-  id            Int         @id @default(autoincrement())
-  SalesEntry    SalesEntry? @relation(fields: [salesEntryId], references: [id], onDelete: Cascade)
+  id            Int                @id @default(autoincrement())
+  SalesEntry    SalesEntry?        @relation(fields: [salesEntryId], references: [id], onDelete: Cascade)
   salesEntryId  Int?
   barcode       String?
-  Style         Style?      @relation(fields: [styleId], references: [id])
+  Style         Style?             @relation(fields: [styleId], references: [id])
   styleId       Int?
-  Size          Size?       @relation(fields: [sizeId], references: [id])
+  Size          Size?              @relation(fields: [sizeId], references: [id])
   sizeId        Int?
   stkQty        Int?
   qty           Int?
   remarks       String?
   Stock         Stock[]
   styleNo       String?
-  Fabric        Fabric?     @relation(fields: [fabricId], references: [id])
+  Fabric        Fabric?            @relation(fields: [fabricId], references: [id])
   fabricId      Int?
   price         Int?
   disc          Int?
   amount        Int?
-  StyleItem     StyleItem?  @relation(fields: [styleItemId], references: [id])
+  StyleItem     StyleItem?         @relation(fields: [styleItemId], references: [id])
   styleItemId   Int?
   discountType  String?
   taxPercent    Int?
   discountValue Int?
-  Color         Color?      @relation(fields: [colorId], references: [id])
+  Color         Color?             @relation(fields: [colorId], references: [id])
   colorId       Int?
+  Uom           UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId         Int?
+  barcodes      Barcode[]
 }
 
 model SizeTemplate {
@@ -2040,6 +2052,7 @@ model StyleItem {
   purchasReturnItemsSRs PurchasReturnItemsSR[]
   salesBillItems        SalesBillItems[]
   salesReturnSRItems    SalesReturnSRItems[]
+  barcodes              Barcode[]
 }
 
 model SalesReturn {
@@ -2683,6 +2696,8 @@ model PurchaseBillItems {
   taxPercent     Float?
   stockLedgers   StockLedger[]
   dcNo           String?
+  Barcode        Barcode?           @relation(fields: [barcodeId], references: [id])
+  barcodeId      Int?
 }
 
 model StockLedger {
@@ -2720,6 +2735,8 @@ model StockLedger {
   salesBillItemsId       Int?
   SalesReturnSRItems     SalesReturnSRItems?   @relation(fields: [salesReturnSRItemsId], references: [id], onDelete: Cascade)
   salesReturnSRItemsId   Int?
+  Barcode                Barcode?              @relation(fields: [barcodeId], references: [id])
+  barcodeId              Int?
 
   @@index([branchId])
 }
@@ -2733,7 +2750,7 @@ model StockSummary {
   updatedBy   User?              @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById Int?
   Branch      Branch?            @relation(fields: [branchId], references: [id])
-  branchId    Int?
+  branchId    Int
   barcodeNo   String?
   Color       Color?             @relation(fields: [colorId], references: [id])
   colorId     Int?
@@ -2747,7 +2764,10 @@ model StockSummary {
   StyleItem   StyleItem?         @relation(fields: [styleItemId], references: [id])
   styleItemId Int?
   rate        Float?
+  Barcode     Barcode?           @relation(fields: [barcodeId], references: [id])
+  barcodeId   Int
 
+  @@unique([branchId, barcodeId])
   @@index([branchId])
 }
 
@@ -2793,6 +2813,8 @@ model PurchasReturnItemsSR {
   PurchaseBill             PurchaseBill?           @relation(fields: [purchaseBillId], references: [id], onDelete: Cascade)
   purchaseBillId           Int?
   stockLedgers             StockLedger[]
+  Barcode                  Barcode?                @relation(fields: [barcodeId], references: [id])
+  barcodeId                Int?
 }
 
 model Customer {
@@ -2861,6 +2883,8 @@ model SalesBillItems {
   discountValue Float?
   taxPercent    Float?
   stockLedgers  StockLedger[]
+  Barcode       Barcode?           @relation(fields: [barcodeId], references: [id])
+  barcodeId     Int?
 }
 
 model SalesReturnSR {
@@ -2902,17 +2926,48 @@ model SalesReturnSRItems {
   Uom             UnitOfMeasurement? @relation(fields: [uomId], references: [id])
   uomId           Int?
   stockLedgers    StockLedger[]
+  Barcode         Barcode?           @relation(fields: [barcodeId], references: [id])
+  barcodeId       Int?
 }
 
 model BarcodeSequence {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   prefix    String?
   code      Int?
   digits    Int?
   seqStart  Int?
   barcodeNo Int?
-  active    Boolean? @default(true)
-  Company   Company? @relation(fields: [companyId], references: [id])
+  active    Boolean?  @default(true)
+  Company   Company?  @relation(fields: [companyId], references: [id])
   companyId Int?
   barcode   String?
+  barcodes  Barcode[]
+}
+
+model Barcode {
+  id                    Int                    @id @default(autoincrement())
+  barcodeNo             String                 @unique
+  Style                 Style?                 @relation(fields: [styleId], references: [id])
+  styleId               Int?
+  StyleItem             StyleItem?             @relation(fields: [styleItemId], references: [id])
+  styleItemId           Int?
+  Size                  Size?                  @relation(fields: [sizeId], references: [id])
+  sizeId                Int?
+  Color                 Color?                 @relation(fields: [colorId], references: [id])
+  colorId               Int?
+  createdAt             DateTime               @default(now())
+  Branch                Branch?                @relation(fields: [branchId], references: [id])
+  branchId              Int?
+  Uom                   UnitOfMeasurement?     @relation(fields: [uomId], references: [id])
+  uomId                 Int?
+  SalesEntryItems       SalesEntryItems?       @relation(fields: [salesEntryItemsId], references: [id], onDelete: Cascade)
+  salesEntryItemsId     Int?
+  BarcodeSequence       BarcodeSequence?       @relation(fields: [barcodeSeqId], references: [id])
+  barcodeSeqId          Int?
+  purchaseBillItems     PurchaseBillItems[]
+  stockLedgers          StockLedger[]
+  stockSummaries        StockSummary[]
+  purchasReturnItemsSRs PurchasReturnItemsSR[]
+  salesBillItems        SalesBillItems[]
+  salesReturnSRItems    SalesReturnSRItems[]
 }

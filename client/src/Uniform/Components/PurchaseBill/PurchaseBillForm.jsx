@@ -32,7 +32,8 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     styleItemList,
     colorList,
     uomList,
-    taxTypeList
+    taxTypeList,
+    styleList
 }) => {
     const [docId, setDocId] = useState("New");
     const [paymentType, setPaymentType] = useState("");
@@ -177,7 +178,11 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                     },
                 });
             } else {
-                toast.error(returnData?.message);
+                Swal.fire({
+                    icon: "warning",
+                    title: "Something Wrong",
+                    text: returnData?.message
+                })
             }
         } catch (error) {
             console.log("handle");
@@ -208,17 +213,13 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         const duplicates = [];
 
         items.forEach((row, index) => {
-            const key = [row.styleItemId || "", row.barcodeNo || "", row.styleId || "", row.sizeId || ""].join(
-                "-"
-            );
+            const key = row?.barcodeId;
 
             if (seen.has(key)) {
                 duplicates.push({
                     firstIndex: seen.get(key),
                     duplicateIndex: index,
-                    styleItemId: row.styleItemId,
-                    styleId: row.styleId,
-                    sizeId: row.styleId,
+                    barcodeId: row.barcodeId,
                     barcodeNo: row.barcodeNo
                 });
             } else {
@@ -256,30 +257,30 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
             !isGridDatasValid(
                 filledGoodsItems,
                 false,
-                ["styleItemId", "sizeId", "qty", "uomId", "rate", "styleId"]
+                ["styleItemId", "sizeId", "qty", "uomId", "rate", "styleId", "barcodeId"]
             )
         ) {
-            toast.info("Please fill all required item details...!", {
+            toast.info("Please fill all required items details...!", {
                 position: "top-center",
+                autoClose: 2000
             });
             return false;
         }
 
         // 4️⃣ Duplicate check
-        const duplicatesGoods = findDuplicateGoodss(filledGoodsItems);
-        if (duplicatesGoods.length > 0) {
-            const dup = duplicatesGoods[0];
-            Swal.fire({
-                icon: "warning",
-                title: "Duplicate Item Found",
-                html: `
-        StyleItem - ${findFromList(dup?.styleItemId, styleItemList?.data, "name")},
-       Barcode - ${dup?.barcodeNo},
-        Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
-      `,
-            });
-            return false;
-        }
+        //     const duplicatesGoods = findDuplicateGoodss(filledGoodsItems);
+        //     if (duplicatesGoods.length > 0) {
+        //         const dup = duplicatesGoods[0];
+        //         Swal.fire({
+        //             icon: "warning",
+        //             title: "Duplicate Item Found",
+        //             html: `
+        //     Barcode - ${dup?.barcodeNo},
+        //     Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
+        //   `,
+        //         });
+        //         return false;
+        //     }
 
         return true;
     };
@@ -362,7 +363,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     const handleAddRow = async (newValue) => {
         setDcNo(newValue);
         const hasUnfilledRequired = purchaseBillItems.some((row) => {
-            return row.styleId && !row.qty;
+            return row.styleId && !row.qty || row.styleId && !row.rate;
         });
 
         if (hasUnfilledRequired) {
@@ -377,7 +378,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                     dcNo: newValue,
                 },
             });
-            const salesItems = salesData?.data?.SalesEntryItems;
+            const salesItems = salesData?.data;
             if (!salesItems) return;
             setPurchaseBillItems((prev) => {
                 const updated = [...prev];
@@ -409,6 +410,10 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                         styleItemId: "",
                         colorId: "",
                         selected: false,
+                        barcodeNo: "",
+                        barcodeId: "",
+                        rate: "",
+                        uomId: "",
                     });
                 }
 
@@ -498,7 +503,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                         setValue={setInvNo}
                                         readOnly={readOnly}
                                         required
-                                    autoFocus={true}
+                                        autoFocus={true}
                                     />
                                     <DateInput
                                         name="Inv Date"
@@ -556,7 +561,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                             placeholder={"Select DC"}
                                             otherField={"docId"}
                                             otherValue={"docId"}
-                                            disabled={id}
+                                            // disabled={id}
                                             clear={true}
                                         />
                                     </div>
@@ -576,6 +581,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                 uomList={uomList}
                                 taxTemplateId={taxTemplateId}
                                 dcNo={dcNo}
+                                styleList={styleList}
                             />
                         </fieldset>
 

@@ -126,7 +126,7 @@ const commonReducers = {
   departmentMaster: departmentMasterApi.reducer,
   employeeCategoryMaster: employeeCategoryMasterApi.reducer,
   finYearMaster: finYearMasterApi.reducer,
-  barcodeSeqMasterApi: barcodeSeqMasterApi.reducer,
+  barcodeSeqMaster: barcodeSeqMasterApi.reducer,
   roleMaster: rolesMasterApi.reducer,
   userMaster: userMasterApi.reducer,
   employeeMaster: employeeMasterApi.reducer,

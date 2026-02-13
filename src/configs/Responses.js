@@ -6,3 +6,7 @@ export const CustomError = (model) => {
   error.statusCode = 1;
   throw error;
 };
+
+export const ErrorResponse = (message) => {
+  return { statusCode: 1, message };
+};

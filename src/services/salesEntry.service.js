@@ -276,6 +276,7 @@ async function getOne(id) {
           taxPercent: true,
           discountValue: true,
           colorId: true,
+          uomId: true,
         },
       },
       Location: true,
@@ -391,6 +392,7 @@ async function create(body) {
     salesType,
     overAllDisc,
     roundOff,
+    companyId,
   } = await body;
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate
@@ -433,6 +435,8 @@ async function create(body) {
       userId,
       branchId,
       storeId,
+      salesType,
+      companyId,
     );
   });
   return { statusCode: 0, data };
@@ -454,6 +458,7 @@ async function update(id, body) {
     salesType,
     overAllDisc,
     roundOff,
+    companyId,
   } = await body;
   let data;
   const dataFound = await prisma.salesEntry.findUnique({
@@ -505,6 +510,8 @@ async function update(id, body) {
       userId,
       branchId,
       storeId,
+      salesType,
+      companyId,
     );
   });
   return { statusCode: 0, data };
@@ -517,8 +524,10 @@ async function updateSalesEntryItems(
   userId,
   branchId,
   storeId,
+  salesType,
+  companyId,
 ) {
-  const promises = salesEntryItems.map(async (stockDetail) => {
+  for (const stockDetail of salesEntryItems) {
     const qty =
       stockDetail?.qty && !isNaN(parseFloat(stockDetail.qty))
         ? -Math.abs(parseInt(stockDetail.qty))
@@ -621,8 +630,94 @@ async function updateSalesEntryItems(
           },
         });
       }
+      if (salesType === "RETAIL") {
+        const newQty = stockDetail?.qty ? parseInt(stockDetail.qty) : 0;
+        const existingBarcodes = await tx.barcode.findMany({
+          where: {
+            salesEntryItemsId: updatedItem.id,
+          },
+          orderBy: { id: "asc" },
+        });
+        const existingCount = existingBarcodes.length;
+        if (newQty > existingCount) {
+          const diff = newQty - existingCount;
 
-      return updatedItem;
+          const barcodeSeq = await tx.barcodeSequence.findFirst({
+            where: {
+              companyId: parseInt(companyId),
+              active: true,
+            },
+          });
+
+          if (!barcodeSeq) {
+            CustomError("No active barcode sequence found for the company");
+          }
+
+          for (let i = 0; i < diff; i++) {
+            const lastBarcode = await tx.barcode.findFirst({
+              where: {
+                barcodeSeqId: parseInt(barcodeSeq.id),
+              },
+              orderBy: {
+                id: "desc",
+              },
+            });
+
+            const fullPrefix = barcodeSeq.prefix + barcodeSeq.code;
+
+            let nextNumber;
+
+            if (lastBarcode) {
+              const lastValue = lastBarcode.barcodeNo;
+              const numberPart = lastValue.substring(fullPrefix.length);
+              nextNumber = parseInt(numberPart) + 1;
+            } else {
+              nextNumber = barcodeSeq.seqStart;
+            }
+
+            const paddedNumber = nextNumber
+              .toString()
+              .padStart(barcodeSeq.digits, "0");
+
+            const newBarcode = fullPrefix + paddedNumber;
+
+            await tx.barcode.create({
+              data: {
+                barcodeNo: newBarcode,
+                salesEntryItemsId: updatedItem.id,
+                barcodeSeqId: barcodeSeq.id,
+                styleId: stockDetail?.styleId
+                  ? parseInt(stockDetail.styleId)
+                  : null,
+                sizeId: stockDetail?.sizeId
+                  ? parseInt(stockDetail.sizeId)
+                  : null,
+                colorId: stockDetail?.colorId
+                  ? parseInt(stockDetail.colorId)
+                  : null,
+                styleItemId: stockDetail?.styleItemId
+                  ? parseInt(stockDetail.styleItemId)
+                  : null,
+                branchId: parseInt(branchId),
+                uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
+              },
+            });
+          }
+        }
+
+        // 🔹 CASE 2: Qty Decreased → Delete Extra Barcodes
+        else if (newQty < existingCount) {
+          const diff = existingCount - newQty;
+
+          const barcodesToDelete = existingBarcodes.slice(-diff);
+
+          for (const bc of barcodesToDelete) {
+            await tx.barcode.delete({
+              where: { id: bc.id },
+            });
+          }
+        }
+      }
     } else {
       const createdItem = await tx.salesEntryItems.create({
         data: {
@@ -679,11 +774,67 @@ async function updateSalesEntryItems(
             : null,
         },
       });
-      return createdItem;
-    }
-  });
+      if (salesType === "RETAIL") {
+        const barcodeSeq = await tx.barcodeSequence.findFirst({
+          where: {
+            companyId: parseInt(companyId),
+            active: true,
+          },
+        });
+        if (!barcodeSeq) {
+          CustomError("No active barcode sequence found for the company");
+        }
+        const qty = stockDetail?.qty ? parseInt(stockDetail.qty) : 1;
+        for (let i = 0; i < qty; i++) {
+          const lastBarcode = await tx.barcode.findFirst({
+            where: {
+              barcodeSeqId: parseInt(barcodeSeq.id),
+            },
+            orderBy: {
+              id: "desc",
+            },
+          });
+          const fullPrefix = barcodeSeq.prefix + barcodeSeq.code;
+          let nextNumber;
+          if (lastBarcode) {
+            const lastValue = lastBarcode.barcodeNo;
 
-  return Promise.all(promises);
+            // Remove prefix+code
+            const numberPart = lastValue.substring(fullPrefix.length);
+
+            nextNumber = parseInt(numberPart) + 1;
+          } else {
+            nextNumber = barcodeSeq.seqStart;
+          }
+
+          const paddedNumber = nextNumber
+            .toString()
+            .padStart(barcodeSeq.digits, "0");
+
+          const newBarcode = fullPrefix + paddedNumber;
+          await tx.barcode.create({
+            data: {
+              barcodeNo: newBarcode,
+              salesEntryItemsId: createdItem.id,
+              barcodeSeqId: barcodeSeq.id,
+              styleId: stockDetail?.styleId
+                ? parseInt(stockDetail.styleId)
+                : null,
+              sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+              colorId: stockDetail?.colorId
+                ? parseInt(stockDetail.colorId)
+                : null,
+              styleItemId: stockDetail?.styleItemId
+                ? parseInt(stockDetail.styleItemId)
+                : null,
+              branchId: parseInt(branchId),
+              uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
+            },
+          });
+        }
+      }
+    }
+  }
 }
 
 async function createSalesEntryItems(
@@ -693,12 +844,13 @@ async function createSalesEntryItems(
   userId,
   branchId,
   storeId,
+  salesType,
+  companyId,
 ) {
-  const promises = salesEntryItems.map(async (itemDetail) => {
+  for (const itemDetail of salesEntryItems) {
     const createdItem = await tx.salesEntryItems.create({
       data: {
         salesEntryId: parseInt(salesEntry.id),
-        barcode: itemDetail?.barcode ? itemDetail?.barcode : undefined,
         styleId: itemDetail?.styleId ? parseInt(itemDetail.styleId) : null,
         sizeId: itemDetail?.sizeId ? parseInt(itemDetail.sizeId) : null,
         colorId: itemDetail?.colorId ? parseInt(itemDetail.colorId) : null,
@@ -728,6 +880,7 @@ async function createSalesEntryItems(
         taxPercent: itemDetail?.taxPercent
           ? parseInt(itemDetail.taxPercent)
           : null,
+        uomId: itemDetail?.uomId ? parseInt(itemDetail.uomId) : null,
       },
     });
     await tx.stock.create({
@@ -744,7 +897,6 @@ async function createSalesEntryItems(
             ? -Math.abs(parseInt(itemDetail.qty))
             : null,
         salesEntryItemsId: createdItem.id,
-        barCode: itemDetail?.barcode ? itemDetail?.barcode : undefined,
         styleNo: itemDetail?.styleNo ?? undefined,
         fabricId: itemDetail?.fabricId ? parseInt(itemDetail.fabricId) : null,
         price: itemDetail?.price ? parseInt(itemDetail.price) : null,
@@ -753,10 +905,62 @@ async function createSalesEntryItems(
           : null,
       },
     });
-    return createdItem;
-  });
+    if (salesType === "RETAIL") {
+      const barcodeSeq = await tx.barcodeSequence.findFirst({
+        where: {
+          companyId: parseInt(companyId),
+          active: true,
+        },
+      });
+      if (!barcodeSeq) {
+        CustomError("No active barcode sequence found for the company");
+      }
+      const qty = itemDetail?.qty ? parseInt(itemDetail.qty) : 1;
+      for (let i = 0; i < qty; i++) {
+        const lastBarcode = await tx.barcode.findFirst({
+          where: {
+            barcodeSeqId: parseInt(barcodeSeq.id),
+          },
+          orderBy: {
+            id: "desc",
+          },
+        });
+        const fullPrefix = barcodeSeq.prefix + barcodeSeq.code;
+        let nextNumber;
+        if (lastBarcode) {
+          const lastValue = lastBarcode.barcodeNo;
 
-  return Promise.all(promises);
+          // Remove prefix+code
+          const numberPart = lastValue.substring(fullPrefix.length);
+
+          nextNumber = parseInt(numberPart) + 1;
+        } else {
+          nextNumber = barcodeSeq.seqStart;
+        }
+
+        const paddedNumber = nextNumber
+          .toString()
+          .padStart(barcodeSeq.digits, "0");
+
+        const newBarcode = fullPrefix + paddedNumber;
+        await tx.barcode.create({
+          data: {
+            barcodeNo: newBarcode,
+            salesEntryItemsId: createdItem.id,
+            barcodeSeqId: barcodeSeq.id,
+            styleId: itemDetail?.styleId ? parseInt(itemDetail.styleId) : null,
+            sizeId: itemDetail?.sizeId ? parseInt(itemDetail.sizeId) : null,
+            colorId: itemDetail?.colorId ? parseInt(itemDetail.colorId) : null,
+            styleItemId: itemDetail?.styleItemId
+              ? parseInt(itemDetail.styleItemId)
+              : null,
+            branchId: parseInt(branchId),
+            uomId: itemDetail?.uomId ? parseInt(itemDetail.uomId) : null,
+          },
+        });
+      }
+    }
+  }
 }
 
 function findRemovedItems(dataFound, salesEntryItems) {
@@ -838,13 +1042,42 @@ async function getSalesDcDetail(req) {
       },
     },
   });
+  const salesEntryItemIds = data?.SalesEntryItems.map((item) => item.id) || [];
+
+  const barcodes = await prisma.barcode.findMany({
+    where: {
+      salesEntryItemsId: { in: salesEntryItemIds },
+    },
+  });
+
+  const barcodeWithRate = await Promise.all(
+    barcodes.map(async (barcode) => {
+      const style = await prisma.style.findUnique({
+        where: {
+          id: barcode.styleId,
+        },
+      });
+      console.log(barcode, "barcode");
+      return {
+        barcodeNo: barcode.barcodeNo,
+        styleId: barcode.styleId,
+        styleItemId: barcode.styleItemId,
+        sizeId: barcode.sizeId,
+        colorId: barcode.colorId,
+        uomId: barcode.uomId,
+        salesEntryItemsId: barcode.salesEntryItemsId,
+        barcodeSeqId: barcode.barcodeSeqId,
+        rate: style?.salesPrice || null,
+        qty: 1,
+        barcodeId: barcode.id,
+      };
+    }),
+  );
 
   if (!data) return NoRecordFound("Sales Entry");
   return {
     statusCode: 0,
-    data: {
-      ...data,
-    },
+    data: barcodeWithRate,
   };
 }
 

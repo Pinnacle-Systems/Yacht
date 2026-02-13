@@ -56,7 +56,20 @@ const purchaseBillApi = createApi({
           params,
         };
       },
-      providesTags: ["purchaseInwardEntry"],
+      providesTags: ["PurchaseBill"],
+    }),
+    getProdBarcodeDetail: builder.query({
+      query: ({ params }) => {
+        return {
+          url: `${PURCHASE_BILL_API}/getBarcodeDetail`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["PurchaseBill"],
     }),
     addPurchaseBill: builder.mutation({
       query: (payload) => ({
@@ -94,6 +107,7 @@ export const {
   useGetPurchaseBillQuery,
   useGetPurchaseBillByIdQuery,
   useGetPurBillItemsQuery,
+  useLazyGetProdBarcodeDetailQuery,
   useAddPurchaseBillMutation,
   useUpdatePurchaseBillMutation,
   useDeletePurchaseBillMutation,

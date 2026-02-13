@@ -192,6 +192,7 @@ export function SalesBillForm({
     salesType,
     roundOff,
     overAllDisc,
+    companyId
   };
 
   const syncFormWithDb = useCallback(
@@ -425,7 +426,7 @@ export function SalesBillForm({
                     value={salesType}
                     setValue={setSalesType}
                     required={true}
-                    readOnly={readOnly}
+                    readOnly={id}
                     autoFocus={true}
                   />
                 </div>

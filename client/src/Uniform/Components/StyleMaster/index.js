@@ -26,6 +26,8 @@ import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMas
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 import StyleReport from "./StyleReport";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterService";
+import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
+import { Button } from "@mui/material";
 
 const StyleMaster = () => {
   const [form, setForm] = useState(false);
@@ -45,6 +47,7 @@ const StyleMaster = () => {
   const [fabricId, setFabricId] = useState("");
   const [styleItemId, setStyleItemId] = useState("");
   const [price, setPrice] = useState("");
+  const [uomId, setUomId] = useState("");
   const [addData] = useAddStyleMasterMutation();
   const [updateData] = useUpdateStyleMasterMutation();
   const [removeData] = useDeleteStyleMasterMutation();
@@ -76,7 +79,10 @@ const StyleMaster = () => {
   const { data: styleItemList } = useGetStyleItemMasterQuery({
     params,
   });
-   const { data: hsnList } = useGetHsnMasterQuery({
+  const { data: hsnList } = useGetHsnMasterQuery({
+    params,
+  });
+  const { data: uomList } = useGetUnitOfMeasurementMasterQuery({
     params,
   });
 
@@ -94,11 +100,12 @@ const StyleMaster = () => {
     styleItemId,
     price,
     salesPrice,
-    hsnId
+    hsnId,
+    uomId,
   };
 
   const validateData = (data) => {
-    if (data.sku && data.fabricId && data.sizeTemplateId) {
+    if (data.sku && data.fabricId && data.sizeTemplateId && data.uomId) {
       return true;
     }
     return false;
@@ -130,7 +137,7 @@ const StyleMaster = () => {
     if (!validateData(data)) {
       Swal.fire({
         title: "Please fill all required fields...!",
-        icon: "success",
+        icon: "warning",
         timer: 1000,
       });
       return;
@@ -155,8 +162,9 @@ const StyleMaster = () => {
     );
     formData.append("sizeTemplateId", sizeTemplateId);
     formData.append("fabricId", fabricId);
-    formData.append("salesPrice",salesPrice);
-    formData.append("hsnId",hsnId)
+    formData.append("salesPrice", salesPrice);
+    formData.append("hsnId", hsnId);
+    formData.append("uomId", uomId);
     // if (img instanceof File) formData.append("img", img);
     if (img instanceof File) {
       formData.append("img", img);
@@ -193,8 +201,9 @@ const StyleMaster = () => {
       setFabricId(data?.fabricId ? data?.fabricId : "");
       setStyleItemId(data?.styleItemId ? data?.styleItemId : "");
       setPrice(data?.price ? data?.price : "");
-      setSalesPrice(data?.salesPrice ? data?.salesPrice : "") ;
-      setHsnId(data?.hsnId ? data?.hsnId : "")
+      setSalesPrice(data?.salesPrice ? data?.salesPrice : "");
+      setHsnId(data?.hsnId ? data?.hsnId : "");
+      setUomId(data?.uomId ? data?.uomId : "");
       childRecord.current = data?.childRecord ? data?.childRecord : 0;
     },
     [id],
@@ -389,7 +398,7 @@ const StyleMaster = () => {
         <Modal
           isOpen={form}
           form={form}
-          widthClass={"w-[1000px] h-[430px]"}
+          widthClass={"w-[1000px] h-[450px]"}
           onClose={() => {
             setForm(false);
           }}
@@ -456,7 +465,7 @@ const StyleMaster = () => {
                           </div>
                           <div className="mb-3 w-48">
                             <DropdownInput
-                              name="Style Name"
+                              name="Style Item Name"
                               options={
                                 styleItemList
                                   ? dropDownListObject(
@@ -543,7 +552,7 @@ const StyleMaster = () => {
                               readOnly={readOnly}
                             />
                           </div>
-                            <div className="mb-5 w-48">
+                          <div className="mb-5 w-48">
                             <TextInput
                               name="Sales Rate"
                               type="number"
@@ -572,6 +581,29 @@ const StyleMaster = () => {
                               value={hsnId}
                               setValue={setHsnId}
                               required={false}
+                              readOnly={readOnly}
+                              // disabled={childRecord.current > 0}
+                            />
+                          </div>
+                          <div className="mb-5 w-48">
+                            <DropdownInput
+                              name="UOM"
+                              options={
+                                uomList
+                                  ? dropDownListObject(
+                                      id
+                                        ? uomList?.data
+                                        : uomList?.data?.filter(
+                                            (item) => item.active,
+                                          ),
+                                      "name",
+                                      "id",
+                                    )
+                                  : []
+                              }
+                              value={uomId}
+                              setValue={setUomId}
+                              required={true}
                               readOnly={readOnly}
                               // disabled={childRecord.current > 0}
                             />

@@ -142,6 +142,7 @@ async function create(req) {
     price,
     salesPrice,
     hsnId,
+    uomId
   } = await req;
   // const file = req.file;
   const data = await prisma.style.create({
@@ -158,6 +159,7 @@ async function create(req) {
       price: price ? parseInt(price) : undefined,
       salesPrice: salesPrice ? parseInt(salesPrice) : undefined,
       hsnId: hsnId ? parseInt(hsnId) : null,
+      uomId: uomId ? parseInt(uomId) : null,
     },
   });
   return { statusCode: 0, data };
@@ -177,6 +179,7 @@ async function update(id, body) {
     price,
     salesPrice,
     hsnId,
+    uomId
   } = await body;
 
   const dataFound = await prisma.style.findUnique({
@@ -200,6 +203,7 @@ async function update(id, body) {
       price: price ? parseInt(price) : undefined,
       salesPrice: salesPrice ? parseInt(salesPrice) : undefined,
       hsnId: hsnId ? parseInt(hsnId) : null,
+      uomId: uomId ? parseInt(uomId) : null,
     },
   });
   return { statusCode: 0, data };

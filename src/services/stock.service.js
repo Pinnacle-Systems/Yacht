@@ -895,6 +895,7 @@ async function getStyleDetail(req) {
       fabricId: d.fabricId,
       barcode: d.barCode,
       price: styleMaster ? styleMaster?.price : 0,
+      uomId: styleMaster ? styleMaster?.uomId : null,
     })),
   };
 }

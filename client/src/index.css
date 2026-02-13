@@ -141,10 +141,6 @@ label,input,h1,h2,h3,h4,h5,h6,header,nav,ul,li,a,table,thead,tbody,th,tr,td,p,sp
     @apply odd:bg-white even:bg-gray-100 text-black text-xs;
   }
 
-  .table-data-input {
-    @apply bg-transparent focus:bg-yellow-100;
-  }
-
   .table-data {
     @apply border-x border-y border-gray-400 cursor-pointer;
   }

@@ -171,10 +171,10 @@ const StyleReport = ({
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                     <div>Style No</div>
                   </th>
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Style Name</div>
+                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-72  ">
+                    <div>Style Item Name</div>
                   </th>
-                  <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                  <th className="w-64  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Fabric Name</div>
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
