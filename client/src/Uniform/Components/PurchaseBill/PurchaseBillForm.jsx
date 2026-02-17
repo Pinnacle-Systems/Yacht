@@ -268,19 +268,19 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         }
 
         // 4️⃣ Duplicate check
-        //     const duplicatesGoods = findDuplicateGoodss(filledGoodsItems);
-        //     if (duplicatesGoods.length > 0) {
-        //         const dup = duplicatesGoods[0];
-        //         Swal.fire({
-        //             icon: "warning",
-        //             title: "Duplicate Item Found",
-        //             html: `
-        //     Barcode - ${dup?.barcodeNo},
-        //     Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
-        //   `,
-        //         });
-        //         return false;
-        //     }
+            const duplicatesGoods = findDuplicateGoodss(filledGoodsItems);
+            if (duplicatesGoods.length > 0) {
+                const dup = duplicatesGoods[0];
+                Swal.fire({
+                    icon: "warning",
+                    title: "Duplicate Item Found",
+                    html: `
+            Barcode - ${dup?.barcodeNo},
+            Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
+          `,
+                });
+                return false;
+            }
 
         return true;
     };

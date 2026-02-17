@@ -166,6 +166,24 @@ async function getOne(id) {
   };
 }
 
+function validateUniqueBarcode(salesReturnItems) {
+  const seen = new Set();
+
+  for (let i = 0; i < salesReturnItems.length; i++) {
+    const barcodeId = salesReturnItems[i]?.barcodeId;
+
+    if (!barcodeId) continue; // skip empty if needed
+
+    if (seen.has(barcodeId)) {
+      throw new Error(
+        `Duplicate Barcode No ${salesReturnItems[i].barcodeNo} found in row ${i + 1}`,
+      );
+    }
+
+    seen.add(barcodeId);
+  }
+}
+
 async function create(body) {
   try {
     const {
@@ -195,6 +213,7 @@ async function create(body) {
       finYearDate?.endDateEndTime,
     );
     let data;
+    validateUniqueBarcode(salesReturnItems);
     await prisma.$transaction(async (tx) => {
       data = await tx.salesReturnSR.create({
         data: {
@@ -240,7 +259,9 @@ async function createSalesReturnItems(
     const qty = itemDetails?.returnQty
       ? Math.round(parseFloat(itemDetails.returnQty))
       : null;
-
+    const barcodeId = itemDetails?.barcodeId
+      ? parseInt(itemDetails.barcodeId)
+      : null;
     const createdItem = await tx.salesReturnSRItems.create({
       data: {
         salesReturnSRId: parseInt(salesReturnSR.id),
@@ -253,6 +274,7 @@ async function createSalesReturnItems(
         colorId: itemDetails?.colorId ? parseInt(itemDetails.colorId) : null,
         returnQty: qty,
         barcodeNo: itemDetails?.barcodeNo ?? undefined,
+        barcodeId,
       },
     });
     await tx.stockLedger.create({
@@ -272,33 +294,19 @@ async function createSalesReturnItems(
         salesReturnSRItemsId: createdItem.id,
         barcodeNo: itemDetails?.barcodeNo ?? undefined,
         invNo: billNo ? billNo : undefined,
+        barcodeId,
       },
     });
-    // await prisma.stockSummary.upsert({
-    //   where: {
-    //     branchId_barcodeNo: {
-    //       branchId: parseInt(branchId),
-    //       barcodeNo: itemDetails.barcodeNo,
-    //     },
-    //   },
-    //   update: {
-    //     qty: { increment: qty },
-    //   },
-    //   create: {
-    //     createdById: parseInt(userId),
-    //     branchId: parseInt(branchId),
-    //     styleId: itemDetails?.styleId ? parseInt(itemDetails.styleId) : null,
-    //     sizeId: itemDetails?.sizeId ? parseInt(itemDetails.sizeId) : null,
-    //     colorId: itemDetails?.colorId ? parseInt(itemDetails.colorId) : null,
-    //     uomId: itemDetails?.uomId ? parseInt(itemDetails.uomId) : null,
-    //     styleItemId: itemDetails?.styleItemId
-    //       ? parseInt(itemDetails.styleItemId)
-    //       : null,
-    //     qty,
-    //     barcodeNo: itemDetails?.barcodeNo ?? undefined,
-    //     rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
-    //   },
-    // });
+    await tx.stockSummary.updateMany({
+      where: {
+        branchId: parseInt(branchId),
+        barcodeId: barcodeId,
+      },
+      data: {
+        qty: { increment: qty },
+        updatedById: parseInt(userId),
+      },
+    });
     return createdItem;
   });
 
@@ -330,6 +338,7 @@ async function update(id, body) {
     billNo,
   } = await body;
   let data;
+  validateUniqueBarcode(salesReturnItems);
   const dataFound = await prisma.salesReturnSR.findUnique({
     where: {
       id: parseInt(id),
@@ -343,6 +352,27 @@ async function update(id, body) {
   let removeItemsIds = removedItems.map((item) => parseInt(item.id));
   await prisma.$transaction(async (tx) => {
     if (removeItemsIds.length > 0) {
+      const removedItemsData = await tx.salesReturnSRItems.findMany({
+        where: { id: { in: removeItemsIds } },
+      });
+      for (const item of removedItemsData) {
+        const returnQty = item?.returnQty || 0;
+        const barcodeId = item?.barcodeId;
+
+        // 🔼 Add stock back (because return deleted)
+        if (barcodeId && returnQty > 0) {
+          await tx.stockSummary.updateMany({
+            where: {
+              branchId: parseInt(branchId),
+              barcodeId: barcodeId,
+            },
+            data: {
+              qty: { decrement: returnQty },
+              updatedById: parseInt(userId),
+            },
+          });
+        }
+      }
       await tx.salesReturnSRItems.deleteMany({
         where: { id: { in: removeItemsIds } },
       });
@@ -387,8 +417,13 @@ async function updateSalesReturnItems(
     const returnQty = itemDetails?.returnQty
       ? Math.round(parseFloat(itemDetails.returnQty))
       : null;
-
+    const barcodeId = itemDetails?.barcodeId
+      ? parseInt(itemDetails.barcodeId)
+      : null;
     if (itemDetails.id) {
+      const oldItem = await tx.salesReturnSRItems.findUnique({
+        where: { id: parseInt(itemDetails.id) },
+      });
       // Update existing poItem
       const updatedItem = await tx.salesReturnSRItems.update({
         where: { id: parseInt(itemDetails.id) },
@@ -403,6 +438,7 @@ async function updateSalesReturnItems(
           colorId: itemDetails?.colorId ? parseInt(itemDetails.colorId) : null,
           returnQty: returnQty,
           barcodeNo: itemDetails?.barcodeNo ?? undefined,
+          barcodeId,
         },
       });
       const existingStock = await tx.stockLedger.findFirst({
@@ -429,6 +465,7 @@ async function updateSalesReturnItems(
             qty: returnQty,
             barcodeNo: itemDetails?.barcodeNo ?? undefined,
             invNo: billNo ? billNo : undefined,
+            barcodeId,
           },
         });
       } else {
@@ -451,10 +488,61 @@ async function updateSalesReturnItems(
               ? parseInt(itemDetails.styleItemId)
               : null,
             qty: returnQty,
+            barcodeId,
             barcodeNo: itemDetails?.barcodeNo ?? undefined,
             invNo: billNo ? billNo : undefined,
           },
         });
+      }
+
+      const oldQty = oldItem?.returnQty || 0;
+      const oldBarcodeId = oldItem?.barcodeId || null;
+      const newQty = returnQty;
+      const newBarcodeId = barcodeId;
+      if (oldBarcodeId && newBarcodeId && oldBarcodeId === newBarcodeId) {
+        // Same barcode → adjust difference
+        const qtyDifference = oldQty - newQty;
+
+        if (qtyDifference !== 0) {
+          await tx.stockSummary.updateMany({
+            where: {
+              branchId: parseInt(branchId),
+              barcodeId: newBarcodeId,
+            },
+            data: {
+              qty: { decrement: qtyDifference },
+              updatedById: parseInt(userId),
+            },
+          });
+        }
+      } else {
+        // 🔼 Add back old return qty
+        if (oldBarcodeId && oldQty > 0) {
+          await tx.stockSummary.updateMany({
+            where: {
+              branchId: parseInt(branchId),
+              barcodeId: oldBarcodeId,
+            },
+            data: {
+              qty: { decrement: oldQty },
+              updatedById: parseInt(userId),
+            },
+          });
+        }
+
+        // 🔽 Subtract new return qty
+        if (newBarcodeId && newQty > 0) {
+          await tx.stockSummary.updateMany({
+            where: {
+              branchId: parseInt(branchId),
+              barcodeId: newBarcodeId,
+            },
+            data: {
+              qty: { increment: newQty },
+              updatedById: parseInt(userId),
+            },
+          });
+        }
       }
       return updatedItem;
     } else {
@@ -471,6 +559,7 @@ async function updateSalesReturnItems(
           colorId: itemDetails?.colorId ? parseInt(itemDetails.colorId) : null,
           returnQty: returnQty,
           barcodeNo: itemDetails?.barcodeNo ?? undefined,
+          barcodeId,
         },
       });
 
@@ -491,9 +580,21 @@ async function updateSalesReturnItems(
           salesReturnSRItemsId: createdItem.id,
           barcodeNo: itemDetails?.barcodeNo ?? undefined,
           invNo: billNo ? billNo : undefined,
+          barcodeId,
         },
       });
-
+      if (barcodeId && returnQty > 0) {
+        await tx.stockSummary.updateMany({
+          where: {
+            branchId: parseInt(branchId),
+            barcodeId: barcodeId,
+          },
+          data: {
+            qty: { increment: returnQty },
+            updatedById: parseInt(userId),
+          },
+        });
+      }
       return createdItem;
     }
   });

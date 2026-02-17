@@ -13,6 +13,7 @@ import { useGetLocationMasterQuery } from "../../../redux/uniformService/Locatio
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
+import { FaRegFilePdf } from "react-icons/fa";
 import { HiOutlineRefresh } from "react-icons/hi";
 import moment from "moment";
 import BillItems from "./SalesEntrytems";
@@ -37,8 +38,9 @@ import { Loader } from "../../../Basic/components";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
-import  purchaseInwardEntryApi  from "../../../redux/uniformService/PurchaseInwardEntry";
-import  purchaseReturnApi  from "../../../redux/services/PurchaseReturnService";
+import purchaseInwardEntryApi from "../../../redux/uniformService/PurchaseInwardEntry";
+import purchaseReturnApi from "../../../redux/services/PurchaseReturnService";
+import BarCodePrintFormat from "./Barcode/BarcodePrintFormat";
 
 export function SalesBillForm({
   onClose,
@@ -65,6 +67,8 @@ export function SalesBillForm({
   const [overAllDisc, setOverAllDisc] = useState("");
   const [roundOff, setRoundOff] = useState("");
   const { companyId, userId, finYearId, branchId } = getCommonParams();
+  const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
+
   const dispatch = useDispatch();
   const isLoadingIndicator = isSingleFetching || isSingleLoading;
 
@@ -90,7 +94,7 @@ export function SalesBillForm({
 
   const storeOptions = locationData
     ? locationData.data.filter(
-        (item) => parseInt(item.locationId) === parseInt(locationId)
+        (item) => parseInt(item.locationId) === parseInt(locationId),
       )
     : [];
 
@@ -100,7 +104,7 @@ export function SalesBillForm({
 
     items.forEach((row, index) => {
       const key = [row.styleId || "", row.sizeId || "", row.colorId || ""].join(
-        "-"
+        "-",
       );
 
       if (seen.has(key)) {
@@ -124,7 +128,7 @@ export function SalesBillForm({
 
     // remove blank rows
     const filledItems = items.filter(
-      (item) => item.styleId || item.styleItemId || item.fabricId
+      (item) => item.styleId || item.styleItemId || item.fabricId,
     );
 
     const duplicates = findDuplicates(filledItems);
@@ -154,7 +158,7 @@ export function SalesBillForm({
         isGridDatasValid(
           data?.salesEntryItems.filter((item) => item?.styleId),
           false,
-          ["qty"]
+          ["qty"],
         )
       )
     ) {
@@ -192,7 +196,7 @@ export function SalesBillForm({
     salesType,
     roundOff,
     overAllDisc,
-    companyId
+    companyId,
   };
 
   const syncFormWithDb = useCallback(
@@ -201,7 +205,7 @@ export function SalesBillForm({
       setDocDate(
         data?.docDate
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
-          : moment.utc(today).format("YYYY-MM-DD")
+          : moment.utc(today).format("YYYY-MM-DD"),
       );
       setSalesEntryItems(data?.SalesEntryItems ? data.SalesEntryItems : []);
       if (data?.docId) {
@@ -217,7 +221,7 @@ export function SalesBillForm({
       setOverAllDisc(data?.overAllDisc ? data?.overAllDisc : "");
       setRoundOff(data?.roundOff ? data?.roundOff : "");
     },
-    [id]
+    [id],
   );
 
   useEffect(() => {
@@ -277,14 +281,14 @@ export function SalesBillForm({
         addData,
         { ...data, draftSave: true },
         "Added",
-        nextProcess
+        nextProcess,
       );
     } else if (id && nextProcess == "draft") {
       handleSubmitCustom(
         updateData,
         { ...data, draftSave: true },
         "Updated",
-        nextProcess
+        nextProcess,
       );
     } else if (id) {
       handleSubmitCustom(updateData, data, "Updated", nextProcess);
@@ -294,14 +298,14 @@ export function SalesBillForm({
     dispatch(OpeningStockApi.util.invalidateTags(["OpeningStock"]));
     dispatch(StockAdjustmentApi.util.invalidateTags(["StockAdjustment"]));
     dispatch(
-      purchaseInwardEntryApi.util.invalidateTags(["purchaseInwardEntry"])
+      purchaseInwardEntryApi.util.invalidateTags(["purchaseInwardEntry"]),
     );
-    dispatch(purchaseReturnApi.util.invalidateTags(["PurchaseReturn"]))
+    dispatch(purchaseReturnApi.util.invalidateTags(["PurchaseReturn"]));
   };
 
   const handlePartyChange = (selectedId, field) => {
     const selectedParty = partyList?.data?.find(
-      (p) => p.id === Number(selectedId)
+      (p) => p.id === Number(selectedId),
     );
 
     if (field === "customer") {
@@ -386,6 +390,15 @@ export function SalesBillForm({
               <PDF singleData={singleData?.data} allData={allData?.data} />
             </PDFViewer>
           </Modal>
+          <Modal
+            isOpen={barcodePrintOpen}
+            onClose={() => setBarcodePrintOpen(false)}
+            widthClass={"px-2 h-[90%] w-[90%]"}
+          >
+            <BarCodePrintFormat
+              data={salesEntryItems.filter((i) => i?.barcodeNo)}
+            />
+          </Modal>
           <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
             <div className="flex justify-between items-center mb-1">
               <h1 className="text-xl font-bold text-gray-800">
@@ -445,7 +458,7 @@ export function SalesBillForm({
                               ? branchList?.data
                               : branchList?.data?.filter((item) => item.active),
                             "branchName",
-                            "id"
+                            "id",
                           )
                         : []
                     }
@@ -464,7 +477,7 @@ export function SalesBillForm({
                         ? storeOptions
                         : storeOptions?.filter((item) => item.active),
                       "storeName",
-                      "id"
+                      "id",
                     )}
                     value={storeId}
                     setValue={setStoreId}
@@ -643,10 +656,6 @@ export function SalesBillForm({
                   <FiEdit2 className="w-4 h-4 mr-2" />
                   Edit
                 </button>
-                <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
-                  <FaWhatsapp className="w-4 h-4 mr-2" />
-                  WhatsApp
-                </button>
                 <button
                   className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
                   disabled={!id}
@@ -654,8 +663,18 @@ export function SalesBillForm({
                     setPdfOpen(true);
                   }}
                 >
+                  <FaRegFilePdf className="w-4 h-4 mr-2" />
+                  Pdf
+                </button>
+                <button
+                  className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm"
+                  onClick={() => {
+                    setBarcodePrintOpen(true);
+                  }}
+                  disabled={!id}
+                >
                   <FiPrinter className="w-4 h-4 mr-2" />
-                  Print
+                  Barcode
                 </button>
               </div>
             </div>

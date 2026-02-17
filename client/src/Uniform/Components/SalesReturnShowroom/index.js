@@ -11,6 +11,7 @@ import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleI
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServices";
 import { useDeleteSalesReturnSRMutation } from "../../../redux/uniformService/SalesReturnShowroom.service";
+import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -27,6 +28,8 @@ export default function Form() {
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
   const { data: taxTypeList } = useGetTaxTemplateQuery({ params });
+  const { data: styleList } = useGetStyleMasterQuery({ params });
+
   const [removeData] = useDeleteSalesReturnSRMutation();
 
   const handleView = (orderId) => {
@@ -130,6 +133,7 @@ export default function Form() {
           colorList={colorList}
           uomList={uomList}
           taxTypeList={taxTypeList}
+          styleList={styleList}
         />
       )}
     </>

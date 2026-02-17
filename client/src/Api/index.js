@@ -29,6 +29,7 @@ export const PRODUCT_SUB_CATEGORY_API = "productSubCategory";
 export const PRODUCT_API = "product";
 export const PURCHASE_BILL_API = "purchaseBill";
 export const STOCK_API = "stock";
+export const SHOWROOM_STOCK_API = "showroomStock";
 export const MATERIAL_STOCK_API = "materialStock";
 export const PRODUCTION_STOCK_API = "productionStock";
 export const SALES_BILL_API = "salesBill";

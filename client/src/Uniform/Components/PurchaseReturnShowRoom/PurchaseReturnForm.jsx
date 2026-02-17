@@ -27,6 +27,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
     styleItemList,
     colorList,
     uomList,
+    styleList
 }) => {
     const [docId, setDocId] = useState("New");
     const [supplierId, setSupplierId] = useState("");
@@ -50,16 +51,6 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
     const finyearId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "currentFinYear"
     );
-    const {
-        data: allData,
-        isFetching,
-        isLoading,
-    } = useGetPurchaseReturnShowroomQuery({
-        params: {
-            branchId,
-            finyearId,
-        },
-    });
     const {
         data: singleData,
         isFetching: isSingleFetching,
@@ -174,17 +165,13 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
         const duplicates = [];
 
         items.forEach((row, index) => {
-            const key = [row.styleItemId || "", row.barcodeNo || "", row.styleId || "", row.sizeId || ""].join(
-                "-"
-            );
+            const key = row?.barcodeId;
 
             if (seen.has(key)) {
                 duplicates.push({
                     firstIndex: seen.get(key),
                     duplicateIndex: index,
-                    styleItemId: row.styleItemId,
-                    styleId: row.styleId,
-                    sizeId: row.styleId,
+                    barcodeId: row.barcodeId,
                     barcodeNo: row.barcodeNo
                 });
             } else {
@@ -199,12 +186,14 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
         if (!data.supplierId || !data.invNo) {
             toast.info("Please fill all required fields...!", {
                 position: "top-center",
+                autoClose: 2000
             });
             return false;
         }
         if (!data.purchaseReturnItems || data.purchaseReturnItems.length === 0) {
             toast.info("Please add at least one item...!", {
                 position: "top-center",
+                autoClose: 2000
             });
             return false;
         }
@@ -218,35 +207,30 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                 "sizeId",
                 "returnQty",
                 "uomId",
-                "styleId"
+                "styleId",
+                "barcodeId"
             ])
         ) {
             toast.info("Please fill all required item details...!", {
                 position: "top-center",
+                autoClose: 2000
             });
             return false;
         }
-        const goodsITems = data?.purchaseReturnItems || [];
-        const filledGoodsItems = goodsITems.filter(
-            (item) =>
-                item.styleItemId
-        );
-        const duplicatesGoods = findDuplicateGoodss(filledGoodsItems);
-        // duplicate check
+        const duplicatesGoods = findDuplicateGoodss(validRows);
         if (duplicatesGoods.length > 0) {
-            const dup = duplicatesGoods[0]; // show first duplicate
+            const dup = duplicatesGoods[0];
             Swal.fire({
                 icon: "warning",
                 title: "Duplicate Item Found",
                 html: `
-       StyleItem - ${findFromList(dup?.styleItemId, styleItemList?.data, "name")},
-       Barcode - ${dup?.barcodeNo},
-       Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
-     `,
-                confirmButtonText: "OK",
+                   Barcode - ${dup?.barcodeNo},
+                   Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
+                 `,
             });
             return false;
         }
+
         return true;
     };
 
@@ -386,6 +370,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                 sizeList={sizeList}
                                 styleItemList={styleItemList}
                                 colorList={colorList}
+                                styleList={styleList}
                                 uomList={uomList}
                                 supplierId={supplierId}
                                 invNo={invNo}

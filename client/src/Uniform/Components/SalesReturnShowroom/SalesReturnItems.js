@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
-import { ReusableInput } from "../../../Utils/CommonInput";
-import { useLazyGetStyleDetailQuery } from "../../../redux/services/StockService";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import FxSelect from "../../../Inputs";
 import Modal from "../../../UiComponents/Modal";
 import SalesBillItemsSelection from "./SalesBillItemsSelection";
 import Swal from "sweetalert2";
+import { findFromList } from "../../../Utils/helper";
 
 export default function SalesReturnItems({
   salesReturnItems,
@@ -20,12 +19,13 @@ export default function SalesReturnItems({
   tempItems,
   setTempItems,
   billNo,
+  styleList,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [fillGrid, setFillGrid] = useState(false);
   const addRow = () => {
     const newRow = {
-      barcode: "",
+      barcodeId: "",
       styleId: "",
       sizeId: "",
       returnQty: "",
@@ -65,7 +65,7 @@ export default function SalesReturnItems({
           return [
             ...prev,
             ...Array.from({ length: 4 - count }, () => ({
-              barcode: "",
+              barcodeId: "",
               styleId: "",
               sizeId: "",
               returnQty: "",
@@ -82,7 +82,7 @@ export default function SalesReturnItems({
     } else {
       setSalesReturnItems(
         Array.from({ length: 4 }, () => ({
-          barcode: "",
+          barcodeId: "",
           styleId: "",
           sizeId: "",
           returnQty: "",
@@ -108,7 +108,8 @@ export default function SalesReturnItems({
       const updated = [...prev];
 
       let startIndex = updated.findIndex(
-        (row) => !row.styleId && !row.sizeId && !row.barcodeNo && !row.barcode,
+        (row) =>
+          !row.styleId && !row.sizeId && !row.barcodeNo && !row.barcodeId,
       );
 
       if (startIndex === -1) startIndex = updated.length;
@@ -127,7 +128,7 @@ export default function SalesReturnItems({
           styleId: "",
           sizeId: "",
           returnQty: "",
-          barcode: "",
+          barcodeId: "",
           styleItemId: "",
           colorId: "",
           selected: false,
@@ -157,11 +158,26 @@ export default function SalesReturnItems({
       <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[450px] overflow-auto overflow-x-auto w-full">
         <div className="flex items-center mt-1">
           <h2 className="font-medium text-slate-700">List of Items</h2>
-          <button
-            className={`font-bold text-slate-700 bord ml-[780px] text-sm bg-blue-500 rounded rounded-md text-white px-2
+          {!id && (
+            <button
+              className={`font-bold text-slate-700 bord ml-[780px] text-sm bg-blue-500 rounded rounded-md text-white px-2
               `}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  if (!billNo) {
+                    Swal.fire({
+                      icon: "warning",
+                      title: ` Choose Bill No`,
+                      showConfirmButton: false,
+                      timer: 2000,
+                    });
+                  } else {
+                    e.preventDefault();
+                    setFillGrid(true);
+                  }
+                }
+              }}
+              onClick={() => {
                 if (!billNo) {
                   Swal.fire({
                     icon: "warning",
@@ -170,29 +186,18 @@ export default function SalesReturnItems({
                     timer: 2000,
                   });
                 } else {
-                  e.preventDefault();
                   setFillGrid(true);
                 }
-              }
-            }}
-            onClick={() => {
-              if (!billNo) {
-                Swal.fire({
-                  icon: "warning",
-                  title: ` Choose Bill No`,
-                  showConfirmButton: false,
-                  timer: 2000,
-                });
-              } else {
-                setFillGrid(true);
-              }
-            }}
-            // disabled={id}
-          >
-            Fill Items
-          </button>
+              }}
+              // disabled={id}
+            >
+              Fill Items
+            </button>
+          )}
         </div>
-        <div className={`w-full  min-h-[190px] max-h-[190px] overflow-y-auto  mt-1 mb-2`}>
+        <div
+          className={`w-full  min-h-[190px] max-h-[190px] overflow-y-auto  mt-1 mb-2`}
+        >
           <table className=" border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
@@ -230,6 +235,11 @@ export default function SalesReturnItems({
                   className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Barcode
+                </th>
+                <th
+                  className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Style No
                 </th>
                 <th
                   className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
@@ -310,100 +320,56 @@ export default function SalesReturnItems({
                     />
                   </td>
                   <td className="py-0.5 border border-gray-300 text-[11px] ">
-                    <FxSelect
-                      value={row.styleItemId}
-                      onChange={(val) =>
-                        handleInputChange(val, index, "styleItemId")
+                    <input
+                      className="text-left rounded py-1 px-1 w-full  select-none"
+                      disabled={true}
+                      value={
+                        findFromList(row.styleId, styleList?.data, "sku") || ""
                       }
-                      options={(styleItemList?.data || [])
-                        .filter((item) => item.active)
-                        .map((item) => ({
-                          label: item.name,
-                          value: item.id,
-                        }))}
-                      readOnly={true}
-                      placeholder=""
-                      onBlur={() =>
-                        handleInputChange(row.styleItemId, index, "styleItemId")
+                    />
+                  </td>
+                  <td className="py-0.5 border border-gray-300 text-[11px] ">
+                    <input
+                      className="text-left rounded py-1 px-1 w-full  select-none"
+                      disabled={true}
+                      value={
+                        findFromList(
+                          row.styleItemId,
+                          styleItemList?.data,
+                          "name",
+                        ) || ""
                       }
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "styleItemId");
-                        }
-                      }}
                     />
                   </td>
 
                   <td className="py-0.5 border border-gray-300 text-[11px]">
-                    <FxSelect
-                      value={row.sizeId}
-                      onChange={(val) =>
-                        handleInputChange(val, index, "sizeId")
+                    <input
+                      className="text-left rounded py-1 px-1 w-full select-none"
+                      readOnly
+                      value={
+                        findFromList(row.sizeId, sizeList?.data, "name") || ""
                       }
-                      options={(sizeList?.data || [])
-                        .filter((item) => item.active)
-                        .map((item) => ({
-                          label: item.name,
-                          value: item.id,
-                        }))}
-                      readOnly={true}
-                      placeholder=""
-                      onBlur={() =>
-                        handleInputChange(row.sizeId, index, "sizeId")
-                      }
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "sizeId");
-                        }
-                      }}
+                      disabled={true}
                     />
                   </td>
                   <td className="py-0.5 border border-gray-300 text-[11px]">
-                    <FxSelect
-                      value={row.colorId}
-                      onChange={(val) =>
-                        handleInputChange(val, index, "colorId")
+                    <input
+                      className="text-left rounded py-1 px-1 w-full select-none"
+                      readOnly
+                      value={
+                        findFromList(row.colorId, colorList?.data, "name") || ""
                       }
-                      options={(colorList?.data || [])
-                        .filter((item) => item.active)
-                        .map((item) => ({
-                          label: item.name,
-                          value: item.id,
-                        }))}
-                      readOnly={true}
-                      placeholder=""
-                      onBlur={() =>
-                        handleInputChange(row.colorId, index, "colorId")
-                      }
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "colorId");
-                        }
-                      }}
-                      inputId={`qty-input-${index}`}
+                      disabled={true}
                     />
                   </td>
                   <td className="py-0.5 border border-gray-300 text-[11px]">
-                    <FxSelect
-                      value={row.uomId}
-                      onChange={(val) => handleInputChange(val, index, "uomId")}
-                      options={(uomList?.data || [])
-                        .filter((item) => item.active)
-                        .map((item) => ({
-                          label: item.name,
-                          value: item.id,
-                        }))}
-                      readOnly={  true}
-                      placeholder=""
-                      onBlur={() =>
-                        handleInputChange(row.uomId, index, "uomId")
+                    <input
+                      className="text-left rounded py-1 px-1 w-full   select-none"
+                      readOnly
+                      value={
+                        findFromList(row.uomId, uomList?.data, "name") || ""
                       }
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "uomId");
-                        }
-                      }}
-                      inputId={`qty-input-${index}`}
+                      disabled={true}
                     />
                   </td>
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
@@ -448,7 +414,7 @@ export default function SalesReturnItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={7}
+                  colSpan={8}
                 >
                   Total
                 </td>

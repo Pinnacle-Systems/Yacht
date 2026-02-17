@@ -473,6 +473,20 @@ async function update(id, body) {
   let removeItemsIds = removedItems.map((item) => parseInt(item.id));
   await prisma.$transaction(async (tx) => {
     if (removeItemsIds.length > 0) {
+      const removedStockItems = await tx.purchaseBillItems.findMany({
+        where: { id: { in: removeItemsIds } },
+      });
+      for (const item of removedStockItems) {
+        await tx.stockSummary.updateMany({
+          where: {
+            branchId: parseInt(branchId), // ✅ FIXED
+            barcodeId: parseInt(item.barcodeId), // ✅ FIXED
+          },
+          data: {
+            qty: { decrement: item.qty || 0 },
+          },
+        });
+      }
       await tx.purchaseBillItems.deleteMany({
         where: { id: { in: removeItemsIds } },
       });
@@ -526,12 +540,27 @@ async function updatePurchaseBillItems(
   dcNo,
 ) {
   const promises = purchaseBillItems.map(async (itemDetails) => {
-    const qty = itemDetails?.qty
-      ? Math.round(parseFloat(itemDetails.qty))
+    const qty = itemDetails?.qty ? Math.round(parseFloat(itemDetails.qty)) : 0;
+
+    const newBarcodeId = itemDetails?.barcodeId
+      ? parseInt(itemDetails.barcodeId)
       : null;
 
     if (itemDetails.id) {
-      // Update existing poItem
+      // 🔹 Get old item
+      const oldItem = await tx.purchaseBillItems.findUnique({
+        where: { id: parseInt(itemDetails.id) },
+      });
+
+      if (!oldItem) return null;
+
+      const oldBarcodeId = oldItem?.barcodeId
+        ? parseInt(oldItem.barcodeId)
+        : null;
+
+      const oldQty = oldItem?.qty || 0;
+
+      // 🔹 Update purchaseBillItem
       const updatedItem = await tx.purchaseBillItems.update({
         where: { id: parseInt(itemDetails.id) },
         data: {
@@ -544,8 +573,11 @@ async function updatePurchaseBillItems(
           uomId: itemDetails?.uomId ? parseInt(itemDetails.uomId) : null,
           colorId: itemDetails?.colorId ? parseInt(itemDetails.colorId) : null,
           qty,
-          invNo: invNo,
+          invNo,
           barcodeNo: itemDetails?.barcodeNo ?? undefined,
+          barcodeId: itemDetails?.barcodeId
+            ? parseInt(itemDetails.barcodeId)
+            : null,
           rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
           discountType: itemDetails?.discountType ?? undefined,
           discountValue: itemDetails?.discountValue
@@ -554,9 +586,11 @@ async function updatePurchaseBillItems(
           taxPercent: itemDetails?.taxPercent
             ? parseInt(itemDetails.taxPercent)
             : null,
-          dcNo: dcNo ? dcNo : undefined,
+          dcNo: dcNo ?? undefined,
         },
       });
+
+      // 🔹 Update or Create Stock Ledger
       const existingStock = await tx.stockLedger.findFirst({
         where: { PurchaseBillItemsId: updatedItem.id },
       });
@@ -580,8 +614,11 @@ async function updatePurchaseBillItems(
               : null,
             qty,
             barcodeNo: itemDetails?.barcodeNo ?? undefined,
+            barcodeId: itemDetails?.barcodeId
+              ? parseInt(itemDetails.barcodeId)
+              : null,
             rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
-            invNo: invNo ? invNo : undefined,
+            invNo: invNo ?? undefined,
           },
         });
       } else {
@@ -606,13 +643,105 @@ async function updatePurchaseBillItems(
             qty,
             barcodeNo: itemDetails?.barcodeNo ?? undefined,
             rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
-            invNo: invNo ? invNo : undefined,
+            invNo: invNo ?? undefined,
+            barcodeId: itemDetails?.barcodeId
+              ? parseInt(itemDetails.barcodeId)
+              : null,
           },
         });
       }
+
+      // 🔹 STOCK SUMMARY LOGIC
+
+      const newQty = qty;
+
+      if (oldBarcodeId && newBarcodeId && oldBarcodeId === newBarcodeId) {
+        const qtyDifference = newQty - oldQty;
+
+        await tx.stockSummary.upsert({
+          where: {
+            branchId_barcodeId: {
+              branchId: parseInt(branchId),
+              barcodeId: newBarcodeId,
+            },
+          },
+          update: {
+            qty: { increment: qtyDifference },
+          },
+          create: {
+            createdById: parseInt(userId),
+            branchId: parseInt(branchId),
+            styleId: itemDetails?.styleId
+              ? parseInt(itemDetails.styleId)
+              : null,
+            sizeId: itemDetails?.sizeId ? parseInt(itemDetails.sizeId) : null,
+            colorId: itemDetails?.colorId
+              ? parseInt(itemDetails.colorId)
+              : null,
+            uomId: itemDetails?.uomId ? parseInt(itemDetails.uomId) : null,
+            styleItemId: itemDetails?.styleItemId
+              ? parseInt(itemDetails.styleItemId)
+              : null,
+            qty: qtyDifference,
+            barcodeId: newBarcodeId,
+            barcodeNo: itemDetails?.barcodeNo ?? undefined,
+            rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
+          },
+        });
+      } else {
+        // Decrement old barcode
+        if (oldBarcodeId) {
+          await tx.stockSummary.updateMany({
+            where: {
+              branchId: parseInt(branchId),
+              barcodeId: oldBarcodeId,
+            },
+            data: {
+              qty: { decrement: oldQty },
+              updatedById: parseInt(userId),
+            },
+          });
+        }
+
+        // Increment new barcode
+        if (newBarcodeId) {
+          await tx.stockSummary.upsert({
+            where: {
+              branchId_barcodeId: {
+                branchId: parseInt(branchId),
+                barcodeId: newBarcodeId,
+              },
+            },
+            update: {
+              qty: { increment: newQty },
+            },
+            create: {
+              createdById: parseInt(userId),
+              branchId: parseInt(branchId),
+              styleId: itemDetails?.styleId
+                ? parseInt(itemDetails.styleId)
+                : null,
+              sizeId: itemDetails?.sizeId ? parseInt(itemDetails.sizeId) : null,
+              colorId: itemDetails?.colorId
+                ? parseInt(itemDetails.colorId)
+                : null,
+              uomId: itemDetails?.uomId ? parseInt(itemDetails.uomId) : null,
+              styleItemId: itemDetails?.styleItemId
+                ? parseInt(itemDetails.styleItemId)
+                : null,
+              qty: newQty,
+              barcodeId: newBarcodeId,
+              barcodeNo: itemDetails?.barcodeNo ?? undefined,
+              rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
+            },
+          });
+        }
+      }
+
       return updatedItem;
     } else {
-      // Create new poItem
+      // 🔹 CREATE NEW ITEM
+
       const createdItem = await tx.purchaseBillItems.create({
         data: {
           purchaseBillId: parseInt(purchaseBill.id),
@@ -624,7 +753,7 @@ async function updatePurchaseBillItems(
           uomId: itemDetails?.uomId ? parseInt(itemDetails.uomId) : null,
           colorId: itemDetails?.colorId ? parseInt(itemDetails.colorId) : null,
           qty,
-          invNo: invNo,
+          invNo,
           barcodeNo: itemDetails?.barcodeNo ?? undefined,
           rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
           discountType: itemDetails?.discountType ?? undefined,
@@ -634,7 +763,10 @@ async function updatePurchaseBillItems(
           taxPercent: itemDetails?.taxPercent
             ? parseInt(itemDetails.taxPercent)
             : null,
-          dcNo: dcNo ? dcNo : undefined,
+          dcNo: dcNo ?? undefined,
+          barcodeId: itemDetails?.barcodeId
+            ? parseInt(itemDetails.barcodeId)
+            : null,
         },
       });
 
@@ -644,6 +776,7 @@ async function updatePurchaseBillItems(
           refType: "PurchaseBill",
           createdById: parseInt(userId),
           branchId: parseInt(branchId),
+          PurchaseBillItemsId: createdItem.id,
           styleId: itemDetails?.styleId ? parseInt(itemDetails.styleId) : null,
           sizeId: itemDetails?.sizeId ? parseInt(itemDetails.sizeId) : null,
           colorId: itemDetails?.colorId ? parseInt(itemDetails.colorId) : null,
@@ -652,12 +785,47 @@ async function updatePurchaseBillItems(
             ? parseInt(itemDetails.styleItemId)
             : null,
           qty,
-          PurchaseBillItemsId: createdItem.id,
           barcodeNo: itemDetails?.barcodeNo ?? undefined,
+          barcodeId: itemDetails?.barcodeId
+            ? parseInt(itemDetails.barcodeId)
+            : null,
           rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
-          invNo: invNo ? invNo : undefined,
+          invNo: invNo ?? undefined,
         },
       });
+
+      if (newBarcodeId) {
+        await tx.stockSummary.upsert({
+          where: {
+            branchId_barcodeId: {
+              branchId: parseInt(branchId),
+              barcodeId: newBarcodeId,
+            },
+          },
+          update: {
+            qty: { increment: qty },
+          },
+          create: {
+            createdById: parseInt(userId),
+            branchId: parseInt(branchId),
+            styleId: itemDetails?.styleId
+              ? parseInt(itemDetails.styleId)
+              : null,
+            sizeId: itemDetails?.sizeId ? parseInt(itemDetails.sizeId) : null,
+            colorId: itemDetails?.colorId
+              ? parseInt(itemDetails.colorId)
+              : null,
+            uomId: itemDetails?.uomId ? parseInt(itemDetails.uomId) : null,
+            styleItemId: itemDetails?.styleItemId
+              ? parseInt(itemDetails.styleItemId)
+              : null,
+            qty,
+            barcodeId: newBarcodeId,
+            barcodeNo: itemDetails?.barcodeNo ?? undefined,
+            rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
+          },
+        });
+      }
 
       return createdItem;
     }

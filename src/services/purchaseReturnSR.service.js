@@ -205,6 +205,24 @@ async function getOne(id) {
   };
 }
 
+function validateUniqueBarcode(purchaseReturnItems) {
+  const seen = new Set();
+
+  for (let i = 0; i < purchaseReturnItems.length; i++) {
+    const barcodeId = purchaseReturnItems[i]?.barcodeId;
+
+    if (!barcodeId) continue; // skip empty if needed
+
+    if (seen.has(barcodeId)) {
+      throw new Error(
+        `Duplicate Barcode No ${purchaseReturnItems[i].barcodeNo} found in row ${i + 1}`,
+      );
+    }
+
+    seen.add(barcodeId);
+  }
+}
+
 async function create(body) {
   const {
     userId,
@@ -235,6 +253,7 @@ async function create(body) {
     draftSave,
   );
   let data;
+  validateUniqueBarcode(purchaseReturnItems);
   await prisma.$transaction(async (tx) => {
     data = await tx.purchaseReturnShowRoom.create({
       data: {
@@ -271,6 +290,13 @@ async function createPurchaseReturnItems(
   invNo,
 ) {
   const promises = purchaseReturnItems.map(async (stockDetail, index) => {
+    const returnQty = stockDetail?.returnQty
+      ? Math.abs(parseFloat(stockDetail.returnQty))
+      : 0;
+
+    const barcodeId = stockDetail?.barcodeId
+      ? parseInt(stockDetail.barcodeId)
+      : null;
     const createdItem = await tx.purchasReturnItemsSR.create({
       data: {
         purchaseReturnShowRoomId: parseInt(purchaseReturn.id),
@@ -282,10 +308,9 @@ async function createPurchaseReturnItems(
         colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
         uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
         invNo: invNo ? invNo : "",
-        returnQty: stockDetail?.returnQty
-          ? parseFloat(stockDetail.returnQty)
-          : null,
+        returnQty,
         barcodeNo: stockDetail?.barcodeNo ?? undefined,
+        barcodeId,
         purchaseBillId: stockDetail?.purchaseBillId
           ? parseInt(stockDetail.purchaseBillId)
           : null,
@@ -303,16 +328,24 @@ async function createPurchaseReturnItems(
         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
         colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
         uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
-        qty:
-          stockDetail?.returnQty && !isNaN(parseFloat(stockDetail.returnQty))
-            ? -Math.abs(parseInt(stockDetail.returnQty))
-            : null,
+        qty: -returnQty,
         purchasReturnItemsSRId: createdItem.id,
         styleItemId: stockDetail?.styleItemId
           ? parseInt(stockDetail.styleItemId)
           : null,
         barcodeNo: stockDetail?.barcodeNo ?? undefined,
+        barcodeId,
         invNo: invNo ? invNo : undefined,
+      },
+    });
+    await tx.stockSummary.updateMany({
+      where: {
+        branchId: parseInt(branchId),
+        barcodeId: barcodeId,
+      },
+      data: {
+        qty: { decrement: returnQty },
+        updatedById: parseInt(userId),
       },
     });
 
@@ -347,6 +380,8 @@ async function update(id, body) {
     purchaseReturnItems,
   } = await body;
   let data;
+  validateUniqueBarcode(purchaseReturnItems);
+
   const dataFound = await prisma.purchaseReturnShowRoom.findUnique({
     where: {
       id: parseInt(id),
@@ -365,6 +400,27 @@ async function update(id, body) {
   let removeItemsIds = removedItems.map((item) => parseInt(item.id));
   await prisma.$transaction(async (tx) => {
     if (removeItemsIds.length > 0) {
+      const removedItemsData = await tx.purchasReturnItemsSR.findMany({
+        where: { id: { in: removeItemsIds } },
+      });
+      for (const item of removedItemsData) {
+        const returnQty = item?.returnQty || 0;
+        const barcodeId = item?.barcodeId;
+
+        // 🔼 Add stock back (because return deleted)
+        if (barcodeId && returnQty > 0) {
+          await tx.stockSummary.updateMany({
+            where: {
+              branchId: parseInt(branchId),
+              barcodeId: barcodeId,
+            },
+            data: {
+              qty: { increment: returnQty },
+              updatedById: parseInt(userId),
+            },
+          });
+        }
+      }
       await tx.purchasReturnItemsSR.deleteMany({
         where: { id: { in: removeItemsIds } },
       });
@@ -406,7 +462,16 @@ async function updatePurchaseReturnItems(
   invNo,
 ) {
   const promises = purchaseReturnItems.map(async (stockDetail) => {
+    const returnQty = stockDetail?.returnQty
+      ? Math.abs(parseFloat(stockDetail.returnQty))
+      : 0;
+    const barcodeId = stockDetail?.barcodeId
+      ? parseInt(stockDetail.barcodeId)
+      : null;
     if (stockDetail.id) {
+      const oldItem = await tx.purchasReturnItemsSR.findUnique({
+        where: { id: parseInt(stockDetail.id) },
+      });
       // Update existing OpeningStockItem
       const updatedItem = await tx.purchasReturnItemsSR.update({
         where: { id: parseInt(stockDetail.id) },
@@ -419,11 +484,10 @@ async function updatePurchaseReturnItems(
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
           colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
           uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
-          returnQty: stockDetail?.returnQty
-            ? parseFloat(stockDetail.returnQty)
-            : null,
+          returnQty,
           invNo: invNo ? invNo : "",
           barcodeNo: stockDetail?.barcodeNo ?? undefined,
+          barcodeId,
           purchaseBillId: stockDetail?.purchaseBillId
             ? parseInt(stockDetail.purchaseBillId)
             : null,
@@ -453,12 +517,9 @@ async function updatePurchaseReturnItems(
               ? parseInt(stockDetail.colorId)
               : null,
             uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
-            qty:
-              stockDetail?.returnQty &&
-              !isNaN(parseFloat(stockDetail.returnQty))
-                ? -Math.abs(parseInt(stockDetail.returnQty))
-                : null,
+            qty: -returnQty,
             barcodeNo: stockDetail?.barcodeNo ?? undefined,
+            barcodeId,
             invNo: invNo ? invNo : undefined,
           },
         });
@@ -477,22 +538,67 @@ async function updatePurchaseReturnItems(
               ? parseInt(stockDetail.colorId)
               : null,
             uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
-
-            qty:
-              stockDetail?.returnQty &&
-              !isNaN(parseFloat(stockDetail.returnQty))
-                ? -Math.abs(parseInt(stockDetail.returnQty))
-                : null,
+            qty: -returnQty,
             purchasReturnItemsSRId: updatedItem.id,
             styleItemId: stockDetail?.styleItemId
               ? parseInt(stockDetail.styleItemId)
               : null,
             barcodeNo: stockDetail?.barcodeNo ?? undefined,
+            barcodeId,
             invNo: invNo ? invNo : undefined,
           },
         });
       }
 
+      const oldQty = oldItem?.returnQty || 0;
+      const oldBarcodeId = oldItem?.barcodeId || null;
+      const newQty = returnQty;
+      const newBarcodeId = barcodeId;
+      if (oldBarcodeId && newBarcodeId && oldBarcodeId === newBarcodeId) {
+        // Same barcode → adjust difference
+        const qtyDifference = oldQty - newQty;
+
+        if (qtyDifference !== 0) {
+          await tx.stockSummary.updateMany({
+            where: {
+              branchId: parseInt(branchId),
+              barcodeId: newBarcodeId,
+            },
+            data: {
+              qty: { increment: qtyDifference },
+              updatedById: parseInt(userId),
+            },
+          });
+        }
+      } else {
+        // 🔼 Add back old return qty
+        if (oldBarcodeId && oldQty > 0) {
+          await tx.stockSummary.updateMany({
+            where: {
+              branchId: parseInt(branchId),
+              barcodeId: oldBarcodeId,
+            },
+            data: {
+              qty: { increment: oldQty },
+              updatedById: parseInt(userId),
+            },
+          });
+        }
+
+        // 🔽 Subtract new return qty
+        if (newBarcodeId && newQty > 0) {
+          await tx.stockSummary.updateMany({
+            where: {
+              branchId: parseInt(branchId),
+              barcodeId: newBarcodeId,
+            },
+            data: {
+              qty: { decrement: newQty },
+              updatedById: parseInt(userId),
+            },
+          });
+        }
+      }
       return updatedItem;
     } else {
       // Create new OpeningStockItem
@@ -503,9 +609,7 @@ async function updatePurchaseReturnItems(
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
           colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
           uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
-          returnQty: stockDetail?.returnQty
-            ? parseFloat(stockDetail.returnQty)
-            : null,
+          returnQty,
           fabricId: stockDetail?.fabricId
             ? parseInt(stockDetail.fabricId)
             : null,
@@ -515,6 +619,7 @@ async function updatePurchaseReturnItems(
             : null,
           invNo: invNo ? invNo : "",
           barcodeNo: stockDetail?.barcodeNo ?? undefined,
+          barcodeId,
           purchaseBillId: stockDetail?.purchaseBillId
             ? parseInt(stockDetail.purchaseBillId)
             : null,
@@ -533,17 +638,28 @@ async function updatePurchaseReturnItems(
           colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
           uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
           invNo: invNo ? invNo : undefined,
-          qty:
-            stockDetail?.returnQty && !isNaN(parseFloat(stockDetail.returnQty))
-              ? -Math.abs(parseInt(stockDetail.returnQty))
-              : null,
+          qty: -returnQty,
           purchasReturnItemsSRId: createdItem.id,
           styleItemId: stockDetail?.styleItemId
             ? parseInt(stockDetail.styleItemId)
             : null,
           barcodeNo: stockDetail?.barcodeNo ?? undefined,
+          barcodeId,
         },
       });
+
+      if (barcodeId && returnQty > 0) {
+        await tx.stockSummary.updateMany({
+          where: {
+            branchId: parseInt(branchId),
+            barcodeId: barcodeId,
+          },
+          data: {
+            qty: { decrement: returnQty },
+            updatedById: parseInt(userId),
+          },
+        });
+      }
 
       return createdItem;
     }

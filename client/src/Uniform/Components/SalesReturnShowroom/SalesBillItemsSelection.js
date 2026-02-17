@@ -32,7 +32,7 @@ const SalesBillItemsSelection = ({
   }
 
   const EMPTY_ROW = {
-    barcode: "",
+    barcodeId: "",
     styleId: "",
     sizeId: "",
     returnQty: "",

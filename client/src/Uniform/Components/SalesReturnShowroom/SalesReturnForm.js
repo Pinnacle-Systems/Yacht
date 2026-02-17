@@ -19,7 +19,10 @@ import {
   useGetSalesReturnSRByIdQuery,
   useUpdateSalesReturnSRMutation,
 } from "../../../redux/uniformService/SalesReturnShowroom.service";
-import { useGetSalesBillQuery, useLazyGetSalesBillDetailQuery } from "../../../redux/services/SalesBillService";
+import {
+  useGetSalesBillQuery,
+  useLazyGetSalesBillDetailQuery,
+} from "../../../redux/services/SalesBillService";
 import { DropdownNew } from "../../../Inputs";
 
 export function SalesReturnForm({
@@ -32,6 +35,7 @@ export function SalesReturnForm({
   styleItemList,
   colorList,
   uomList,
+  styleList,
 }) {
   const [docId, setDocId] = useState("New");
   const [docDate, setDocDate] = useState("");
@@ -59,24 +63,19 @@ export function SalesReturnForm({
 
   const isLoadingIndicator = isSingleFetching || isSingleLoading;
 
-  const findDuplicates = (items) => {
+  const findDuplicateGoodss = (items) => {
     const seen = new Map(); // key -> first index
     const duplicates = [];
 
     items.forEach((row, index) => {
-      const key = [
-        row.styleItemId || "",
-        row.sizeId || "",
-        row.colorId || "",
-      ].join("-");
+      const key = row?.barcodeId;
 
       if (seen.has(key)) {
         duplicates.push({
           firstIndex: seen.get(key),
           duplicateIndex: index,
-          styleItemId: row.styleItemId,
-          sizeId: row.sizeId,
-          colorId: row.colorId,
+          barcodeId: row.barcodeId,
+          barcodeNo: row.barcodeNo,
         });
       } else {
         seen.set(key, index);
@@ -87,45 +86,42 @@ export function SalesReturnForm({
   };
 
   const validateData = (data) => {
-    const items = data?.salesReturnItems || [];
+    if (!data?.customerName || !data?.billNo) {
+      toast.info("Please fill all required fields...!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      return false;
+    }
+    if (!data?.salesReturnItems || data.salesReturnItems.length === 0) {
+      toast.info("Please add at least one item...!", {
+        position: "top-center",
+      });
+      return false;
+    }
 
-    // remove blank rows
-    const filledItems = items.filter(
-      (item) => item.styleId || item.styleItemId || item.sizeId,
+    const filledGoodsItems = data.salesReturnItems.filter(
+      (item) => item?.styleItemId,
     );
-
-    const duplicates = findDuplicates(filledItems);
-    // duplicate check
-    if (duplicates.length > 0) {
-      const dup = duplicates[0]; // show first duplicate
+    if (
+      !isGridDatasValid(filledGoodsItems, false, ["returnQty", "barcodeId"])
+    ) {
+      toast.info("Please fill all required items details...!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      return false;
+    }
+    const duplicatesGoods = findDuplicateGoodss(filledGoodsItems);
+    if (duplicatesGoods.length > 0) {
+      const dup = duplicatesGoods[0];
       Swal.fire({
         icon: "warning",
         title: "Duplicate Item Found",
         html: `
-       Style - ${findFromList(dup?.styleItemId, styleItemList?.data, "name")},
-       Size - ${findFromList(dup?.sizeId, sizeList?.data, "name")},
-       Color - ${findFromList(dup?.colorId, colorList?.data, "name")},
-       Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
-     `,
-        confirmButtonText: "OK",
-      });
-      return false;
-    }
-    if (
-      !(
-        data?.customerName &&
-        data?.billNo &&
-        data?.salesReturnItems.length > 0 &&
-        isGridDatasValid(
-          data?.salesReturnItems.filter((item) => item?.styleItemId),
-          false,
-          ["returnQty"],
-        )
-      )
-    ) {
-      toast.info("Please fill all required fields...!", {
-        position: "top-center",
-        autoClose: 2000,
+                   Barcode - ${dup?.barcodeNo},
+                   Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
+                 `,
       });
       return false;
     }
@@ -366,6 +362,8 @@ export function SalesReturnForm({
                 tempItems={tempItems}
                 setTempItems={setTempItems}
                 billNo={billNo}
+                styleList={styleList}
+                id={id}
               />
             </fieldset>
             <div className="grid grid-cols-3 gap-2">

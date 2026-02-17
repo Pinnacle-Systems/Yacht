@@ -84,6 +84,7 @@ import {
   customer,
   salesReturnSR,
   barcodeSeq,
+  showRoomStock,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";
@@ -200,6 +201,7 @@ app.use("/purchaseReturnSR", purchaseReturnSR);
 app.use("/salesBill", salesBill);
 app.use("/customer", customer);
 app.use("/barcodeSeq", barcodeSeq);
+app.use("/showroomStock", showRoomStock);
 app.get("/retreiveFile/:fileName", (req, res) => {
   const { fileName } = req.params;
   res.sendFile(__dirname + "/uploads/" + fileName);

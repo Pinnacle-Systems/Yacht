@@ -89,6 +89,7 @@ import {
   ProcessGroupApi,
   productionStockApi,
   barcodeSeqMasterApi,
+  showroomStockApi,
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -143,6 +144,7 @@ const commonReducers = {
   purchaseBill: purchaseBillApi.reducer,
   styleSheet: styleSheetApi.reducer,
   stock: stockApi.reducer,
+  showroomStock: showroomStockApi.reducer,
   materialStock: materialStockApi.reducer,
   salesBill: salesBillApi.reducer,
   purchaseReturn: purchaseReturnApi.reducer,
@@ -257,6 +259,7 @@ const commonMiddleware = [
   purchaseBillApi.middleware,
   styleSheetApi.middleware,
   stockApi.middleware,
+  showroomStockApi.middleware,
   materialStockApi.middleware,
   salesBillApi.middleware,
   purchaseReturnApi.middleware,

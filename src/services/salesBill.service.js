@@ -10,7 +10,6 @@ import {
 import { getTableRecordWithId } from "../utils/helperQueries.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 
-
 async function getNextDocId(branchId, shortCode, startTime, endTime) {
   let lastObject = await prisma.salesBill.findFirst({
     where: {
@@ -169,6 +168,24 @@ async function getOne(id) {
   };
 }
 
+function validateUniqueBarcode(salesBillItems) {
+  const seen = new Set();
+
+  for (let i = 0; i < salesBillItems.length; i++) {
+    const barcodeId = salesBillItems[i]?.barcodeId;
+
+    if (!barcodeId) continue; // skip empty if needed
+
+    if (seen.has(barcodeId)) {
+      throw new Error(
+        `Duplicate Barcode No ${salesBillItems[i].barcodeNo} found in row ${i + 1}`,
+      );
+    }
+
+    seen.add(barcodeId);
+  }
+}
+
 async function create(body) {
   try {
     const {
@@ -207,6 +224,7 @@ async function create(body) {
       finYearDate?.endDateEndTime,
     );
     let data;
+    validateUniqueBarcode(salesBillItems);
     await prisma.$transaction(async (tx) => {
       await tx.customer.update({
         where: { id: customerId ? parseInt(customerId) : undefined },
@@ -266,7 +284,9 @@ async function createSalesBillItems(
     const qty = itemDetails?.qty
       ? Math.round(parseFloat(itemDetails.qty))
       : null;
-
+    const barcodeId = itemDetails?.barcodeId
+      ? parseInt(itemDetails.barcodeId)
+      : null;
     const createdItem = await tx.salesBillItems.create({
       data: {
         salesBillId: parseInt(salesBill.id),
@@ -278,6 +298,7 @@ async function createSalesBillItems(
         uomId: itemDetails?.uomId ? parseInt(itemDetails.uomId) : null,
         colorId: itemDetails?.colorId ? parseInt(itemDetails.colorId) : null,
         qty,
+        barcodeId,
         barcodeNo: itemDetails?.barcodeNo ?? undefined,
         rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
         discountType: itemDetails?.discountType ?? undefined,
@@ -302,40 +323,23 @@ async function createSalesBillItems(
         styleItemId: itemDetails?.styleItemId
           ? parseInt(itemDetails.styleItemId)
           : null,
-        qty:
-          itemDetails?.qty && !isNaN(parseFloat(itemDetails.qty))
-            ? -Math.abs(parseInt(itemDetails.qty))
-            : null,
+        qty: -qty,
+        barcodeId,
         salesBillItemsId: createdItem.id,
         barcodeNo: itemDetails?.barcodeNo ?? undefined,
         rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
       },
     });
-    // await prisma.stockSummary.upsert({
-    //   where: {
-    //     branchId_barcodeNo: {
-    //       branchId: parseInt(branchId),
-    //       barcodeNo: itemDetails.barcodeNo,
-    //     },
-    //   },
-    //   update: {
-    //     qty: { increment: qty },
-    //   },
-    //   create: {
-    //     createdById: parseInt(userId),
-    //     branchId: parseInt(branchId),
-    //     styleId: itemDetails?.styleId ? parseInt(itemDetails.styleId) : null,
-    //     sizeId: itemDetails?.sizeId ? parseInt(itemDetails.sizeId) : null,
-    //     colorId: itemDetails?.colorId ? parseInt(itemDetails.colorId) : null,
-    //     uomId: itemDetails?.uomId ? parseInt(itemDetails.uomId) : null,
-    //     styleItemId: itemDetails?.styleItemId
-    //       ? parseInt(itemDetails.styleItemId)
-    //       : null,
-    //     qty,
-    //     barcodeNo: itemDetails?.barcodeNo ?? undefined,
-    //     rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
-    //   },
-    // });
+    await tx.stockSummary.updateMany({
+      where: {
+        branchId: parseInt(branchId),
+        barcodeId: barcodeId,
+      },
+      data: {
+        qty: { decrement: qty },
+        updatedById: parseInt(userId),
+      },
+    });
     return createdItem;
   });
 
@@ -376,6 +380,7 @@ async function update(id, body) {
     upiAmount,
   } = await body;
   let data;
+  validateUniqueBarcode(salesBillItems);
   const dataFound = await prisma.salesBill.findUnique({
     where: {
       id: parseInt(id),
@@ -389,6 +394,27 @@ async function update(id, body) {
   let removeItemsIds = removedItems.map((item) => parseInt(item.id));
   await prisma.$transaction(async (tx) => {
     if (removeItemsIds.length > 0) {
+      const removedItemsData = await tx.salesBillItems.findMany({
+        where: { id: { in: removeItemsIds } },
+      });
+      for (const item of removedItemsData) {
+        const salesQty = item?.qty || 0;
+        const barcodeId = item?.barcodeId;
+
+        // 🔼 Add stock back (because return deleted)
+        if (barcodeId && salesQty > 0) {
+          await tx.stockSummary.updateMany({
+            where: {
+              branchId: parseInt(branchId),
+              barcodeId: barcodeId,
+            },
+            data: {
+              qty: { increment: salesQty },
+              updatedById: parseInt(userId),
+            },
+          });
+        }
+      }
       await tx.salesBillItems.deleteMany({
         where: { id: { in: removeItemsIds } },
       });
@@ -434,11 +460,16 @@ async function updateSalesBillItems(
   branchId,
 ) {
   const promises = salesBillItems.map(async (itemDetails) => {
-    const qty = itemDetails?.qty
+    const salesQty = itemDetails?.qty
       ? Math.round(parseFloat(itemDetails.qty))
       : null;
-
+    const barcodeId = itemDetails?.barcodeId
+      ? parseInt(itemDetails.barcodeId)
+      : null;
     if (itemDetails.id) {
+      const oldItem = await tx.salesBillItems.findUnique({
+        where: { id: parseInt(itemDetails.id) },
+      });
       // Update existing poItem
       const updatedItem = await tx.salesBillItems.update({
         where: { id: parseInt(itemDetails.id) },
@@ -451,8 +482,9 @@ async function updateSalesBillItems(
           styleId: itemDetails?.styleId ? parseInt(itemDetails.styleId) : null,
           uomId: itemDetails?.uomId ? parseInt(itemDetails.uomId) : null,
           colorId: itemDetails?.colorId ? parseInt(itemDetails.colorId) : null,
-          qty,
+          qty: salesQty,
           barcodeNo: itemDetails?.barcodeNo ?? undefined,
+          barcodeId,
           rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
           discountType: itemDetails?.discountType ?? undefined,
           discountValue: itemDetails?.discountValue
@@ -484,10 +516,8 @@ async function updateSalesBillItems(
             styleItemId: itemDetails?.styleItemId
               ? parseInt(itemDetails.styleItemId)
               : null,
-            qty:
-              itemDetails?.qty && !isNaN(parseFloat(itemDetails.qty))
-                ? -Math.abs(parseInt(itemDetails.qty))
-                : null,
+            qty: -salesQty,
+            barcodeId,
             barcodeNo: itemDetails?.barcodeNo ?? undefined,
             rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
           },
@@ -511,14 +541,62 @@ async function updateSalesBillItems(
             styleItemId: itemDetails?.styleItemId
               ? parseInt(itemDetails.styleItemId)
               : null,
-            qty:
-              itemDetails?.qty && !isNaN(parseFloat(itemDetails.qty))
-                ? -Math.abs(parseInt(itemDetails.qty))
-                : null,
+            qty: -salesQty,
+            barcodeId,
             barcodeNo: itemDetails?.barcodeNo ?? undefined,
             rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
           },
         });
+      }
+
+      const oldQty = oldItem?.qty || 0;
+      const oldBarcodeId = oldItem?.barcodeId || null;
+      const newQty = salesQty;
+      const newBarcodeId = barcodeId;
+      if (oldBarcodeId && newBarcodeId && oldBarcodeId === newBarcodeId) {
+        // Same barcode → adjust difference
+        const qtyDifference = oldQty - newQty;
+
+        if (qtyDifference !== 0) {
+          await tx.stockSummary.updateMany({
+            where: {
+              branchId: parseInt(branchId),
+              barcodeId: newBarcodeId,
+            },
+            data: {
+              qty: { increment: qtyDifference },
+              updatedById: parseInt(userId),
+            },
+          });
+        }
+      } else {
+        // 🔼 Add back old return qty
+        if (oldBarcodeId && oldQty > 0) {
+          await tx.stockSummary.updateMany({
+            where: {
+              branchId: parseInt(branchId),
+              barcodeId: oldBarcodeId,
+            },
+            data: {
+              qty: { increment: oldQty },
+              updatedById: parseInt(userId),
+            },
+          });
+        }
+
+        // 🔽 Subtract new return qty
+        if (newBarcodeId && newQty > 0) {
+          await tx.stockSummary.updateMany({
+            where: {
+              branchId: parseInt(branchId),
+              barcodeId: newBarcodeId,
+            },
+            data: {
+              qty: { decrement: newQty },
+              updatedById: parseInt(userId),
+            },
+          });
+        }
       }
       return updatedItem;
     } else {
@@ -533,8 +611,9 @@ async function updateSalesBillItems(
           styleId: itemDetails?.styleId ? parseInt(itemDetails.styleId) : null,
           uomId: itemDetails?.uomId ? parseInt(itemDetails.uomId) : null,
           colorId: itemDetails?.colorId ? parseInt(itemDetails.colorId) : null,
-          qty,
+          qty: salesQty,
           barcodeNo: itemDetails?.barcodeNo ?? undefined,
+          barcodeId,
           rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
           discountType: itemDetails?.discountType ?? undefined,
           discountValue: itemDetails?.discountValue
@@ -559,15 +638,26 @@ async function updateSalesBillItems(
           styleItemId: itemDetails?.styleItemId
             ? parseInt(itemDetails.styleItemId)
             : null,
-          qty:
-            itemDetails?.qty && !isNaN(parseFloat(itemDetails.qty))
-              ? -Math.abs(parseInt(itemDetails.qty))
-              : null,
+          qty: -salesQty,
           salesBillItemsId: createdItem.id,
           barcodeNo: itemDetails?.barcodeNo ?? undefined,
           rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
+          barcodeId,
         },
       });
+
+      if (barcodeId && salesQty > 0) {
+        await tx.stockSummary.updateMany({
+          where: {
+            branchId: parseInt(branchId),
+            barcodeId: barcodeId,
+          },
+          data: {
+            qty: { decrement: salesQty },
+            updatedById: parseInt(userId),
+          },
+        });
+      }
 
       return createdItem;
     }
@@ -627,6 +717,7 @@ async function getSalesBillDetail(req) {
           },
           barcodeNo: true,
           id: true,
+          barcodeId: true,
         },
       },
       Customer: {

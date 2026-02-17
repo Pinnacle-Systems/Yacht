@@ -10,6 +10,7 @@ import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMaste
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import PurchaseReturnFormReport from "./PurchaseReturnFormReport";
+import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 const MODEL = "Purchase Return";
 
 export default function Form() {
@@ -26,7 +27,8 @@ export default function Form() {
   const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
- 
+  const { data: styleList } = useGetStyleMasterQuery({ params });
+
   const [removeData] = useDeletePurchaseReturnShowroomMutation();
   const handleView = (orderId) => {
     setId(orderId);
@@ -132,6 +134,7 @@ export default function Form() {
           styleItemList={styleItemList}
           colorList={colorList}
           uomList={uomList}
+          styleList={styleList}
         />
       )}
     </>

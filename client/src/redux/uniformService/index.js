@@ -31,7 +31,7 @@ export { default as ProductionReceiptApi } from "./ProductionReceiptServices";
 export { default as DispatchedApi } from "./DispatchedServices";
 export { default as GeneralPurchaseApi } from "./GeneralPurchaseServices";
 export { default as RawMaterialOpeningStockApi } from "./RawMaterialOpeningStockServices";
-
+export { default as showroomStockApi } from "./ShowroomStockService.js";
 export { default as CertificateMaster } from "./CertificateMasterService";
 export { default as purchaseInwardEntryApi } from "./PurchaseInwardEntry";
 export { default as styleMasterApi } from "./StyleMasterService";

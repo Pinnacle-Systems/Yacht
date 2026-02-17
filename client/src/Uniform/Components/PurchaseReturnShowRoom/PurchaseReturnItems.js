@@ -4,6 +4,7 @@ import FxSelect from "../../../Inputs";
 import Swal from "sweetalert2";
 import Modal from "../../../UiComponents/Modal";
 import PurchaseBillItemsSelection from "./PurchaseBillItemsSelection";
+import { findFromList } from "../../../Utils/helper";
 export default function PurchaseReturnItems({
   purchaseReturnItems,
   setPurchaseReturnItems,
@@ -19,6 +20,7 @@ export default function PurchaseReturnItems({
   branchId,
   tempItems,
   setTempItems,
+  styleList,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [fillGrid, setFillGrid] = useState(false);
@@ -35,6 +37,7 @@ export default function PurchaseReturnItems({
       barcodeNo: "",
       uomId: "",
       returnQty: "",
+      barcodeId: "",
     };
     setPurchaseReturnItems([...purchaseReturnItems, newRow]);
   };
@@ -100,6 +103,7 @@ export default function PurchaseReturnItems({
               colorId: "",
               selected: false,
               barcodeNo: "",
+              barcodeId: "",
               uomId: "",
               returnQty: "",
               selected: false,
@@ -120,6 +124,7 @@ export default function PurchaseReturnItems({
           colorId: "",
           selected: false,
           barcodeNo: "",
+          barcodeId: "",
           uomId: "",
           returnQty: "",
           selected: false,
@@ -150,29 +155,33 @@ export default function PurchaseReturnItems({
       <div className="border border-slate-200  bg-white rounded-md shadow-sm max-h-[400px] px-2 overflow-auto">
         <div className="flex items-center mt-1">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
-          <button
-            className="font-bold text-slate-700 bord ml-[935px] text-sm bg-blue-500 rounded rounded-md text-white px-2"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                setFillGrid(true);
-              }
-            }}
-            onClick={() => {
-              if (!supplierId || !invNo) {
-                Swal.fire({
-                  icon: "warning",
-                  title: ` Choose Supplier and Inv No`,
-                  showConfirmButton: false,
-                  timer: 2000,
-                });
-              } else {
-                setFillGrid(true);
-              }
-            }}
-          >
-            Fill Items
-          </button>
+          {!id && (
+            <button
+              className="font-bold text-slate-700 bord ml-[935px] text-sm bg-blue-500 rounded rounded-md text-white px-2"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  setFillGrid(true);
+                }
+              }}
+              onClick={() => {
+                if (!supplierId || !invNo) {
+                  Swal.fire({
+                    icon: "warning",
+                    title: ` Choose Supplier and Inv No`,
+                    showConfirmButton: false,
+                    timer: 2000,
+                  });
+                } else {
+                  setFillGrid(true);
+                }
+              }}
+              disabled={id}
+              readOnly={id}
+            >
+              Fill Items
+            </button>
+          )}
         </div>
         <div
           className={`w-full max-h-[192px] min-h-[192px] overflow-y-auto  mb-2 mt-1`}
@@ -217,6 +226,11 @@ export default function PurchaseReturnItems({
                   className={`w-40 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Barcode
+                </th>
+                <th
+                  className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Style No
                 </th>
                 <th
                   className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
@@ -303,106 +317,58 @@ export default function PurchaseReturnItems({
                       />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
-                      <FxSelect
-                        value={row.styleItemId}
-                        onChange={(val) =>
-                          handleInputChange(val, index, "styleItemId")
+                      <input
+                        className="text-left rounded py-1 px-1 w-full  select-none"
+                        disabled={true}
+                        value={
+                          findFromList(row.styleId, styleList?.data, "sku") ||
+                          ""
                         }
-                        options={(styleItemList?.data || [])
-                          .filter((item) => item.active)
-                          .map((item) => ({
-                            label: item.name,
-                            value: item.id,
-                          }))}
-                        readOnly={true}
-                        placeholder=""
-                        onBlur={() =>
-                          handleInputChange(
+                      />
+                    </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px] ">
+                      <input
+                        className="text-left rounded py-1 px-1 w-full  select-none"
+                        disabled={true}
+                        value={
+                          findFromList(
                             row.styleItemId,
-                            index,
-                            "styleItemId",
-                          )
+                            styleItemList?.data,
+                            "name",
+                          ) || ""
                         }
-                        onKeyDown={(e) => {
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "styleItemId");
-                          }
-                        }}
                       />
                     </td>
 
                     <td className="py-0.5 border border-gray-300 text-[11px]">
-                      <FxSelect
-                        value={row.sizeId}
-                        onChange={(val) =>
-                          handleInputChange(val, index, "sizeId")
+                      <input
+                        className="text-left rounded py-1 px-1 w-full select-none"
+                        readOnly
+                        value={
+                          findFromList(row.sizeId, sizeList?.data, "name") || ""
                         }
-                        options={(sizeList?.data || [])
-                          .filter((item) => item.active)
-                          .map((item) => ({
-                            label: item.name,
-                            value: item.id,
-                          }))}
-                        readOnly={true}
-                        placeholder=""
-                        onBlur={() =>
-                          handleInputChange(row.sizeId, index, "sizeId")
-                        }
-                        onKeyDown={(e) => {
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "sizeId");
-                          }
-                        }}
+                        disabled={true}
                       />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px]">
-                      <FxSelect
-                        value={row.colorId}
-                        onChange={(val) =>
-                          handleInputChange(val, index, "colorId")
+                      <input
+                        className="text-left rounded py-1 px-1 w-full select-none"
+                        readOnly
+                        value={
+                          findFromList(row.colorId, colorList?.data, "name") ||
+                          ""
                         }
-                        options={(colorList?.data || [])
-                          .filter((item) => item.active)
-                          .map((item) => ({
-                            label: item.name,
-                            value: item.id,
-                          }))}
-                        readOnly={true}
-                        placeholder=""
-                        onBlur={() =>
-                          handleInputChange(row.colorId, index, "colorId")
-                        }
-                        onKeyDown={(e) => {
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "colorId");
-                          }
-                        }}
-                        inputId={`qty-input-${index}`}
+                        disabled={true}
                       />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px]">
-                      <FxSelect
-                        value={row.uomId}
-                        onChange={(val) =>
-                          handleInputChange(val, index, "uomId")
+                      <input
+                        className="text-left rounded py-1 px-1 w-full   select-none"
+                        readOnly
+                        value={
+                          findFromList(row.uomId, uomList?.data, "name") || ""
                         }
-                        options={(uomList?.data || [])
-                          .filter((item) => item.active)
-                          .map((item) => ({
-                            label: item.name,
-                            value: item.id,
-                          }))}
-                        readOnly={true}
-                        placeholder=""
-                        onBlur={() =>
-                          handleInputChange(row.uomId, index, "uomId")
-                        }
-                        onKeyDown={(e) => {
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "uomId");
-                          }
-                        }}
-                        inputId={`qty-input-${index}`}
+                        disabled={true}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
@@ -483,7 +449,7 @@ export default function PurchaseReturnItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={8}
+                  colSpan={9}
                 >
                   Total Qty
                 </td>

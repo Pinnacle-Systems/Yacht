@@ -40,6 +40,7 @@ export function SalesBillForm({
   colorList,
   uomList,
   taxTypeList,
+  styleList,
 }) {
   const [pdfOpen, setPdfOpen] = useState(false);
   const [docId, setDocId] = useState("New");
@@ -77,24 +78,19 @@ export function SalesBillForm({
 
   const isLoadingIndicator = isSingleFetching || isSingleLoading;
 
-  const findDuplicates = (items) => {
+  const findDuplicateGoodss = (items) => {
     const seen = new Map(); // key -> first index
     const duplicates = [];
 
     items.forEach((row, index) => {
-      const key = [
-        row.styleItemId || "",
-        row.sizeId || "",
-        row.colorId || "",
-      ].join("-");
+      const key = row?.barcodeId;
 
       if (seen.has(key)) {
         duplicates.push({
           firstIndex: seen.get(key),
           duplicateIndex: index,
-          styleItemId: row.styleItemId,
-          sizeId: row.sizeId,
-          colorId: row.colorId,
+          barcodeId: row.barcodeId,
+          barcodeNo: row.barcodeNo,
         });
       } else {
         seen.set(key, index);
@@ -105,50 +101,57 @@ export function SalesBillForm({
   };
 
   const validateData = (data) => {
-    const items = data?.salesBillItems || [];
-
-    // remove blank rows
-    const filledItems = items.filter(
-      (item) => item.styleId || item.styleItemId || item.sizeId,
-    );
-
-    const duplicates = findDuplicates(filledItems);
-    // duplicate check
-    if (duplicates.length > 0) {
-      const dup = duplicates[0]; // show first duplicate
-      Swal.fire({
-        icon: "warning",
-        title: "Duplicate Item Found",
-        html: `
-       Style - ${findFromList(dup?.styleItemId, styleItemList?.data, "name")},
-       Size - ${findFromList(dup?.sizeId, sizeList?.data, "name")},
-       Color - ${findFromList(dup?.colorId, colorList?.data, "name")},
-       Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
-     `,
-        confirmButtonText: "OK",
-      });
-      return false;
-    }
-    if (
-      !(
-        data?.customerId &&
-        data?.customerName &&
-        // data?.paymentValue &&
-        data?.taxTemplateId &&
-        data?.salesBillItems.length > 0 &&
-        isGridDatasValid(
-          data?.salesBillItems.filter((item) => item?.styleItemId),
-          false,
-          ["qty", "rate"],
-        )
-      )
-    ) {
+    if (!data?.customerId || !data?.customerName || !data?.taxTemplateId) {
       toast.info("Please fill all required fields...!", {
         position: "top-center",
         autoClose: 2000,
       });
       return false;
     }
+
+    // 2️⃣ At least one item required
+    if (!data?.salesBillItems || data.salesBillItems.length === 0) {
+      toast.info("Please add at least one item...!", {
+        position: "top-center",
+      });
+      return false;
+    }
+
+    const filledGoodsItems = data.salesBillItems.filter(
+      (item) => item?.styleItemId,
+    );
+    if (
+      !isGridDatasValid(filledGoodsItems, false, [
+        "qty",
+        "rate",
+        "barcodeId",
+        "sizeId",
+        "styleId",
+      ])
+    ) {
+      toast.info("Please fill all required items details...!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      return false;
+    }
+
+    // 4️⃣ Duplicate check
+    // 4️⃣ Duplicate check
+    const duplicatesGoods = findDuplicateGoodss(filledGoodsItems);
+    if (duplicatesGoods.length > 0) {
+      const dup = duplicatesGoods[0];
+      Swal.fire({
+        icon: "warning",
+        title: "Duplicate Item Found",
+        html: `
+               Barcode - ${dup?.barcodeNo},
+               Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
+             `,
+      });
+      return false;
+    }
+
     return true;
   };
 
@@ -454,6 +457,7 @@ export function SalesBillForm({
                 colorList={colorList}
                 uomList={uomList}
                 taxTemplateId={taxTemplateId}
+                styleList={styleList}
               />
             </fieldset>
             <div className="grid grid-cols-3 gap-2">

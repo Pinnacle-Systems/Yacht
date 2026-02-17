@@ -254,7 +254,7 @@ async function getOne(id) {
       Customer: true,
       SalesEntryItems: {
         select: {
-          Stock: true,
+          // Stock: true,
           id: true,
           salesEntryId: true,
           barcode: true,
@@ -327,11 +327,17 @@ async function getOne(id) {
           returnQty: true,
         },
       });
+      const barcode = await prisma.barcode.findFirst({
+        where: {
+          salesEntryItemsId: item.id,
+        },
+      });
       return {
         ...item,
         stkQty: totalStkQty._sum.qty + item.qty,
         returnQty: totalReturnQty,
         usedQty: usedQty._sum.returnQty,
+        barcodeNo: barcode?.barcodeNo,
       };
     }),
   );

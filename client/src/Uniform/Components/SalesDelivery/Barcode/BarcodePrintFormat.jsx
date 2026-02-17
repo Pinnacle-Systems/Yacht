@@ -1,11 +1,11 @@
 import React, { useEffect } from "react";
 import { Document, Page, View, Text, PDFViewer } from "@react-pdf/renderer";
-import tw from "../../../Utils/tailwind-react-pdf";
-import BarcodeGenerator from "../BarcodeGenerator";
-import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
-import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
-import { findFromList } from "../../../Utils/helper";
 import secureLocalStorage from "react-secure-storage";
+import tw from "../../../../Utils/tailwind-react-pdf";
+import BarcodeGenerator from "./BarcodeGenerator";
+import { findFromList } from "../../../../Utils/helper";
+import { useGetStyleItemMasterQuery } from "../../../../redux/uniformService/StyleItemMasterService";
+import { useGetSizeMasterQuery } from "../../../../redux/uniformService/SizeMasterService";
 
 const mmToPt = (mm) => (mm / 25.4) * 72; // mm → pt
 const chunkArray = (arr, size) => {
@@ -21,9 +21,9 @@ const BarCodePrintFormat = ({
   labelConfig = {
     labelWidth: 25, // mm
     labelHeight: 20, // mm
-    stickersPerRow: 4,
+    stickersPerRow: 2,
     horizontalGap: 1, // mm
-    verticalGap: 1, // mm
+    verticalGap: 2, // mm
   },
 }) => {
   const params = {
@@ -38,10 +38,11 @@ const BarCodePrintFormat = ({
   // 🔁 Generate labels per quantity
   const allBarcodes = data.flatMap((item) =>
     Array.from({ length: parseInt(item?.qty || 0) }, () => ({
-      barCode: item.barCode,
+      barcodeNo: item.barcodeNo,
       styleNo: item.styleNo,
       styleName: findFromList(item.styleItemId, styleItemList?.data, "name"),
       sizeName: findFromList(item.sizeId, sizeList?.data, "name"),
+      rate: item.price
     }))
   );
 
@@ -89,33 +90,51 @@ const BarCodePrintFormat = ({
                   alignItems: "center",
                 }}
               >
+                <Text
+                  style={{
+                    fontSize: 6,
+                    marginTop: 1,
+                    textAlign: "center",
+                  }}
+                >
+                  YACHT
+                </Text>
                 {/* 🧾 Barcode */}
                 <BarcodeGenerator
-                  value={code.styleNo}
+                  value={code.barcodeNo}
                   width={labelWidthPt * 0.85}
-                  height={labelHeightPt * 0.55}
+                  height={labelHeightPt * 0.30}
                 />
 
                 {/* 🧵 Style No */}
                 <Text
                   style={{
-                    fontSize: 7,
+                    fontSize: 5,
                     marginTop: 1,
                     textAlign: "center",
                   }}
                 >
-                  { code.styleNo ? `Style: ${code.styleNo}` : ""}
+                  {code.barcodeNo || ""}
                 </Text>
 
                 {/* 📏 Size */}
                 <Text
                   style={{
-                    fontSize: 7,
+                    fontSize: 6,
                     marginTop: 1,
                     textAlign: "center",
                   }}
                 >
-                  {code.sizeName ? `Size: ${code.sizeName}` : ""}
+                  {code.styleName ? `${code.styleName}` : ""} - {code.sizeName ? `${code.sizeName}` : ""}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 6,
+                    marginTop: 1,
+                    textAlign: "center",
+                  }}
+                >
+                  {code.rate ? `MRP : Rs.${code.rate}.00` : ""}
                 </Text>
               </View>
             ))}

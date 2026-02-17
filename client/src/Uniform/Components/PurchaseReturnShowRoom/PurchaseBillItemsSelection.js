@@ -17,12 +17,17 @@ const PurchaseBillItemsSelection = ({
   function addItem(id, obj) {
     setPurchaseReturnItems((prevItems) => {
       let newItems = structuredClone(prevItems);
-      const index = newItems?.findIndex((v) => v?.styleItemId === "");
-
+      const updatedObj = {
+        ...obj,
+        returnQty: obj?.stkQty ?? 0,
+      };
+      const index = newItems?.findIndex(
+        (v) => v?.styleItemId === "" || v?.styleItemId === null,
+      );
       if (index !== -1) {
-        newItems[index] = obj;
+        newItems[index] = updatedObj;
       } else {
-        newItems.push(obj);
+        newItems.push(updatedObj);
       }
 
       return newItems;
@@ -38,6 +43,7 @@ const PurchaseBillItemsSelection = ({
     colorId: "",
     selected: false,
     barcodeNo: "",
+    barcodeId: "",
     uomId: "",
     returnQty: "",
   };
@@ -220,11 +226,11 @@ const PurchaseBillItemsSelection = ({
                       >
                         <td className="text-center py-2 border border-gray-300">
                           <input
-                                  type="checkbox"
-                                  className="cursor-pointer"
-                                  checked={isItemAddedd(item.id, item)}
-                                  readOnly
-                                />
+                            type="checkbox"
+                            className="cursor-pointer"
+                            checked={isItemAddedd(item.id, item)}
+                            readOnly
+                          />
                         </td>
 
                         <td className="text-center border border-gray-300 text-[11px]">

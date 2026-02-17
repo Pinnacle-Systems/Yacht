@@ -413,6 +413,7 @@ export default function PurchaseBillItems({
                                 amount: "",
                                 discount: "",
                                 taxPercent: "",
+                                barcodeId: "",
                               };
                               return newBlend;
                             });

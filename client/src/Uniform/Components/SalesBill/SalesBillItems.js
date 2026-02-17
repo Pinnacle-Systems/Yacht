@@ -7,6 +7,8 @@ import Modal from "../../../UiComponents/Modal";
 import { VIEW } from "../../../icons";
 import FxSelect, { DropdownNew } from "../../../Inputs";
 import TaxDetailsFullTemplate from "./TaxDetailsFullTemplate";
+import { useLazyGetSRBarcodeDetailQuery } from "../../../redux/uniformService/ShowroomStockService";
+import { findFromList } from "../../../Utils/helper";
 
 export default function SalesBillItems({
   salesBillItems,
@@ -19,6 +21,7 @@ export default function SalesBillItems({
   styleItemList,
   colorList,
   uomList,
+  styleList,
 }) {
   const [barcodeNo, setbarcodeNo] = useState("");
   const [contextMenu, setContextMenu] = useState(null);
@@ -28,15 +31,15 @@ export default function SalesBillItems({
   const [showColorPopup, setShowColorPopup] = useState(false);
   const [colorId, setColorId] = useState("");
   const [uniqueColorIds, setUniqueColorIds] = useState([]);
+  const [getBarcodeDetails, { data: barcodeData }] =
+    useLazyGetSRBarcodeDetailQuery();
   const addRow = () => {
     const newRow = {
-      barcode: "",
+      barcodeNo: "",
+      barcodeId: "",
       styleId: "",
       sizeId: "",
-      stkQty: "",
       qty: "",
-      remarks: "",
-      barcodeNo: "",
       rate: "",
       taxPercent: "",
       discountType: "",
@@ -48,7 +51,6 @@ export default function SalesBillItems({
     };
     setSalesBillItems([...salesBillItems, newRow]);
   };
-
 
   const deleteSelectedRows = () => {
     setSalesBillItems((rows) =>
@@ -80,13 +82,11 @@ export default function SalesBillItems({
           return [
             ...prev,
             ...Array.from({ length: 5 - count }, () => ({
-              barcode: "",
               styleId: "",
               sizeId: "",
-              stkQty: "",
               qty: "",
-              remarks: "",
               barcodeNo: "",
+              barcodeId: "",
               rate: "",
               taxPercent: "",
               discountType: "",
@@ -104,12 +104,10 @@ export default function SalesBillItems({
     } else {
       setSalesBillItems(
         Array.from({ length: 5 }, () => ({
-          barcode: "",
+          barcodeId: "",
           styleId: "",
           sizeId: "",
-          stkQty: "",
           qty: "",
-          remarks: "",
           barcodeNo: "",
           rate: "",
           taxPercent: "",
@@ -128,7 +126,6 @@ export default function SalesBillItems({
     if (field === "qty") {
       const row = salesBillItems[index];
       const balanceQty = row?.stkQty || 0;
-
     }
     setSalesBillItems((prev) => {
       const newItems = structuredClone(prev);
@@ -196,9 +193,7 @@ export default function SalesBillItems({
           styleId: "",
           sizeId: "",
           qty: "",
-          remarks: "",
-          stkQty: "",
-          barcode: "",
+          barcodeId: "",
           rate: "",
           taxPercent: "",
           discountType: "",
@@ -317,6 +312,72 @@ export default function SalesBillItems({
     }
   }, [salesBillItems]);
 
+  const handleBarcodeEnter = async (index, row) => {
+    try {
+      const response = await getBarcodeDetails({
+        params: { barcodeNo: row.barcodeNo },
+      }).unwrap();
+
+      if (response.statusCode !== 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "Not Found",
+          text: response?.message || "Failed to fetch barcode details",
+        });
+        return;
+      }
+
+      const data = response.data;
+
+      setSalesBillItems((prev) => {
+        const updated = [...prev];
+        const isLastRow = index === prev.length - 1;
+
+        updated[index] = {
+          ...updated[index],
+          styleItemId: data.styleItemId,
+          sizeId: data.sizeId,
+          colorId: data.colorId,
+          uomId: data.uomId,
+          barcodeNo: data.barcodeNo,
+          qty: data.qty,
+          rate: data.rate,
+          barcodeId: data.barcodeId,
+          styleId: data.styleId,
+        };
+
+        // Add new row if last
+        if (isLastRow) {
+          updated.push({
+            styleId: "",
+            sizeId: "",
+            qty: "",
+            styleItemId: "",
+            colorId: "",
+            selected: false,
+            barcodeNo: "",
+            barcodeId: "",
+            uomId: "",
+            rate: "",
+            netAmount: 0,
+          });
+        }
+
+        return updated;
+      });
+
+      // Focus next row
+      setTimeout(() => {
+        const nextInput = document.querySelector(
+          `#barcodeNo-input-${index + 1}`,
+        );
+        nextInput?.focus();
+      }, 0);
+    } catch (error) {
+      console.error("Barcode fetch failed:", error);
+    }
+  };
+
   return (
     <>
       <Modal
@@ -404,7 +465,9 @@ export default function SalesBillItems({
         <div className="flex justify-between items-center">
           <h2 className="font-medium text-slate-700">List of Items</h2>
         </div>
-        <div className={`w-full  max-h-[204px] min-h-[204px]  overflow-y-auto  mb-2 mt-1`}>
+        <div
+          className={`w-full  max-h-[204px] min-h-[204px]  overflow-y-auto  mb-2 mt-1`}
+        >
           <table className=" border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
@@ -448,6 +511,11 @@ export default function SalesBillItems({
                   className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Barcode
+                </th>
+                <th
+                  className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Style No
                 </th>
                 <th
                   className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
@@ -528,11 +596,36 @@ export default function SalesBillItems({
                   </td>
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-left">
                     <input
-                      onKeyDown={(e) => {
+                      id={`barcodeNo-input-${index}`}
+                      onKeyDown={async (e) => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract")
                           e.preventDefault();
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "barcodeNo");
+                        if (e.key === "Delete" || e.key === "") {
+                          setSalesBillItems((prev) => {
+                            const newBlend = [...prev];
+                            newBlend[index] = {
+                              barcodeNo: "",
+                              styleItemId: null,
+                              styleId: "",
+                              sizeId: null,
+                              colorId: null,
+                              uomId: null,
+                              qty: "",
+                              rate: "",
+                              amount: "",
+                              discountType: "",
+                              discountValue: "",
+                              taxPercent: "",
+                              barcodeId: "",
+                              selected: false,
+                            };
+                            return newBlend;
+                          });
+                        }
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleBarcodeEnter(index, row);
                         }
                       }}
                       className="text-left rounded py-1 px-1 w-full"
@@ -543,105 +636,83 @@ export default function SalesBillItems({
                       }
                       onBlur={(e) => {
                         handleInputChange(e.target.value, index, "barcodeNo");
+                        if (e.target.value === "") {
+                          setSalesBillItems((prev) => {
+                            const newBlend = [...prev];
+                            newBlend[index] = {
+                              barcodeNo: "",
+                              styleItemId: null,
+                              styleId: "",
+                              sizeId: null,
+                              colorId: null,
+                              uomId: null,
+                              qty: "",
+                              rate: "",
+                              amount: "",
+                              discountType: "",
+                              discountValue: "",
+                              taxPercent: "",
+                              barcodeId: "",
+                              selected: false,
+                            };
+                            return newBlend;
+                          });
+                        }
                       }}
                       disabled={readOnly}
                     />
                   </td>
                   <td className="py-0.5 border border-gray-300 text-[11px] ">
-                    <FxSelect
-                      value={row.styleItemId}
-                      onChange={(val) =>
-                        handleInputChange(val, index, "styleItemId")
+                    <input
+                      className="text-left rounded py-1 px-1 w-full  select-none"
+                      disabled={true}
+                      value={
+                        findFromList(row.styleId, styleList?.data, "sku") || ""
                       }
-                      options={(styleItemList?.data || [])
-                        .filter((item) => item.active)
-                        .map((item) => ({
-                          label: item.name,
-                          value: item.id,
-                        }))}
-                      readOnly={readOnly || (row.usedQty ?? 0) > 0}
-                      placeholder=""
-                      onBlur={() =>
-                        handleInputChange(row.styleItemId, index, "styleItemId")
+                    />
+                  </td>
+                  <td className="py-0.5 border border-gray-300 text-[11px] ">
+                    <input
+                      className="text-left rounded py-1 px-1 w-full  select-none"
+                      disabled={true}
+                      value={
+                        findFromList(
+                          row.styleItemId,
+                          styleItemList?.data,
+                          "name",
+                        ) || ""
                       }
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "styleItemId");
-                        }
-                      }}
                     />
                   </td>
 
                   <td className="py-0.5 border border-gray-300 text-[11px]">
-                    <FxSelect
-                      value={row.sizeId}
-                      onChange={(val) =>
-                        handleInputChange(val, index, "sizeId")
+                    <input
+                      className="text-left rounded py-1 px-1 w-full select-none"
+                      readOnly
+                      value={
+                        findFromList(row.sizeId, sizeList?.data, "name") || ""
                       }
-                      options={(sizeList?.data || [])
-                        .filter((item) => item.active)
-                        .map((item) => ({
-                          label: item.name,
-                          value: item.id,
-                        }))}
-                      readOnly={readOnly || (row.usedQty ?? 0) > 0}
-                      placeholder=""
-                      onBlur={() =>
-                        handleInputChange(row.sizeId, index, "sizeId")
-                      }
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "sizeId");
-                        }
-                      }}
+                      disabled={true}
                     />
                   </td>
                   <td className="py-0.5 border border-gray-300 text-[11px]">
-                    <FxSelect
-                      value={row.colorId}
-                      onChange={(val) =>
-                        handleInputChange(val, index, "colorId")
+                    <input
+                      className="text-left rounded py-1 px-1 w-full select-none"
+                      readOnly
+                      value={
+                        findFromList(row.colorId, colorList?.data, "name") || ""
                       }
-                      options={(colorList?.data || [])
-                        .filter((item) => item.active)
-                        .map((item) => ({
-                          label: item.name,
-                          value: item.id,
-                        }))}
-                      readOnly={readOnly || (row.usedQty ?? 0) > 0}
-                      placeholder=""
-                      onBlur={() =>
-                        handleInputChange(row.colorId, index, "colorId")
-                      }
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "colorId");
-                        }
-                      }}
-                      inputId={`qty-input-${index}`}
+                      disabled={true}
                     />
                   </td>
                   <td className="py-0.5 border border-gray-300 text-[11px]">
-                    <FxSelect
-                      value={row.uomId}
-                      onChange={(val) => handleInputChange(val, index, "uomId")}
-                      options={(uomList?.data || [])
-                        .filter((item) => item.active)
-                        .map((item) => ({
-                          label: item.name,
-                          value: item.id,
-                        }))}
-                      readOnly={readOnly || (row.usedQty ?? 0) > 0}
-                      placeholder=""
-                      onBlur={() =>
-                        handleInputChange(row.uomId, index, "uomId")
+                    <input
+                      className="text-left rounded py-1 px-1 w-full   select-none"
+                      readOnly
+                      value={
+                        findFromList(row.uomId, uomList?.data, "name") || ""
                       }
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "uomId");
-                        }
-                      }}
-                      inputId={`qty-input-${index}`}
+                      disabled={true}
                     />
                   </td>
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
@@ -664,7 +735,7 @@ export default function SalesBillItems({
                       onBlur={(e) => {
                         handleInputChange(e.target.value, index, "qty");
                       }}
-                      disabled={readOnly}
+                      disabled={true}
                     />
                   </td>
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
@@ -757,7 +828,7 @@ export default function SalesBillItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={7}
+                  colSpan={8}
                 >
                   Total Qty
                 </td>
