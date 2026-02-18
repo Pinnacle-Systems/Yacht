@@ -5,25 +5,31 @@ import Swal from "sweetalert2";
 import { FaPlus } from "react-icons/fa";
 import PurchaseBillFormReport from "./PurchaseBillFormReport";
 import { getCommonParams } from "../../../Utils/helper";
-import { useDeletePurchaseBillMutation } from "../../../redux/services/PurchaseBillService";
+import { useDeletePurchaseBillMutation, useLazyGetPurchaseBillByIdQuery } from "../../../redux/services/PurchaseBillService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServices";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
+
 const MODEL = "Purchase Bill";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
   const [id, setId] = useState("");
   const [readOnly, setReadOnly] = useState(false);
-  //   const dispatch = useDispatch();
+  const dispatch = useDispatch();
   const { companyId, branchId } = getCommonParams();
   const params = {
     branchId,
     companyId,
   };
+  const [trigger, { data: singleData,
+    isFetching: isSingleFetching,
+    isLoading: isSingleLoading, }] =
+    useLazyGetPurchaseBillByIdQuery();
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
@@ -47,48 +53,51 @@ export default function Form() {
 
   const handleDelete = async (id) => {
     setId(id);
+    const { data } = await trigger(id);
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-      //   if (data?.data?.childRecordReturn > 0) {
-      //     Swal.fire({
-      //       icon: "error",
-      //       title: "This item used in Purchase Return",
-      //       text: "Data cannot be deleted!",
-      //     });
-      //   } else if (data?.data?.childRecordSales > 0) {
-      //     Swal.fire({
-      //       icon: "error",
-      //       title: "This item used in Sales Entry",
-      //       text: "Data cannot be deleted!",
-      //     });
-      //   }
-      //   else {}
-      try {
-        let deldata = await removeData(id).unwrap();
-        if (deldata?.statusCode == 1) {
-          Swal.fire({
-            icon: "error",
-            title: "Child record Exists",
-            text: deldata.data?.message || "Data cannot be deleted!",
-          });
-          return;
-        }
-        setId("");
-        Swal.fire({
-          title: "Deleted Successfully",
-          icon: "success",
-          timer: 1000,
-        });
-        setShowForm(false);
-      } catch (error) {
+      if (data?.data?.childRecordReturn > 0) {
         Swal.fire({
           icon: "error",
-          title: "Submission error",
-          text: error.data?.message || "Something went wrong!",
+          title: "This Transaction items used in Purchase Return",
+          text: "Data cannot be deleted!",
         });
-        setShowForm(false);
+      } else if (data?.data?.childRecordSales > 0) {
+        Swal.fire({
+          icon: "error",
+          title: "This Transaction items used in Sales Bill",
+          text: "Data cannot be deleted!",
+        });
+      }
+      else {
+        try {
+          let deldata = await removeData(id).unwrap();
+          if (deldata?.statusCode == 1) {
+            Swal.fire({
+              icon: "error",
+              title: "Child record Exists",
+              text: deldata.data?.message || "Data cannot be deleted!",
+            });
+            return;
+          }
+          setId("");
+          Swal.fire({
+            title: "Deleted Successfully",
+            icon: "success",
+            timer: 1000,
+          });
+          setShowForm(false);
+          dispatch(showroomStockApi.util.invalidateTags(["showroomStock"]));
+        } catch (error) {
+          Swal.fire({
+            icon: "error",
+            title: "Submission error",
+            text: error.data?.message || "Something went wrong!",
+          });
+          setShowForm(false);
+        }
       }
 
 

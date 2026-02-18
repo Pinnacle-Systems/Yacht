@@ -12,6 +12,8 @@ import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformServic
 import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServices";
 import { useDeleteSalesReturnSRMutation } from "../../../redux/uniformService/SalesReturnShowroom.service";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+import salesBillApi from "../../../redux/services/SalesBillService";
+import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -68,6 +70,8 @@ export default function Form() {
           timer: 1000,
         });
         setShowForm(false);
+        dispatch(salesBillApi.util.invalidateTags(["SalesBill"]));
+        dispatch(showroomStockApi.util.invalidateTags(["showroomStock"]));
       } catch (error) {
         Swal.fire({
           icon: "error",

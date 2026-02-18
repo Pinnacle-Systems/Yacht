@@ -35,7 +35,6 @@ const Header = ({ heading, singleData, DeliveryNo, DeliveryDate, styles }) => {
           {/* <Text style={tw("text-teal-500")}>{heading}</Text> */}
 
           <Text style={tw("text-xs ml-1 text-right")}>{singleData?.docId || ""}</Text>
-          {console.log(singleData?.docId,"docId")}
           
           <Text style={tw("text-xs ml-1 text-right mt-2")}>{moment(singleData?.date).format("DD-MM-YYYY") || ""}</Text>
         </View>

@@ -341,8 +341,33 @@ async function getOne(id) {
       };
     }),
   );
-  const styleNos = data.SalesEntryItems.map((item) => item.styleNo).filter(
+  const salesEntryItemsIds = data.SalesEntryItems.map((item) => item.id).filter(
     Boolean,
+  );
+  const barcodes = await prisma.barcode.findMany({
+    where: {
+      salesEntryItemsId: { in: salesEntryItemsIds },
+    },
+  });
+  const barcodeWithRate = await Promise.all(
+    barcodes.map(async (barcode) => {
+      const style = await prisma.style.findUnique({
+        where: {
+          id: barcode.styleId,
+        },
+      });
+      return {
+        barcodeNo: barcode.barcodeNo,
+        styleId: barcode.styleId,
+        styleItemId: barcode.styleItemId,
+        sizeId: barcode.sizeId,
+        colorId: barcode.colorId,
+        salesEntryItemsId: barcode.salesEntryItemsId,
+        rate: style?.salesPrice || null,
+        qty: 1,
+        barcodeId: barcode.id,
+      };
+    }),
   );
   const childRecordReturn = await prisma.salesReturn.count({
     where: {
@@ -355,6 +380,7 @@ async function getOne(id) {
       ...data,
       SalesEntryItems: salesWithStkQty,
       childRecordReturn: childRecordReturn,
+      barcodes: barcodeWithRate,
     },
   };
 }
@@ -1062,8 +1088,14 @@ async function getSalesDcDetail(req) {
         where: {
           id: barcode.styleId,
         },
+        include: {
+          Hsn: {
+            select: {
+              taxPerc: true,
+            },
+          },
+        },
       });
-      console.log(barcode, "barcode");
       return {
         barcodeNo: barcode.barcodeNo,
         styleId: barcode.styleId,
@@ -1074,6 +1106,7 @@ async function getSalesDcDetail(req) {
         salesEntryItemsId: barcode.salesEntryItemsId,
         barcodeSeqId: barcode.barcodeSeqId,
         rate: style?.salesPrice || null,
+        taxPercent: style?.Hsn?.taxPerc ?? 5,
         qty: 1,
         barcodeId: barcode.id,
       };

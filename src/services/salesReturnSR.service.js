@@ -603,12 +603,35 @@ async function updateSalesReturnItems(
 }
 
 async function remove(id) {
-  const data = await prisma.salesReturnSR.delete({
-    where: {
-      id: parseInt(id),
-    },
+  return await prisma.$transaction(async (tx) => {
+    const singleData = await tx.salesReturnSR.findUnique({
+      where: {
+        id: parseInt(id),
+      },
+      include: {
+        salesReturnSRItems: true,
+      },
+    });
+    for (const item of singleData.salesReturnSRItems) {
+      await tx.stockSummary.updateMany({
+        where: {
+          barcodeId: item.barcodeId,
+          branchId: singleData.branchId,
+        },
+        data: {
+          qty: {
+            decrement: item.returnQty || 0,
+          },
+        },
+      });
+    }
+    const data = await tx.salesReturnSR.delete({
+      where: {
+        id: parseInt(id),
+      },
+    });
+    return { statusCode: 0, data };
   });
-  return { statusCode: 0, data };
 }
 
 export { get, getOne, create, update, remove };

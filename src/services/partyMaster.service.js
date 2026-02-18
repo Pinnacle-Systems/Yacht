@@ -2,7 +2,6 @@ import { prisma } from "../lib/prisma.js";
 import { NoRecordFound } from "../configs/Responses.js";
 import { exclude, getRemovedItems } from "../utils/helper.js";
 
-
 async function get(req) {
   const { companyId, active } = req.query;
 
@@ -36,6 +35,14 @@ async function getOne(id) {
   const childRecordPurchaseReturn = await prisma.purchaseReturn.count({
     where: { supplierId: parseInt(id) },
   });
+  const childRecordSRPurchase = await prisma.purchaseBill.count({
+    where: { supplierId: parseInt(id) },
+  });
+  const childRecordSRPurchaseReturn = await prisma.purchaseReturnShowRoom.count(
+    {
+      where: { supplierId: parseInt(id) },
+    },
+  );
   const data = await prisma.party.findUnique({
     where: {
       id: parseInt(id),
@@ -54,9 +61,14 @@ async function getOne(id) {
     statusCode: 0,
     data: {
       ...data,
-      childRecord: childRecordSales,
+      // childRecord: childRecordSales,
       childRecordPurchase: childRecordPurchase,
-      childRecord: childRecordSalesReturn + childRecordPurchaseReturn + childRecordSales + childRecordPurchase
+      childRecord:
+        childRecordSalesReturn +
+        childRecordPurchaseReturn +
+        childRecordSales +
+        childRecordPurchase,
+      childRecordShowroom: childRecordSRPurchase + childRecordSRPurchaseReturn,
     },
   };
 }

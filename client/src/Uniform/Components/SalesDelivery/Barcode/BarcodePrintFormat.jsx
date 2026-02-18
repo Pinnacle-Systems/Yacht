@@ -17,9 +17,9 @@ const chunkArray = (arr, size) => {
 };
 
 const BarCodePrintFormat = ({
-  data,
+  data = [],
   labelConfig = {
-    labelWidth: 25, // mm
+    labelWidth: 35, // mm
     labelHeight: 20, // mm
     stickersPerRow: 2,
     horizontalGap: 1, // mm
@@ -39,10 +39,9 @@ const BarCodePrintFormat = ({
   const allBarcodes = data.flatMap((item) =>
     Array.from({ length: parseInt(item?.qty || 0) }, () => ({
       barcodeNo: item.barcodeNo,
-      styleNo: item.styleNo,
       styleName: findFromList(item.styleItemId, styleItemList?.data, "name"),
       sizeName: findFromList(item.sizeId, sizeList?.data, "name"),
-      rate: item.price
+      rate: item.rate
     }))
   );
 

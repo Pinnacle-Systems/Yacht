@@ -93,6 +93,7 @@ const salesBillApi = createApi({
 export const {
   useGetSalesBillQuery,
   useGetSalesBillByIdQuery,
+  useLazyGetSalesBillByIdQuery,
   useLazyGetSalesBillDetailQuery,
   useAddSalesBillMutation,
   useUpdateSalesBillMutation,

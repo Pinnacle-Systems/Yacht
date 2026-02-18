@@ -1,5 +1,6 @@
 import { ErrorResponse } from "../configs/Responses.js";
 import { prisma } from "../lib/prisma.js";
+import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 
 async function getSRBarcodeDetail(req) {
   const { barcodeNo } = req.query;
@@ -18,7 +19,6 @@ async function getSRBarcodeDetail(req) {
       sizeId: true,
       styleItemId: true,
       qty: true,
-      rate: true,
     },
   });
 
@@ -31,10 +31,125 @@ async function getSRBarcodeDetail(req) {
     return ErrorResponse("Barcode Number Does Not Exist");
   }
 
+  const style = await prisma.style.findUnique({
+    where: {
+      id: data.styleId,
+    },
+    include: {
+      Hsn: {
+        select: {
+          taxPerc: true,
+        },
+      },
+    },
+  });
+
   return {
     statusCode: 0,
-    data: { ...data },
+    data: {
+      ...data,
+      rate: style?.salesPrice ?? null,
+      taxPercent: style?.Hsn?.taxPerc ?? 5,
+    },
   };
 }
 
-export { getSRBarcodeDetail };
+async function get(req) {
+  const {
+    locationId,
+    pagination,
+    pageNumber,
+    dataPerPage,
+    finYearId,
+    styleId,
+    sizeId,
+    styleItemId,
+    colorId,
+    barcodeId,
+  } = req.query;
+
+  let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+  let data;
+  let totalCount;
+  let totalQty;
+  data = await prisma.stockSummary.groupBy({
+    where: {
+      branchId: locationId ? parseInt(locationId) : undefined,
+      styleId: styleId ? parseInt(styleId) : undefined,
+      sizeId: sizeId ? parseInt(sizeId) : undefined,
+      styleItemId: styleItemId ? parseInt(styleItemId) : undefined,
+      colorId: colorId ? parseInt(colorId) : undefined,
+      barcodeId: barcodeId ? parseInt(barcodeId) : undefined,
+      AND: finYearDate
+        ? [
+            {
+              createdAt: {
+                gte: finYearDate.startTime,
+              },
+            },
+            {
+              createdAt: {
+                lte: finYearDate.endTime,
+              },
+            },
+          ]
+        : undefined,
+    },
+    by: [
+      "styleId",
+      "sizeId",
+      "styleItemId",
+      "barcodeId",
+      "colorId",
+      "barcodeNo",
+      "branchId",
+    ],
+    _sum: {
+      qty: true,
+    },
+    orderBy: {
+      barcodeNo: "asc",
+    },
+  });
+  totalCount = data.length;
+  totalQty = data?.reduce((sum, item) => sum + (item._sum?.qty || 0), 0);
+  // if (pagination) {
+  //   data = data.slice(
+  //     (pageNumber - 1) * parseInt(dataPerPage),
+  //     pageNumber * dataPerPage
+  //   );
+  // }
+  return {
+    statusCode: 0,
+    data: data.map((d) => ({
+      styleId: d.styleId,
+      sizeId: d.sizeId,
+      qty: d._sum.qty,
+      barcodeNo: d.barcodeNo,
+      styleItemId: d.styleItemId,
+      colorId: d.colorId,
+      branchId: d.branchId,
+    })),
+    totalCount,
+    totalQty,
+  };
+}
+
+async function getBarcodeList(req) {
+  const { branchId } = req.query;
+  const data = await prisma.stockSummary.findMany({
+    where: {
+      branchId: parseInt(branchId),
+    },
+    orderBy: {
+      barcodeNo: "asc",
+    },
+    select: {
+      barcodeId: true,
+      barcodeNo: true,
+    },
+  });
+  return { statusCode: 0, data };
+}
+
+export { getSRBarcodeDetail, get, getBarcodeList };

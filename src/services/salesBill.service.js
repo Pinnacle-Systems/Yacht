@@ -141,10 +141,8 @@ async function get(req) {
 }
 
 async function getOne(id) {
-  const childRecord = 0;
-
   // Fetch PO with relations
-  let salesBill = await prisma.salesBill.findUnique({
+  let data = await prisma.salesBill.findUnique({
     where: { id: parseInt(id) },
     include: {
       salesBillItems: true,
@@ -157,12 +155,33 @@ async function getOne(id) {
     },
   });
 
-  if (!salesBill) return NoRecordFound("salesBill");
-
+  if (!data) return NoRecordFound("salesBill");
+  const itemsWithUsedQty = await Promise.all(
+    data.salesBillItems.map(async (item) => {
+      const childRecordReturn = await prisma.salesReturnSRItems.count({
+        where: {
+          barcodeId: item.barcodeId,
+        },
+      });
+      return {
+        ...item,
+        usedQty: childRecordReturn || 0,
+      };
+    }),
+  );
+  const barcodeIds = data.salesBillItems
+    .map((item) => item.barcodeId)
+    .filter(Boolean);
+  const childRecord = await prisma.salesReturnSRItems.count({
+    where: {
+      barcodeId: { in: barcodeIds },
+    },
+  });
   return {
     statusCode: 0,
     data: {
-      ...salesBill,
+      ...data,
+      salesBillItems: itemsWithUsedQty,
       childRecord,
     },
   };
@@ -667,12 +686,35 @@ async function updateSalesBillItems(
 }
 
 async function remove(id) {
-  const data = await prisma.salesBill.delete({
-    where: {
-      id: parseInt(id),
-    },
+  return await prisma.$transaction(async (tx) => {
+    const singleData = await tx.salesBill.findUnique({
+      where: {
+        id: parseInt(id),
+      },
+      include: {
+        salesBillItems: true,
+      },
+    });
+    for (const item of singleData.salesBillItems) {
+      await tx.stockSummary.updateMany({
+        where: {
+          barcodeId: item.barcodeId,
+          branchId: singleData.branchId,
+        },
+        data: {
+          qty: {
+            increment: item.qty || 0,
+          },
+        },
+      });
+    }
+    const data = await tx.salesBill.delete({
+      where: {
+        id: parseInt(id),
+      },
+    });
+    return { statusCode: 0, data };
   });
-  return { statusCode: 0, data };
 }
 
 async function getSalesBillDetail(req) {

@@ -18,7 +18,7 @@ const TaxDetailsFullTemplate = ({
 
   const { data, isLoading, isFetching } = useGetTaxTemplateByIdQuery(
     taxTypeId,
-    { skip: !taxTypeId }
+    { skip: !taxTypeId },
   );
 
   const {
@@ -49,24 +49,24 @@ const TaxDetailsFullTemplate = ({
     (id) => {
       if (!taxTermMaster) return "";
       let data = taxTermMaster.data.find(
-        (t) => parseInt(t.id) === parseInt(id)
+        (t) => parseInt(t.id) === parseInt(id),
       );
       if (!data) return "";
       return data.name;
     },
-    [taxTermMaster]
+    [taxTermMaster],
   );
 
   const getIsPoItem = useCallback(
     (id) => {
       if (!taxTermMaster) return false;
       let data = taxTermMaster.data.find(
-        (t) => parseInt(t.id) === parseInt(id)
+        (t) => parseInt(t.id) === parseInt(id),
       );
       if (!data) return false;
       return data.isPoWise;
     },
-    [taxTermMaster]
+    [taxTermMaster],
   );
   useEffect(() => {
     if (data && taxTermMaster) {
@@ -79,7 +79,7 @@ const TaxDetailsFullTemplate = ({
             value: f.value,
             amount: f.amount,
           };
-        })
+        }),
       );
     }
   }, [
@@ -145,15 +145,7 @@ const TaxDetailsFullTemplate = ({
         <tbody>
           <tr className="h-7">
             <td className="border border-gray-500">Tax</td>
-            <td
-              className="border border-gray-500"
-              colSpan={2}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  setCurrentSelectedIndex("");
-                }
-              }}
-            >
+            <td className="border border-gray-500" colSpan={2}>
               <input
                 type="text"
                 autoFocus
@@ -197,6 +189,11 @@ const TaxDetailsFullTemplate = ({
                 onChange={(e) =>
                   handleInputChange(e.target.value, index, "discountValue")
                 }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    setCurrentSelectedIndex("");
+                  }
+                }}
               />
             </td>
           </tr>

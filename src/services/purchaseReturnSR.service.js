@@ -172,7 +172,6 @@ async function getOne(id) {
       Supplier: true,
     },
   });
-  console.log(data, "data");
   if (!data) return NoRecordFound("purchaseReturnShowRoom");
   const purchaseReturnStkQty = await Promise.all(
     data.purchasReturnItemsSRs?.map(async (item) => {
@@ -669,13 +668,35 @@ async function updatePurchaseReturnItems(
 }
 
 async function remove(id) {
-  const data = await prisma.purchaseReturnShowRoom.delete({
-    where: {
-      id: parseInt(id),
-    },
+  return await prisma.$transaction(async (tx) => {
+    const singleData = await tx.purchaseReturnShowRoom.findUnique({
+      where: {
+        id: parseInt(id),
+      },
+      include: {
+        purchasReturnItemsSRs: true,
+      },
+    });
+    for (const item of singleData.purchasReturnItemsSRs) {
+      await tx.stockSummary.updateMany({
+        where: {
+          barcodeId: item.barcodeId,
+          branchId: singleData.branchId,
+        },
+        data: {
+          qty: {
+            increment: item.returnQty || 0,
+          },
+        },
+      });
+    }
+    const data = await tx.purchaseReturnShowRoom.delete({
+      where: {
+        id: parseInt(id),
+      },
+    });
+    return { statusCode: 0, data };
   });
-
-  return { statusCode: 0, data };
 }
 
 export { remove, get, getOne, create, update };

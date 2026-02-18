@@ -68,7 +68,7 @@ export function SalesBillForm({
   const [roundOff, setRoundOff] = useState("");
   const { companyId, userId, finYearId, branchId } = getCommonParams();
   const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
-
+  const [barcodes, setBarcodes] = useState([]);
   const dispatch = useDispatch();
   const isLoadingIndicator = isSingleFetching || isSingleLoading;
 
@@ -220,6 +220,7 @@ export function SalesBillForm({
       setSalesType(data?.salesType ? data?.salesType : "");
       setOverAllDisc(data?.overAllDisc ? data?.overAllDisc : "");
       setRoundOff(data?.roundOff ? data?.roundOff : "");
+      setBarcodes(data?.barcodes ? data?.barcodes : [])
     },
     [id],
   );
@@ -395,9 +396,7 @@ export function SalesBillForm({
             onClose={() => setBarcodePrintOpen(false)}
             widthClass={"px-2 h-[90%] w-[90%]"}
           >
-            <BarCodePrintFormat
-              data={salesEntryItems.filter((i) => i?.barcodeNo)}
-            />
+              <BarCodePrintFormat data={barcodes} />
           </Modal>
           <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
             <div className="flex justify-between items-center mb-1">

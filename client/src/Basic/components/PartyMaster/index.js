@@ -92,13 +92,13 @@ export default function Form({ partyId, onCloseForm }) {
   const childRecord = useRef(0);
   const dispatch = useDispatch();
   const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
+    sessionStorage.getItem("sessionId") + "userCompanyId",
   );
 
   let accessoryItemsMasterList;
 
   const userId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userId"
+    sessionStorage.getItem("sessionId") + "userId",
   );
   const params = {
     companyId,
@@ -113,7 +113,7 @@ export default function Form({ partyId, onCloseForm }) {
   } = useGetPartyQuery({ params, searchParams: searchValue });
 
   const activeTab = useSelector(
-    (state) => state.openTabs.tabs.find((tab) => tab.active).name
+    (state) => state.openTabs.tabs.find((tab) => tab.active).name,
   );
 
   const {
@@ -203,7 +203,7 @@ export default function Form({ partyId, onCloseForm }) {
         setGstNo(data?.gstNo || "");
         setCostCode(data?.costCode || "");
         setCstDate(
-          data?.cstDate ? moment.utc(data?.cstDate).format("YYYY-MM-DD") : ""
+          data?.cstDate ? moment.utc(data?.cstDate).format("YYYY-MM-DD") : "",
         );
         setPayTermId(data?.payTermId);
         setCode(data?.code || "");
@@ -211,16 +211,16 @@ export default function Form({ partyId, onCloseForm }) {
         setWebsite(data?.website || "");
         setEmail(data?.email || "");
         setCity(data?.cityId || "");
-        setActive(id ? data?.active ?? false : true);
+        setActive(id ? (data?.active ?? false) : true);
         setSupplier(data?.yarn || false);
         setClient(data?.fabric || false);
         setAccessoryGroup(data?.accessoryGroup || false);
         setAccessoryItemList(
           data?.PartyOnAccessoryItems
             ? data.PartyOnAccessoryItems.map((item) =>
-                parseInt(item.accessoryItemId)
+                parseInt(item.accessoryItemId),
               )
-            : []
+            : [],
         );
         setPriceTemplateId(data?.priceTemplateId || "");
         setShippingAddress(data?.ShippingAddress ? data?.ShippingAddress : []);
@@ -247,12 +247,12 @@ export default function Form({ partyId, onCloseForm }) {
                   label: findFromList(item.processId, processList.data, "name"),
                 };
               })
-            : []
+            : [],
         );
         childRecord.current = data?.childRecord ? data?.childRecord : 0;
       }
     },
-    [id]
+    [id],
   );
 
   useEffect(() => {
@@ -370,7 +370,7 @@ export default function Form({ partyId, onCloseForm }) {
     if (accessoryGroup) {
       if (accessoryItemsMasterList) {
         setAccessoryItemList(
-          accessoryItemsMasterList.data.map((item) => parseInt(item.id))
+          accessoryItemsMasterList.data.map((item) => parseInt(item.id)),
         );
       }
     }
@@ -383,11 +383,12 @@ export default function Form({ partyId, onCloseForm }) {
         ?.filter((i) => i.id !== id)
         ?.some(
           (item) =>
-            item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+            item.name?.trim().toLowerCase() === name?.trim().toLowerCase(),
         );
     } else {
       foundItem = allData?.data?.some(
-        (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+        (item) =>
+          item.name?.trim().toLowerCase() === name?.trim().toLowerCase(),
       );
     }
 
@@ -446,6 +447,12 @@ export default function Form({ partyId, onCloseForm }) {
         Swal.fire({
           icon: "error",
           title: "Child record Exists",
+          text: "Data cannot be deleted!",
+        });
+      } else if (data?.data?.childRecordShowroom) {
+        Swal.fire({
+          icon: "error",
+          title: "Child record Exists in Purchase Transactions",
           text: "Data cannot be deleted!",
         });
       } else {
@@ -826,7 +833,7 @@ export default function Form({ partyId, onCloseForm }) {
                               ? cityList?.data
                               : cityList?.data?.filter((item) => item.active),
                             "name",
-                            "id"
+                            "id",
                           )}
                           country={country}
                           masterName="CITY MASTER"
@@ -959,11 +966,11 @@ export default function Form({ partyId, onCloseForm }) {
                               ? id
                                 ? payTermList?.data
                                 : payTermList?.data?.filter(
-                                    (item) => item.active
+                                    (item) => item.active,
                                   )
                               : [],
                             "name",
-                            "id"
+                            "id",
                           )}
                           value={payTermId}
                           setValue={setPayTermId}

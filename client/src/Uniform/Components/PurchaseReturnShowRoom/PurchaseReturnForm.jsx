@@ -20,7 +20,8 @@ import { useDispatch } from "react-redux";
 import { Loader } from "../../../Basic/components";
 import secureLocalStorage from "react-secure-storage";
 import { useAddPurchaseReturnShowroomMutation, useDeletePurchaseReturnShowroomMutation, useGetPurchaseReturnShowroomByIdQuery, useGetPurchaseReturnShowroomQuery, useUpdatePurchaseReturnShowroomMutation } from "../../../redux/services/PurchaseReturnShowroomService";
-import { useGetPurchaseBillQuery } from "../../../redux/services/PurchaseBillService";
+import purchaseBillApi, { useGetPurchaseBillQuery } from "../../../redux/services/PurchaseBillService";
+import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
 
 const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
     sizeList,
@@ -134,6 +135,8 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                         Swal.showLoading();
                     },
                 });
+                dispatch(purchaseBillApi.util.invalidateTags(["PurchaseBill"]));
+                dispatch(showroomStockApi.util.invalidateTags(["showroomStock"]));
             } else {
                 toast.error(returnData?.message);
             }
@@ -260,7 +263,6 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
         } else {
             handleSubmitCustom(addData, data, "Added", nextProcess);
         }
-        // dispatch(purchaseReturnApi.util.invalidateTags(["PurchaseReturn"]));
     };
 
     useEffect(() => {

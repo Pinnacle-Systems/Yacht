@@ -175,10 +175,8 @@ async function get(req) {
 }
 
 async function getOne(id) {
-  const childRecord = 0;
-
   // Fetch PO with relations
-  let purchaseBill = await prisma.purchaseBill.findUnique({
+  let data = await prisma.purchaseBill.findUnique({
     where: { id: parseInt(id) },
     include: {
       purchaseBillItems: true,
@@ -197,13 +195,46 @@ async function getOne(id) {
     },
   });
 
-  if (!purchaseBill) return NoRecordFound("purchaseBill");
+  if (!data) return NoRecordFound("purchaseBill");
+  const itemsWithUsedQty = await Promise.all(
+    data.purchaseBillItems.map(async (item) => {
+      const childRecordSales = await prisma.salesBillItems.count({
+        where: {
+          barcodeId: item.barcodeId,
+        },
+      });
+      const childRecordReturn = await prisma.purchasReturnItemsSR.count({
+        where: {
+          barcodeId: item.barcodeId,
+        },
+      });
+      return {
+        ...item,
+        usedQty: childRecordSales + childRecordReturn || 0,
+      };
+    }),
+  );
+  const barcodeIds = data.purchaseBillItems
+    .map((item) => item.barcodeId)
+    .filter(Boolean);
+  const childRecordReturn = await prisma.purchasReturnItemsSR.count({
+    where: {
+      barcodeId: { in: barcodeIds },
+    },
+  });
 
+  const childRecordSales = await prisma.salesBillItems.count({
+    where: {
+      barcodeId: { in: barcodeIds },
+    },
+  });
   return {
     statusCode: 0,
     data: {
-      ...purchaseBill,
-      childRecord,
+      ...data,
+      purchaseBillItems: itemsWithUsedQty,
+      childRecordReturn: childRecordReturn,
+      childRecordSales: childRecordSales,
     },
   };
 }
@@ -835,12 +866,30 @@ async function updatePurchaseBillItems(
 }
 
 async function remove(id) {
-  const data = await prisma.purchaseBill.delete({
-    where: {
-      id: parseInt(id),
-    },
+  return await prisma.$transaction(async (tx) => {
+    const singleData = await tx.purchaseBill.findUnique({
+      where: {
+        id: parseInt(id),
+      },
+      include: {
+        purchaseBillItems: true,
+      },
+    });
+    for (const item of singleData.purchaseBillItems) {
+      await tx.stockSummary.deleteMany({
+        where: {
+          barcodeId: item.barcodeId,
+          branchId: singleData.branchId,
+        },
+      });
+    }
+    const data = await tx.purchaseBill.delete({
+      where: {
+        id: parseInt(id),
+      },
+    });
+    return { statusCode: 0, data };
   });
-  return { statusCode: 0, data };
 }
 
 function manualFilterSearchDatapurchaseBillItems(
@@ -994,11 +1043,23 @@ async function getBarcodeDetail(req) {
     where: {
       id: data.styleId,
     },
+    include: {
+      Hsn: {
+        select: {
+          taxPerc: true,
+        },
+      },
+    },
   });
 
   return {
     statusCode: 0,
-    data: { ...data, rate: style?.salesPrice ?? null, qty: 1 },
+    data: {
+      ...data,
+      rate: style?.salesPrice ?? null,
+      qty: 1,
+      taxPercent: style?.Hsn?.taxPerc ?? 5,
+    },
   };
 }
 

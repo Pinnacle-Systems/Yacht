@@ -24,7 +24,8 @@ import {
   useLazyGetSalesBillDetailQuery,
 } from "../../../redux/services/SalesBillService";
 import { DropdownNew } from "../../../Inputs";
-
+import salesBillApi from "../../../redux/services/SalesBillService";
+import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
 export function SalesReturnForm({
   onClose,
   id,
@@ -208,6 +209,8 @@ export function SalesReturnForm({
             Swal.showLoading();
           },
         });
+        dispatch(salesBillApi.util.invalidateTags(["SalesBill"]));
+        dispatch(showroomStockApi.util.invalidateTags(["showroomStock"]));
       } else {
         toast.error(returnData?.message);
       }

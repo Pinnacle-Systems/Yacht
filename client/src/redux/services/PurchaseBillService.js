@@ -106,6 +106,7 @@ const purchaseBillApi = createApi({
 export const {
   useGetPurchaseBillQuery,
   useGetPurchaseBillByIdQuery,
+  useLazyGetPurchaseBillByIdQuery,
   useGetPurBillItemsQuery,
   useLazyGetProdBarcodeDetailQuery,
   useAddPurchaseBillMutation,

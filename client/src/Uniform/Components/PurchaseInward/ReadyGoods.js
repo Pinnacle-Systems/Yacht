@@ -264,7 +264,7 @@ export default function ReadyGoods({
               <tr>
                 <th className="w-12 px-1 py-1 justify-center font-medium text-[13px]">
                   {/* <tr className="flex items-center justify-center">Select</tr> */}
-                  <tr className="flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-center gap-2">
                     <input
                       type="checkbox"
                       checked={
@@ -291,7 +291,7 @@ export default function ReadyGoods({
                       tabIndex={-1}
                       disabled={readOnly}
                     />
-                  </tr>
+                  </div>
                 </th>
                 <th
                   className={`w-12 px-4 py-2 text-center font-medium text-[13px]`}

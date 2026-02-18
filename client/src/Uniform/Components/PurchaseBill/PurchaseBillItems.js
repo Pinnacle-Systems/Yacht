@@ -51,7 +51,7 @@ export default function PurchaseBillItems({
 
   const deleteSelectedRows = () => {
     setPurchaseBillItems((rows) =>
-      rows.filter((r) => !(r.selected && (r.stockQty ?? 0) === 0)),
+      rows.filter((r) => !(r.selected && (r.usedQty ?? 0) === 0)),
     );
     setContextMenu(null);
   };
@@ -194,6 +194,7 @@ export default function PurchaseBillItems({
           rate: data.rate,
           barcodeId: data.id,
           styleId: data.styleId,
+          taxPercent: data.taxPercent,
         };
 
         // Add new row if last
@@ -277,14 +278,14 @@ export default function PurchaseBillItems({
                       checked={
                         purchaseBillItems.length > 0 &&
                         purchaseBillItems
-                          .filter((row) => (row.returnQty ?? 0) === 0)
+                          .filter((row) => (row.usedQty ?? 0) === 0)
                           .every((row) => row.selected)
                       }
                       onChange={(e) => {
                         const checked = e.target.checked;
                         setPurchaseBillItems((prev) =>
                           prev.map((row) =>
-                            (row.returnQty ?? 0) > 0
+                            (row.usedQty ?? 0) > 0
                               ? row
                               : { ...row, selected: checked },
                           ),
@@ -378,7 +379,7 @@ export default function PurchaseBillItems({
                       <input
                         type="checkbox"
                         checked={row.selected || false}
-                        disabled={readOnly || (row.returnQty ?? 0) > 0}
+                        disabled={readOnly || (row.usedQty ?? 0) > 0}
                         onChange={(e) =>
                           handleInputChange(e.target.checked, index, "selected")
                         }
@@ -451,7 +452,7 @@ export default function PurchaseBillItems({
                             });
                           }
                         }}
-                        disabled={readOnly || dcNo}
+                        disabled={readOnly || dcNo || row.styleItemId}
                       />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">

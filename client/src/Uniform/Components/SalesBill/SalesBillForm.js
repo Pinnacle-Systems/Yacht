@@ -28,7 +28,8 @@ import SalesBillItems from "./SalesBillItems";
 import SalesBillSummary from "./SalesBillSummary";
 import CustomerSearchComponent from "./CustomerSearchComponent";
 import { useGetCustomerByIdQuery } from "../../../redux/services/CustomerMasterService";
-
+import purchaseBillApi from "../../../redux/services/PurchaseBillService";
+import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
 export function SalesBillForm({
   onClose,
   id,
@@ -249,6 +250,8 @@ export function SalesBillForm({
             Swal.showLoading();
           },
         });
+        dispatch(purchaseBillApi.util.invalidateTags(["PurchaseBill"]));
+        dispatch(showroomStockApi.util.invalidateTags(["showroomStock"]));
       } else {
         toast.error(returnData?.message);
       }

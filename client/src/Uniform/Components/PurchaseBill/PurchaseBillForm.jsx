@@ -26,6 +26,7 @@ import secureLocalStorage from "react-secure-storage";
 import { useAddPurchaseBillMutation, useDeletePurchaseBillMutation, useGetPurchaseBillByIdQuery, useGetPurchaseBillQuery, useUpdatePurchaseBillMutation } from "../../../redux/services/PurchaseBillService";
 import PurchaseBillSummary from "./PurchaseBillSummary";
 import { useGetSalesEntryQuery, useLazyGetSalesDCDetailQuery } from "../../../redux/uniformService/SalesEntryService";
+import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
 
 const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     sizeList,
@@ -177,6 +178,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                         Swal.showLoading();
                     },
                 });
+                dispatch(showroomStockApi.util.invalidateTags(["showroomStock"]));
             } else {
                 Swal.fire({
                     icon: "warning",
@@ -268,19 +270,19 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         }
 
         // 4️⃣ Duplicate check
-            const duplicatesGoods = findDuplicateGoodss(filledGoodsItems);
-            if (duplicatesGoods.length > 0) {
-                const dup = duplicatesGoods[0];
-                Swal.fire({
-                    icon: "warning",
-                    title: "Duplicate Item Found",
-                    html: `
+        const duplicatesGoods = findDuplicateGoodss(filledGoodsItems);
+        if (duplicatesGoods.length > 0) {
+            const dup = duplicatesGoods[0];
+            Swal.fire({
+                icon: "warning",
+                title: "Duplicate Item Found",
+                html: `
             Barcode - ${dup?.barcodeNo},
             Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
           `,
-                });
-                return false;
-            }
+            });
+            return false;
+        }
 
         return true;
     };
@@ -290,34 +292,34 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         if (!validateData(data)) {
             return;
         }
-        // let foundItem;
-        // if (id) {
-        //     foundItem = allData?.data
-        //         ?.filter((i) => i.id !== id)
-        //         ?.find((item) => item.invNo?.trim().toLowerCase() === invNo?.trim().toLowerCase());
-        // } else {
-        //     foundItem = allData?.data?.find(
-        //         (item) => item.invNo?.trim().toLowerCase() === invNo?.trim().toLowerCase()
-        //     );
-        // }
-        // if (foundItem) {
+        let foundItem;
+        if (id) {
+            foundItem = allData?.data
+                ?.filter((i) => i.id !== id)
+                ?.find((item) => item.invNo?.trim().toLowerCase() === invNo?.trim().toLowerCase());
+        } else {
+            foundItem = allData?.data?.find(
+                (item) => item.invNo?.trim().toLowerCase() === invNo?.trim().toLowerCase()
+            );
+        }
+        if (foundItem) {
 
-        //     const hasDuplicateGoods = foundItem.purchaseBillItems?.some(existing =>
-        //         purchaseBillItems?.some(
-        //             current => Number(current.styleId) === Number(existing.styleId) && Number(current.sizeId) === Number(existing.sizeId)
-        //         )
-        //     );
-        //     if (hasDuplicateGoods) {
-        //         Swal.fire({
-        //             text: `Duplicate Style and Size already exists in this Invoice.`,
-        //             icon: "warning",
-        //             timer: 2000,
-        //             showConfirmButton: false,
-        //         });
-        //         return false;
-        //     }
+            const hasDuplicateGoods = foundItem.purchaseBillItems?.some(existing =>
+                purchaseBillItems?.some(
+                    current => Number(current.barcodeId) === Number(existing.barcodeId)
+                )
+            );
+            if (hasDuplicateGoods) {
+                Swal.fire({
+                    text: `Barcode No ${hasDuplicateGoods.barcodeNo} already exists in another Invoice.`,
+                    icon: "warning",
+                    timer: 2000,
+                    showConfirmButton: false,
+                });
+                return false;
+            }
 
-        // }
+        }
 
         if (!window.confirm("Are you sure save the details ...?")) {
             return;
@@ -341,7 +343,6 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         } else {
             handleSubmitCustom(addData, data, "Added", nextProcess);
         }
-        // dispatch(purchaseReturnApi.util.invalidateTags(["PurchaseReturn"]));
     };
 
     useEffect(() => {

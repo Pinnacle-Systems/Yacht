@@ -11,13 +11,16 @@ import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleI
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import PurchaseReturnFormReport from "./PurchaseReturnFormReport";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+import purchaseBillApi from "../../../redux/services/PurchaseBillService"
+import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
+
 const MODEL = "Purchase Return";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
   const [id, setId] = useState("");
   const [readOnly, setReadOnly] = useState(false);
-  //   const dispatch = useDispatch();
+  const dispatch = useDispatch();
   const { companyId, branchId } = getCommonParams();
   const params = {
     branchId,
@@ -65,6 +68,10 @@ export default function Form() {
           timer: 1000,
         });
         setShowForm(false);
+        dispatch(
+          purchaseBillApi.util.invalidateTags(["PurchaseBill"])
+        );
+        dispatch(showroomStockApi.util.invalidateTags(["showroomStock"]));
       } catch (error) {
         Swal.fire({
           icon: "error",

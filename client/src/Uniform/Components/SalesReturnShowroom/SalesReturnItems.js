@@ -160,7 +160,7 @@ export default function SalesReturnItems({
           <h2 className="font-medium text-slate-700">List of Items</h2>
           {!id && (
             <button
-              className={`font-bold text-slate-700 bord ml-[780px] text-sm bg-blue-500 rounded rounded-md text-white px-2
+              className={`font-bold text-slate-700 bord ml-[870px] text-sm bg-blue-500 rounded rounded-md text-white px-2
               `}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
