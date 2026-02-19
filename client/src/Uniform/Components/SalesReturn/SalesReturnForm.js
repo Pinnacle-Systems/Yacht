@@ -71,7 +71,7 @@ export default function SalesReturnForm({
   const { data: colorList } = useGetColorMasterQuery({ params: { companyId } });
   const storeOptions = locationData
     ? locationData.data.filter(
-        (item) => parseInt(item.locationId) === parseInt(locationId)
+        (item) => parseInt(item.locationId) === parseInt(locationId),
       )
     : [];
 
@@ -81,7 +81,7 @@ export default function SalesReturnForm({
 
     items.forEach((row, index) => {
       const key = [row.styleId || "", row.sizeId || "", row.colorId || ""].join(
-        "-"
+        "-",
       );
 
       if (seen.has(key)) {
@@ -104,7 +104,7 @@ export default function SalesReturnForm({
 
     // remove blank rows
     const filledItems = items.filter(
-      (item) => item.styleId || item.styleItemId || item.fabricId
+      (item) => item.styleId || item.styleItemId || item.fabricId,
     );
 
     const duplicates = findDuplicates(filledItems);
@@ -133,7 +133,7 @@ export default function SalesReturnForm({
         isGridDatasValid(
           data?.salesReturnItems.filter((item) => item?.styleId),
           false,
-          ["returnQty"]
+          ["returnQty"],
         )
       )
     ) {
@@ -173,7 +173,7 @@ export default function SalesReturnForm({
       setDocDate(
         data?.docDate
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
-          : moment.utc(today).format("YYYY-MM-DD")
+          : moment.utc(today).format("YYYY-MM-DD"),
       );
       setSalesReturnItems(data?.salesReturnItems ? data.salesReturnItems : []);
       if (data?.docId) {
@@ -184,7 +184,7 @@ export default function SalesReturnForm({
       setCustomerId(data?.customerId ? data?.customerId : "");
       setInvNo(data?.invNo ? data?.invNo : "");
     },
-    [id]
+    [id],
   );
 
   useEffect(() => {
@@ -244,14 +244,14 @@ export default function SalesReturnForm({
         addData,
         { ...data, draftSave: true },
         "Added",
-        nextProcess
+        nextProcess,
       );
     } else if (id && nextProcess == "draft") {
       handleSubmitCustom(
         updateData,
         { ...data, draftSave: true },
         "Updated",
-        nextProcess
+        nextProcess,
       );
     } else if (id) {
       handleSubmitCustom(updateData, data, "Updated", nextProcess);
@@ -434,13 +434,15 @@ export default function SalesReturnForm({
                 </button>
               </div>
               <div className="flex gap-2 flex-wrap">
-                <button
-                  className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                  onClick={() => setReadOnly(false)}
-                >
-                  <FiEdit2 className="w-4 h-4 mr-2" />
-                  Edit
-                </button>
+                {readOnly && (
+                  <button
+                    className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                    onClick={() => setReadOnly(false)}
+                  >
+                    <FiEdit2 className="w-4 h-4 mr-2" />
+                    Edit
+                  </button>
+                )}
                 <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
                   <FaWhatsapp className="w-4 h-4 mr-2" />
                   WhatsApp

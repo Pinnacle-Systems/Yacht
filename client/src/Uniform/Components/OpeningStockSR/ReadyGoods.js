@@ -3,18 +3,13 @@ import {
   useLazyGetStyleCodeDetailQuery,
 } from "../../../redux/uniformService/StyleMasterService";
 import { useEffect, useState } from "react";
-import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { ReusableInput } from "../../../Utils/CommonInput";
 import { useLazyGetSizeTemplateByIdQuery } from "../../../redux/uniformService/SizeTemplateMasterServices";
-import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
-import { findFromList } from "../../../Utils/helper";
-import { IMAGE_UPLOAD_URL } from "../../../Constants";
 import secureLocalStorage from "react-secure-storage";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
-import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
-import { VIEW } from "../../../icons";
 import { toast } from "react-toastify";
 import FxSelect from "../../../Inputs";
+import { findFromList } from "../../../Utils/helper";
 
 export default function ReadyGoods({
   openingStockItems,
@@ -22,26 +17,22 @@ export default function ReadyGoods({
   params,
   readOnly,
   id,
+  styleList,
+  sizeList,
+  colorList,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [styleNo, setStyleNo] = useState("");
-  const [previewImage, setPreviewImage] = useState(null);
   const [getStyleCodeDetail] = useLazyGetStyleCodeDetailQuery();
   const [styleTemplateDetail] = useLazyGetSizeTemplateByIdQuery();
-  const { data: styleList } = useGetStyleMasterQuery({ params });
-  const { data: sizeList } = useGetSizeMasterQuery({ params });
-  const { data: colorList } = useGetColorMasterQuery({ params });
-  const { data: fabricList } = useGetFabricMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
 
   const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
+    sessionStorage.getItem("sessionId") + "userCompanyId",
   );
 
   const addRow = () => {
     const newRow = {
-      styleNo: "",
-      fabricId: "",
       styleId: "",
       sizeId: "",
       qty: "",
@@ -70,7 +61,7 @@ export default function ReadyGoods({
 
   const deleteSelectedRows = () => {
     setOpeningStockItems((rows) =>
-      rows.filter((r) => !(r.selected && (r.stockQty ?? 0) === 0))
+      rows.filter((r) => !(r.selected && (r.stockQty ?? 0) === 0)),
     );
     setContextMenu(null);
   };
@@ -101,13 +92,11 @@ export default function ReadyGoods({
       setOpeningStockItems((prev) => {
         const filledRows = prev.length;
 
-        if (filledRows < 6) {
+        if (filledRows < 5) {
           // add empty rows until total becomes 6
           return [
             ...prev,
-            ...Array.from({ length: 6 - filledRows }, () => ({
-              styleNo: "",
-              fabricId: "",
+            ...Array.from({ length: 5 - filledRows }, () => ({
               styleId: "",
               sizeId: "",
               qty: "",
@@ -123,9 +112,7 @@ export default function ReadyGoods({
     } else {
       // if null/undefined, initialize with 6 empty rows
       setOpeningStockItems(
-        Array.from({ length: 6 }, () => ({
-          styleNo: "",
-          fabricId: "",
+        Array.from({ length: 5 }, () => ({
           styleId: "",
           sizeId: "",
           qty: "",
@@ -133,27 +120,28 @@ export default function ReadyGoods({
           styleItemId: "",
           colorId: "",
           selected: false,
-        }))
+        })),
       );
     }
   }, [openingStockItems, setOpeningStockItems]);
 
   const handleAddRow = async () => {
-    const isFirstTime = openingStockItems.every((row) => !row.styleNo);
+    const isFirstTime = openingStockItems.every((row) => !row.styleId);
 
     if (!isFirstTime) {
       // const hasEmpty = openingStockItems.some((row) => !row.qty);
       const hasEmpty = openingStockItems.some((row) => {
         const hasStyle =
-          row.styleNo !== "" &&
-          row.styleNo !== null &&
-          row.styleNo !== undefined;
+          row.styleId !== "" &&
+          row.styleId !== null &&
+          row.styleId !== undefined;
 
         return hasStyle && !row.qty;
       });
       if (hasEmpty) {
         toast.info("Please fill all required fields...!", {
           position: "top-center",
+          autoClose: 2000,
         });
         return;
       }
@@ -176,8 +164,6 @@ export default function ReadyGoods({
 
         if (sizeData?.data?.SizeTemplateList?.length) {
           sizeRows = sizeData.data.SizeTemplateList.map((s) => ({
-            styleNo: style.sku || "",
-            fabricId: style.fabricId || "",
             styleId: style.id || "",
             sizeId: s.sizeId,
             qty: "",
@@ -194,7 +180,7 @@ export default function ReadyGoods({
 
         // Find first empty slot index
         let startIndex = updated.findIndex(
-          (row) => !row.styleId && !row.sizeId && !row.styleNo && !row.fabricId
+          (row) => !row.styleId && !row.sizeId && !row.styleId,
         );
         if (startIndex === -1) startIndex = updated.length;
 
@@ -208,10 +194,8 @@ export default function ReadyGoods({
         });
 
         // Ensure at least 6 rows
-        while (updated.length < 6) {
+        while (updated.length < 5) {
           updated.push({
-            styleNo: "",
-            fabricId: "",
             styleId: "",
             sizeId: "",
             qty: "",
@@ -228,12 +212,6 @@ export default function ReadyGoods({
       console.error("Error adding row:", error);
     }
   };
-
-  function imageFormatter(styleId) {
-    const fileName = findFromList(styleId, styleList?.data, "img");
-    if (!fileName) return "/no-image.png"; // fallback image if missing
-    return `${IMAGE_UPLOAD_URL}${fileName}`;
-  }
 
   return (
     <>
@@ -254,11 +232,13 @@ export default function ReadyGoods({
             }}
           />
         </div>
-        <div className="flex justify-between items-center mb-2">
+        <div className="flex justify-between items-center mb-1">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
         </div>
-        <div className={`w-full max-h-[300px]  overflow-y-auto  my-1`}>
-          <table className="w-full border-collapse table-fixed">
+        <div
+          className={`w-full max-h-[230px] min-h-[230px] overflow-y-auto mb-2`}
+        >
+          <table className=" border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
                 <th className="w-12 px-1 py-1 justify-center font-medium text-[13px]">
@@ -278,8 +258,8 @@ export default function ReadyGoods({
                           prev.map((row) =>
                             (row.stockQty ?? 0) > 0
                               ? row
-                              : { ...row, selected: checked }
-                          )
+                              : { ...row, selected: checked },
+                          ),
                         );
                       }}
                       onContextMenu={(e) => {
@@ -306,16 +286,6 @@ export default function ReadyGoods({
                   className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style Item
-                </th>
-                <th
-                  className={`w-12 px-4 py-2 text-center  font-medium text-[13px]`}
-                >
-                  Img
-                </th>
-                <th
-                  className={`w-48 px-4 py-2 text-center font-medium text-[13px]`}
-                >
-                  Fabric
                 </th>
                 <th
                   className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
@@ -368,134 +338,38 @@ export default function ReadyGoods({
                     <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
                       {index + 1}
                     </td>
-                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                    <td className="py-0.5 border border-gray-300 text-[11px] ">
                       <input
-                        onKeyDown={(e) => {
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "styleNo");
-                          }
-                        }}
-                        type="string"
-                        className="text-left rounded py-1 px-1 w-full table-data-input"
-                        onFocus={(e) => e.target.select()}
-                        value={row?.styleNo}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "styleNo")
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "styleNo");
-                        }}
+                        className="text-left rounded py-1 px-1 w-full  select-none"
                         disabled={true}
+                        value={
+                          findFromList(row.styleId, styleList?.data, "sku") ||
+                          ""
+                        }
                       />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
-                      <select
-                        onKeyDown={(e) => {
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "styleItemId");
-                          }
-                        }}
-                        tabIndex={"0"}
+                      <input
+                        className="text-left rounded py-1 px-1 w-full  select-none"
                         disabled={true}
-                        className="text-left w-full rounded py-1 table-data-input"
-                        value={row.styleItemId}
-                        onChange={(e) =>
-                          handleInputChange(
-                            e.target.value,
-                            index,
-                            "styleItemId"
-                          )
+                        value={
+                          findFromList(
+                            row.styleItemId,
+                            styleItemList?.data,
+                            "name",
+                          ) || ""
                         }
-                        onBlur={(e) => {
-                          handleInputChange(
-                            e.target.value,
-                            index,
-                            "styleItemId"
-                          );
-                        }}
-                      >
-                        <option></option>
-                        {(id
-                          ? styleItemList?.data
-                          : styleItemList?.data?.filter((item) => item.active)
-                        )?.map((blend) => (
-                          <option value={blend.id} key={blend.id}>
-                            {blend?.name}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="border border-gray-300 py-0.5 text-center">
-                      {row?.styleId ? (
-                        <button
-                          className="text-xs"
-                          onClick={() => {
-                            setPreviewImage(imageFormatter(row?.styleId));
-                          }}
-                        >
-                          {VIEW}
-                        </button>
-                      ) : (
-                        <span className="text-xs pl-1"></span>
-                      )}
-                    </td>
-                    <td className="py-0.5 border border-gray-300 text-[11px] ">
-                      <select
-                        onKeyDown={(e) => {
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "fabricId");
-                          }
-                        }}
-                        tabIndex={"0"}
-                        disabled={true}
-                        className="text-left w-full rounded py-1 table-data-input"
-                        value={row.fabricId}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "fabricId")
-                        }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "fabricId");
-                        }}
-                      >
-                        <option></option>
-                        {(id
-                          ? fabricList?.data
-                          : fabricList?.data?.filter((item) => item.active)
-                        )?.map((blend) => (
-                          <option value={blend.id} key={blend.id}>
-                            {blend?.name}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px]">
-                      <select
-                        onKeyDown={(e) => {
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "sizeId");
-                          }
-                        }}
-                        tabIndex={"0"}
-                        disabled={true}
-                        className="text-left w-full rounded py-1 table-data-input"
-                        value={row.sizeId}
-                        onChange={(e) =>
-                          handleInputChange(e.target.value, index, "sizeId")
+                      <input
+                        className="text-left rounded py-1 px-1 w-full select-none"
+                        readOnly
+                        value={
+                          findFromList(row.sizeId, sizeList?.data, "name") || ""
                         }
-                        onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "sizeId");
-                        }}
-                      >
-                        <option></option>
-                        {(id
-                          ? sizeList?.data
-                          : sizeList?.data?.filter((item) => item.active)
-                        )?.map((blend) => (
-                          <option value={blend.id} key={blend.id}>
-                            {blend?.name}
-                          </option>
-                        ))}
-                      </select>
+                        disabled={true}
+                      />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px]">
                       <FxSelect
@@ -552,7 +426,7 @@ export default function ReadyGoods({
                             e.preventDefault(); // prevent form submit or line break
                             e.stopPropagation();
                             const nextQtyInput = document.querySelector(
-                              `#qty-input-${index + 1}`
+                              `#qty-input-${index + 1}`,
                             );
                             if (nextQtyInput) {
                               nextQtyInput.focus();
@@ -578,11 +452,6 @@ export default function ReadyGoods({
 
                     <td className="w-2 border border-gray-300">
                       <input
-                        // onContextMenu={(e) => {
-                        //   if (!readOnly) {
-                        //     handleRightClick(e, index, "notes");
-                        //   }
-                        // }}
                         className="w-full "
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
@@ -594,49 +463,27 @@ export default function ReadyGoods({
                       />
                     </td>
                   </tr>
-                )
+                ),
               )}
             </tbody>
             <tfoot>
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={8}
+                  colSpan={6}
                 >
                   Total Qty
                 </td>
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
                   {openingStockItems.reduce(
                     (sum, row) => sum + (Number(row.qty) || 0),
-                    0
+                    0,
                   )}
                 </td>
                 <td className="border border-gray-300" colSpan={2}></td>
               </tr>
             </tfoot>
           </table>
-          {previewImage && (
-            <div
-              className="fixed inset-0 flex items-center justify-center z-50 bg-black/40 backdrop-blur-sm"
-              onMouseEnter={() => setPreviewImage(previewImage)}
-              onMouseLeave={() => setPreviewImage(null)}
-            >
-              <div className="relative z-50 ">
-                <button
-                  className="absolute top-[-10px] right-[-10px] bg-red-600 rounded-full w-6 h-6 flex items-center justify-center text-white shadow-md hover:bg-red-700 transition"
-                  onClick={() => setPreviewImage(null)}
-                >
-                  ×
-                </button>
-
-                <img
-                  src={previewImage}
-                  alt="No Image...."
-                  className="max-h-[80vh] max-w-[80vw] rounded-lg shadow-lg"
-                />
-              </div>
-            </div>
-          )}
         </div>
         {contextMenu && (
           <div
@@ -656,22 +503,12 @@ export default function ReadyGoods({
               <button
                 className=" text-black text-[12px] text-left rounded px-1"
                 onClick={() => {
-                  // deleteRow(contextMenu.rowId);
                   deleteSelectedRows();
                   handleCloseContextMenu();
                 }}
               >
                 Delete
               </button>
-              {/* <button
-                className=" text-black text-[12px] text-left rounded px-1"
-                onClick={() => {
-                  handleDeleteAllRows();
-                  handleCloseContextMenu();
-                }}
-              >
-                Delete All
-              </button> */}
             </div>
           </div>
         )}

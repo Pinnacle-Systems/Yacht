@@ -1,40 +1,30 @@
 import { useCallback, useEffect, useState } from "react";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../../../Utils/CommonInput";
-import { DropdownInput } from "../../../Inputs";
-import { dropDownListObject } from "../../../Utils/contructObject";
-import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import {
   findFromList,
   getCommonParams,
   isGridDatasValid,
-  params,
 } from "../../../Utils/helper";
-import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import Swal from "sweetalert2";
-import { HiOutlineRefresh, HiX } from "react-icons/hi";
+import { HiOutlineRefresh } from "react-icons/hi";
 import ReadyGoods from "./ReadyGoods.js";
-import {
-  useAddOpeningStockMutation,
-  useGetOpeningStockByIdQuery,
-  useGetOpeningStockQuery,
-  useLazyGetOpeningStockByIdQuery,
-  useLazyGetOpeningStockQuery,
-  useUpdateOpeningStockMutation,
-} from "../../../redux/uniformService/OpeningStockService.js";
 import moment from "moment";
 import Modal from "../../../UiComponents/Modal/index.js";
-import BarCodePrintFormat from "./BarcodePrintFormat.jsx";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
-import StyleMasterApi, {
-  useGetStyleMasterQuery,
-} from "../../../redux/uniformService/StyleMasterService.js";
+import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService.js";
 import { Loader } from "../../../Basic/components/index.js";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService.js";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService.js";
-import stockApi from "../../../redux/services/StockService.js";
+import {
+  useAddOpeningStockSRMutation,
+  useGetOpeningStockSRByIdQuery,
+  useGetOpeningStockSRQuery,
+  useUpdateOpeningStockSRMutation,
+} from "../../../redux/uniformService/OpeningStockSRServices.js";
+import BarCodePrintFormat from "../SalesDelivery/Barcode/BarcodePrintFormat.jsx";
 
 export default function OpeningStockForm({
   onClose,
@@ -43,45 +33,31 @@ export default function OpeningStockForm({
   readOnly,
   setReadOnly,
   setShowForm,
-  isSingleFetching,
-  isSingleLoading,
-  singleData,
 }) {
   const [docId, setDocId] = useState("New");
   const [docDate, setDocDate] = useState("");
-  const [locationId, setLocationId] = useState("");
-  const [searchValue, setSearchValue] = useState("");
-  const [term, setTerm] = useState("");
-  const [notes, setNotes] = useState("");
-  const [storeId, setStoreId] = useState("");
   const [openingStockItems, setOpeningStockItems] = useState([]);
   const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
-  const [barCodePerPage, setBarCodePerPage] = useState(18);
   const [barcodeItems, setBarcodeItems] = useState([]);
 
   const dispatch = useDispatch();
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
 
-  const { data: branchList } = useGetBranchQuery({ params: { companyId } });
-
-  const { data: locationData } = useGetLocationMasterQuery({
-    params: { branchId },
-    searchParams: searchValue,
-  });
-
   const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
   const { data: sizeList } = useGetSizeMasterQuery({ params: { companyId } });
   const { data: colorList } = useGetColorMasterQuery({ params: { companyId } });
-
-  const [trigger, { data: allDataLazy, isFetchingLazy }] =
-    useLazyGetOpeningStockQuery();
+  const {
+    data: singleData,
+    isFetching: isSingleFetching,
+    isLoading: isSingleLoading,
+  } = useGetOpeningStockSRByIdQuery(id, { skip: !id });
 
   const {
     data: allData,
     isFetching,
     isLoading,
-  } = useGetOpeningStockQuery({
+  } = useGetOpeningStockSRQuery({
     params: {
       branchId,
     },
@@ -93,20 +69,16 @@ export default function OpeningStockForm({
       setDocDate(
         data?.docDate
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
-          : moment.utc(today).format("YYYY-MM-DD")
+          : moment.utc(today).format("YYYY-MM-DD"),
       );
       setOpeningStockItems(
-        data?.OpeningStockItems ? data.OpeningStockItems : []
+        data?.OpeningStockItems ? data.OpeningStockItems : [],
       );
       if (data?.docId) {
         setDocId(data?.docId);
       }
-      setLocationId(data?.locationId ? data?.locationId : branchId);
-      setStoreId(data?.storeId ? data.storeId : "");
-      setNotes(data?.notes ? data?.notes : "");
-      setTerm(data?.term ? data?.term : "");
     },
-    [id]
+    [id],
   );
 
   useEffect(() => {
@@ -117,14 +89,8 @@ export default function OpeningStockForm({
     }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-  const [addData] = useAddOpeningStockMutation();
-  const [updateData] = useUpdateOpeningStockMutation();
-
-  const storeOptions = locationData
-    ? locationData.data.filter(
-        (item) => parseInt(item.locationId) === parseInt(locationId)
-      )
-    : [];
+  const [addData] = useAddOpeningStockSRMutation();
+  const [updateData] = useUpdateOpeningStockSRMutation();
 
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
@@ -154,8 +120,6 @@ export default function OpeningStockForm({
             Swal.showLoading();
           },
         });
-        dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
-        dispatch(stockApi.util.invalidateTags(["Stock"]));
       } else {
         toast.error(returnData?.message, {
           autoClose: 2000,
@@ -172,7 +136,7 @@ export default function OpeningStockForm({
 
     items.forEach((row, index) => {
       const key = [row.styleId || "", row.sizeId || "", row.colorId || ""].join(
-        "-"
+        "-",
       );
 
       if (seen.has(key)) {
@@ -198,7 +162,7 @@ export default function OpeningStockForm({
 
     // remove blank rows
     const filledItems = items.filter(
-      (item) => item.styleId || item.styleItemId || item.fabricId
+      (item) => item.styleId || item.styleItemId || item.fabricId,
     );
     const duplicates = findDuplicates(filledItems);
     // duplicate check
@@ -221,16 +185,16 @@ export default function OpeningStockForm({
     if (
       !(
         data?.openingStockItems.length > 0 &&
-        data.storeId &&
         isGridDatasValid(
           data?.openingStockItems.filter((item) => item.styleId),
           false,
-          ["qty"]
+          ["qty"],
         )
       )
     ) {
       toast.info("Please fill all required fields...!", {
         position: "top-center",
+        autoClose: 2000,
       });
       return false;
     }
@@ -243,9 +207,9 @@ export default function OpeningStockForm({
 
       const existing = existingItems.find(
         (ex) =>
-          ex.styleNo === newItem.styleNo &&
+          ex.styleId === newItem.styleId &&
           ex.sizeId === newItem.sizeId &&
-          ex.colorId === newItem.colorId
+          ex.colorId === newItem.colorId,
       );
 
       if (existing) {
@@ -291,14 +255,14 @@ export default function OpeningStockForm({
         addData,
         { ...data, draftSave: true },
         "Added",
-        nextProcess
+        nextProcess,
       );
     } else if (id && nextProcess == "draft") {
       handleSubmitCustom(
         updateData,
         { ...data, draftSave: true },
         "Updated",
-        nextProcess
+        nextProcess,
       );
     } else if (id) {
       handleSubmitCustom(updateData, data, "Updated", nextProcess);
@@ -335,13 +299,9 @@ export default function OpeningStockForm({
     id,
     docDate,
     branchId,
-    storeId,
     openingStockItems: openingStockItems?.filter((item) => item?.styleId),
     userId,
     finYearId,
-    locationId,
-    term,
-    notes,
   };
 
   const handleKeyDown = (event) => {
@@ -360,9 +320,7 @@ export default function OpeningStockForm({
         <div onKeyDown={handleKeyDown}>
           <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
             <div className="flex justify-between items-center mb-1">
-              <h1 className="text-xl font-bold text-gray-800">
-                Opening Stock Details
-              </h1>
+              <h1 className="text-xl font-bold text-gray-800">Opening Stock</h1>
               <button
                 onClick={onClose}
                 className="text-indigo-600 hover:text-indigo-700"
@@ -372,8 +330,8 @@ export default function OpeningStockForm({
               </button>
             </div>
           </div>
-          <div className="space-y-3 mt-3">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div className="space-y-1 mt-1.5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
               <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                 <h2 className="font-medium text-slate-700 mb-2">
                   Basic Details
@@ -394,64 +352,20 @@ export default function OpeningStockForm({
                   />
                 </div>
               </div>
-
-              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                <h2 className="font-medium text-slate-700 mb-2">
-                  Location Details
-                </h2>
-                <div className="grid grid-cols-2 gap-1">
-                  <DropdownInput
-                    name="Branch"
-                    options={
-                      branchList
-                        ? dropDownListObject(
-                            id
-                              ? branchList?.data
-                              : branchList?.data?.filter((item) => item.active),
-                            "branchName",
-                            "id"
-                          )
-                        : []
-                    }
-                    value={locationId}
-                    setValue={(value) => {
-                      setLocationId(value);
-                      setStoreId("");
-                    }}
-                    required={true}
-                    readOnly={id}
-                  />
-                  <DropdownInput
-                    name="Location"
-                    options={dropDownListObject(
-                      id
-                        ? storeOptions
-                        : storeOptions?.filter((item) => item.active),
-                      "storeName",
-                      "id"
-                    )}
-                    value={storeId}
-                    setValue={setStoreId}
-                    required={true}
-                    readOnly={id}
-                    autoFocus={true}
-                  />
-                </div>
-              </div>
-              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                <h2 className="font-medium text-slate-700 mb-2"></h2>
-
-                <div className="grid grid-cols-2 gap-1"></div>
-              </div>
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1"></div>
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1"></div>
             </div>
             <fieldset>
               <ReadyGoods
                 openingStockItems={openingStockItems}
                 setOpeningStockItems={setOpeningStockItems}
                 readOnly={readOnly}
+                styleList={styleList}
+                sizeList={sizeList}
+                colorList={colorList}
               />
             </fieldset>
-            <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">
+            <div className="flex flex-col md:flex-row gap-2 justify-between pt-1">
               <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => saveData("new")}
@@ -478,15 +392,15 @@ export default function OpeningStockForm({
                 )}
               </div>
               <div className="flex gap-2 flex-wrap">
-                 {
-                                    readOnly && (
-                <button
-                  className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                  onClick={() => setReadOnly(false)}
-                >
-                  <FiEdit2 className="w-4 h-4 mr-2" />
-                  Edit
-                </button>)}
+                {readOnly && (
+                  <button
+                    className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                    onClick={() => setReadOnly(false)}
+                  >
+                    <FiEdit2 className="w-4 h-4 mr-2" />
+                    Edit
+                  </button>
+                )}
                 <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
                   <FaWhatsapp className="w-4 h-4 mr-2" />
                   WhatsApp
@@ -495,13 +409,10 @@ export default function OpeningStockForm({
                   className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
                   onClick={() => {
                     const allStockRows = openingStockItems.flatMap(
-                      (item) => item.Stock
+                      (item) => item.Stock,
                     );
                     setBarcodeItems(allStockRows);
                     setBarcodePrintOpen(true);
-                    // printBarcode({barcodeDetails:allStockRows.filter((i) => i?.styleId),
-                    // labelsPerRow: 4,
-                    // })
                   }}
                   disabled={!id}
                 >
@@ -516,17 +427,8 @@ export default function OpeningStockForm({
             onClose={() => setBarcodePrintOpen(false)}
             widthClass={"px-2 h-[90%] w-[90%]"}
           >
-            <BarCodePrintFormat
-              data={barcodeItems.filter((i) => i?.styleId)}
-              // barCodePerPage={barCodePerPage}
-            />
+            <BarCodePrintFormat data={barcodeItems.filter((i) => i?.styleId)} />
           </Modal>
-          {/* {barcodePrintOpen && (
-        <BarCodePrintThermalRoll
-          data={barcodeItems.filter((i) => i?.styleId)}
-          autoPrint={true}
-        />
-      )} */}
         </div>
       )}
     </>

@@ -19,7 +19,18 @@ async function getOne(id) {
     },
   });
   if (!data) return NoRecordFound("BarcodeSequence");
-  return { statusCode: 0, data: { ...data } };
+  const barcodes = await prisma.barcode.findMany({
+    where: {
+      barcodeSeqId: data.id,
+    },
+  });
+  const barcodeIds = barcodes.map((item) => item.id);
+  const childRecord = await prisma.purchaseBillItems.count({
+    where: {
+      barcodeId: { in: barcodeIds },
+    },
+  });
+  return { statusCode: 0, data: { ...data, childRecord } };
 }
 
 async function create(body) {
@@ -40,7 +51,8 @@ async function create(body) {
 }
 
 async function update(id, body) {
-  const { companyId, code, seqStart, active, digits, barcodeNo,prefix } = await body;
+  const { companyId, code, seqStart, active, digits, barcodeNo, prefix } =
+    await body;
   const dataFound = await prisma.barcodeSequence.findUnique({
     where: {
       id: parseInt(id),
@@ -73,4 +85,4 @@ async function remove(id) {
   return { statusCode: 0, data };
 }
 
-export { get, getOne,create, update, remove };
+export { get, getOne, create, update, remove };

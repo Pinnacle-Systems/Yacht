@@ -827,7 +827,7 @@ export default function BillItems({
                             Swal.fire({
                               icon: "warning",
                               title: "Invalid Qty",
-                              text: `Sales Qty cannot be Less than Return Qty! - ${minQty}`,
+                              text: `Sales Qty cannot be Less than Min Qty! - ${minQty}`,
                               confirmButtonText: "OK",
                             });
                             return;

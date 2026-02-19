@@ -137,10 +137,10 @@ export default function CuttingDeliveryForm({
       setDocDate(
         data?.docDate
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
-          : moment.utc(today).format("YYYY-MM-DD")
+          : moment.utc(today).format("YYYY-MM-DD"),
       );
       setCuttingDeliveryItems(
-        data?.cuttingDeliveryItems ? data.cuttingDeliveryItems : []
+        data?.cuttingDeliveryItems ? data.cuttingDeliveryItems : [],
       );
       if (data?.docId) {
         setDocId(data?.docId);
@@ -150,7 +150,7 @@ export default function CuttingDeliveryForm({
       setStyleId(data?.styleId ? data?.styleId : "");
       setCuttingNo(data?.cuttingNo ? data?.cuttingNo : "");
       setProductionType(
-        data?.productionType ? data?.productionType : "INHOUSE"
+        data?.productionType ? data?.productionType : "INHOUSE",
       );
       setSupplierId(data?.supplierId ? data?.supplierId : "");
       setFromProcessId(data?.fromProcessId ? data?.fromProcessId : "");
@@ -158,7 +158,7 @@ export default function CuttingDeliveryForm({
       setEmployeeId(data?.employeeId ? data?.employeeId : "");
       setProcessGroupId(data?.processGroupId ? data?.processGroupId : "");
     },
-    [id]
+    [id],
   );
 
   useEffect(() => {
@@ -175,7 +175,7 @@ export default function CuttingDeliveryForm({
 
   const storeOptions = locationData
     ? locationData.data.filter(
-        (item) => parseInt(item.locationId) === parseInt(locationId)
+        (item) => parseInt(item.locationId) === parseInt(locationId),
       )
     : [];
 
@@ -207,11 +207,11 @@ export default function CuttingDeliveryForm({
         });
         dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
         dispatch(
-          purchaseInwardEntryApi.util.invalidateTags(["purchaseInwardEntry"])
+          purchaseInwardEntryApi.util.invalidateTags(["purchaseInwardEntry"]),
         );
         dispatch(purchaseReturnApi.util.invalidateTags(["PurchaseReturn"]));
         dispatch(
-          ProductionDeliveryApi.util.invalidateTags(["ProductionDelivery"])
+          ProductionDeliveryApi.util.invalidateTags(["ProductionDelivery"]),
         );
       } else {
         toast.error(returnData?.message, {
@@ -283,7 +283,7 @@ export default function CuttingDeliveryForm({
     const items = data?.cuttingDeliveryItems || [];
     const filledItems = items.filter(
       (item) =>
-        item.styleId || item.fabricId || item.portionId || item.styleItemId
+        item.styleId || item.fabricId || item.portionId || item.styleItemId,
     );
     const duplicates = findDuplicates(filledItems);
     // duplicate check
@@ -296,7 +296,7 @@ export default function CuttingDeliveryForm({
              Portion - ${findFromList(
                dup?.portionId,
                portionList?.data,
-               "name"
+               "name",
              )},
              Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
            `,
@@ -315,7 +315,7 @@ export default function CuttingDeliveryForm({
         isGridDatasValid(
           data?.cuttingDeliveryItems?.filter((item) => item.styleId),
           false,
-          ["issueQty", "usedMeter", "styleId", "styleItemId"]
+          ["issueQty", "usedMeter", "styleId", "styleItemId"],
         ) &&
         data?.cuttingDeliveryItems.length > 0
       )
@@ -343,14 +343,14 @@ export default function CuttingDeliveryForm({
         addData,
         { ...data, draftSave: true },
         "Added",
-        nextProcess
+        nextProcess,
       );
     } else if (id && nextProcess == "draft") {
       handleSubmitCustom(
         updateData,
         { ...data, draftSave: true },
         "Updated",
-        nextProcess
+        nextProcess,
       );
     } else if (id) {
       handleSubmitCustom(updateData, data, "Updated", nextProcess);
@@ -437,7 +437,7 @@ export default function CuttingDeliveryForm({
             !row.portionId &&
             !row.sizeId &&
             !row.orderQty &&
-            !row.remarks
+            !row.remarks,
         );
         if (startIndex === -1) startIndex = updated.length;
 
@@ -455,7 +455,7 @@ export default function CuttingDeliveryForm({
           fabricItems.forEach((item, i) => {
             const detail = fabricDetails.find(
               (f) =>
-                f.styleId === item.styleId && f.portionId === item.portionId
+                f.styleId === item.styleId && f.portionId === item.portionId,
             );
             const newRow = {
               ...item,
@@ -591,7 +591,7 @@ export default function CuttingDeliveryForm({
                               ? branchList?.data
                               : branchList?.data?.filter((item) => item.active),
                             "branchName",
-                            "id"
+                            "id",
                           )
                         : []
                     }
@@ -610,7 +610,7 @@ export default function CuttingDeliveryForm({
                         ? storeOptions
                         : storeOptions?.filter((item) => item.active),
                       "storeName",
-                      "id"
+                      "id",
                     )}
                     value={storeId}
                     setValue={setStoreId}
@@ -652,7 +652,7 @@ export default function CuttingDeliveryForm({
                   <DropdownNew
                     name="Process"
                     dataList={processList?.data?.filter(
-                      (item) => item.isCutting
+                      (item) => item.isCutting,
                     )}
                     value={fromProcessId}
                     setValue={setFromProcessId}
@@ -739,13 +739,15 @@ export default function CuttingDeliveryForm({
                 </button> */}
               </div>
               <div className="flex gap-2 flex-wrap">
-                <button
-                  className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                  onClick={() => setReadOnly(false)}
-                >
-                  <FiEdit2 className="w-4 h-4 mr-2" />
-                  Edit
-                </button>
+                {readOnly && (
+                  <button
+                    className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                    onClick={() => setReadOnly(false)}
+                  >
+                    <FiEdit2 className="w-4 h-4 mr-2" />
+                    Edit
+                  </button>
+                )}
                 <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
                   <FaWhatsapp className="w-4 h-4 mr-2" />
                   WhatsApp

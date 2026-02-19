@@ -40,3 +40,4 @@ export { default as PortionMasterApi } from "./PortionMasterService";
 export { default as ProcessGroupSeqApi } from "./ProcessGroupSeqMasterServices";
 export { default as ProcessGroupApi } from "./ProcessGroupMasterServices";
 export { default as productionStockApi } from "./ProductionStockServices.js";
+export { default as OpeningStockSRApi } from "./OpeningStockSRServices.js";

@@ -76,4 +76,5 @@ export { default as salesBill } from "./salesBill.route.js";
 export { default as customer } from "./customer.route.js";
 export { default as salesReturnSR } from "./salesReturnSR.route.js";
 export { default as barcodeSeq } from "./barcodeSeq.route.js";
-export {default as showRoomStock } from "./showRoomStock.route.js"
+export { default as showRoomStock } from "./showRoomStock.route.js";
+export { default as openingStockSR } from "./openingStockSR.route.js";

@@ -85,6 +85,7 @@ import {
   salesReturnSR,
   barcodeSeq,
   showRoomStock,
+  openingStockSR,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";
@@ -178,6 +179,7 @@ app.use("/fabric", fabric);
 app.use("/accessoryGroup", accessoryGroup);
 app.use("/accessory", accessory);
 app.use("/openingStock", openingStock);
+app.use("/openingStockSR", openingStockSR);
 app.use("/stockAdjustment", stockAdjustment);
 app.use("/salesEntry", salesEntry);
 app.use("/sizeTemplate", sizeTemplate);

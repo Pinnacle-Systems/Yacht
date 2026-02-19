@@ -49,7 +49,14 @@ import secureLocalStorage from "react-secure-storage";
 
 const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDropdownOpen, heading, setIsOpen }) => {
     const dispatch = useDispatch();
-
+ const priority = {
+    "PURCHASE": 1,
+    "CUTTING": 2,
+    "PRODUCTION": 3,
+    "OPENING STOCK": 4,
+    "SALES":5
+  };
+   groups.sort((a, b) => priority[a.name] - priority[b.name]);
     const [hoveredGroupId, setHoveredGroupId] = useState(null);
     const navigate = useNavigate();
 
@@ -156,14 +163,14 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
         ,
         "PURCHASE INWARD":<img src={purchaseInward} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
         "PURCHASE RETURN":<img src={purchaseReturn} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "CUTTING PLAN":<img src={cutting} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "CUTTING PRODUCTION":<img src={cutting} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "PRODUCTION ENTRY":<img src={production} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "FINISHED GOODS INWARD":<img src={openingStock} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
         "OPENING STOCK":<img src={openingStock} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
         "STOCK ADJUSTMENT":<img src={stockAdjustment} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
         "SALES DELIVERY":<img src={salesDelivery} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
         "SALES RETURN":<img src={purchaseReturn} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
-        "FINISHED GOODS INWARD":<img src={openingStock} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
-        "PRODUCTION ENTRY":<img src={production} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
-        "CUTTING PLAN":<img src={cutting} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
-        "CUTTING PRODUCTION":<img src={cutting} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
         "FINISHED GOODS STOCK":<img src={goodsStock} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
         "MATERIAL STOCK REPORT":<img src={materialStock} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
         "SALES REPORT":<img src={salesReport} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,

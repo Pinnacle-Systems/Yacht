@@ -246,22 +246,6 @@ export default function PurchaseBillItems({
         />
       </Modal>
       <div className="border border-slate-200  bg-white rounded-md shadow-sm max-h-[450px] px-2 overflow-auto">
-        {/* <div className="flex items-center gap-4  sticky top-0 bg-white z-30 mt-2">
-          <ReusableInput
-            label="Style No"
-            value={styleNo}
-            setValue={setStyleNo}
-            type={"text"}
-            required={true}
-            readOnly={readOnly}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.stopPropagation();
-                handleAddRow();
-              }
-            }}
-          />
-        </div> */}
         <div className="flex justify-between items-center">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
         </div>

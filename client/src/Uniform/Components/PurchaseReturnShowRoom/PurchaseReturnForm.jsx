@@ -20,7 +20,7 @@ import { useDispatch } from "react-redux";
 import { Loader } from "../../../Basic/components";
 import secureLocalStorage from "react-secure-storage";
 import { useAddPurchaseReturnShowroomMutation, useDeletePurchaseReturnShowroomMutation, useGetPurchaseReturnShowroomByIdQuery, useGetPurchaseReturnShowroomQuery, useUpdatePurchaseReturnShowroomMutation } from "../../../redux/services/PurchaseReturnShowroomService";
-import purchaseBillApi, { useGetPurchaseBillQuery } from "../../../redux/services/PurchaseBillService";
+import purchaseBillApi, { useGetPurBillItemsQuery, useGetPurchaseBillQuery } from "../../../redux/services/PurchaseBillService";
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
 
 const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
@@ -67,6 +67,37 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
     const { data: purchaseList } = useGetPurchaseBillQuery({
         params: { companyId, branchId },
     });
+
+    const {
+        data: purBillItemsData,
+        isLoading: isPurBillItemsLoading,
+        isFetching: isPurBillItemsFetching,
+    } = useGetPurBillItemsQuery({
+        params: {
+            branchId,
+            invNo,
+            pagination: true,
+        },
+    }, { skip: !invNo });
+
+    const syncFormWithDbItems = useCallback(
+        (data) => {
+            setTempItems(data);
+        },
+        [invNo],
+    );
+
+    useEffect(() => {
+        if (purBillItemsData?.data) {
+            syncFormWithDbItems(purBillItemsData?.data);
+            setSupplierId(purBillItemsData?.supplierId)
+        }
+    }, [
+        isPurBillItemsFetching,
+        isPurBillItemsLoading,
+        syncFormWithDbItems,
+        purBillItemsData,
+    ]);
 
     const data = {
         docId,
@@ -340,7 +371,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                                 setSupplierId(value);
                                             }}
                                             required={true}
-                                            disabled={id}
+                                            readonly={true}
                                             placeholder={"Select Supplier"}
                                         />
                                         <ReusableInput
@@ -452,13 +483,15 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                             </div>
 
                             <div className="flex gap-2 flex-wrap">
-                                <button
-                                    className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                                    onClick={() => setReadOnly(false)}
-                                >
-                                    <FiEdit2 className="w-4 h-4 mr-2" />
-                                    Edit
-                                </button>
+                                {
+                                    readOnly && (
+                                        <button
+                                            className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                                            onClick={() => setReadOnly(false)}
+                                        >
+                                            <FiEdit2 className="w-4 h-4 mr-2" />
+                                            Edit
+                                        </button>)}
                                 <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
                                     <FaWhatsapp className="w-4 h-4 mr-2" />
                                     WhatsApp

@@ -219,10 +219,10 @@ async function remove(id) {
 }
 
 async function getStyleCode(req) {
-  const { styleNo, companyId } = req.query;
+  const { styleNo } = req.query;
   const data = await prisma.style.findMany({
     where: {
-      companyId: companyId ? parseInt(companyId) : undefined,
+      // companyId: companyId ? parseInt(companyId) : undefined,
       sku: styleNo,
     },
   });

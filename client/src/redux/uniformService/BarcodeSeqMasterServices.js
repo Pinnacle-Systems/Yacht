@@ -79,6 +79,7 @@ const barcodeSeqMasterApi = createApi({
 export const {
   useGetBarcodeSeqQuery,
   useGetBarcodeSeqByIdQuery,
+  useLazyGetBarcodeSeqByIdQuery,
   useAddBarcodeSeqMutation,
   useUpdateBarcodeSeqMutation,
   useDeleteBarcodeSeqMutation

@@ -10,9 +10,9 @@ import {
   useDeleteBarcodeSeqMutation,
   useGetBarcodeSeqByIdQuery,
   useGetBarcodeSeqQuery,
+  useLazyGetBarcodeSeqByIdQuery,
   useUpdateBarcodeSeqMutation,
 } from "../../../redux/uniformService/BarcodeSeqMasterServices";
-import { set } from "lodash";
 
 const MODEL = "Barcode Seq Master";
 
@@ -49,7 +49,7 @@ export default function Form() {
   const [addData] = useAddBarcodeSeqMutation();
   const [updateData] = useUpdateBarcodeSeqMutation();
   const [removeData] = useDeleteBarcodeSeqMutation();
-
+  const [trigger, { data: singleDataLazy }] = useLazyGetBarcodeSeqByIdQuery();
   const syncFormWithDb = useCallback(
     (data) => {
       if (id) {
@@ -136,14 +136,9 @@ export default function Form() {
       });
       return false;
     }
-    if (
-      data.prefix &&
-      data.code &&
-      data.digits &&
-      data.seqStart
-    ) {
+    if (data.prefix && data.code && data.digits && data.seqStart) {
       return true;
-    }else{
+    } else {
       Swal.fire({
         icon: "error",
         title: "Validation error",
@@ -217,33 +212,43 @@ export default function Form() {
   };
 
   const deleteData = async (id) => {
+    setId(id);
+    const { data } = await trigger(id);
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-      try {
-        let deldata = await removeData(id).unwrap();
-        if (deldata?.statusCode == 1) {
+      if (data?.data?.childRecord > 0) {
+        Swal.fire({
+          icon: "error",
+          title: "This Barcode used in another branch",
+          text: "Data cannot be deleted!",
+        });
+      } else {
+        try {
+          let deldata = await removeData(id).unwrap();
+          if (deldata?.statusCode == 1) {
+            Swal.fire({
+              icon: "error",
+              title: "Submission error",
+              text: deldata.data?.message || "Something went wrong!",
+            });
+            return;
+          }
+          setId("");
+          Swal.fire({
+            title: "Deleted Successfully",
+            icon: "success",
+            timer: 1000,
+          });
+          setForm(false);
+        } catch (error) {
           Swal.fire({
             icon: "error",
             title: "Submission error",
-            text: deldata.data?.message || "Something went wrong!",
+            text: error.data?.message || "Something went wrong!",
           });
-          return;
         }
-        setId("");
-        Swal.fire({
-          title: "Deleted Successfully",
-          icon: "success",
-          timer: 1000,
-        });
-        setForm(false);
-      } catch (error) {
-        Swal.fire({
-          icon: "error",
-          title: "Submission error",
-          text: error.data?.message || "Something went wrong!",
-        });
       }
     }
   };

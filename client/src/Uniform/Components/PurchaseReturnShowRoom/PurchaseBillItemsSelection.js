@@ -10,7 +10,6 @@ const PurchaseBillItemsSelection = ({
   onClose,
   setFillGrid,
   branchId,
-  supplierId,
   invNo,
 }) => {
   const [localpurchaseReturnItems, setLocalpurchaseReturnItems] = useState([]);
@@ -90,37 +89,6 @@ const PurchaseBillItemsSelection = ({
   function getSelectAll(purchaseReturnItems) {
     return purchaseReturnItems?.every((item) => isItemAddedd(item.id));
   }
-
-  const {
-    data: purBillItemsData,
-    isLoading: isPurBillItemsLoading,
-    isFetching: isPurBillItemsFetching,
-  } = useGetPurBillItemsQuery({
-    params: {
-      branchId,
-      supplierId,
-      invNo,
-      pagination: true,
-    },
-  });
-
-  const syncFormWithDb = useCallback(
-    (data) => {
-      setTempItems(data);
-    },
-    [supplierId],
-  );
-
-  useEffect(() => {
-    if (purBillItemsData?.data) {
-      syncFormWithDb(purBillItemsData?.data);
-    }
-  }, [
-    isPurBillItemsFetching,
-    isPurBillItemsLoading,
-    syncFormWithDb,
-    purBillItemsData,
-  ]);
 
   return (
     <div className="h-full flex flex-col bg-[#f1f1f0]">

@@ -152,6 +152,7 @@ model Branch {
   customers               Customer[]
   salesReturnSRs          SalesReturnSR[]
   barcodes                Barcode[]
+  openingStockSRs         OpeningStockSR[]
 }
 
 model UserOnBranch {
@@ -288,6 +289,8 @@ model User {
   salesBillsUpdatedBy              SalesBill[]              @relation(name: "updatedBy")
   salesReturnSRsCreatedBy          SalesReturnSR[]          @relation(name: "createdBy")
   salesReturnSRsUpdatedBy          SalesReturnSR[]          @relation(name: "updatedBy")
+  openingStockSRsCreatedBy         OpeningStockSR[]         @relation(name: "createdBy")
+  openingStockSRsUpdatedBy         OpeningStockSR[]         @relation(name: "updatedBy")
 }
 
 model Employee {
@@ -1213,6 +1216,7 @@ model Color {
   salesBillItems             SalesBillItems[]
   salesReturnSRItems         SalesReturnSRItems[]
   barcodes                   Barcode[]
+  openingStockItemsSRs       OpeningStockItemsSR[]
 }
 
 model UnitOfMeasurement {
@@ -1242,6 +1246,7 @@ model UnitOfMeasurement {
   styles                     Style[]
   salesEntryItems            SalesEntryItems[]
   barcodes                   Barcode[]
+  openingStockItemsSRs       OpeningStockItemsSR[]
 }
 
 model purchaseInwardEntry {
@@ -1651,6 +1656,7 @@ model Style {
   salesBillItems        SalesBillItems[]
   salesReturnSRItems    SalesReturnSRItems[]
   barcodes              Barcode[]
+  openingStockItemsSRs  OpeningStockItemsSR[]
 }
 
 model Size {
@@ -1685,6 +1691,7 @@ model Size {
   salesBillItems        SalesBillItems[]
   salesReturnSRItems    SalesReturnSRItems[]
   barcodes              Barcode[]
+  openingStockItemsSRs  OpeningStockItemsSR[]
 }
 
 model Measurement {
@@ -2053,6 +2060,7 @@ model StyleItem {
   salesBillItems        SalesBillItems[]
   salesReturnSRItems    SalesReturnSRItems[]
   barcodes              Barcode[]
+  openingStockItemsSRs  OpeningStockItemsSR[]
 }
 
 model SalesReturn {
@@ -2737,6 +2745,8 @@ model StockLedger {
   salesReturnSRItemsId   Int?
   Barcode                Barcode?              @relation(fields: [barcodeId], references: [id])
   barcodeId              Int?
+  OpeningStockItemsSR    OpeningStockItemsSR?  @relation(fields: [openingStockItemsSRId], references: [id], onDelete: Cascade)
+  openingStockItemsSRId  Int?
 
   @@index([branchId])
 }
@@ -2964,10 +2974,46 @@ model Barcode {
   salesEntryItemsId     Int?
   BarcodeSequence       BarcodeSequence?       @relation(fields: [barcodeSeqId], references: [id])
   barcodeSeqId          Int?
+  OpeningStockItemsSR   OpeningStockItemsSR?   @relation(fields: [openingStockItemsSRId], references: [id], onDelete: Cascade)
+  openingStockItemsSRId Int?
   purchaseBillItems     PurchaseBillItems[]
   stockLedgers          StockLedger[]
   stockSummaries        StockSummary[]
   purchasReturnItemsSRs PurchasReturnItemsSR[]
   salesBillItems        SalesBillItems[]
   salesReturnSRItems    SalesReturnSRItems[]
+}
+
+model OpeningStockSR {
+  id                   Int                   @id @default(autoincrement())
+  docId                String
+  docDate              DateTime?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  createdBy            User?                 @relation("createdBy", fields: [createdById], references: [id])
+  createdById          Int?
+  updatedBy            User?                 @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById          Int?
+  Branch               Branch?               @relation(fields: [branchId], references: [id])
+  branchId             Int?
+  openingStockItemsSRs OpeningStockItemsSR[]
+}
+
+model OpeningStockItemsSR {
+  id               Int                @id @default(autoincrement())
+  OpeningStockSR   OpeningStockSR?    @relation(fields: [openingStockSRId], references: [id], onDelete: Cascade)
+  openingStockSRId Int?
+  Style            Style?             @relation(fields: [styleId], references: [id])
+  styleId          Int?
+  Size             Size?              @relation(fields: [sizeId], references: [id])
+  sizeId           Int?
+  qty              Int?
+  StyleItem        StyleItem?         @relation(fields: [styleItemId], references: [id])
+  styleItemId      Int?
+  Color            Color?             @relation(fields: [colorId], references: [id])
+  colorId          Int?
+  Uom              UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId            Int?
+  stockLedgers     StockLedger[]
+  barcodes         Barcode[]
 }

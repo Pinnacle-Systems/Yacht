@@ -21,7 +21,7 @@ async function getNextDocId(
   if (saveType) {
     return "Draft Save";
   } else if (isUpdate === "drift") {
-    lastObject = await prisma.salesEntry.findFirst({
+    lastObject = await prisma.openingStockSR.findFirst({
       where: {
         branchId: parseInt(branchId),
         draftSave: false,
@@ -35,17 +35,17 @@ async function getNextDocId(
     const branchObj = await getTableRecordWithId(branchId, "branch");
     let newDocId = `${branchObj.branchCode}${getYearShortCode(
       new Date(),
-    )}/SBE/1`;
+    )}/OS/1`;
 
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SBE/${
+      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/OS/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
 
     return newDocId;
   } else {
-    let lastObject = await prisma.salesEntry.findFirst({
+    let lastObject = await prisma.openingStockSR.findFirst({
       where: {
         branchId: parseInt(branchId),
         AND: [
@@ -69,26 +69,14 @@ async function getNextDocId(
     const branchObj = await getTableRecordWithId(branchId, "branch");
     let newDocId = `${branchObj.branchCode}${getYearShortCode(
       new Date(),
-    )}/SBE/1`;
+    )}/OS/1`;
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SBE/${
+      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/OS/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
     return newDocId;
   }
-}
-
-function manualFilterSearchData(searchDelDate, searchDueDate, data) {
-  return data.filter(
-    (item) =>
-      (searchDelDate
-        ? String(getDateFromDateTime(item.createdAt)).includes(searchDelDate)
-        : true) &&
-      (searchDueDate
-        ? String(getDateFromDateTime(item.dueDate)).includes(searchDueDate)
-        : true),
-  );
 }
 
 async function get(req) {
@@ -99,10 +87,7 @@ async function get(req) {
     dataPerPage,
     serachDocNo,
     searchDocDate,
-    searchStore,
     finYearId,
-    searchType,
-    searchCustomer,
   } = req.query;
 
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -117,9 +102,9 @@ async function get(req) {
   );
   let data;
   let totalCount;
-  data = await prisma.salesEntry.findMany({
+  data = await prisma.openingStockSR.findMany({
     where: {
-      // branchId: branchId ? parseInt(branchId) : undefined,
+      branchId: branchId ? parseInt(branchId) : undefined,
       AND: finYearDate
         ? [
             {
@@ -139,28 +124,9 @@ async function get(req) {
             contains: serachDocNo,
           }
         : undefined,
-      Store: {
-        storeName: searchStore ? { contains: searchStore } : undefined,
-      },
-      Customer: {
-        name: searchCustomer ? { contains: searchCustomer } : undefined,
-      },
-      salesType: searchType ? { contains: searchType } : undefined,
     },
     include: {
-      Store: {
-        select: {
-          id: true,
-          storeName: true,
-        },
-      },
-      SalesEntryItems: true,
-      Customer: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
+      openingStockItemsSRs: true,
     },
   });
   totalCount = data.length;
@@ -183,110 +149,18 @@ async function get(req) {
   };
 }
 
-async function getSalesReport(req) {
-  const { finYearId, branchId, storeId, fromDate, toDate, customerId } =
-    req.query;
-  let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-  let data;
-  let totalCount;
-  let totalAmount;
-  const from = fromDate ? new Date(fromDate) : undefined;
-  const to = toDate ? new Date(toDate) : undefined;
-  if (to) to.setHours(23, 59, 59, 999);
-  data = await prisma.salesEntry.findMany({
-    where: {
-      branchId: branchId ? parseInt(branchId) : undefined,
-      storeId: storeId ? parseInt(storeId) : undefined,
-      customerId: customerId ? parseInt(customerId) : undefined,
-      // AND: finYearDate
-      //   ? [
-      //       {
-      //         createdAt: {
-      //           gte: finYearDate.startTime,
-      //         },
-      //       },
-      //       {
-      //         createdAt: {
-      //           lte: finYearDate.endTime,
-      //         },
-      //       },
-      //       {
-      //         docDate: {
-      //           gte: from,
-      //           lte: to,
-      //         },
-      //       },
-      //     ]
-      //   : undefined,
-      AND: finYearDate
-        ? [
-            { createdAt: { gte: finYearDate.startTime } },
-            { createdAt: { lte: finYearDate.endTime } },
-            ...(from && to ? [{ docDate: { gte: from, lte: to } }] : []),
-          ]
-        : from && to
-          ? [{ docDate: { gte: from, lte: to } }]
-          : undefined,
-    },
-    include: {
-      SalesEntryItems: true,
-    },
-  });
-  totalCount = data.length;
-  return {
-    statusCode: 0,
-    data,
-    totalCount,
-  };
-}
-
 async function getOne(id) {
-  const data = await prisma.salesEntry.findUnique({
+  const data = await prisma.openingStockSR.findUnique({
     where: {
       id: parseInt(id),
     },
     include: {
-      Store: {
-        select: {
-          locationId: true,
-        },
-      },
-      Customer: true,
-      SalesEntryItems: {
-        select: {
-          // Stock: true,
-          id: true,
-          salesEntryId: true,
-          barcode: true,
-          StyleItem: true,
-          Size: true,
-          Fabric: true,
-          styleId: true,
-          sizeId: true,
-          qty: true,
-          remarks: true,
-          stkQty: true,
-          styleNo: true,
-          fabricId: true,
-          disc: true,
-          amount: true,
-          price: true,
-          styleItemId: true,
-          discountType: true,
-          taxPercent: true,
-          discountValue: true,
-          colorId: true,
-          uomId: true,
-        },
-      },
-      Location: true,
-      Store: true,
-      Destination: true,
+      openingStockItemsSRs: true,
     },
   });
-  if (!data) return NoRecordFound("salesEntry");
+  if (!data) return NoRecordFound("Opening Stock");
   const salesWithStkQty = await Promise.all(
-    data.SalesEntryItems.map(async (item) => {
+    data.openingStockItemsSRs.map(async (item) => {
       const totalStkQty = await prisma.stock.aggregate({
         where: {
           styleId: item.styleId,
@@ -329,7 +203,7 @@ async function getOne(id) {
       });
       const barcodes = await prisma.barcode.findMany({
         where: {
-          salesEntryItemsId: item.id,
+          openingStockItemsId: item.id,
         },
       });
       const barcodeIds = barcodes.map((item) => item.id);
@@ -349,12 +223,12 @@ async function getOne(id) {
       };
     }),
   );
-  const salesEntryItemsIds = data.SalesEntryItems.map((item) => item.id).filter(
-    Boolean,
-  );
+  const openingStockItemsIds = data.openingStockItemsSRs
+    .map((item) => item.id)
+    .filter(Boolean);
   const barcodes = await prisma.barcode.findMany({
     where: {
-      salesEntryItemsId: { in: salesEntryItemsIds },
+      openingStockItemsSRId: { in: openingStockItemsIds },
     },
   });
   const barcodeWithRate = await Promise.all(
@@ -370,7 +244,7 @@ async function getOne(id) {
         styleItemId: barcode.styleItemId,
         sizeId: barcode.sizeId,
         colorId: barcode.colorId,
-        salesEntryItemsId: barcode.salesEntryItemsId,
+        openingStockItemsSRId: barcode.openingStockItemsSRId,
         rate: style?.salesPrice || null,
         qty: 1,
         barcodeId: barcode.id,
@@ -391,7 +265,7 @@ async function getOne(id) {
     statusCode: 0,
     data: {
       ...data,
-      SalesEntryItems: salesWithStkQty,
+      openingStockItems: salesWithStkQty,
       childRecordReturn: childRecordReturn,
       childRecordSRInward: childRecordSRInward,
       barcodes: barcodeWithRate,
@@ -399,47 +273,9 @@ async function getOne(id) {
   };
 }
 
-async function getSearch(req) {
-  const { companyId, active } = req.query;
-  const { searchKey } = req.params;
-  const data = await prisma.salesEntry.findMany({
-    where: {
-      country: {
-        companyId: companyId ? parseInt(companyId) : undefined,
-      },
-      active: active ? Boolean(active) : undefined,
-      OR: [
-        {
-          aliasName: {
-            contains: searchKey,
-          },
-        },
-      ],
-    },
-  });
-  return { statusCode: 0, data: data };
-}
-
 async function create(body) {
-  const {
-    userId,
-    branchId,
-    storeId,
-    salesEntryItems,
-    finYearId,
-    docDate,
-    draftSave,
-    locationId,
-    customerId,
-    contactPerson,
-    contactNumber,
-    taxTemplateId,
-    destinationId,
-    salesType,
-    overAllDisc,
-    roundOff,
-    companyId,
-  } = await body;
+  const { userId, branchId, openingStockItems, finYearId, docDate, draftSave } =
+    await body;
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(
@@ -456,33 +292,20 @@ async function create(body) {
   );
   let data;
   await prisma.$transaction(async (tx) => {
-    data = await tx.salesEntry.create({
+    data = await tx.openingStockSR.create({
       data: {
         docId: newDocId,
         branchId: parseInt(branchId),
-        storeId: parseInt(storeId),
         createdById: parseInt(userId),
         docDate: docDate ? new Date(docDate) : null,
-        locationId: parseInt(locationId),
-        customerId: parseInt(customerId),
-        contactPerson,
-        contactNumber,
-        taxTemplateId: taxTemplateId ? parseInt(taxTemplateId) : null,
-        destinationId: destinationId ? parseInt(destinationId) : null,
-        salesType,
-        roundOff: roundOff ? parseInt(roundOff) : null,
-        overAllDisc: overAllDisc ? parseInt(overAllDisc) : null,
       },
     });
-    await createSalesEntryItems(
+    await createOpeningStockItems(
       tx,
-      salesEntryItems,
+      openingStockItems,
       data,
       userId,
       branchId,
-      storeId,
-      salesType,
-      companyId,
     );
   });
   return { statusCode: 0, data };
@@ -491,7 +314,7 @@ async function create(body) {
 async function update(id, body) {
   const {
     branchId,
-    salesEntryItems,
+    openingStockItems,
     userId,
     storeId,
     docDate,
@@ -512,7 +335,7 @@ async function update(id, body) {
       id: parseInt(id),
     },
     include: {
-      SalesEntryItems: {
+      openingStockItems: {
         select: {
           id: true,
         },
@@ -520,12 +343,12 @@ async function update(id, body) {
     },
   });
   if (!dataFound) return NoRecordFound("salesEntry");
-  let removedItems = findRemovedItems(dataFound, salesEntryItems);
+  let removedItems = findRemovedItems(dataFound, openingStockItems);
   let removeItemsIds = removedItems.map((item) => parseInt(item.id));
   await prisma.$transaction(async (tx) => {
     // await deleteItemsFromStock(tx, removeItemsIds);
     if (removeItemsIds.length > 0) {
-      await tx.salesEntryItems.deleteMany({
+      await tx.openingStockItems.deleteMany({
         where: { id: { in: removeItemsIds } },
       });
     }
@@ -549,9 +372,9 @@ async function update(id, body) {
         roundOff: roundOff ? parseInt(roundOff) : null,
       },
     });
-    await updateSalesEntryItems(
+    await updateopeningStockItems(
       tx,
-      salesEntryItems,
+      openingStockItems,
       data,
       userId,
       branchId,
@@ -563,9 +386,9 @@ async function update(id, body) {
   return { statusCode: 0, data };
 }
 
-async function updateSalesEntryItems(
+async function updateopeningStockItems(
   tx,
-  salesEntryItems,
+  openingStockItems,
   salesEntry,
   userId,
   branchId,
@@ -573,14 +396,14 @@ async function updateSalesEntryItems(
   salesType,
   companyId,
 ) {
-  for (const stockDetail of salesEntryItems) {
+  for (const stockDetail of openingStockItems) {
     const qty =
       stockDetail?.qty && !isNaN(parseFloat(stockDetail.qty))
         ? -Math.abs(parseInt(stockDetail.qty))
         : null;
 
     if (stockDetail.id) {
-      const updatedItem = await tx.salesEntryItems.update({
+      const updatedItem = await tx.openingStockItemsSR.update({
         where: { id: parseInt(stockDetail.id) },
         data: {
           salesEntryId: parseInt(salesEntry.id),
@@ -620,11 +443,11 @@ async function updateSalesEntryItems(
       });
 
       const existingStock = await tx.stock.findFirst({
-        where: { salesEntryItemsId: updatedItem.id },
+        where: { openingStockItemsId: updatedItem.id },
       });
 
       if (existingStock) {
-        await tx.stock.update({
+        await tx.stockLedger.update({
           where: { id: existingStock.id },
           data: {
             styleId: stockDetail?.styleId
@@ -649,7 +472,7 @@ async function updateSalesEntryItems(
           },
         });
       } else {
-        await tx.stock.create({
+        await tx.stockLedger.create({
           data: {
             inOrOut: "SalesEntry",
             createdById: parseInt(userId),
@@ -663,7 +486,7 @@ async function updateSalesEntryItems(
               ? parseInt(stockDetail.colorId)
               : null,
             qty,
-            salesEntryItemsId: updatedItem.id,
+            openingStockItemsId: updatedItem.id,
             barCode: stockDetail?.barcode ? stockDetail?.barcode : undefined,
             styleNo: stockDetail?.styleNo ?? undefined,
             fabricId: stockDetail?.fabricId
@@ -680,7 +503,7 @@ async function updateSalesEntryItems(
         const newQty = stockDetail?.qty ? parseInt(stockDetail.qty) : 0;
         const existingBarcodes = await tx.barcode.findMany({
           where: {
-            salesEntryItemsId: updatedItem.id,
+            openingStockItemsId: updatedItem.id,
           },
           orderBy: { id: "asc" },
         });
@@ -730,7 +553,7 @@ async function updateSalesEntryItems(
             await tx.barcode.create({
               data: {
                 barcodeNo: newBarcode,
-                salesEntryItemsId: updatedItem.id,
+                openingStockItemsId: updatedItem.id,
                 barcodeSeqId: barcodeSeq.id,
                 styleId: stockDetail?.styleId
                   ? parseInt(stockDetail.styleId)
@@ -765,7 +588,7 @@ async function updateSalesEntryItems(
         }
       }
     } else {
-      const createdItem = await tx.salesEntryItems.create({
+      const createdItem = await tx.openingStockItemsSR.create({
         data: {
           salesEntryId: parseInt(salesEntry.id),
           styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
@@ -799,7 +622,7 @@ async function updateSalesEntryItems(
             : null,
         },
       });
-      await tx.stock.create({
+      await tx.stockLedger.create({
         data: {
           inOrOut: "SalesEntry",
           createdById: parseInt(userId),
@@ -809,7 +632,7 @@ async function updateSalesEntryItems(
           sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
           colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
           qty: createdItem.qty ? -Math.abs(createdItem.qty) : null,
-          salesEntryItemsId: createdItem.id,
+          openingStockItemsId: createdItem.id,
           barCode: stockDetail?.barcode ? stockDetail?.barcode : undefined,
           styleNo: stockDetail?.styleNo ?? undefined,
           fabricId: stockDetail?.fabricId
@@ -861,7 +684,7 @@ async function updateSalesEntryItems(
           await tx.barcode.create({
             data: {
               barcodeNo: newBarcode,
-              salesEntryItemsId: createdItem.id,
+              openingStockItemsId: createdItem.id,
               barcodeSeqId: barcodeSeq.id,
               styleId: stockDetail?.styleId
                 ? parseInt(stockDetail.styleId)
@@ -883,151 +706,139 @@ async function updateSalesEntryItems(
   }
 }
 
-async function createSalesEntryItems(
+async function createOpeningStockItems(
   tx,
-  salesEntryItems,
-  salesEntry,
+  openingStockItems,
+  openingStock,
   userId,
   branchId,
-  storeId,
-  salesType,
-  companyId,
 ) {
-  for (const itemDetail of salesEntryItems) {
-    const createdItem = await tx.salesEntryItems.create({
+  for (const itemDetail of openingStockItems) {
+    const qty = itemDetail?.qty ? Math.round(parseFloat(itemDetail.qty)) : 0;
+    const createdItem = await tx.openingStockItemsSR.create({
       data: {
-        salesEntryId: parseInt(salesEntry.id),
+        openingStockSRId: parseInt(openingStock.id),
         styleId: itemDetail?.styleId ? parseInt(itemDetail.styleId) : null,
         sizeId: itemDetail?.sizeId ? parseInt(itemDetail.sizeId) : null,
         colorId: itemDetail?.colorId ? parseInt(itemDetail.colorId) : null,
-        stkQty:
-          itemDetail?.stkQty && !isNaN(parseFloat(itemDetail.stkQty))
-            ? Math.round(parseFloat(itemDetail.stkQty))
-            : null,
-        qty:
-          itemDetail?.qty && !isNaN(parseFloat(itemDetail.qty))
-            ? Math.round(parseFloat(itemDetail.qty))
-            : null,
+        qty,
         remarks: itemDetail?.remarks ? itemDetail?.remarks : undefined,
-        styleNo: itemDetail?.styleNo ?? undefined,
-        fabricId: itemDetail?.fabricId ? parseInt(itemDetail.fabricId) : null,
-        price: itemDetail?.price ? parseInt(itemDetail.price) : null,
-        disc: itemDetail?.disc ? parseInt(itemDetail.disc) : null,
-        amount: itemDetail?.amount ? parseInt(itemDetail.amount) : null,
         styleItemId: itemDetail?.styleItemId
           ? parseInt(itemDetail.styleItemId)
-          : null,
-        discountType: itemDetail?.discountType
-          ? itemDetail?.discountType
-          : undefined,
-        discountValue: itemDetail?.discountValue
-          ? parseInt(itemDetail.discountValue)
-          : null,
-        taxPercent: itemDetail?.taxPercent
-          ? parseInt(itemDetail.taxPercent)
           : null,
         uomId: itemDetail?.uomId ? parseInt(itemDetail.uomId) : null,
       },
     });
-    await tx.stock.create({
-      data: {
-        inOrOut: "SalesEntry",
-        createdById: parseInt(userId),
-        branchId: parseInt(branchId),
-        storeId: parseInt(storeId),
-        styleId: itemDetail?.styleId ? parseInt(itemDetail.styleId) : null,
-        sizeId: itemDetail?.sizeId ? parseInt(itemDetail.sizeId) : null,
-        colorId: itemDetail?.colorId ? parseInt(itemDetail.colorId) : null,
-        qty:
-          itemDetail?.qty && !isNaN(parseFloat(itemDetail.qty))
-            ? -Math.abs(parseInt(itemDetail.qty))
-            : null,
-        salesEntryItemsId: createdItem.id,
-        styleNo: itemDetail?.styleNo ?? undefined,
-        fabricId: itemDetail?.fabricId ? parseInt(itemDetail.fabricId) : null,
-        price: itemDetail?.price ? parseInt(itemDetail.price) : null,
-        styleItemId: itemDetail?.styleItemId
-          ? parseInt(itemDetail.styleItemId)
-          : null,
+    const barcodeSeq = await tx.barcodeSequence.findFirst({
+      where: {
+        // companyId: parseInt(companyId),
+        active: true,
       },
     });
-    if (salesType === "RETAIL") {
-      const barcodeSeq = await tx.barcodeSequence.findFirst({
+    if (!barcodeSeq) {
+      CustomError("No active barcode sequence found for the Branch");
+    }
+    for (let i = 0; i < qty; i++) {
+      const lastBarcode = await tx.barcode.findFirst({
         where: {
-          companyId: parseInt(companyId),
-          active: true,
+          barcodeSeqId: parseInt(barcodeSeq.id),
+        },
+        orderBy: {
+          id: "desc",
         },
       });
-      if (!barcodeSeq) {
-        CustomError("No active barcode sequence found for the company");
+      const fullPrefix = barcodeSeq.prefix + barcodeSeq.code;
+      let nextNumber;
+      if (lastBarcode) {
+        const lastValue = lastBarcode.barcodeNo;
+
+        // Remove prefix+code
+        const numberPart = lastValue.substring(fullPrefix.length);
+
+        nextNumber = parseInt(numberPart) + 1;
+      } else {
+        nextNumber = barcodeSeq.seqStart;
       }
-      const qty = itemDetail?.qty ? parseInt(itemDetail.qty) : 1;
-      for (let i = 0; i < qty; i++) {
-        const lastBarcode = await tx.barcode.findFirst({
-          where: {
-            barcodeSeqId: parseInt(barcodeSeq.id),
-          },
-          orderBy: {
-            id: "desc",
-          },
-        });
-        const fullPrefix = barcodeSeq.prefix + barcodeSeq.code;
-        let nextNumber;
-        if (lastBarcode) {
-          const lastValue = lastBarcode.barcodeNo;
 
-          // Remove prefix+code
-          const numberPart = lastValue.substring(fullPrefix.length);
+      const paddedNumber = nextNumber
+        .toString()
+        .padStart(barcodeSeq.digits, "0");
 
-          nextNumber = parseInt(numberPart) + 1;
-        } else {
-          nextNumber = barcodeSeq.seqStart;
-        }
-
-        const paddedNumber = nextNumber
-          .toString()
-          .padStart(barcodeSeq.digits, "0");
-
-        const newBarcode = fullPrefix + paddedNumber;
-        await tx.barcode.create({
-          data: {
-            barcodeNo: newBarcode,
-            salesEntryItemsId: createdItem.id,
-            barcodeSeqId: barcodeSeq.id,
-            styleId: itemDetail?.styleId ? parseInt(itemDetail.styleId) : null,
-            sizeId: itemDetail?.sizeId ? parseInt(itemDetail.sizeId) : null,
-            colorId: itemDetail?.colorId ? parseInt(itemDetail.colorId) : null,
-            styleItemId: itemDetail?.styleItemId
-              ? parseInt(itemDetail.styleItemId)
-              : null,
+      const newBarcode = fullPrefix + paddedNumber;
+      const saveBarcode = await tx.barcode.create({
+        data: {
+          barcodeNo: newBarcode,
+          openingStockItemsSRId: createdItem.id,
+          barcodeSeqId: barcodeSeq.id,
+          styleId: itemDetail?.styleId ? parseInt(itemDetail.styleId) : null,
+          sizeId: itemDetail?.sizeId ? parseInt(itemDetail.sizeId) : null,
+          colorId: itemDetail?.colorId ? parseInt(itemDetail.colorId) : null,
+          styleItemId: itemDetail?.styleItemId
+            ? parseInt(itemDetail.styleItemId)
+            : null,
+          branchId: parseInt(branchId),
+          uomId: itemDetail?.uomId ? parseInt(itemDetail.uomId) : null,
+        },
+      });
+      await tx.stockLedger.create({
+        data: {
+          inOrOut: "In",
+          refType: "OpeningStock",
+          createdById: parseInt(userId),
+          branchId: parseInt(branchId),
+          styleId: itemDetail?.styleId ? parseInt(itemDetail.styleId) : null,
+          sizeId: itemDetail?.sizeId ? parseInt(itemDetail.sizeId) : null,
+          colorId: itemDetail?.colorId ? parseInt(itemDetail.colorId) : null,
+          uomId: itemDetail?.uomId ? parseInt(itemDetail.uomId) : null,
+          qty: 1,
+          openingStockItemsSRId: createdItem.id,
+          styleItemId: itemDetail?.styleItemId
+            ? parseInt(itemDetail.styleItemId)
+            : null,
+          barcodeNo: saveBarcode?.barcodeNo ?? undefined,
+          barcodeId: saveBarcode?.id
+            ? parseInt(saveBarcode.id)
+            : null,
+        },
+      });
+      await tx.stockSummary.upsert({
+        where: {
+          branchId_barcodeId: {
             branchId: parseInt(branchId),
-            uomId: itemDetail?.uomId ? parseInt(itemDetail.uomId) : null,
+            barcodeId: saveBarcode.id,
           },
-        });
-      }
+        },
+        update: {
+          qty: { increment: 1 },
+        },
+        create: {
+          createdById: parseInt(userId),
+          branchId: parseInt(branchId),
+          styleId: itemDetail?.styleId ? parseInt(itemDetail.styleId) : null,
+          sizeId: itemDetail?.sizeId ? parseInt(itemDetail.sizeId) : null,
+          colorId: itemDetail?.colorId ? parseInt(itemDetail.colorId) : null,
+          uomId: itemDetail?.uomId ? parseInt(itemDetail.uomId) : null,
+          styleItemId: itemDetail?.styleItemId
+            ? parseInt(itemDetail.styleItemId)
+            : null,
+         qty: 1,
+          barcodeNo: saveBarcode?.barcodeNo ?? undefined,
+          barcodeId: saveBarcode.id,
+        },
+      });
     }
   }
 }
 
-function findRemovedItems(dataFound, salesEntryItems) {
-  let removedItems = dataFound.SalesEntryItems.filter((oldItem) => {
-    let result = salesEntryItems.find(
+function findRemovedItems(dataFound, openingStockItems) {
+  let removedItems = dataFound.openingStockItems.filter((oldItem) => {
+    let result = openingStockItems.find(
       (newItem) => parseInt(newItem.id) === parseInt(oldItem.id),
     );
     if (result) return false;
     return true;
   });
   return removedItems;
-}
-
-async function deleteItemsFromStock(tx, removeItemsStockIds) {
-  return await tx.stock.deleteMany({
-    where: {
-      id: {
-        in: removeItemsStockIds,
-      },
-    },
-  });
 }
 
 async function remove(id) {
@@ -1040,157 +851,4 @@ async function remove(id) {
   return { statusCode: 0, data };
 }
 
-async function getSalesInvDetail(req) {
-  const { invNo, storeId, branchId } = req.query;
-  if (!invNo || !storeId || !branchId) {
-    return {
-      statusCode: 400,
-      message: "Please Choose Required Fields",
-    };
-  }
-
-  // 1️⃣ First try fetching by styleNo
-  let data = await prisma.salesEntry.findFirst({
-    where: {
-      docId: invNo,
-      storeId: parseInt(storeId),
-      branchId: parseInt(branchId),
-    },
-  });
-
-  if (!data) return NoRecordFound("Sales Entry");
-  return {
-    statusCode: 0,
-    data: {
-      ...data,
-    },
-  };
-}
-
-async function getSalesDcDetail(req) {
-  const { dcNo } = req.query;
-
-  let data = await prisma.salesEntry.findFirst({
-    where: {
-      docId: dcNo,
-    },
-    select: {
-      SalesEntryItems: {
-        select: {
-          id: true,
-          salesEntryId: true,
-          styleId: true,
-          sizeId: true,
-          qty: true,
-          styleItemId: true,
-          colorId: true,
-        },
-      },
-    },
-  });
-  const salesEntryItemIds = data?.SalesEntryItems.map((item) => item.id) || [];
-
-  const barcodes = await prisma.barcode.findMany({
-    where: {
-      salesEntryItemsId: { in: salesEntryItemIds },
-    },
-  });
-
-  const barcodeWithRate = await Promise.all(
-    barcodes.map(async (barcode) => {
-      const style = await prisma.style.findUnique({
-        where: {
-          id: barcode.styleId,
-        },
-        include: {
-          Hsn: {
-            select: {
-              taxPerc: true,
-            },
-          },
-        },
-      });
-      return {
-        barcodeNo: barcode.barcodeNo,
-        styleId: barcode.styleId,
-        styleItemId: barcode.styleItemId,
-        sizeId: barcode.sizeId,
-        colorId: barcode.colorId,
-        uomId: barcode.uomId,
-        salesEntryItemsId: barcode.salesEntryItemsId,
-        barcodeSeqId: barcode.barcodeSeqId,
-        rate: style?.salesPrice || null,
-        taxPercent: style?.Hsn?.taxPerc ?? 5,
-        qty: 1,
-        barcodeId: barcode.id,
-      };
-    }),
-  );
-
-  if (!data) return NoRecordFound("Sales Entry");
-  return {
-    statusCode: 0,
-    data: barcodeWithRate,
-  };
-}
-
-async function getSalesInvStyleDetail(req) {
-  const { invNo, storeId, branchId, styleNo } = req.query;
-  if (!invNo || !storeId || !branchId || !styleNo) {
-    return {
-      statusCode: 400,
-      message: "Please Choose Required Fields",
-    };
-  }
-  const salesEntry = await prisma.salesEntry.findFirst({
-    where: {
-      docId: invNo,
-      storeId: parseInt(storeId),
-      branchId: parseInt(branchId),
-    },
-    include: {
-      SalesEntryItems: {
-        select: {
-          barcode: true,
-          styleNo: true,
-          styleId: true,
-          sizeId: true,
-          colorId: true,
-          fabricId: true,
-          styleItemId: true,
-          qty: true,
-        },
-      },
-    },
-  });
-
-  // 1️⃣ First try fetching by styleNo
-  let data = salesEntry.SalesEntryItems.filter(
-    (item) => item.styleNo === styleNo,
-  );
-
-  if (data.length === 0) {
-    return {
-      statusCode: 1,
-      message: "Style No Not Found",
-    };
-  }
-
-  return {
-    statusCode: 0,
-    data: data,
-  };
-}
-
-export {
-  get,
-  getOne,
-  getSearch,
-  create,
-  update,
-  remove,
-  getSalesReport,
-  getSalesInvDetail,
-  getSalesDcDetail,
-  getSalesInvStyleDetail,
-};
+export { get, getOne, create, update, remove };

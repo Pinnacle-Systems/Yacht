@@ -92,6 +92,7 @@ export const PRODUCTION_RECEIPT_API = "productionReceipt";
 export const DISPATCHED_API = "dispatched";
 export const GENERALPURCHASE_API = "generalpurchase";
 export const OPENING_STOCK_API = "openingStock";
+export const OPENING_STOCK_SR_API = "openingStockSR";
 export const MACHINE_API = "machine";
 export const PERCENTAGE_API = "percentage";
 export const EMAIL_API = "email";

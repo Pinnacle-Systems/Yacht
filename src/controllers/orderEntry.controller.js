@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { prisma } from "../lib/prisma.js";
 
 import {
   get as _get,
@@ -85,7 +85,7 @@ async function create(req, res, next) {
     console.log(res.statusCode);
   } catch (error) {
     console.error(`Error`, error.message);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error instanceof prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         res.statusCode = 200;
         res.json({
@@ -122,7 +122,7 @@ async function update(req, res, next) {
 
   } catch (error) {
     console.error(`Error`, error.message);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error instanceof prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         res.statusCode = 200;
         res.json({
@@ -145,7 +145,7 @@ async function uploadBillProofImage(req, res, next) {
     console.log(res.statusCode);
   } catch (error) {
     console.error(`Error`, error.message);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error instanceof prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         res.statusCode = 200;
         res.json({
@@ -168,7 +168,7 @@ export async function upload(req, res, next) {
     console.log(res.statusCode);
   } catch (error) {
     console.error(`Error`, error.message);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error instanceof prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         res.statusCode = 200;
         res.json({
@@ -197,7 +197,7 @@ export async function attach(req, res, next) {
     console.log(res.statusCode);
   } catch (error) {
     console.error(`Error`, error.message);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error instanceof prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         res.statusCode = 200;
         res.json({

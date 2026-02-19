@@ -961,7 +961,6 @@ async function getpurchaseBillItems(req) {
   const {
     branchId,
     active,
-    supplierId,
     pagination,
     dataPerPage,
     searchDocId,
@@ -972,6 +971,11 @@ async function getpurchaseBillItems(req) {
 
   let data;
   let totalCount;
+  const headerData = invNo
+    ? await prisma.purchaseBill.findFirst({
+        where: { invNo: invNo },
+      })
+    : null;
   if (pagination) {
     data = await prisma.purchaseBillItems.findMany({
       where: {
@@ -981,7 +985,9 @@ async function getpurchaseBillItems(req) {
                 contains: searchDocId,
               }
             : undefined,
-          supplierId: supplierId ? parseInt(supplierId) : undefined,
+          supplierId: headerData?.supplierId
+            ? parseInt(headerData.supplierId)
+            : undefined,
           invNo: invNo ? invNo : undefined,
         },
       },
@@ -1007,10 +1013,11 @@ async function getpurchaseBillItems(req) {
       data,
     );
 
-    data = data?.filter(
-      (i) => i.PurchaseBill.supplierId == supplierId,
-      // && i.Po.inwardType === po,
-    );
+    if (headerData?.supplierId) {
+      data = data?.filter(
+        (i) => i.PurchaseBill.supplierId == headerData.supplierId,
+      );
+    }
 
     data = await getAllDatapurchaseBillItems(data);
   } else {
@@ -1021,7 +1028,7 @@ async function getpurchaseBillItems(req) {
       },
     });
   }
-  return { statusCode: 0, data, totalCount };
+  return { statusCode: 0, data, totalCount, supplierId: headerData?.supplierId || null, };
 }
 
 async function getBarcodeDetail(req) {

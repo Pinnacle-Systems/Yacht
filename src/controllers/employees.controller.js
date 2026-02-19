@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client'
+import { prisma } from "../lib/prisma.js";
 import { get as _get, getPaginated as _getPaginated, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove } from '../services/employees.service.js';
 
 async function get(req, res, next) {
@@ -38,7 +38,7 @@ async function create(req, res, next) {
         res.json(await _create(req));
     } catch (error) {
         console.error(`Error`, error);
-        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error instanceof prisma.PrismaClientKnownRequestError) {
             if (error.code === 'P2002') {
                 res.statusCode = 200;
                 res.json({ statusCode: 1, message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists` })
@@ -53,7 +53,7 @@ async function update(req, res, next) {
         res.json(await _update(req.params.id, req));
     } catch (error) {
         console.error(`Error`, error);
-        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error instanceof prisma.PrismaClientKnownRequestError) {
             if (error.code === 'P2002') {
                 res.statusCode = 200;
                 res.send({ statusCode: 1, message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists` })

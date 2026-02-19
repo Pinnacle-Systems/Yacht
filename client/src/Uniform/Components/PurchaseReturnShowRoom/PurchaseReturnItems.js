@@ -200,11 +200,10 @@ export default function PurchaseReturnItems({
                       onChange={(e) => {
                         const checked = e.target.checked;
                         setPurchaseReturnItems((prev) =>
-                          prev.map((row) =>
-                            (row.returnQty ?? 0) > 0
-                              ? row
-                              : { ...row, selected: checked },
-                          ),
+                          prev.map((row) => ({
+                            ...row,
+                            selected: checked,
+                          })),
                         );
                       }}
                       onContextMenu={(e) => {

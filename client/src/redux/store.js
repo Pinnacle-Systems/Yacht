@@ -90,6 +90,7 @@ import {
   productionStockApi,
   barcodeSeqMasterApi,
   showroomStockApi,
+  OpeningStockSRApi,
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -233,6 +234,7 @@ const commonReducers = {
   StyleItemMaster: StyleItemMasterApi.reducer,
   productionStock: productionStockApi.reducer,
   hsnMaster: HsnMasterApi.reducer,
+  OpeningStockSR: OpeningStockSRApi.reducer,
 };
 const commonMiddleware = [
   countryMasterApi.middleware,
@@ -346,6 +348,7 @@ const commonMiddleware = [
   StyleItemMasterApi.middleware,
   ProcessGroupApi.middleware,
   HsnMasterApi.middleware,
+  OpeningStockSRApi.middleware
 ];
 
 const store = configureStore({
