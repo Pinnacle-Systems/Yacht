@@ -20,8 +20,8 @@ export default function Form() {
   const [form, setForm] = useState(false);
   const [readOnly, setReadOnly] = useState(false);
   const [id, setId] = useState("");
-  const [prefix, setPrefix] = useState("");
-  const [code, setCode] = useState("");
+  const [prefix, setPrefix] = useState("STYLECODE");
+  const [code, setCode] = useState("YYMM");
   const [digits, setDigits] = useState("");
   const [seqStart, setSeqStart] = useState(1);
   const [barcodeNo, setBarcodeNo] = useState("");
@@ -54,7 +54,6 @@ export default function Form() {
     (data) => {
       if (id) {
         setActive(data?.active);
-        setCode(data?.code);
         setDigits(data?.digits);
         setSeqStart(data?.seqStart);
         setBarcodeNo(data?.barcode);
@@ -71,7 +70,7 @@ export default function Form() {
 
   useEffect(() => {
     setStartWith(digits ? String(seqStart).padStart(digits, "0") : "");
-    setBarcodeNo(`${prefix}${code}${startWith}`);
+    setBarcodeNo(`XXXX${code}${startWith}`);
   }, [
     setPrefix,
     setCode,
@@ -100,34 +99,34 @@ export default function Form() {
   };
 
   const validateData = (data) => {
-    if (
-      !data.prefix ||
-      typeof data.prefix !== "string" ||
-      data.prefix.trim().length < 2
-    ) {
-      Swal.fire({
-        icon: "error",
-        title: "Validation error",
-        text: "Prefix must be a string and at least 2 characters long.",
-      });
-      return false;
-    }
-    if (data.prefix.length > 3) {
-      Swal.fire({
-        icon: "error",
-        title: "Validation error",
-        text: "Prefix  should be at Maximum 3 character .",
-      });
-      return false;
-    }
-    if (data.code > 99) {
-      Swal.fire({
-        icon: "error",
-        title: "Validation error",
-        text: "Code should be Two Digits .",
-      });
-      return false;
-    }
+    // if (
+    //   !data.prefix ||
+    //   typeof data.prefix !== "string" ||
+    //   data.prefix.trim().length < 2
+    // ) {
+    //   Swal.fire({
+    //     icon: "error",
+    //     title: "Validation error",
+    //     text: "Prefix must be a string and at least 2 characters long.",
+    //   });
+    //   return false;
+    // }
+    // if (data.prefix.length > 3) {
+    //   Swal.fire({
+    //     icon: "error",
+    //     title: "Validation error",
+    //     text: "Prefix  should be at Maximum 3 character .",
+    //   });
+    //   return false;
+    // }
+    // if (data.code > 99) {
+    //   Swal.fire({
+    //     icon: "error",
+    //     title: "Validation error",
+    //     text: "Code should be Two Digits .",
+    //   });
+    //   return false;
+    // }
     if (data.digits > 9) {
       Swal.fire({
         icon: "error",
@@ -266,8 +265,8 @@ export default function Form() {
     setReadOnly(false);
     setForm(true);
     setSearchValue("");
-    setPrefix("");
-    setCode("");
+    setPrefix("STYLECODE");
+    setCode("YYMM");
     setSeqStart("");
     setBarcodeNo("");
     setDigits("");
@@ -404,8 +403,8 @@ export default function Form() {
                             setValue={setPrefix}
                             required={true}
                             readOnly={readOnly}
-                            disabled={childRecord.current > 0}
-                            ref={designationRef}
+                            disabled={true}
+                           
                           />
                         </div>
 
@@ -416,8 +415,7 @@ export default function Form() {
                             setValue={setCode}
                             required={true}
                             readOnly={readOnly}
-                            type="number"
-                            disabled={childRecord.current > 0}
+                            disabled={true}
                           />
                         </div>
 
@@ -430,6 +428,7 @@ export default function Form() {
                             readOnly={readOnly}
                             type="number"
                             disabled={childRecord.current > 0}
+                             ref={designationRef}
                           />
                         </div>
                       </div>

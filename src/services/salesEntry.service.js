@@ -709,7 +709,7 @@ async function updateSalesEntryItems(
               },
             });
 
-            const fullPrefix = barcodeSeq.prefix + barcodeSeq.code;
+            const fullPrefix = generatePrefix(stockDetail.styleNo);
 
             let nextNumber;
 
@@ -840,7 +840,8 @@ async function updateSalesEntryItems(
               id: "desc",
             },
           });
-          const fullPrefix = barcodeSeq.prefix + barcodeSeq.code;
+          const fullPrefix = generatePrefix(stockDetail.styleNo);
+
           let nextNumber;
           if (lastBarcode) {
             const lastValue = lastBarcode.barcodeNo;
@@ -881,6 +882,32 @@ async function updateSalesEntryItems(
       }
     }
   }
+}
+
+function generatePrefix(styleNo) {
+  if (!styleNo) {
+    CustomError("Style Code is Missing Failed to Barcode Generation");
+  }
+
+  // Extract first continuous number sequence
+  const match = styleNo.match(/\d+/);
+
+  if (!match) return null;
+
+  // Take first numeric match
+  const numericPart = match[0];
+
+  // Pad to 4 digits
+  const paddedStyle = numericPart.padStart(4, "0").slice(0, 4);
+
+  // Get current YYMM
+  const now = new Date();
+  const year = String(now.getFullYear()).slice(-2);
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+
+  const yymm = `${year}${month}`;
+
+  return `${paddedStyle}${yymm}`;
 }
 
 async function createSalesEntryItems(
@@ -971,7 +998,7 @@ async function createSalesEntryItems(
             id: "desc",
           },
         });
-        const fullPrefix = barcodeSeq.prefix + barcodeSeq.code;
+        const fullPrefix = generatePrefix(itemDetail.styleNo);
         let nextNumber;
         if (lastBarcode) {
           const lastValue = lastBarcode.barcodeNo;
