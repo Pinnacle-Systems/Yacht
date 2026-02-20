@@ -17,6 +17,7 @@ import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServi
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
 import purchaseBillApi from "../../../redux/services/PurchaseBillService";
+import OpeningStockSRApi from "../../../redux/uniformService/OpeningStockSRServices";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -90,6 +91,7 @@ export default function Form() {
           setShowForm(false);
           dispatch(purchaseBillApi.util.invalidateTags(["PurchaseBill"]));
           dispatch(showroomStockApi.util.invalidateTags(["showroomStock"]));
+          dispatch(OpeningStockSRApi.util.invalidateTags(["OpeningStockSR"]));
         } catch (error) {
           Swal.fire({
             icon: "error",

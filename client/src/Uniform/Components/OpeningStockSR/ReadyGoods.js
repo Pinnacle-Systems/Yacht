@@ -20,6 +20,7 @@ export default function ReadyGoods({
   styleList,
   sizeList,
   colorList,
+  uomList,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [styleNo, setStyleNo] = useState("");
@@ -40,6 +41,7 @@ export default function ReadyGoods({
       styleItemId: "",
       colorId: "",
       selected: false,
+      uomId: "",
     };
     setOpeningStockItems([...openingStockItems, newRow]);
   };
@@ -104,6 +106,7 @@ export default function ReadyGoods({
               styleItemId: "",
               colorId: "",
               selected: false,
+              uomId: "",
             })),
           ];
         }
@@ -120,6 +123,7 @@ export default function ReadyGoods({
           styleItemId: "",
           colorId: "",
           selected: false,
+          uomId: "",
         })),
       );
     }
@@ -170,8 +174,8 @@ export default function ReadyGoods({
             remarks: "",
             colorId: "",
             styleItemId: style.styleItemId || "",
-            price: style.price || "",
             selected: false,
+            uomId: style.uomId || "",
           }));
         }
       }
@@ -203,6 +207,7 @@ export default function ReadyGoods({
             styleItemId: "",
             colorId: "",
             selected: false,
+            uomId: "",
           });
         }
 
@@ -249,14 +254,14 @@ export default function ReadyGoods({
                       checked={
                         openingStockItems.length > 0 &&
                         openingStockItems
-                          .filter((row) => (row.stockQty ?? 0) === 0)
+                          .filter((row) => (row.usedQty ?? 0) === 0)
                           .every((row) => row.selected)
                       }
                       onChange={(e) => {
                         const checked = e.target.checked;
                         setOpeningStockItems((prev) =>
                           prev.map((row) =>
-                            (row.stockQty ?? 0) > 0
+                            (row.usedQty ?? 0) > 0
                               ? row
                               : { ...row, selected: checked },
                           ),
@@ -298,6 +303,11 @@ export default function ReadyGoods({
                   Color
                 </th>
                 <th
+                  className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Unit
+                </th>
+                <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Qty
@@ -323,7 +333,7 @@ export default function ReadyGoods({
                       <input
                         type="checkbox"
                         checked={row.selected || false}
-                        disabled={readOnly || (row.stockQty ?? 0) > 0}
+                        disabled={readOnly || (row.usedQty ?? 0) > 0}
                         onChange={(e) =>
                           handleInputChange(e.target.checked, index, "selected")
                         }
@@ -383,7 +393,7 @@ export default function ReadyGoods({
                             label: item.name,
                             value: item.id,
                           }))}
-                        readOnly={readOnly || (row.stockQty ?? 0) > 0}
+                        readOnly={readOnly || id}
                         placeholder=""
                         onBlur={() =>
                           handleInputChange(row.colorId, index, "colorId")
@@ -394,6 +404,17 @@ export default function ReadyGoods({
                           }
                         }}
                         inputId={`qty-input-${index}`}
+                        disabled={readOnly || id}
+                      />
+                    </td>
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <input
+                        className="text-left rounded py-1 px-1 w-full   select-none"
+                        readOnly
+                        value={
+                          findFromList(row.uomId, uomList?.data, "name") || ""
+                        }
+                        disabled={true}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
@@ -416,7 +437,7 @@ export default function ReadyGoods({
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "qty");
                         }}
-                        disabled={readOnly || (row.stockQty ?? 0) > 0}
+                        disabled={readOnly || (row.usedQty ?? 0) > 0}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
@@ -470,9 +491,9 @@ export default function ReadyGoods({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={6}
+                  colSpan={7}
                 >
-                  Total Qty
+                  Total
                 </td>
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
                   {openingStockItems.reduce(

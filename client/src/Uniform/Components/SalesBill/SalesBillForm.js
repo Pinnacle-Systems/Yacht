@@ -30,6 +30,7 @@ import CustomerSearchComponent from "./CustomerSearchComponent";
 import { useGetCustomerByIdQuery } from "../../../redux/services/CustomerMasterService";
 import purchaseBillApi from "../../../redux/services/PurchaseBillService";
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
+import OpeningStockSRApi from "../../../redux/uniformService/OpeningStockSRServices";
 export function SalesBillForm({
   onClose,
   id,
@@ -252,6 +253,7 @@ export function SalesBillForm({
         });
         dispatch(purchaseBillApi.util.invalidateTags(["PurchaseBill"]));
         dispatch(showroomStockApi.util.invalidateTags(["showroomStock"]));
+        dispatch(OpeningStockSRApi.util.invalidateTags(["OpeningStockSR"]));
       } else {
         toast.error(returnData?.message);
       }
@@ -535,15 +537,15 @@ export function SalesBillForm({
                 </button>
               </div>
               <div className="flex gap-2 flex-wrap">
-                 {
-                                    readOnly && (
-                <button
-                  className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                  onClick={() => setReadOnly(false)}
-                >
-                  <FiEdit2 className="w-4 h-4 mr-2" />
-                  Edit
-                </button>)}
+                {readOnly && (
+                  <button
+                    className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                    onClick={() => setReadOnly(false)}
+                  >
+                    <FiEdit2 className="w-4 h-4 mr-2" />
+                    Edit
+                  </button>
+                )}
                 <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
                   <FaWhatsapp className="w-4 h-4 mr-2" />
                   WhatsApp

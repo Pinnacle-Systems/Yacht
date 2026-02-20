@@ -25,6 +25,8 @@ import {
   useUpdateOpeningStockSRMutation,
 } from "../../../redux/uniformService/OpeningStockSRServices.js";
 import BarCodePrintFormat from "../SalesDelivery/Barcode/BarcodePrintFormat.jsx";
+import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices.js";
+import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
 
 export default function OpeningStockForm({
   onClose,
@@ -47,6 +49,9 @@ export default function OpeningStockForm({
   const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
   const { data: sizeList } = useGetSizeMasterQuery({ params: { companyId } });
   const { data: colorList } = useGetColorMasterQuery({ params: { companyId } });
+  const { data: uomList } = useGetUnitOfMeasurementMasterQuery({
+    params: { companyId },
+  });
   const {
     data: singleData,
     isFetching: isSingleFetching,
@@ -72,7 +77,7 @@ export default function OpeningStockForm({
           : moment.utc(today).format("YYYY-MM-DD"),
       );
       setOpeningStockItems(
-        data?.OpeningStockItems ? data.OpeningStockItems : [],
+        data?.openingStockItemsSRs ? data.openingStockItemsSRs : [],
       );
       if (data?.docId) {
         setDocId(data?.docId);
@@ -120,6 +125,7 @@ export default function OpeningStockForm({
             Swal.showLoading();
           },
         });
+        dispatch(showroomStockApi.util.invalidateTags(["showroomStock"]));
       } else {
         toast.error(returnData?.message, {
           autoClose: 2000,
@@ -363,6 +369,8 @@ export default function OpeningStockForm({
                 styleList={styleList}
                 sizeList={sizeList}
                 colorList={colorList}
+                uomList={uomList}
+                id={id}
               />
             </fieldset>
             <div className="flex flex-col md:flex-row gap-2 justify-between pt-1">
@@ -381,15 +389,6 @@ export default function OpeningStockForm({
                   <HiOutlineRefresh className="w-4 h-4 mr-2" />
                   Save & Close
                 </button>
-                {!id && (
-                  <button
-                    onClick={() => saveData("draft")}
-                    className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
-                  >
-                    <HiOutlineRefresh className="w-4 h-4 mr-2" />
-                    Draft Save
-                  </button>
-                )}
               </div>
               <div className="flex gap-2 flex-wrap">
                 {readOnly && (

@@ -5,7 +5,11 @@ import { FaPlus } from "react-icons/fa";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { getCommonParams } from "../../../Utils/helper.js";
-import { useDeleteOpeningStockSRMutation, useLazyGetOpeningStockSRByIdQuery } from "../../../redux/uniformService/OpeningStockSRServices.js";
+import {
+  useDeleteOpeningStockSRMutation,
+  useLazyGetOpeningStockSRByIdQuery,
+} from "../../../redux/uniformService/OpeningStockSRServices.js";
+import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -48,13 +52,7 @@ export default function Form() {
       if (data?.data?.childRecordSales > 0) {
         Swal.fire({
           icon: "error",
-          title: "This items used in Sales Delivery",
-          text: "Data cannot be deleted!",
-        });
-      } else if (data?.data?.childRecordStock > 0) {
-        Swal.fire({
-          icon: "error",
-          title: "This items used in Stock Adjustment",
+          title: "This Transaction items used in Sales Bill",
           text: "Data cannot be deleted!",
         });
       } else {
@@ -75,8 +73,7 @@ export default function Form() {
             timer: 1000,
           });
           setShowForm(false);
-        //   dispatch(StyleMasterApi.util.invalidateTags(["StyleMaster"]));
-        //   dispatch(stockApi.util.invalidateTags(["Stock"]));
+          dispatch(showroomStockApi.util.invalidateTags(["showroomStock"]));
         } catch (error) {
           Swal.fire({
             icon: "error",
