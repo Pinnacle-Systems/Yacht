@@ -82,6 +82,7 @@ export default function OpeningStockForm({
       if (data?.docId) {
         setDocId(data?.docId);
       }
+      setBarcodeItems(data?.barcodes ? data?.barcodes : []);
     },
     [id],
   );
@@ -407,10 +408,6 @@ export default function OpeningStockForm({
                 <button
                   className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
                   onClick={() => {
-                    const allStockRows = openingStockItems.flatMap(
-                      (item) => item.Stock,
-                    );
-                    setBarcodeItems(allStockRows);
                     setBarcodePrintOpen(true);
                   }}
                   disabled={!id}

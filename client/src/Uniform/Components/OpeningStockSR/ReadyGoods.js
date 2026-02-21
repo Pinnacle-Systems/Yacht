@@ -42,6 +42,7 @@ export default function ReadyGoods({
       colorId: "",
       selected: false,
       uomId: "",
+      styleNo: "",
     };
     setOpeningStockItems([...openingStockItems, newRow]);
   };
@@ -107,6 +108,7 @@ export default function ReadyGoods({
               colorId: "",
               selected: false,
               uomId: "",
+              styleNo: "",
             })),
           ];
         }
@@ -124,6 +126,7 @@ export default function ReadyGoods({
           colorId: "",
           selected: false,
           uomId: "",
+          styleNo: "",
         })),
       );
     }
@@ -176,6 +179,7 @@ export default function ReadyGoods({
             styleItemId: style.styleItemId || "",
             selected: false,
             uomId: style.uomId || "",
+            styleNo: style.sku,
           }));
         }
       }
@@ -208,6 +212,7 @@ export default function ReadyGoods({
             colorId: "",
             selected: false,
             uomId: "",
+            styleNo:""
           });
         }
 
@@ -393,7 +398,7 @@ export default function ReadyGoods({
                             label: item.name,
                             value: item.id,
                           }))}
-                        readOnly={readOnly || id}
+                        readOnly={readOnly || row.id}
                         placeholder=""
                         onBlur={() =>
                           handleInputChange(row.colorId, index, "colorId")
@@ -404,7 +409,7 @@ export default function ReadyGoods({
                           }
                         }}
                         inputId={`qty-input-${index}`}
-                        disabled={readOnly || id}
+                        disabled={readOnly}
                       />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px]">

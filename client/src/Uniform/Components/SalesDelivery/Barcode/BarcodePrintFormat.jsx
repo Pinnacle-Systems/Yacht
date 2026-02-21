@@ -19,10 +19,10 @@ const chunkArray = (arr, size) => {
 const BarCodePrintFormat = ({
   data = [],
   labelConfig = {
-    labelWidth: 35, // mm
-    labelHeight: 20, // mm
+    labelWidth: 50, // mm
+    labelHeight: 25, // mm
     stickersPerRow: 2,
-    horizontalGap: 1, // mm
+    horizontalGap: 2, // mm
     verticalGap: 2, // mm
   },
 }) => {
@@ -101,8 +101,8 @@ const BarCodePrintFormat = ({
                 {/* 🧾 Barcode */}
                 <BarcodeGenerator
                   value={code.barcodeNo}
-                  width={labelWidthPt * 0.85}
-                  height={labelHeightPt * 0.30}
+                  width={labelWidthPt * 0.9}
+                  height={labelHeightPt * 0.40}
                 />
 
                 {/* 🧵 Style No */}

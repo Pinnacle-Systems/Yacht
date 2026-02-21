@@ -3,9 +3,10 @@ import React from "react";
 import PageWrapper from "../../../../Utils/PageWrapper";
 import tw from "../../../../Utils/tailwind-react-pdf";
 import { findFromList } from "../../../../Utils/helper";
-import Header from "../../../../Utils/Header";
+import SRHeader from "../../../../Utils/SRHeader";
+import SRPageWrapper from "../../../../Utils/SRPageWrapper";
 
-const PDF = ({ allData, sizeList, styleItemList, colorList, styleList }) => {
+const PDF = ({ allData, sizeList, styleItemList, colorList, styleList,singleData }) => {
 
     const styles = StyleSheet.create({
         page: { padding: 5 },
@@ -117,13 +118,13 @@ const PDF = ({ allData, sizeList, styleItemList, colorList, styleList }) => {
 
     return (
         <Document>
-            <PageWrapper heading={"Stock Report"} allData={allData} header={false}>
+            <SRPageWrapper heading={"Stock Report"} allData={allData} header={false}>
                 <View>
-                    <Header styles={styles} />
+                    <SRHeader styles={styles} singleData={singleData}/>
                 </View>
 
                 <View style={styles.container}>
-                    <Text style={tw("mx-auto     text-base text-black")}> Stock Report</Text>
+                    <Text style={tw("mx-auto     text-base text-black mt-2")}> Stock Report</Text>
                     <View style={{ height: 1 }} fixed />
                     <View style={[styles.table,]} wrap>
                         <View fixed style={styles.tableHeader}>
@@ -250,7 +251,7 @@ const PDF = ({ allData, sizeList, styleItemList, colorList, styleList }) => {
                     </View>
 
                 </View>
-            </PageWrapper>
+            </SRPageWrapper>
         </Document>
     );
 };

@@ -71,6 +71,12 @@ async function get(req) {
       fabMeter: true,
     },
   });
+  if (pagination) {
+    data = data.slice(
+      (pageNumber - 1) * parseInt(dataPerPage),
+      pageNumber * dataPerPage,
+    );
+  }
   totalCount = data.length;
   totalQty = data?.reduce((sum, item) => sum + (item._sum?.qty || 0), 0);
   totalMeter = data?.reduce((sum, item) => sum + (item._sum?.fabMeter || 0), 0);

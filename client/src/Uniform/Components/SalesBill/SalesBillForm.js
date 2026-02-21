@@ -31,6 +31,7 @@ import { useGetCustomerByIdQuery } from "../../../redux/services/CustomerMasterS
 import purchaseBillApi from "../../../redux/services/PurchaseBillService";
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
 import OpeningStockSRApi from "../../../redux/uniformService/OpeningStockSRServices";
+import PDF from "./PrintFormat/PDF";
 export function SalesBillForm({
   onClose,
   id,
@@ -43,6 +44,7 @@ export function SalesBillForm({
   uomList,
   taxTypeList,
   styleList,
+  singleDataBranch
 }) {
   const [pdfOpen, setPdfOpen] = useState(false);
   const [docId, setDocId] = useState("New");
@@ -381,6 +383,23 @@ export function SalesBillForm({
               upiAmount={upiAmount}
               paymentValue={paymentValue}
             />
+          </Modal>
+          <Modal
+            isOpen={pdfOpen}
+            onClose={() => setPdfOpen(false)}
+            widthClass={"w-[90%] h-[90%]"}
+          >
+            <PDFViewer style={tw("w-full h-full")}>
+              <PDF
+                singleData={singleData?.data}
+                styleList={styleList}
+                styleItemList={styleItemList}
+                colorList={colorList}
+                sizeList={sizeList}
+                uomList={uomList}
+                singleDataBranch={singleDataBranch}
+              />
+            </PDFViewer>
           </Modal>
           <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
             <div className="flex justify-between items-center mb-1">

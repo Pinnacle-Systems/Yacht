@@ -709,7 +709,12 @@ async function updateSalesEntryItems(
               },
             });
 
-            const fullPrefix = generatePrefix(stockDetail.styleNo);
+            let fullPrefix;
+            if (barcodeSeq.prefix === "STYLECODE") {
+              fullPrefix = generatePrefix(stockDetail.styleNo);
+            } else {
+              fullPrefix = barcodeSeq.prefix + barcodeSeq.code;
+            }
 
             let nextNumber;
 
@@ -840,7 +845,12 @@ async function updateSalesEntryItems(
               id: "desc",
             },
           });
-          const fullPrefix = generatePrefix(stockDetail.styleNo);
+          let fullPrefix;
+          if (barcodeSeq.prefix === "STYLECODE") {
+            fullPrefix = generatePrefix(stockDetail.styleNo);
+          } else {
+            fullPrefix = barcodeSeq.prefix + barcodeSeq.code;
+          }
 
           let nextNumber;
           if (lastBarcode) {
@@ -998,7 +1008,12 @@ async function createSalesEntryItems(
             id: "desc",
           },
         });
-        const fullPrefix = generatePrefix(itemDetail.styleNo);
+        let fullPrefix;
+        if (barcodeSeq.prefix === "STYLECODE") {
+          fullPrefix = generatePrefix(itemDetail.styleNo);
+        } else {
+          fullPrefix = barcodeSeq.prefix + barcodeSeq.code;
+        }
         let nextNumber;
         if (lastBarcode) {
           const lastValue = lastBarcode.barcodeNo;

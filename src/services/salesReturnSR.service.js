@@ -126,6 +126,12 @@ async function get(req) {
     );
   }
   const totalCount = data.length;
+  if (pagination) {
+    data = data.slice(
+      (pageNumber - 1) * parseInt(dataPerPage),
+      pageNumber * dataPerPage,
+    );
+  }
 
   let docId = finYearDate
     ? await getNextDocId(

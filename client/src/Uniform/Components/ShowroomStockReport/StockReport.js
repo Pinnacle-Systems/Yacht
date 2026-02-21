@@ -39,10 +39,6 @@ const StockReport = forwardRef(
     const [colorId, setColorId] = useState("");
     const [barcodeId, setBarcodeId] = useState("");
 
-    useEffect(() => {
-      setCurrentPageNumber(1);
-    }, [serachDocNo, searchDocDate]);
-
     const companyId = secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId",
     );
@@ -76,12 +72,16 @@ const StockReport = forwardRef(
     );
 
     useEffect(() => {
+      setCurrentPageNumber(1);
+    }, [serachDocNo, searchDocDate, locationId,styleId,sizeId,styleItemId,colorId,barcodeId]);
+
+    useEffect(() => {
       if (allData && onDataLoaded) {
         onDataLoaded(allData);
       }
     }, [allData, onDataLoaded]);
 
-    const allDataDetail = allData?.data;
+    const allDataDetail = allData?.data || [];
 
     useEffect(() => {
       if (allData?.totalCount) {
@@ -91,13 +91,9 @@ const StockReport = forwardRef(
 
     const isLoadingIndicator = isLoading || isFetching;
 
-    const totalPages = Math?.ceil(allDataDetail?.length / itemsPerPage);
-    const indexOfLastItem = currentPage * itemsPerPage;
+    const totalPages = Math?.ceil(allData?.totalCount / itemsPerPage);
+    const indexOfLastItem = currentPage * parseInt(10);
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = (allDataDetail || []).slice(
-      indexOfFirstItem,
-      indexOfLastItem,
-    );
 
     const handlePageChange = (newPage) => {
       if (newPage >= 1 && newPage <= totalPages) {
@@ -108,6 +104,11 @@ const StockReport = forwardRef(
     const Pagination = () => {
       return (
         <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
+          {/* <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+          Showing {indexOfFirstItem + 1} to{" "}
+          {Math.min(indexOfLastItem, allData?.data?.length)} of{" "}
+          {allData?.length} entries
+        </div> */}
           <div className="text-sm text-gray-600 mb-2 sm:mb-0">
             Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
             {Math.min(currentPage * itemsPerPage, allData?.totalCount || 0)} of{" "}
@@ -218,14 +219,14 @@ const StockReport = forwardRef(
           <>
             <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
               <div className="h-[420px]">
-                {currentItems.length > 0 ? (
+                {allDataDetail.length > 0 ? (
                   <table className="">
                     <thead className="bg-gray-200 text-gray-800 ">
                       <tr className="">
                         <th className=" px-1 py-1.5  font-medium text-[13px]  text-gray-900  text-center  w-12">
                           <div className="">S No</div>
                         </th>
- <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
+                        <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                           <div>Barcode No</div>
                         </th>
                         <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-28">
@@ -240,7 +241,7 @@ const StockReport = forwardRef(
                         <th className="w-28  px-3   font-medium text-[13px] text-gray-900  text-center ">
                           <div>Size</div>
                         </th>
-                       
+
                         <th className="w-28  px-3   font-medium text-[13px] text-gray-900  text-center ">
                           <div>Qty</div>
                         </th>
@@ -256,7 +257,7 @@ const StockReport = forwardRef(
                       </tbody>
                     ) : (
                       <tbody className="border-2">
-                        {currentItems.map((dataObj, index) => (
+                        {allDataDetail.map((dataObj, index) => (
                           <tr
                             tabIndex={0}
                             key={dataObj.id}
@@ -265,7 +266,7 @@ const StockReport = forwardRef(
                             }`}
                           >
                             <td className="text-center h-8">{index + 1}</td>
-                              <td className="py-1.5 text-center">
+                            <td className="py-1.5 text-center">
                               {dataObj?.barcodeNo}
                             </td>
 
@@ -298,7 +299,7 @@ const StockReport = forwardRef(
                                 "name",
                               )}
                             </td>
-                          
+
                             <td className="py-1.5 text-center">
                               {dataObj?.qty}
                             </td>

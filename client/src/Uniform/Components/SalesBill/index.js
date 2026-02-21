@@ -18,6 +18,7 @@ import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMaste
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
 import purchaseBillApi from "../../../redux/services/PurchaseBillService";
 import OpeningStockSRApi from "../../../redux/uniformService/OpeningStockSRServices";
+import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterService";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -37,6 +38,7 @@ export default function Form() {
       isLoading: isSingleLoading,
     },
   ] = useLazyGetSalesBillByIdQuery();
+  const { data: singleDataBranch } = useGetBranchByIdQuery(branchId);
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
@@ -159,6 +161,7 @@ export default function Form() {
           uomList={uomList}
           taxTypeList={taxTypeList}
           styleList={styleList}
+          singleDataBranch={singleDataBranch}
         />
       )}
     </>

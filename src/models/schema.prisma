@@ -3017,4 +3017,5 @@ model OpeningStockItemsSR {
   stockLedgers     StockLedger[]
   barcodes         Barcode[]
   remarks          String?
+  styleNo          String?
 }

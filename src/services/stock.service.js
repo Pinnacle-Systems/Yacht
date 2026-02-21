@@ -524,12 +524,12 @@ async function get(req) {
   });
   totalCount = data.length;
   totalQty = data?.reduce((sum, item) => sum + (item._sum?.qty || 0), 0);
-  // if (pagination) {
-  //   data = data.slice(
-  //     (pageNumber - 1) * parseInt(dataPerPage),
-  //     pageNumber * dataPerPage
-  //   );
-  // }
+  if (pagination) {
+    data = data.slice(
+      (pageNumber - 1) * parseInt(dataPerPage),
+      pageNumber * dataPerPage
+    );
+  }
   return {
     statusCode: 0,
     data: data.map((d) => ({

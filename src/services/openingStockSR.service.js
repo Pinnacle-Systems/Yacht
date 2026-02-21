@@ -220,7 +220,7 @@ async function getOne(id) {
       ...data,
       barcodes: barcodeWithRate,
       openingStockItemsSRs: openingWithStkQty,
-      childRecordSales: childRecordSales
+      childRecordSales: childRecordSales,
     },
   };
 }
@@ -260,6 +260,32 @@ async function create(body) {
     );
   });
   return { statusCode: 0, data };
+}
+
+function generatePrefix(styleNo) {
+  if (!styleNo) {
+    CustomError("Style Code is Missing Failed to Barcode Generation");
+  }
+
+  // Extract first continuous number sequence
+  const match = styleNo.match(/\d+/);
+
+  if (!match) return null;
+
+  // Take first numeric match
+  const numericPart = match[0];
+
+  // Pad to 4 digits
+  const paddedStyle = numericPart.padStart(4, "0").slice(0, 4);
+
+  // Get current YYMM
+  const now = new Date();
+  const year = String(now.getFullYear()).slice(-2);
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+
+  const yymm = `${year}${month}`;
+
+  return `${paddedStyle}${yymm}`;
 }
 
 async function update(id, body) {
@@ -335,9 +361,10 @@ async function updateOpeningStockItems(
           sizeId: item?.sizeId ? parseInt(item.sizeId) : null,
           colorId: item?.colorId ? parseInt(item.colorId) : null,
           qty,
-          // remarks: item ?.remarks ? item ?.remarks : undefined,
+          remarks: item?.remarks ? item?.remarks : undefined,
           styleItemId: item?.styleItemId ? parseInt(item.styleItemId) : null,
           uomId: item?.uomId ? parseInt(item.uomId) : null,
+          styleNo: item.styleNo ?? undefined,
         },
       });
       const existingBarcodes = await tx.barcode.findMany({
@@ -370,8 +397,12 @@ async function updateOpeningStockItems(
               id: "desc",
             },
           });
-
-          const fullPrefix = barcodeSeq.prefix + barcodeSeq.code;
+          let fullPrefix;
+          if (barcodeSeq.prefix === "STYLECODE") {
+            fullPrefix = generatePrefix(item.styleNo);
+          } else {
+            fullPrefix = barcodeSeq.prefix + barcodeSeq.code;
+          }
 
           let nextNumber = lastBarcode
             ? parseInt(lastBarcode.barcodeNo.substring(fullPrefix.length)) + 1
@@ -430,9 +461,10 @@ async function updateOpeningStockItems(
           sizeId: item?.sizeId ? parseInt(item.sizeId) : null,
           colorId: item?.colorId ? parseInt(item.colorId) : null,
           qty,
-          // remarks: item ?.remarks ? item ?.remarks : undefined,
+          remarks: item?.remarks ? item?.remarks : undefined,
           styleItemId: item?.styleItemId ? parseInt(item.styleItemId) : null,
           uomId: item?.uomId ? parseInt(item.uomId) : null,
+          styleNo: item.styleNo ?? undefined,
         },
       });
       const barcodeSeq = await tx.barcodeSequence.findFirst({
@@ -453,7 +485,12 @@ async function updateOpeningStockItems(
             id: "desc",
           },
         });
-        const fullPrefix = barcodeSeq.prefix + barcodeSeq.code;
+        let fullPrefix;
+        if (barcodeSeq.prefix === "STYLECODE") {
+          fullPrefix = generatePrefix(item.styleNo);
+        } else {
+          fullPrefix = barcodeSeq.prefix + barcodeSeq.code;
+        }
         let nextNumber = lastBarcode
           ? parseInt(lastBarcode.barcodeNo.substring(fullPrefix.length)) + 1
           : barcodeSeq.seqStart;
@@ -538,11 +575,12 @@ async function createOpeningStockItems(
         sizeId: itemDetail?.sizeId ? parseInt(itemDetail.sizeId) : null,
         colorId: itemDetail?.colorId ? parseInt(itemDetail.colorId) : null,
         qty,
-        // remarks: itemDetail?.remarks ? itemDetail?.remarks : undefined,
+        remarks: itemDetail?.remarks ? itemDetail?.remarks : undefined,
         styleItemId: itemDetail?.styleItemId
           ? parseInt(itemDetail.styleItemId)
           : null,
         uomId: itemDetail?.uomId ? parseInt(itemDetail.uomId) : null,
+        styleNo: itemDetail.styleNo ?? undefined,
       },
     });
     const barcodeSeq = await tx.barcodeSequence.findFirst({
@@ -563,7 +601,12 @@ async function createOpeningStockItems(
           id: "desc",
         },
       });
-      const fullPrefix = barcodeSeq.prefix + barcodeSeq.code;
+      let fullPrefix;
+      if (barcodeSeq.prefix === "STYLECODE") {
+        fullPrefix = generatePrefix(itemDetail.styleNo);
+      } else {
+        fullPrefix = barcodeSeq.prefix + barcodeSeq.code;
+      }
       let nextNumber;
       if (lastBarcode) {
         const lastValue = lastBarcode.barcodeNo;

@@ -1,6 +1,6 @@
 import StockReport from "./StockReport";
 import ParameterButton from "../../../ReusableComponents/ParameterButton";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FiPrinter } from "react-icons/fi";
 import { PDFViewer } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf";
@@ -13,6 +13,7 @@ import ExcelJS from "exceljs";
 import { findFromList } from "../../../Utils/helper";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterService";
 
 export default function Form() {
   const [parameter, setParameter] = useState(false);
@@ -29,6 +30,11 @@ export default function Form() {
     branchId,
     companyId,
   };
+  const {
+    data: singleData,
+    isFetching: isSingleFetching,
+    isLoading: isSingleLoading,
+  } = useGetBranchByIdQuery(branchId);
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
@@ -40,14 +46,22 @@ export default function Form() {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Stock Report");
 
-    // Title
+    /* =========================
+     TITLE
+  ========================== */
     sheet.mergeCells("A1:G1");
     const titleCell = sheet.getCell("A1");
     titleCell.value = "Stock Report";
-    titleCell.font = { bold: true, size: 14 };
-    titleCell.alignment = { horizontal: "center", vertical: "middle" };
+    titleCell.font = { bold: true, size: 16 };
+    titleCell.alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
+    sheet.getRow(1).height = 28;
 
-    // Header row
+    /* =========================
+     HEADER
+  ========================== */
     const headerRow = [
       "S.No",
       "Barcode",
@@ -57,48 +71,24 @@ export default function Form() {
       "Size",
       "Qty",
     ];
+
     sheet.addRow(headerRow);
 
-    // Header styling
-    sheet.getRow(2).eachCell((cell) => {
+    const header = sheet.getRow(2);
+    header.height = 24;
+
+    header.eachCell((cell) => {
       cell.font = { bold: true };
-      cell.alignment = { horizontal: "center", vertical: "middle" };
-      cell.border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" },
+      cell.alignment = {
+        horizontal: "center",
+        vertical: "middle",
+        indent: 1,
       };
       cell.fill = {
         type: "pattern",
         pattern: "solid",
         fgColor: { argb: "FFEFEFEF" },
       };
-    });
-
-    // Data rows
-    dataArray.forEach((item, index) => {
-      sheet.addRow([
-        index + 1,
-        item?.barcodeNo || "",
-        findFromList(item?.styleId, styleList?.data, "sku") || "",
-        findFromList(item?.styleItemId, styleItemList?.data, "name") || "",
-        findFromList(item?.colorId, colorList?.data, "name") || "",
-        findFromList(item?.sizeId, sizeList?.data, "name") || "",
-
-        item?.qty || 0,
-      ]);
-    });
-
-    // Add total row
-    const totalQty = dataArray.reduce(
-      (sum, item) => sum + (Number(item?.qty) || 0),
-      0,
-    );
-    const totalRow = sheet.addRow(["", "", "", "", "", "Total", totalQty]);
-    totalRow.eachCell((cell, colNumber) => {
-      cell.font = { bold: true };
-      cell.alignment = { horizontal: "right" };
       cell.border = {
         top: { style: "thin" },
         left: { style: "thin" },
@@ -107,35 +97,109 @@ export default function Form() {
       };
     });
 
-    // Adjust column widths
+    /* =========================
+     DATA ROWS
+  ========================== */
+    dataArray.forEach((item, index) => {
+      const row = sheet.addRow([
+        index + 1,
+        item?.barcodeNo || "",
+        findFromList(item?.styleId, styleList?.data, "sku") || "",
+        findFromList(item?.styleItemId, styleItemList?.data, "name") || "",
+        findFromList(item?.colorId, colorList?.data, "name") || "",
+        findFromList(item?.sizeId, sizeList?.data, "name") || "",
+        item?.qty || 0,
+      ]);
+
+      row.height = 22;
+    });
+
+    /* =========================
+     TOTAL ROW
+  ========================== */
+    const totalQty = dataArray.reduce(
+      (sum, item) => sum + (Number(item?.qty) || 0),
+      0,
+    );
+
+    const totalRow = sheet.addRow(["", "", "", "", "", "Total", totalQty]);
+    totalRow.height = 24;
+
+    /* =========================
+     COLUMN WIDTHS
+  ========================== */
     sheet.columns = [
-      { key: "sno", width: 8 },
-      { key: "barcodeNo", width: 25 },
-      { key: "styleNo", width: 15 },
-      { key: "styleName", width: 25 },
-      { key: "colourName", width: 25 },
-      { key: "size", width: 12 },
-      { key: "qty", width: 10 },
+      { width: 8 },
+      { width: 25 },
+      { width: 15 },
+      { width: 25 },
+      { width: 25 },
+      { width: 12 },
+      { width: 10 },
     ];
 
-    // Borders & alignment for all rows
+    /* =========================
+     GLOBAL STYLING
+  ========================== */
     sheet.eachRow((row, rowNumber) => {
-      row.eachCell((cell) => {
+      row.eachCell((cell, colNumber) => {
+        // Borders for all cells
         cell.border = {
           top: { style: "thin" },
           left: { style: "thin" },
           bottom: { style: "thin" },
           right: { style: "thin" },
         };
-        cell.alignment = { vertical: "middle", wrapText: true };
+
+        // ✅ Skip Title Row (Row 1)
+        if (rowNumber === 1) return;
+
+        // Alignment rules for remaining rows
+        if (colNumber === 7) {
+          cell.alignment = {
+            horizontal: "right",
+            vertical: "middle",
+            indent: 1,
+          };
+        } else {
+          cell.alignment = {
+            horizontal: "left",
+            vertical: "middle",
+            indent: 1,
+            wrapText: true,
+          };
+        }
+
+        // Total row styling
+        if (rowNumber === sheet.rowCount) {
+          cell.font = { bold: true };
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFDDEBF7" },
+          };
+        }
       });
     });
 
-    // Export workbook
+    /* =========================
+     FREEZE HEADER ONLY
+  ========================== */
+    sheet.views = [
+      {
+        state: "frozen",
+        ySplit: 2,
+      },
+    ];
+
+    /* =========================
+     EXPORT
+  ========================== */
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
+
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -158,14 +222,13 @@ export default function Form() {
             styleItemList={styleItemList}
             colorList={colorList}
             styleList={styleList}
+            singleData={singleData}
           />
         </PDFViewer>
       </Modal>
       <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">
-             Stock Report
-          </h1>
+          <h1 className="text-xl font-bold text-gray-800">Stock Report</h1>
         </div>
         <div className="flex gap-x-5">
           <button

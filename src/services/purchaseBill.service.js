@@ -163,6 +163,13 @@ async function get(req) {
   );
   const totalCount = data.length;
 
+  if (pagination) {
+    data = data.slice(
+      (pageNumber - 1) * parseInt(dataPerPage),
+      pageNumber * dataPerPage,
+    );
+  }
+
   let docId = finYearDate
     ? await getNextDocId(
         branchId,
@@ -1028,7 +1035,12 @@ async function getpurchaseBillItems(req) {
       },
     });
   }
-  return { statusCode: 0, data, totalCount, supplierId: headerData?.supplierId || null, };
+  return {
+    statusCode: 0,
+    data,
+    totalCount,
+    supplierId: headerData?.supplierId || null,
+  };
 }
 
 async function getBarcodeDetail(req) {

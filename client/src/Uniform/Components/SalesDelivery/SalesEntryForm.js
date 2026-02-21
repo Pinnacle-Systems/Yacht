@@ -220,7 +220,7 @@ export function SalesBillForm({
       setSalesType(data?.salesType ? data?.salesType : "");
       setOverAllDisc(data?.overAllDisc ? data?.overAllDisc : "");
       setRoundOff(data?.roundOff ? data?.roundOff : "");
-      setBarcodes(data?.barcodes ? data?.barcodes : [])
+      setBarcodes(data?.barcodes ? data?.barcodes : []);
     },
     [id],
   );
@@ -396,7 +396,7 @@ export function SalesBillForm({
             onClose={() => setBarcodePrintOpen(false)}
             widthClass={"px-2 h-[90%] w-[90%]"}
           >
-              <BarCodePrintFormat data={barcodes} />
+            <BarCodePrintFormat data={barcodes} />
           </Modal>
           <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
             <div className="flex justify-between items-center mb-1">
@@ -648,15 +648,15 @@ export function SalesBillForm({
                 </button> */}
               </div>
               <div className="flex gap-2 flex-wrap">
-                 {
-                                    readOnly && (
-                <button
-                  className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                  onClick={() => setReadOnly(false)}
-                >
-                  <FiEdit2 className="w-4 h-4 mr-2" />
-                  Edit
-                </button>)}
+                {readOnly && (
+                  <button
+                    className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                    onClick={() => setReadOnly(false)}
+                  >
+                    <FiEdit2 className="w-4 h-4 mr-2" />
+                    Edit
+                  </button>
+                )}
                 <button
                   className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
                   disabled={!id}
@@ -667,16 +667,18 @@ export function SalesBillForm({
                   <FaRegFilePdf className="w-4 h-4 mr-2" />
                   Pdf
                 </button>
-                <button
-                  className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm"
-                  onClick={() => {
-                    setBarcodePrintOpen(true);
-                  }}
-                  disabled={!id}
-                >
-                  <FiPrinter className="w-4 h-4 mr-2" />
-                  Barcode
-                </button>
+                {salesType === "RETAIL" && (
+                  <button
+                    className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm"
+                    onClick={() => {
+                      setBarcodePrintOpen(true);
+                    }}
+                    disabled={!id}
+                  >
+                    <FiPrinter className="w-4 h-4 mr-2" />
+                    Barcode
+                  </button>
+                )}
               </div>
             </div>
           </div>
