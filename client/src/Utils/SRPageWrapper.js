@@ -29,7 +29,7 @@ const SRPageWrapper = ({
         style={{
           flex: 1,
           borderWidth: 1,
-         borderColor: "#411354" ,
+          borderColor: "#411354",
           margin: 4,
 
           // no need to add bottom padding here because Page pb reserves it
@@ -49,7 +49,7 @@ const SRPageWrapper = ({
         )}
 
         {/* main content — make it grow so it stops before page paddingBottom */}
-        <View>{children}</View>
+        <View style={{ flex: 1, flexDirection: "column" }}>{children}</View>
       </View>
 
       {/* Footer: fixed to page bottom (won't overlap content because Page pb reserved space) */}

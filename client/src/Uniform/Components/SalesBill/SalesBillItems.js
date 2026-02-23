@@ -42,7 +42,7 @@ export default function SalesBillItems({
       qty: "",
       rate: "",
       taxPercent: "",
-      discountType: "",
+      discountType: "Percentage",
       discountValue: "",
       amount: "",
       styleItemId: "",
@@ -89,7 +89,7 @@ export default function SalesBillItems({
               barcodeId: "",
               rate: "",
               taxPercent: "",
-              discountType: "",
+              discountType: "Percentage",
               discountValue: "",
               amount: "",
               styleItemId: "",
@@ -111,7 +111,7 @@ export default function SalesBillItems({
           barcodeNo: "",
           rate: "",
           taxPercent: "",
-          discountType: "",
+          discountType: "Percentage",
           discountValue: "",
           amount: "",
           styleItemId: "",
@@ -166,7 +166,7 @@ export default function SalesBillItems({
     // Final net amount
     const netAmount = amountAfterGST - discountAmt;
 
-    return netAmount.toFixed(2);
+    return netAmount;
   };
 
   const fillRows = (rowsToFill) => {
@@ -196,7 +196,7 @@ export default function SalesBillItems({
           barcodeId: "",
           rate: "",
           taxPercent: "",
-          discountType: "",
+          discountType: "Percentage",
           discountValue: "",
           styleItemId: "",
           colorId: "",
@@ -781,11 +781,7 @@ export default function SalesBillItems({
                     <input
                       type="number"
                       className="text-right rounded py-1 px-1 w-full"
-                      value={
-                        row?.netAmount !== undefined && row?.netAmount !== null
-                          ? Number(row.netAmount).toFixed(2)
-                          : "0"
-                      }
+                      value={Number(row.netAmount || 0).toFixed(2)}
                       disabled
                     />
                   </td>

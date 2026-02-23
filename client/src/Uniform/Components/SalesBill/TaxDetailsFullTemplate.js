@@ -125,6 +125,16 @@ const TaxDetailsFullTemplate = ({
     return args.reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
   }
 
+  const safeEval = (expression) => {
+    try {
+      if (!expression) return 0;
+      return eval(expression);
+    } catch (e) {
+      console.error("Formula error:", expression);
+      return 0;
+    }
+  };
+
   return (
     <div
       className={`${
@@ -143,21 +153,6 @@ const TaxDetailsFullTemplate = ({
           </tr>
         </thead>
         <tbody>
-          <tr className="h-7">
-            <td className="border border-gray-500">Tax</td>
-            <td className="border border-gray-500" colSpan={2}>
-              <input
-                type="text"
-                autoFocus
-                disabled={readOnly}
-                className="h-7 w-full text-right"
-                value={taxPercent}
-                onChange={(e) => {
-                  handleInputChange(e.target.value, index, "taxPercent");
-                }}
-              />
-            </td>
-          </tr>
           <tr>
             <td className="border border-gray-500">Discount Type</td>
             <td className="border border-gray-500" colSpan={2}>
@@ -168,6 +163,7 @@ const TaxDetailsFullTemplate = ({
                 onChange={(e) =>
                   handleInputChange(e.target.value, index, "discountType")
                 }
+                autoFocus={true}
               >
                 <option hidden>Select</option>
                 {discountTypes.map((option, index) => (
@@ -197,7 +193,21 @@ const TaxDetailsFullTemplate = ({
               />
             </td>
           </tr>
-
+          <tr className="h-7">
+            <td className="border border-gray-500">Tax</td>
+            <td className="border border-gray-500" colSpan={2}>
+              <input
+                type="text"
+                // autoFocus
+                disabled={readOnly}
+                className="h-7 w-full text-right"
+                value={taxPercent}
+                onChange={(e) => {
+                  handleInputChange(e.target.value, index, "taxPercent");
+                }}
+              />
+            </td>
+          </tr>
           {formulas
             // .filter((item) => !item.isPowise)
             .map((f, i) => (
@@ -206,10 +216,10 @@ const TaxDetailsFullTemplate = ({
                   {f.displayName}
                 </td>
                 <td className="border border-gray-500 font-semibold text-right">
-                  {eval(getRegex(f.value))}
+                  {safeEval(getRegex(f.value))}
                 </td>
                 <td className="border border-gray-500 font-semibold text-right">
-                  {eval(getRegex(f.amount))}
+                  {safeEval(getRegex(f.amount))}
                 </td>
               </tr>
             ))}
