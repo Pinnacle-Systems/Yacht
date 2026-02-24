@@ -48,6 +48,7 @@ export default function SalesBillItems({
       styleItemId: "",
       colorId: "",
       selected: false,
+      netAmount: 0,
     };
     setSalesBillItems([...salesBillItems, newRow]);
   };
@@ -89,7 +90,7 @@ export default function SalesBillItems({
               barcodeId: "",
               rate: "",
               taxPercent: "",
-              discountType: "Percentage",
+              discountType: "",
               discountValue: "",
               amount: "",
               styleItemId: "",
@@ -111,7 +112,7 @@ export default function SalesBillItems({
           barcodeNo: "",
           rate: "",
           taxPercent: "",
-          discountType: "Percentage",
+          discountType: "",
           discountValue: "",
           amount: "",
           styleItemId: "",
@@ -155,18 +156,21 @@ export default function SalesBillItems({
     const grossAmount = qty * rate;
 
     // GST Subtracted
-    const amountAfterGST = grossAmount - (grossAmount * taxPercent) / 100;
 
     // Apply Discount
     let discountAmt = 0;
     if (discountType === "Flat") discountAmt = discountValue;
-    else if (discountType === "Percent")
-      discountAmt = (amountAfterGST * discountValue) / 100;
+    else if (discountType === "Percentage")
+      discountAmt = (grossAmount * discountValue) / 100;
+
+    const taxable = grossAmount - discountAmt;
+    const sgst = (taxable * (taxPercent / 2)) / 100;
+    const cgst = (taxable * (taxPercent / 2)) / 100;
 
     // Final net amount
-    const netAmount = amountAfterGST - discountAmt;
+    const netAmount = taxable - (sgst + cgst);
 
-    return netAmount;
+    return Math.round(netAmount);
   };
 
   const fillRows = (rowsToFill) => {
@@ -201,6 +205,7 @@ export default function SalesBillItems({
           styleItemId: "",
           colorId: "",
           selected: false,
+          netAmount: 0,
         });
       }
 
@@ -263,11 +268,11 @@ export default function SalesBillItems({
     }
   };
 
-  const totalNetAmount = useMemo(() => {
-    return salesBillItems
-      .reduce((sum, row) => sum + (parseFloat(calculateNetAmount(row)) || 0), 0)
-      .toFixed(2);
-  }, [salesBillItems]);
+  // const totalNetAmount = useMemo(() => {
+  //   return salesBillItems
+  //     .reduce((sum, row) => sum + (parseFloat(calculateNetAmount(row)) || 0), 0)
+  //     .toFixed(2);
+  // }, [salesBillItems]);
 
   useEffect(() => {
     // Recalculate net amount for all rows whenever dependent fields change
@@ -293,8 +298,7 @@ export default function SalesBillItems({
       const sgst = (taxable * (taxPercent / 2)) / 100;
       const cgst = (taxable * (taxPercent / 2)) / 100;
 
-      const net = taxable;
-
+      const net = taxable - (sgst + cgst);
       return {
         ...row,
         netAmount: Math.round(net),
@@ -781,7 +785,11 @@ export default function SalesBillItems({
                     <input
                       type="number"
                       className="text-right rounded py-1 px-1 w-full"
-                      value={Number(row.netAmount || 0).toFixed(2)}
+                      value={
+                        row?.netAmount !== undefined && row?.netAmount !== null
+                          ? Number(row.netAmount).toFixed(2)
+                          : "0"
+                      }
                       disabled
                     />
                   </td>
@@ -846,7 +854,7 @@ export default function SalesBillItems({
                     .toFixed(2)}
                 </td>
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
-                  {salesBillItems
+                 {salesBillItems
                     ?.reduce(
                       (sum, row) => sum + (Number(row.netAmount) || 0),
                       0,

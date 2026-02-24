@@ -29,7 +29,11 @@ const PurchaseBillSummary = ({
   // 2️⃣ DISCOUNT
 
   // 3️⃣ NET & ROUNDING
-  const netValue = grossAmount;
+  const totalNet = purchaseBillItems.reduce(
+    (sum, row) => sum + (Number(row.netAmount) || 0),
+    0,
+  );
+  const netValue = totalNet;
   const netAmount = Math.round(netValue);
   const roundoff = netAmount - netValue;
 

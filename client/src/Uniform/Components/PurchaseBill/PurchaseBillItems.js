@@ -4,10 +4,10 @@ import { toast } from "react-toastify";
 import FxSelect from "../../../Inputs";
 import Swal from "sweetalert2";
 import { VIEW } from "../../../icons";
-import TaxDetailsFullTemplate from "../TaxDetailsCompleteTemplate";
 import Modal from "../../../UiComponents/Modal";
 import { findFromList } from "../../../Utils/helper";
 import { useLazyGetProdBarcodeDetailQuery } from "../../../redux/services/PurchaseBillService";
+import TaxDetailsFullTemplate from "./TaxDetailsFullTemplate";
 export default function PurchaseBillItems({
   purchaseBillItems,
   setPurchaseBillItems,
@@ -38,6 +38,7 @@ export default function PurchaseBillItems({
       uomId: "",
       rate: "",
       netAmount: 0,
+      discountType: "Percentage",
     };
     setPurchaseBillItems([...purchaseBillItems, newRow]);
   };
@@ -92,6 +93,7 @@ export default function PurchaseBillItems({
               rate: "",
               selected: false,
               netAmount: 0,
+              discountType: "Percentage",
             })),
           ];
         }
@@ -113,6 +115,7 @@ export default function PurchaseBillItems({
           rate: "",
           selected: false,
           netAmount: 0,
+          discountType: "Percentage",
         })),
       );
     }
@@ -142,7 +145,7 @@ export default function PurchaseBillItems({
       const sgst = (taxable * (taxPercent / 2)) / 100;
       const cgst = (taxable * (taxPercent / 2)) / 100;
 
-      const net = taxable;
+      const net = taxable - (sgst + cgst);
 
       return {
         ...row,

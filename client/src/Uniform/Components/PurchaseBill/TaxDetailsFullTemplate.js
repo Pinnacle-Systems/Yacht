@@ -6,7 +6,7 @@ import { Loader } from "../../../Basic/components";
 import { substract as s } from "../../../Utils/helper";
 
 const TaxDetailsFullTemplate = ({
-  salesBillItems,
+  purchaseBillItems,
   currentIndex: index,
   setCurrentSelectedIndex,
   readOnly,
@@ -81,7 +81,7 @@ const TaxDetailsFullTemplate = ({
     getName,
   ]);
 
-  const row = salesBillItems[index];
+  const row = purchaseBillItems[index];
 
   // useEffect(() => {
   //   if (!formulas || !row) return;
