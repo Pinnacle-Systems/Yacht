@@ -42,7 +42,7 @@ const PurchaseBillSummary = ({
     .filter(([taxPercent]) => Number(taxPercent) > 0) // ignore null / 0
     .map(([taxPercent, items]) => {
       const taxable = items.reduce(
-        (sum, item) => sum + item.qty * item.rate,
+        (sum, item) => sum +  (Number(item.taxable) || 0),
         0,
       );
 
@@ -72,7 +72,7 @@ const PurchaseBillSummary = ({
 
         <tbody>
           {/* DISCOUNT TYPE */}
-          <tr>
+          {/* <tr>
             <td className="border border-gray-500">Discount Type</td>
             <td colSpan={2} className="border border-gray-500">
               <select
@@ -89,10 +89,10 @@ const PurchaseBillSummary = ({
                 ))}
               </select>
             </td>
-          </tr>
+          </tr> */}
 
           {/* DISCOUNT VALUE */}
-          <tr>
+          {/* <tr>
             <td className="border border-gray-500">Discount</td>
             <td colSpan={2} className="border border-gray-500">
               <input
@@ -103,7 +103,7 @@ const PurchaseBillSummary = ({
                 onChange={(e) => setDiscountValue(e.target.value)}
               />
             </td>
-          </tr>
+          </tr> */}
           <tr>
             <td className="border border-gray-500 font-semibold">Total</td>
             <td />
@@ -112,7 +112,7 @@ const PurchaseBillSummary = ({
             </td>
           </tr>
           {/* DISCOUNT AMOUNT */}
-          <tr>
+          {/* <tr>
             <td className="border border-gray-500 font-semibold">
               Discount Amount
             </td>
@@ -120,15 +120,15 @@ const PurchaseBillSummary = ({
             <td className="border border-gray-500 text-right">
               {discountAmount.toFixed(2)}
             </td>
-          </tr>
+          </tr> */}
           {/* GROSS */}
-          <tr>
+          {/* <tr>
             <td className="border border-gray-500 font-semibold">Gross</td>
             <td />
             <td className="border border-gray-500 text-right">
               {grossAmount.toFixed(2)}
             </td>
-          </tr>
+          </tr> */}
 
           {/* DISPLAY ONLY – NO CALC IMPACT */}
           {displayTaxRows.map((tax, index) => (

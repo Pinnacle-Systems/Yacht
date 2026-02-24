@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import { DropdownInput } from "../../../Inputs";
+import { CommaInput, DropdownInput } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import {
   findFromList,
@@ -32,6 +32,7 @@ import purchaseBillApi from "../../../redux/services/PurchaseBillService";
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
 import OpeningStockSRApi from "../../../redux/uniformService/OpeningStockSRServices";
 import PDF from "./PrintFormat/PDF";
+import { groupBy } from "lodash";
 export function SalesBillForm({
   onClose,
   id,
@@ -44,7 +45,7 @@ export function SalesBillForm({
   uomList,
   taxTypeList,
   styleList,
-  singleDataBranch
+  singleDataBranch,
 }) {
   const [pdfOpen, setPdfOpen] = useState(false);
   const [docId, setDocId] = useState("New");
@@ -64,8 +65,9 @@ export function SalesBillForm({
   const [isCash, setIsCash] = useState(true);
   const [isCard, setIsCard] = useState(false);
   const [isUpI, setIsUpI] = useState(false);
-  const [cardAmount, setCardAmount] = useState(0);
-  const [upiAmount, setUpiAmount] = useState(0);
+  const [cardAmount, setCardAmount] = useState("");
+  const [upiAmount, setUpiAmount] = useState("");
+
   const dispatch = useDispatch();
   const customerNameRef = useRef(null);
   const {
@@ -156,6 +158,23 @@ export function SalesBillForm({
       return false;
     }
 
+    if (paidAmount > totalAmount) {
+      Swal.fire({
+        icon: "error",
+        title: "Payment Error",
+        text: "Paid amount cannot be greater than Total amount",
+      });
+      return false; // stop further execution
+    }
+    if (paidAmount < totalAmount) {
+      Swal.fire({
+        icon: "error",
+        title: "Payment Error",
+        text: "Paid amount cannot be Less than Total amount",
+      });
+      return false; // stop further execution
+    }
+
     return true;
   };
 
@@ -210,8 +229,8 @@ export function SalesBillForm({
       setIsCash(data?.isCash || true);
       setIsCard(data?.isCard || false);
       setIsUpI(data?.isUpI || false);
-      setCardAmount(data?.cardAmount || 0);
-      setUpiAmount(data?.upiAmount || 0);
+      setCardAmount(data?.cardAmount || "");
+      setUpiAmount(data?.upiAmount || "");
     },
     [id],
   );
@@ -300,36 +319,42 @@ export function SalesBillForm({
     }
   };
 
-  const calculateNetAmount = (item) => {
-    const qty = parseFloat(item.qty) || 0;
-    const price = parseFloat(item.price) || 0;
-    const taxPercent = parseFloat(item.taxPercent) || 0;
-    const discountValue = parseFloat(item.discountValue) || 0;
-    const discountType = item.discountType || "";
+  const grossAmount = salesBillItems.reduce(
+    (sum, row) => sum + (Number(row.taxable) || 0),
+    0,
+  );
+  const taxGroupWise = groupBy(salesBillItems, "taxPercent");
 
-    // Gross amount
-    const grossAmount = qty * price;
+  const taxRows = Object.entries(taxGroupWise)
+    .filter(([taxPercent]) => Number(taxPercent) > 0)
+    .map(([taxPercent, items]) => {
+      const taxable = items.reduce(
+        (sum, item) => sum + (Number(item.taxable) || 0),
+        0,
+      );
 
-    // GST Subtracted
-    const amountAfterGST = grossAmount - (grossAmount * taxPercent) / 100;
+      const taxRate = Number(taxPercent);
+      const halfTax = taxRate / 2;
 
-    // Apply Discount
-    let discountAmt = 0;
-    if (discountType === "Flat") discountAmt = discountValue;
-    else if (discountType === "Percent")
-      discountAmt = (amountAfterGST * discountValue) / 100;
+      return {
+        taxPercent: taxRate,
+        halfTax,
+        sgstAmount: (taxable * halfTax) / 100,
+        cgstAmount: (taxable * halfTax) / 100,
+      };
+    });
 
-    // Final net amount
-    const netAmount = amountAfterGST - discountAmt;
-
-    return netAmount.toFixed(2);
-  };
-
-  const totalNetAmount = useMemo(() => {
-    return salesBillItems
-      .reduce((sum, row) => sum + (parseFloat(calculateNetAmount(row)) || 0), 0)
-      .toFixed(2);
-  }, [salesBillItems]);
+  const netAmount = salesBillItems.reduce(
+    (sum, row) => sum + (Number(row.netAmount) || 0),
+    0,
+  );
+  const rounded = Math.round(netAmount);
+  const roundOff = rounded - netAmount;
+  const totalAmount = netAmount + Number(roundOff || 0);
+  const paidAmount =
+    Number(paymentValue || 0) +
+    Number(cardAmount || 0) +
+    Number(upiAmount || 0);
 
   useEffect(() => {
     if (!taxTemplateId && taxTypeList?.data?.length > 0) {
@@ -398,6 +423,10 @@ export function SalesBillForm({
                 sizeList={sizeList}
                 uomList={uomList}
                 singleDataBranch={singleDataBranch}
+                grossAmount={grossAmount}
+                netAmount={netAmount}
+                roundOff={roundOff}
+                taxRows={taxRows}
               />
             </PDFViewer>
           </Modal>
@@ -485,7 +514,7 @@ export function SalesBillForm({
               />
             </fieldset>
             <div className="grid grid-cols-3 gap-2">
-              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
+              {/* <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                 <h2 className="font-medium text-slate-700 mb-1 text-base">
                   Terms and Condition
                 </h2>
@@ -499,7 +528,7 @@ export function SalesBillForm({
                   placeholder="Terms Details..."
                   disabled={readOnly}
                 />
-              </div>
+              </div> */}
 
               <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
                 <h2 className="font-medium text-slate-700 mb-1 text-base">
@@ -511,31 +540,146 @@ export function SalesBillForm({
                   onChange={(e) => {
                     setRemarks(e.target.value);
                   }}
-                  className="w-full  overflow-auto h-9 px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                  className="w-full  overflow-auto h-32 px-2.5 py-2 text-xs border border-slate-400 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
                   placeholder="Additional remarks..."
                   disabled={readOnly}
                 />
               </div>
 
-              <div className="border border-slate-200 p-2 bg-white flex h-auto items-center rounded-md shadow-sm">
-                <h2 className="font-bold text-slate-800 mb-2 text-base">
-                  Sales Bill Summary
-                </h2>
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
+                <fieldset className="w-full text-slate-700 border h-full p-2 border-slate-400 rounded-md">
+                  <legend className="font-medium">Payment Details</legend>
+                  <div className="gap-3 items-center text-xs">
+                    <div className="flex gap-10 items-center">
+                      <div className="flex gap-2 items-center">
+                        <label className="flex items-center gap-1">
+                          <input
+                            type="checkbox"
+                            checked={isCash}
+                            disabled={readOnly}
+                            onChange={(e) => setIsCash(e.target.checked)}
+                          />
+                          Cash
+                        </label>
+                        <CommaInput
+                          value={paymentValue}
+                          setValue={setPaymentValue}
+                          comma={true}
+                          disabled={readOnly || !isCash}
+                          width={28}
+                        />
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <label className="flex items-center gap-1">
+                          <input
+                            type="checkbox"
+                            checked={isCard}
+                            disabled={readOnly}
+                            onChange={(e) => setIsCard(e.target.checked)}
+                          />
+                          Card
+                        </label>
+                        <CommaInput
+                          value={cardAmount}
+                          setValue={setCardAmount}
+                          comma={true}
+                          disabled={readOnly || !isCard}
+                          width={28}
+                        />
+                      </div>
+                    </div>
+                    <div className="items-center text-xs">
+                      <div className="flex gap-4 items-center">
+                        <label className="flex items-center gap-1">
+                          <input
+                            type="checkbox"
+                            checked={isUpI}
+                            disabled={readOnly}
+                            onChange={(e) => setIsUpI(e.target.checked)}
+                          />
+                          UPI
+                        </label>
+                        <CommaInput
+                          value={upiAmount}
+                          setValue={setUpiAmount}
+                          comma={true}
+                          disabled={readOnly || !isUpI}
+                          width={28}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-between font-bold text-base border-t pt-2 text-indigo-600">
+                    <span>Total Paid Amount </span>
+                    <span>
+                      {Number(paidAmount || 0).toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                </fieldset>
+              </div>
 
-                <button
-                  className="text-sm bg-sky-500 text-white font-semibold hover:bg-sky-800 transition p-1 ml-5 rounded"
-                  onClick={() => {
-                    if (!taxTemplateId) {
-                      toast.info("Please Select Tax Template !", {
-                        position: "top-center",
-                      });
-                      return;
-                    }
-                    setSummary(true);
-                  }}
-                >
-                  View Summary
-                </button>
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
+                <fieldset className="w-full text-slate-700 border h-full p-3 border-slate-400 rounded-md">
+                  <legend className="font-medium px-2">Summary</legend>
+
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    {/* LEFT SIDE — TAX DETAILS */}
+                    <div className="space-y-2 border-r pr-4">
+                      {taxRows.length === 0 && (
+                        <div className="text-slate-400">No Tax</div>
+                      )}
+
+                      {taxRows.map((tax, index) => (
+                        <div key={index} className="space-y-1">
+                          <div className="flex justify-between">
+                            <span>SGST @{tax.halfTax}%</span>
+                            <span>{tax.sgstAmount.toFixed(2)}</span>
+                          </div>
+
+                          <div className="flex justify-between">
+                            <span>CGST @{tax.halfTax}%</span>
+                            <span>{tax.cgstAmount.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* RIGHT SIDE — AMOUNT SUMMARY */}
+                    <div className="space-y-2 pl-4">
+                      {/* Gross */}
+                      <div className="flex justify-between">
+                        <span>Gross</span>
+                        <span>{grossAmount.toFixed(2)}</span>
+                      </div>
+
+                      {/* Net */}
+                      <div className="flex justify-between">
+                        <span>Net</span>
+                        <span>{netAmount.toFixed(2)}</span>
+                      </div>
+
+                      {/* Roundoff */}
+                      <div className="flex justify-between items-center">
+                        <span>Roundoff</span>
+                        <span>{paidAmount.toFixed(2)}</span>
+                      </div>
+
+                      {/* Total */}
+                      <div className="flex justify-between font-bold text-base border-t pt-2 text-indigo-600">
+                        <span>Total</span>
+                        <span>
+                          {Number(totalAmount || 0).toLocaleString("en-IN", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </fieldset>
               </div>
             </div>
             <div className="flex flex-col md:flex-row gap-2 justify-between">

@@ -7,7 +7,8 @@ import SRPageWrapper from "../../../../Utils/SRPageWrapper";
 import SRHeader from "../../../../Utils/SRHeader";
 import { groupBy } from "lodash";
 
-const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, singleDataBranch }) => {
+
+const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, singleDataBranch, grossAmount, netAmount, roundOff ,taxRows}) => {
     const styles = StyleSheet.create({
         page: { padding: 5 },
 
@@ -190,34 +191,10 @@ const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, single
 
     const overallDiscAmt = ((totalNetAmount * overAllDisc) / 100).toFixed(2);
 
-    const overallGrossAmount = (totalNetAmount - overallDiscAmt).toFixed(2);
+    const overallGrossAmount = grossAmount.toFixed(2);
 
-    const roundOff = parseFloat(singleData?.roundOff || 0);
-
-    const overallNetAmount = (
-        parseFloat(overallGrossAmount) - roundOff
-    ).toFixed(2);
-
-    const taxGroupWise = groupBy(singleData?.salesBillItems, "taxPercent");
-    const displayTaxRows = Object.entries(taxGroupWise)
-        .filter(([taxPercent]) => Number(taxPercent) > 0) // ignore null / 0
-        .map(([taxPercent, items]) => {
-            const taxable = items.reduce(
-                (sum, item) => sum + item.qty * item.rate,
-                0,
-            );
-
-            const taxRate = Number(taxPercent);
-            const halfTax = taxRate / 2;
-
-            return {
-                taxPercent: taxRate,
-                halfTax,
-                taxable,
-                sgstAmount: (taxable * halfTax) / 100,
-                cgstAmount: (taxable * halfTax) / 100,
-            };
-        });
+    const overallNetAmount =
+        netAmount.toFixed(2);
 
     return (
         <Document>
@@ -540,7 +517,7 @@ const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, single
                             ]}>
                                 {/* Legend Title */}
                                 <Text style={styles.summaryTitle}>Summary</Text>
-                                {displayTaxRows?.map((tax, index) => (
+                                {taxRows?.map((tax, index) => (
                                     <View key={index}>
                                         {/* SGST Row */}
                                         <View style={styles.summaryRow}>
@@ -565,18 +542,12 @@ const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, single
                                 ))}
 
                                 <View style={styles.summaryRow}>
-                                    <Text style={styles.summaryLabel}>Overall Discount %</Text>
-                                    <Text style={styles.summaryValue}>{overAllDisc}%</Text>
-                                </View>
-
-                                <View style={styles.summaryRow}>
-                                    <Text style={styles.summaryLabel}>Discount Value</Text>
-                                    <Text style={styles.summaryValue}>{overallDiscAmt}</Text>
-                                </View>
-
-                                <View style={styles.summaryRow}>
                                     <Text style={styles.summaryLabel}>Overall Gross Amount</Text>
                                     <Text style={styles.summaryValue}>{overallGrossAmount}</Text>
+                                </View>
+                                <View style={styles.summaryRow}>
+                                    <Text style={styles.summaryLabel}>Overall Net Amount</Text>
+                                    <Text style={styles.summaryValue}>{overallNetAmount}</Text>
                                 </View>
 
                                 <View style={styles.summaryRow}>

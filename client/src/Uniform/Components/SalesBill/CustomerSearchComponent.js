@@ -161,7 +161,7 @@ const CustomerSearchComponent = ({
         ) : (
           <input
             // type="text"
-            readOnly={readOnly}
+            readOnly   // 
             tabIndex={0}
             value={findFromList(
               customerId,

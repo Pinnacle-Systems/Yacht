@@ -38,7 +38,7 @@ export const handleOnChange = (event, setValue, type) => {
   setValue(
     valueBeforeCursor +
       inputValue.slice(inputSelectionStart, inputSelectionEnd) +
-      valueAfterCursor
+      valueAfterCursor,
   );
 
   // Set the cursor position to the end of the input value
@@ -47,7 +47,7 @@ export const handleOnChange = (event, setValue, type) => {
       valueBeforeCursor.length +
         inputValue.slice(inputSelectionStart, inputSelectionEnd).length,
       valueBeforeCursor.length +
-        inputValue.slice(inputSelectionStart, inputSelectionEnd).length
+        inputValue.slice(inputSelectionStart, inputSelectionEnd).length,
     );
   });
 };
@@ -83,7 +83,7 @@ export const handleOnChangeforpassword = (event, setValue) => {
   setValue(
     valueBeforeCursor +
       inputValue.slice(inputSelectionStart, inputSelectionEnd) +
-      valueAfterCursor
+      valueAfterCursor,
   );
 
   // Set the cursor position to the end of the input value
@@ -92,7 +92,7 @@ export const handleOnChangeforpassword = (event, setValue) => {
       valueBeforeCursor.length +
         inputValue.slice(inputSelectionStart, inputSelectionEnd).length,
       valueBeforeCursor.length +
-        inputValue.slice(inputSelectionStart, inputSelectionEnd).length
+        inputValue.slice(inputSelectionStart, inputSelectionEnd).length,
     );
   });
 };
@@ -216,14 +216,14 @@ export const TextInput = forwardRef(
       autoFocus,
       onKeyDown,
     },
-    ref
+    ref,
   ) => {
     const handleBlur = (e) => {
       if (type === "number") {
         const val = Number(e.target.value);
 
         if (!isNaN(val) && val < 0) {
-         Swal.fire(`${name} cannot be negative`);
+          Swal.fire(`${name} cannot be negative`);
           setValue(""); // or "" if you prefer
           return;
         }
@@ -267,7 +267,7 @@ export const TextInput = forwardRef(
         />
       </div>
     );
-  }
+  },
 );
 
 export const PasswordTextInput = ({
@@ -495,7 +495,7 @@ export const TextArea = ({
     <div className="mb-3 w-full">
       {name && (
         <label className="block text-xs font-bold text-gray-600 mb-1">
-          {required ? <RequiredLabel name={label ?? name} /> : label ?? name}
+          {required ? <RequiredLabel name={label ?? name} /> : (label ?? name)}
         </label>
       )}
 
@@ -1446,16 +1446,16 @@ export const ReusableSearchableInput = forwardRef(
       nextRef,
       show,
     },
-    ref
+    ref,
   ) => {
     const companyId = secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "userCompanyId"
+      sessionStorage.getItem("sessionId") + "userCompanyId",
     );
     const branchId = secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "currentBranchId"
+      sessionStorage.getItem("sessionId") + "currentBranchId",
     );
     const userId = secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "userId"
+      sessionStorage.getItem("sessionId") + "userId",
     );
 
     const {
@@ -1516,7 +1516,7 @@ export const ReusableSearchableInput = forwardRef(
             page?.code?.toLowerCase().includes(search.toLowerCase()) &&
             page[show] // this makes sure only customer/supplier (based on props) are shown
           );
-        })
+        }),
       );
     }, [search, partyList, isPartyFetching, isPartyLoading]);
 
@@ -1723,7 +1723,7 @@ export const ReusableSearchableInput = forwardRef(
         </div>
       </>
     );
-  }
+  },
 );
 
 export const customSelectStyles = {
@@ -1945,8 +1945,8 @@ export const customStyles = {
     backgroundColor: state.isSelected
       ? "#d1d5db" // gray-200
       : state.isFocused
-      ? "#e5e7eb" // gray-100
-      : "white",
+        ? "#e5e7eb" // gray-100
+        : "white",
     color: "black",
   }),
 
@@ -2049,3 +2049,103 @@ export const CustomDropdown = ({
     </div>
   );
 };
+
+const formatNumberWithComma = (val) => {
+  if (val === "" || val === null || val === undefined) return "";
+
+  const number = parseFloat(val);
+  if (isNaN(number)) return "";
+
+  return number.toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
+export const CommaInput = forwardRef(
+  (
+    {
+      name,
+      value,
+      setValue,
+      readOnly = false,
+      disabled = false,
+      className = "",
+      width = "full",
+      onBlur = null,
+      autoFocus,
+      onKeyDown,
+    },
+    ref
+  ) => {
+    const inputRef = useRef(null);
+    const [isFocused, setIsFocused] = useState(false);
+
+    // 👇 merge forwarded ref + local ref
+    const combinedRef = (node) => {
+      inputRef.current = node;
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    };
+
+    // ✅ Select after re-render
+    useEffect(() => {
+      if (isFocused && inputRef.current) {
+        inputRef.current.select();
+      }
+    }, [isFocused]);
+
+    const handleChange = (e) => {
+      let val = e.target.value;
+
+      val = val.replace(/[^0-9.]/g, "");
+
+      const parts = val.split(".");
+      if (parts.length > 2) return;
+
+      setValue(val);
+    };
+
+    const handleBlur = (e) => {
+      setIsFocused(false);
+
+      const num = parseFloat(value);
+
+      if (!isNaN(num)) {
+        if (num < 0) {
+          Swal.fire(`${name} cannot be negative`);
+          setValue("");
+          return;
+        }
+
+        setValue(num.toFixed(2));
+      }
+
+      if (onBlur) onBlur(e);
+    };
+
+    const handleFocus = () => {
+      setIsFocused(true);
+    };
+
+    return (
+      <div className={`mb-2 w-${width}`}>
+        <input
+          ref={combinedRef}
+          type="text"
+          value={isFocused ? value || "" : formatNumberWithComma(value)}
+          onChange={handleChange}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          readOnly={readOnly}
+          disabled={disabled}
+          className={`w-full px-3 py-1 text-xs border border-gray-300 rounded-md
+            focus:outline-none focus:ring-1 focus:ring-blue-500 text-right
+            ${className}`}
+          autoFocus={autoFocus}
+          onKeyDown={onKeyDown}
+        />
+      </div>
+    );
+  }
+);

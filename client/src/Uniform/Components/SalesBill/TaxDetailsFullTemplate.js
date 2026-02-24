@@ -196,6 +196,9 @@ const TaxDetailsFullTemplate = ({
                     setCurrentSelectedIndex("");
                   }
                 }}
+                onFocus={(e) => {
+                  e.target.select()
+                }}
               />
             </td>
           </tr>
@@ -210,6 +213,9 @@ const TaxDetailsFullTemplate = ({
                 value={taxPercent}
                 onChange={(e) => {
                   handleInputChange(e.target.value, index, "taxPercent");
+                }}
+                 onFocus={(e) => {
+                  e.target.select()
                 }}
               />
             </td>
