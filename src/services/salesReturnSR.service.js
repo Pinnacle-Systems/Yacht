@@ -118,6 +118,12 @@ async function get(req) {
           mobileNo: true,
         },
       },
+      salesReturnSRItems: {
+        select: {
+          barcodeId: true,
+          barcodeNo: true,
+        },
+      },
     },
   });
   if (searchDocDate) {

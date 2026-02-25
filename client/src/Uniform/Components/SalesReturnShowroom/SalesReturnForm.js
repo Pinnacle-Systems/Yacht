@@ -17,6 +17,7 @@ import SalesReturnItems from "./SalesReturnItems";
 import {
   useAddSalesReturnSRMutation,
   useGetSalesReturnSRByIdQuery,
+  useGetSalesReturnSRQuery,
   useUpdateSalesReturnSRMutation,
 } from "../../../redux/uniformService/SalesReturnShowroom.service";
 import {
@@ -57,6 +58,16 @@ export function SalesReturnForm({
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetSalesReturnSRByIdQuery(id, { skip: !id });
+  const {
+    data: allData,
+    isFetching,
+    isLoading,
+  } = useGetSalesReturnSRQuery({
+    params: {
+      branchId,
+      finYearId,
+    },
+  });
 
   const { data: salesList } = useGetSalesBillQuery({
     params: { branchId },
@@ -223,6 +234,36 @@ export function SalesReturnForm({
     if (!validateData(data)) {
       return;
     }
+    let foundItem;
+    if (id) {
+      foundItem = allData?.data
+        ?.filter((i) => i.id !== id)
+        ?.find(
+          (item) =>
+            item.billNo?.trim().toLowerCase() === billNo?.trim().toLowerCase(),
+        );
+    } else {
+      foundItem = allData?.data?.find(
+        (item) =>
+          item.billNo?.trim().toLowerCase() === billNo?.trim().toLowerCase(),
+      );
+    }
+    if (foundItem) {
+      const hasDuplicateGoods = foundItem.salesReturnSRItems?.find((existing) =>
+        salesReturnItems?.some(
+          (current) => Number(current.barcodeId) === Number(existing.barcodeId),
+        ),
+      );
+      if (hasDuplicateGoods) {
+        Swal.fire({
+          text: `Barcode No ${hasDuplicateGoods.barcodeNo} is already return.`,
+          icon: "warning",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+        return false;
+      }
+    }
     if (!window.confirm("Are you sure save the details ...?")) {
       return;
     }
@@ -257,6 +298,7 @@ export function SalesReturnForm({
 
   const handleAddRow = async (newValue) => {
     setBillNo(newValue);
+    setSalesReturnItems([]);
     try {
       const { data: salesData } = await getSalesBillDetail({
         params: {

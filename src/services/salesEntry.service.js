@@ -1158,7 +1158,7 @@ async function getSalesDcDetail(req) {
         styleItemId: barcode.styleItemId,
         sizeId: barcode.sizeId,
         colorId: barcode.colorId,
-        uomId: barcode.uomId,
+        uomId: style.uomId,
         salesEntryItemsId: barcode.salesEntryItemsId,
         barcodeSeqId: barcode.barcodeSeqId,
         rate: style?.salesPrice || null,

@@ -427,6 +427,7 @@ export function SalesBillForm({
                 netAmount={netAmount}
                 roundOff={roundOff}
                 taxRows={taxRows}
+                salesBillItems={salesBillItems}
               />
             </PDFViewer>
           </Modal>
@@ -555,6 +556,7 @@ export function SalesBillForm({
                         <label className="flex items-center gap-1">
                           <input
                             type="checkbox"
+                             className="h-4 w-4 align-middle"
                             checked={isCash}
                             disabled={readOnly}
                             onChange={(e) => setIsCash(e.target.checked)}
@@ -573,6 +575,7 @@ export function SalesBillForm({
                         <label className="flex items-center gap-1">
                           <input
                             type="checkbox"
+                             className="h-4 w-4 align-middle"
                             checked={isCard}
                             disabled={readOnly}
                             onChange={(e) => setIsCard(e.target.checked)}
@@ -594,6 +597,7 @@ export function SalesBillForm({
                           <input
                             type="checkbox"
                             checked={isUpI}
+                             className="h-4 w-4 align-middle"
                             disabled={readOnly}
                             onChange={(e) => setIsUpI(e.target.checked)}
                           />
@@ -664,7 +668,7 @@ export function SalesBillForm({
                       {/* Roundoff */}
                       <div className="flex justify-between items-center">
                         <span>Roundoff</span>
-                        <span>{paidAmount.toFixed(2)}</span>
+                        <span>{roundOff.toFixed(2)}</span>
                       </div>
 
                       {/* Total */}

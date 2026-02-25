@@ -304,7 +304,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         }
         if (foundItem) {
 
-            const hasDuplicateGoods = foundItem.purchaseBillItems?.some(existing =>
+            const hasDuplicateGoods = foundItem.purchaseBillItems?.find(existing =>
                 purchaseBillItems?.some(
                     current => Number(current.barcodeId) === Number(existing.barcodeId)
                 )

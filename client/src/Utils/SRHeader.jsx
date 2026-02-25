@@ -17,13 +17,13 @@ const SRHeader = ({ heading, singleDataDoc, DeliveryNo, DeliveryDate, styles, si
                 <View style={tw("w-[25%]")}>
                     <Image style={tw("h-12")} src={logo} />
                 </View>
-                <View style={tw(" w-[50%] item-center")}>
+                <View style={tw(" w-[50%] items-center")}>
                     <Text style={tw(" mx-auto text-2xl font-bold text-purple-900")}>
                         YACHT
                     </Text>
                     {
                         showDate && (
-                            <Text style={tw("text-xs  text-right mt-2")}>{moment(singleDataDoc?.date).format("DD-MM-YYYY") || ""}</Text>
+                            <Text style={tw("text-xs  text-center")}>{moment(singleDataDoc?.date).format("DD-MM-YYYY") || ""}</Text>
 
                         )
                     }

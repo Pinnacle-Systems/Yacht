@@ -234,6 +234,19 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
         const validRows = data.purchaseReturnItems.filter(
             (item) => item?.styleItemId
         );
+        const hasEmptyQty = data.purchaseReturnItems?.find(item =>
+            Number(item.stkQty) === 0
+
+        );
+        if (hasEmptyQty) {
+            Swal.fire({
+                text: `Barcode No ${hasEmptyQty.barcodeNo} cannot return. Currently no stock!.`,
+                icon: "warning",
+                timer: 2000,
+                showConfirmButton: false,
+            });
+            return false;
+        }
 
         if (
             !isGridDatasValid(validRows, false, [
@@ -348,7 +361,10 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                         name="Inv No"
                                         dataList={purchaseList?.data}
                                         value={invNo}
-                                        setValue={setInvNo}
+                                        setValue={(value) => {
+                                            setPurchaseReturnItems([])
+                                            setInvNo(value)
+                                        }}
                                         required={true}
                                         readOnly={readOnly}
                                         placeholder={"Select Inv"}

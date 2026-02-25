@@ -151,6 +151,8 @@ async function get(req) {
       purchaseBillItems: {
         select: {
           qty: true,
+          barcodeId: true,
+          barcodeNo:true
         },
       },
     },

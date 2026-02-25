@@ -8,7 +8,7 @@ import SRHeader from "../../../../Utils/SRHeader";
 import { groupBy } from "lodash";
 
 
-const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, singleDataBranch, grossAmount, netAmount, roundOff ,taxRows}) => {
+const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, singleDataBranch, grossAmount, netAmount, roundOff, taxRows, salesBillItems }) => {
     const styles = StyleSheet.create({
         page: { padding: 5 },
 
@@ -381,7 +381,7 @@ const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, single
                         </View>
                         {/*  Grouped Rows */}
 
-                        {(singleData?.salesBillItems || []).map((item, index) => {
+                        {(salesBillItems || []).filter((item) => item.barcodeId).map((item, index) => {
                             const isEven = index % 2 === 0;
                             const gross = item.rate * item.qty;
                             return (
@@ -417,13 +417,13 @@ const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, single
                                         {item.qty || 0}
                                     </Text>
                                     <Text style={[styles.tableCell, { flex: 1, fontSize: 7, textAlign: "right" }]}>
-                                        {item.rate?.toFixed(2) || "0.00"}
+                                        {Number(item.rate || 0).toFixed(2)}
                                     </Text>
                                     <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7, textAlign: "right" }]}>
                                         {item.taxPercent || 0}%
                                     </Text>
                                     <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
-                                        {item.discountType || ""}
+                                        {item.discountType === "Percentage" ? "Perc" : item.discountType || ""}
                                     </Text>
                                     <Text style={[styles.tableCell, { flex: 1, fontSize: 7, textAlign: "right" }]}>
                                         {item.discountValue || 0}
@@ -432,7 +432,9 @@ const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, single
                                         {gross.toFixed(2)}
                                     </Text>
                                     <Text style={[styles.tableCell, { flex: 1.3, fontSize: 7, textAlign: "right" }]}>
-                                        {calculateNetAmount(item)}
+                                        {item?.netAmount !== undefined && item?.netAmount !== null
+                                            ? Number(item.netAmount).toFixed(2)
+                                            : "0"}
                                     </Text>
                                 </View>
                             );
@@ -475,7 +477,7 @@ const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, single
                                     },
                                 ]}
                             >
-                                {singleData?.salesBillItems?.reduce(
+                                {salesBillItems.reduce(
                                     (sum, row) => sum + (row.qty || 0),
                                     0
                                 )}
@@ -493,10 +495,10 @@ const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, single
                                     },
                                 ]}
                             >
-                                {singleData?.salesBillItems
+                                {salesBillItems
                                     ?.reduce(
-                                        (sum, row) => sum + parseFloat(calculateNetAmount(row)),
-                                        0
+                                        (sum, row) => sum + (Number(row.netAmount) || 0),
+                                        0,
                                     )
                                     .toFixed(2)}
                             </Text>

@@ -157,7 +157,7 @@ export default function PurchaseReturnItems({
           <h2 className="font-medium text-slate-700">List Of Items</h2>
           {!id && (
             <button
-              className="font-bold text-slate-700 bord ml-[1027px] text-sm bg-blue-500 rounded rounded-md text-white px-2"
+              className="font-bold  bord ml-[1027px] text-sm bg-blue-500 rounded-md text-white px-2"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
