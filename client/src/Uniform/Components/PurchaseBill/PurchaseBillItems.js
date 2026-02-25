@@ -145,7 +145,7 @@ export default function PurchaseBillItems({
       const sgst = (taxable * (taxPercent / 2)) / 100;
       const cgst = (taxable * (taxPercent / 2)) / 100;
 
-      const net = taxable - (sgst + cgst);
+      const net = taxable + (sgst + cgst);
 
       return {
         ...row,

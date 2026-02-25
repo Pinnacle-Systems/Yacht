@@ -146,6 +146,107 @@ async function get(req) {
   return { statusCode: 0, data, nextDocId: docId, totalCount };
 }
 
+async function getSalesReport(req) {
+  const {
+    branchId,
+    active,
+    pagination,
+    pageNumber,
+    dataPerPage,
+    finYearId,
+    startDate,
+    endDate,
+  } = req.query;
+  const { startTime: startDateStartTime } = getDateTimeRange(startDate);
+  const { endTime: endDateEndTime } = getDateTimeRange(endDate);
+  let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+  let data = await prisma.salesBill.findMany({
+    where: {
+      AND: [
+        {
+          AND: finYearDate
+            ? [
+                {
+                  createdAt: {
+                    gte: finYearDate.startDateStartTime,
+                  },
+                },
+                {
+                  createdAt: {
+                    lte: finYearDate.endDateEndTime,
+                  },
+                },
+              ]
+            : undefined,
+        },
+        {
+          AND:
+            startDate && endDate
+              ? [
+                  {
+                    createdAt: {
+                      gte: startDateStartTime,
+                    },
+                  },
+                  {
+                    createdAt: {
+                      lte: endDateEndTime,
+                    },
+                  },
+                ]
+              : undefined,
+        },
+      ],
+      branchId: branchId ? parseInt(branchId) : undefined,
+      active: active ? Boolean(active) : undefined,
+    },
+    include: {
+      Customer: {
+        select: {
+          name: true,
+          mobileNo: true,
+        },
+      },
+
+      salesBillItems: {
+        select: {
+          qty: true,
+        },
+      },
+    },
+  });
+  const totalCount = data.length;
+  const totalCashAmount = data?.reduce(
+    (sum, item) => sum + (item.paymentValue || 0),
+    0,
+  );
+  const totalCardAmount = data?.reduce(
+    (sum, item) => sum + (item.cardAmount || 0),
+    0,
+  );
+  const totalUpiAmount = data?.reduce(
+    (sum, item) => sum + (item.upiAmount || 0),
+    0,
+  );
+  const totalNetAmount = totalCashAmount + totalCardAmount + totalUpiAmount;
+  if (pagination) {
+    data = data.slice(
+      (pageNumber - 1) * parseInt(dataPerPage),
+      pageNumber * dataPerPage,
+    );
+  }
+
+  return {
+    statusCode: 0,
+    data,
+    totalCount,
+    totalCashAmount,
+    totalCardAmount,
+    totalUpiAmount,
+    totalNetAmount
+  };
+}
+
 async function getOne(id) {
   // Fetch PO with relations
   let data = await prisma.salesBill.findUnique({
@@ -786,4 +887,12 @@ async function getSalesBillDetail(req) {
   };
 }
 
-export { get, getOne, create, update, remove, getSalesBillDetail };
+export {
+  get,
+  getOne,
+  create,
+  update,
+  remove,
+  getSalesBillDetail,
+  getSalesReport,
+};

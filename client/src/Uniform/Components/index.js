@@ -73,3 +73,4 @@ export { default as PurchaseReturnShowRoom } from "./PurchaseReturnShowRoom";
 export { default as SalesReturnSR } from "./SalesReturnShowroom";
 export { default as BarcodeSeqmaster } from "./BarcodeSeqmaster";
 export { default as OpeningStockSR } from "./OpeningStockSR";
+export { default as SalesBillReport } from "./SalesBillReport";

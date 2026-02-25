@@ -33,6 +33,19 @@ const salesBillApi = createApi({
       },
       providesTags: ["SalesBill"],
     }),
+    getSalesBillReport: builder.query({
+      query: ({ params }) => {
+        return {
+          url: `${SALES_BILL_API}/salesReport`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["SalesBill"],
+    }),
     getSalesBillById: builder.query({
       query: (id) => {
         return {
@@ -92,6 +105,7 @@ const salesBillApi = createApi({
 
 export const {
   useGetSalesBillQuery,
+  useGetSalesBillReportQuery,
   useGetSalesBillByIdQuery,
   useLazyGetSalesBillByIdQuery,
   useLazyGetSalesBillDetailQuery,

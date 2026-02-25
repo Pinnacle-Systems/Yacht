@@ -7,10 +7,12 @@ import {
   update,
   remove,
   getSaleBillDetail,
+  getSalesReport,
 } from "../controllers/salesBill.controller.js";
 
 router.post("/", create);
 router.get("/", get);
+router.get("/salesReport", getSalesReport);
 router.get("/salesBillDetail", getSaleBillDetail);
 router.get("/:id", getOne);
 router.put("/:id", update);
