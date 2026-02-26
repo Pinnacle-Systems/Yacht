@@ -714,6 +714,7 @@ model TaxTemplate {
   SalesEntry         SalesEntry[]
   purchaseBills      PurchaseBill[]
   salesBills         SalesBill[]
+  salesReturnSRs     SalesReturnSR[]
 }
 
 model TaxTemplateDetails {
@@ -1217,6 +1218,7 @@ model Color {
   salesReturnSRItems         SalesReturnSRItems[]
   barcodes                   Barcode[]
   openingStockItemsSRs       OpeningStockItemsSR[]
+  salesExchangeItems         SalesExchangeItems[]
 }
 
 model UnitOfMeasurement {
@@ -1247,6 +1249,7 @@ model UnitOfMeasurement {
   salesEntryItems            SalesEntryItems[]
   barcodes                   Barcode[]
   openingStockItemsSRs       OpeningStockItemsSR[]
+  salesExchangeItems         SalesExchangeItems[]
 }
 
 model purchaseInwardEntry {
@@ -1657,6 +1660,7 @@ model Style {
   salesReturnSRItems    SalesReturnSRItems[]
   barcodes              Barcode[]
   openingStockItemsSRs  OpeningStockItemsSR[]
+  salesExchangeItems    SalesExchangeItems[]
 }
 
 model Size {
@@ -1692,6 +1696,7 @@ model Size {
   salesReturnSRItems    SalesReturnSRItems[]
   barcodes              Barcode[]
   openingStockItemsSRs  OpeningStockItemsSR[]
+  salesExchangeItems    SalesExchangeItems[]
 }
 
 model Measurement {
@@ -2061,6 +2066,7 @@ model StyleItem {
   salesReturnSRItems    SalesReturnSRItems[]
   barcodes              Barcode[]
   openingStockItemsSRs  OpeningStockItemsSR[]
+  salesExchangeItems    SalesExchangeItems[]
 }
 
 model SalesReturn {
@@ -2747,6 +2753,8 @@ model StockLedger {
   barcodeId              Int?
   OpeningStockItemsSR    OpeningStockItemsSR?  @relation(fields: [openingStockItemsSRId], references: [id], onDelete: Cascade)
   openingStockItemsSRId  Int?
+  SalesExchangeItems     SalesExchangeItems?   @relation(fields: [salesExchangeItemsId], references: [id], onDelete: Cascade)
+  salesExchangeItemsId   Int?
 
   @@index([branchId])
 }
@@ -2892,6 +2900,7 @@ model SalesBillItems {
   discountType  String?
   discountValue Float?
   taxPercent    Float?
+  netAmount     Float?
   stockLedgers  StockLedger[]
   Barcode       Barcode?           @relation(fields: [barcodeId], references: [id])
   barcodeId     Int?
@@ -2916,7 +2925,17 @@ model SalesReturnSR {
   billNo             String?
   mobileNo           String?
   customerName       String?
+  returnType         String?
+  isCash             Boolean?             @default(false)
+  isCard             Boolean?             @default(false)
+  isUpI              Boolean?             @default(false)
+  cardAmount         Float?
+  upiAmount          Float?
+  cashAmount         Float?
+  taxTemplate        TaxTemplate?         @relation(fields: [taxTemplateId], references: [id])
+  taxTemplateId      Int?
   salesReturnSRItems SalesReturnSRItems[]
+  salesExchangeItems SalesExchangeItems[]
 }
 
 model SalesReturnSRItems {
@@ -2938,6 +2957,32 @@ model SalesReturnSRItems {
   stockLedgers    StockLedger[]
   Barcode         Barcode?           @relation(fields: [barcodeId], references: [id])
   barcodeId       Int?
+  netAmount       Float?
+}
+
+model SalesExchangeItems {
+  id              Int                @id @default(autoincrement())
+  SalesReturnSR   SalesReturnSR?     @relation(fields: [salesReturnSRId], references: [id], onDelete: Cascade)
+  salesReturnSRId Int?
+  Style           Style?             @relation(fields: [styleId], references: [id])
+  styleId         Int?
+  Size            Size?              @relation(fields: [sizeId], references: [id])
+  sizeId          Int?
+  exchangeQty     Int?
+  StyleItem       StyleItem?         @relation(fields: [styleItemId], references: [id])
+  styleItemId     Int?
+  Color           Color?             @relation(fields: [colorId], references: [id])
+  colorId         Int?
+  Uom             UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId           Int?
+  barcodeNo       String?
+  rate            Float?
+  discountType    String?
+  discountValue   Float?
+  taxPercent      Float?
+  Barcode         Barcode?           @relation(fields: [barcodeId], references: [id])
+  barcodeId       Int?
+  stockLedgers    StockLedger[]
 }
 
 model BarcodeSequence {
@@ -2982,6 +3027,7 @@ model Barcode {
   purchasReturnItemsSRs PurchasReturnItemsSR[]
   salesBillItems        SalesBillItems[]
   salesReturnSRItems    SalesReturnSRItems[]
+  salesExchangeItems    SalesExchangeItems[]
 }
 
 model OpeningStockSR {

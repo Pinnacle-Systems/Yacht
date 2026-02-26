@@ -243,7 +243,7 @@ async function getSalesReport(req) {
     totalCashAmount,
     totalCardAmount,
     totalUpiAmount,
-    totalNetAmount
+    totalNetAmount,
   };
 }
 
@@ -434,6 +434,9 @@ async function createSalesBillItems(
         taxPercent: itemDetails?.taxPercent
           ? parseInt(itemDetails.taxPercent)
           : null,
+        netAmount: itemDetails?.netAmount
+          ? parseInt(itemDetails.netAmount)
+          : null,
       },
     });
     await tx.stockLedger.create({
@@ -619,6 +622,9 @@ async function updateSalesBillItems(
           taxPercent: itemDetails?.taxPercent
             ? parseInt(itemDetails.taxPercent)
             : null,
+          netAmount: itemDetails?.netAmount
+            ? parseInt(itemDetails.netAmount)
+            : null,
         },
       });
       const existingStock = await tx.stockLedger.findFirst({
@@ -748,6 +754,9 @@ async function updateSalesBillItems(
           taxPercent: itemDetails?.taxPercent
             ? parseInt(itemDetails.taxPercent)
             : null,
+          netAmount: itemDetails?.netAmount
+            ? parseInt(itemDetails.netAmount)
+            : null,
         },
       });
 
@@ -867,6 +876,7 @@ async function getSalesBillDetail(req) {
           barcodeNo: true,
           id: true,
           barcodeId: true,
+          netAmount:true
         },
       },
       Customer: {

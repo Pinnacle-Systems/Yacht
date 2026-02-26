@@ -169,6 +169,9 @@ const SalesBillItemsSelection = ({
                           <th className="px-1 py-1.5 border border-gray-300 text-xs text-gray-800  w-20">
                             Rate
                           </th>
+                          <th className="px-1 py-1.5 border border-gray-300 text-xs text-gray-800  w-20">
+                            Net Amount
+                          </th>
                         </tr>
                       </thead>
 
@@ -222,6 +225,9 @@ const SalesBillItemsSelection = ({
                               </td>
                               <td className=" border border-gray-300 text-[11px] text-right py-1.5 px-2">
                                 {item.rate?.toFixed(2)}
+                              </td>
+                              <td className=" border border-gray-300 text-[11px] text-right py-1.5 px-2">
+                                {item.netAmount?.toFixed(2)}
                               </td>
                             </tr>
                           ))

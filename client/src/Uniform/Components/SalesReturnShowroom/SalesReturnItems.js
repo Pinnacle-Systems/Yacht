@@ -20,6 +20,7 @@ export default function SalesReturnItems({
   setTempItems,
   billNo,
   styleList,
+  returnType,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [fillGrid, setFillGrid] = useState(false);
@@ -33,6 +34,7 @@ export default function SalesReturnItems({
       styleItemId: "",
       colorId: "",
       selected: false,
+      netAmount: "",
     };
     setSalesReturnItems([...salesReturnItems, newRow]);
   };
@@ -73,6 +75,7 @@ export default function SalesReturnItems({
               styleItemId: "",
               colorId: "",
               selected: false,
+              netAmount: "",
             })),
           ];
         }
@@ -90,6 +93,7 @@ export default function SalesReturnItems({
           styleItemId: "",
           colorId: "",
           selected: false,
+          netAmount: "",
         })),
       );
     }
@@ -132,6 +136,7 @@ export default function SalesReturnItems({
           styleItemId: "",
           colorId: "",
           selected: false,
+          netAmount: "",
         });
       }
 
@@ -160,7 +165,7 @@ export default function SalesReturnItems({
           <h2 className="font-medium text-slate-700">Return Items</h2>
           {!id && (
             <button
-              className={`font-bold  bord ml-[900px] text-sm bg-blue-500 rounded-md text-white px-2
+              className={`font-bold  bord ${returnType === "Exchange" ? "ml-[1000px]" : "ml-[900px]"} text-sm bg-blue-500 rounded-md text-white px-2
               `}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -266,6 +271,14 @@ export default function SalesReturnItems({
                 >
                   Return Qty
                 </th>
+                {returnType === "Exchange" && (
+                  <th
+                    className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  >
+                    Net Amount
+                  </th>
+                )}
+
                 <th
                   className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
                 >
@@ -395,6 +408,19 @@ export default function SalesReturnItems({
                       disabled={true}
                     />
                   </td>
+                  {returnType === "Exchange" && (
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        min={"0"}
+                        type="number"
+                        className="text-right rounded py-1 px-1 w-full"
+                        onFocus={(e) => e.target.select()}
+                        value={row?.netAmount}
+                        disabled={true}
+                      />
+                    </td>
+                  )}
+
                   <td className="w-2 border border-gray-300">
                     <input
                       className="w-full"
@@ -424,6 +450,18 @@ export default function SalesReturnItems({
                     : []
                   ).reduce((sum, row) => sum + (Number(row.returnQty) || 0), 0)}
                 </td>
+                {returnType === "Exchange" && (
+                  <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
+                    {(Array.isArray(salesReturnItems)
+                      ? salesReturnItems
+                      : []
+                    ).reduce(
+                      (sum, row) => sum + (Number(row.netAmount) || 0),
+                      0,
+                    )}
+                  </td>
+                )}
+
                 <td className="border border-gray-300" colSpan={1}></td>
               </tr>
             </tfoot>

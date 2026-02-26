@@ -207,9 +207,18 @@ async function create(body) {
       mobileNo,
       remarks,
       salesReturnItems,
+      salesExchangeItems,
       termsAndCondition,
       customerName,
       billNo,
+      returnType,
+      isCash,
+      isCard,
+      isUpI,
+      cardAmount,
+      upiAmount,
+      cashAmount,
+      taxTemplateId,
     } = await body;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate
@@ -236,9 +245,17 @@ async function create(body) {
           billNo: billNo ? billNo : undefined,
           customerId: customerId ? parseInt(customerId) : undefined,
           mobileNo: mobileNo ? mobileNo : undefined,
-          termsAndCondition,
+          termsAndCondition: termsAndCondition ? termsAndCondition : "",
           remarks,
           customerName: customerName ? customerName : undefined,
+          taxTemplateId: parseInt(taxTemplateId),
+          returnType,
+          isCash: Boolean(isCash),
+          isCard: Boolean(isCard),
+          isUpI: Boolean(isUpI),
+          cardAmount: cardAmount ? parseFloat(cardAmount) : null,
+          upiAmount: upiAmount ? parseFloat(upiAmount) : null,
+          cashAmount: cashAmount ? parseFloat(cashAmount) : null,
         },
       });
       await createSalesReturnItems(
@@ -249,7 +266,17 @@ async function create(body) {
         branchId,
         billNo,
       );
+      if (returnType === "Exchange") {
+        await createSalesExchangeItems(
+          tx,
+          salesExchangeItems,
+          data,
+          userId,
+          branchId,
+        );
+      }
     });
+
     return { statusCode: 0, data };
   } catch (err) {
     return {
@@ -316,6 +343,82 @@ async function createSalesReturnItems(
       },
       data: {
         qty: { increment: qty },
+        updatedById: parseInt(userId),
+      },
+    });
+    return createdItem;
+  });
+
+  return Promise.all(promises);
+}
+
+async function createSalesExchangeItems(
+  tx,
+  salesExchangeItems,
+  salesReturnSR,
+  userId,
+  branchId,
+) {
+  const promises = salesExchangeItems.map(async (itemDetails, index) => {
+    const qty = itemDetails?.qty
+      ? Math.round(parseFloat(itemDetails.qty))
+      : null;
+    const barcodeId = itemDetails?.barcodeId
+      ? parseInt(itemDetails.barcodeId)
+      : null;
+    const createdItem = await tx.salesExchangeItems.create({
+      data: {
+        salesReturnSRId: parseInt(salesReturnSR.id),
+        styleItemId: itemDetails?.styleItemId
+          ? parseInt(itemDetails.styleItemId)
+          : null,
+        sizeId: itemDetails?.sizeId ? parseInt(itemDetails.sizeId) : null,
+        styleId: itemDetails?.styleId ? parseInt(itemDetails.styleId) : null,
+        uomId: itemDetails?.uomId ? parseInt(itemDetails.uomId) : null,
+        colorId: itemDetails?.colorId ? parseInt(itemDetails.colorId) : null,
+        qty,
+        barcodeId,
+        barcodeNo: itemDetails?.barcodeNo ?? undefined,
+        rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
+        discountType: itemDetails?.discountType ?? undefined,
+        discountValue: itemDetails?.discountValue
+          ? parseInt(itemDetails.discountValue)
+          : null,
+        taxPercent: itemDetails?.taxPercent
+          ? parseInt(itemDetails.taxPercent)
+          : null,
+        netAmount: itemDetails?.netAmount
+          ? parseInt(itemDetails.netAmount)
+          : null,
+      },
+    });
+    await tx.stockLedger.create({
+      data: {
+        inOrOut: "Out",
+        refType: "SalesExchange",
+        createdById: parseInt(userId),
+        branchId: parseInt(branchId),
+        styleId: itemDetails?.styleId ? parseInt(itemDetails.styleId) : null,
+        sizeId: itemDetails?.sizeId ? parseInt(itemDetails.sizeId) : null,
+        colorId: itemDetails?.colorId ? parseInt(itemDetails.colorId) : null,
+        uomId: itemDetails?.uomId ? parseInt(itemDetails.uomId) : null,
+        styleItemId: itemDetails?.styleItemId
+          ? parseInt(itemDetails.styleItemId)
+          : null,
+        qty: -qty,
+        barcodeId,
+        salesExchangeItemsId: createdItem.id,
+        barcodeNo: itemDetails?.barcodeNo ?? undefined,
+        rate: itemDetails?.rate ? parseInt(itemDetails.rate) : null,
+      },
+    });
+    await tx.stockSummary.updateMany({
+      where: {
+        branchId: parseInt(branchId),
+        barcodeId: barcodeId,
+      },
+      data: {
+        qty: { decrement: qty },
         updatedById: parseInt(userId),
       },
     });
@@ -451,6 +554,9 @@ async function updateSalesReturnItems(
           returnQty: returnQty,
           barcodeNo: itemDetails?.barcodeNo ?? undefined,
           barcodeId,
+          netAmount: itemDetails?.netAmount
+            ? parseInt(itemDetails.netAmount)
+            : null,
         },
       });
       const existingStock = await tx.stockLedger.findFirst({
@@ -572,6 +678,9 @@ async function updateSalesReturnItems(
           returnQty: returnQty,
           barcodeNo: itemDetails?.barcodeNo ?? undefined,
           barcodeId,
+          netAmount: itemDetails?.netAmount
+            ? parseInt(itemDetails.netAmount)
+            : null,
         },
       });
 
