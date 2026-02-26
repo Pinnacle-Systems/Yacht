@@ -61,10 +61,10 @@ export default function SalesReturnItems({
       setSalesReturnItems((prev) => {
         const count = prev.length;
 
-        if (count < 4) {
+        if (count < 3) {
           return [
             ...prev,
-            ...Array.from({ length: 4 - count }, () => ({
+            ...Array.from({ length: 3 - count }, () => ({
               barcodeId: "",
               styleId: "",
               sizeId: "",
@@ -81,7 +81,7 @@ export default function SalesReturnItems({
       });
     } else {
       setSalesReturnItems(
-        Array.from({ length: 4 }, () => ({
+        Array.from({ length: 3 }, () => ({
           barcodeId: "",
           styleId: "",
           sizeId: "",
@@ -122,7 +122,7 @@ export default function SalesReturnItems({
         }
       });
 
-      while (updated.length < 4) {
+      while (updated.length < 3) {
         updated.push({
           barcodeNo: "",
           styleId: "",
@@ -155,12 +155,12 @@ export default function SalesReturnItems({
           onClose={() => setFillGrid(false)}
         />
       </Modal>
-      <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[450px] overflow-auto overflow-x-auto w-full">
+      <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[360px] overflow-auto overflow-x-auto w-full">
         <div className="flex items-center mt-1">
-          <h2 className="font-medium text-slate-700">List of Items</h2>
+          <h2 className="font-medium text-slate-700">Return Items</h2>
           {!id && (
             <button
-              className={`font-bold text-slate-700 bord ml-[870px] text-sm bg-blue-500 rounded rounded-md text-white px-2
+              className={`font-bold  bord ml-[900px] text-sm bg-blue-500 rounded-md text-white px-2
               `}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -196,7 +196,7 @@ export default function SalesReturnItems({
           )}
         </div>
         <div
-          className={`w-full  min-h-[190px] max-h-[190px] overflow-y-auto  mt-1 mb-2`}
+          className={`w-full  min-h-[150px] max-h-[150px] overflow-y-auto  mt-1 mb-2`}
         >
           <table className=" border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
@@ -232,7 +232,7 @@ export default function SalesReturnItems({
                   S.No
                 </th>
                 <th
-                  className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Barcode
                 </th>

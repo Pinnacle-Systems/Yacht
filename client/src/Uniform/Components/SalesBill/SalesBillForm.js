@@ -320,7 +320,7 @@ export function SalesBillForm({
   };
 
   const grossAmount = salesBillItems.reduce(
-    (sum, row) => sum + (Number(row.taxable) || 0),
+    (sum, row) => sum +   (Number(row.qty) || 0) * (Number(row.rate) || 0),
     0,
   );
   const taxGroupWise = groupBy(salesBillItems, "taxPercent");

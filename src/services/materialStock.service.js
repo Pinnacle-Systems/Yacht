@@ -71,16 +71,16 @@ async function get(req) {
       fabMeter: true,
     },
   });
+  data = data.filter((item) => Number(item._sum?.fabMeter) > 0);
+  totalCount = data.length;
+  totalQty = data?.reduce((sum, item) => sum + (item._sum?.qty || 0), 0);
+  totalMeter = data?.reduce((sum, item) => sum + (item._sum?.fabMeter || 0), 0);
   if (pagination) {
     data = data.slice(
       (pageNumber - 1) * parseInt(dataPerPage),
       pageNumber * dataPerPage,
     );
   }
-  totalCount = data.length;
-  totalQty = data?.reduce((sum, item) => sum + (item._sum?.qty || 0), 0);
-  totalMeter = data?.reduce((sum, item) => sum + (item._sum?.fabMeter || 0), 0);
-
   return {
     statusCode: 0,
     data: data.map((d) => ({

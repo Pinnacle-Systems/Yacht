@@ -24,9 +24,11 @@ import {
   useGetSalesBillQuery,
   useLazyGetSalesBillDetailQuery,
 } from "../../../redux/services/SalesBillService";
-import { DropdownNew } from "../../../Inputs";
+import { DropdownInput, DropdownNew } from "../../../Inputs";
 import salesBillApi from "../../../redux/services/SalesBillService";
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
+import { ReturnTypeDatas } from "../../../Utils/DropdownData";
+import SalesExchangeItems from "./SalesExchangeItems";
 export function SalesReturnForm({
   onClose,
   id,
@@ -51,7 +53,9 @@ export function SalesReturnForm({
   const [termsAndCondition, setTermsAndCondition] = useState("");
   const [remarks, setRemarks] = useState("");
   const [billNo, setBillNo] = useState("");
-
+  const [returnType, setReturnType] = useState("Exchange");
+  const [taxTemplateId, setTaxTemplateId] = useState("");
+  const [salesExchangeItems, setsalesExchangeItems] = useState([]);
   const dispatch = useDispatch();
   const {
     data: singleData,
@@ -155,6 +159,9 @@ export function SalesReturnForm({
     termsAndCondition,
     remarks,
     billNo,
+    salesExchangeItems,
+    returnType,
+    taxTemplateId,
   };
 
   const syncFormWithDb = useCallback(
@@ -168,6 +175,9 @@ export function SalesReturnForm({
       setSalesReturnItems(
         data?.salesReturnSRItems ? data.salesReturnSRItems : [],
       );
+      setsalesExchangeItems(
+        data?.salesExchangeItems ? data?.salesExchangeItems : [],
+      );
       setBillNo(data?.billNo ? data.billNo : "");
       if (data?.docId) {
         setDocId(data?.docId);
@@ -179,6 +189,8 @@ export function SalesReturnForm({
         data?.termsAndCondition ? data.termsAndCondition : "",
       );
       setRemarks(data?.remarks ? data.remarks : "");
+      setReturnType(data?.returnType ? data?.returnType : "Exchange");
+      setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "");
     },
     [id],
   );
@@ -309,6 +321,7 @@ export function SalesReturnForm({
       setCustomerId(salesData?.data?.customerId);
       setCustomerName(salesData?.data?.customerName);
       setMobileNo(salesData?.data?.mobileNo);
+      setTaxTemplateId(salesData?.data?.taxTemplateId);
       const salesItems = salesData?.data?.salesBillItems;
       if (!salesItems) return;
       setTempItems(salesItems);
@@ -336,12 +349,12 @@ export function SalesReturnForm({
             </div>
           </div>
           <div className="space-y-2 mt-1.5">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                 <h2 className="font-medium text-slate-700 mb-2">
                   Basic Details
                 </h2>
-                <div className="grid grid-cols-3 gap-1">
+                <div className="grid grid-cols-2 gap-1">
                   <ReusableInput
                     label="Sales Return No"
                     readOnly
@@ -355,6 +368,26 @@ export function SalesReturnForm({
                     readOnly={true}
                     disabled
                   />
+                </div>
+              </div>
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                <h2 className="font-medium text-slate-700 mb-2">
+                  Sales Bill Details
+                </h2>
+                <div className="grid grid-cols-2 gap-2">
+                  <DropdownInput
+                    name="Return Type"
+                    options={ReturnTypeDatas}
+                    value={returnType}
+                    setValue={setReturnType}
+                    required={true}
+                    readOnly={id}
+                    beforeChange={() => {
+                      setsalesExchangeItems([]);
+                      setSalesReturnItems([]);
+                    }}
+                    autoFocus={true}
+                  />
                   <DropdownNew
                     name="Sales Bill No"
                     dataList={salesList?.data}
@@ -366,7 +399,6 @@ export function SalesReturnForm({
                     otherField={"docId"}
                     otherValue={"docId"}
                     disabled={id}
-                    autoFocus={true}
                   />
                 </div>
               </div>
@@ -374,7 +406,7 @@ export function SalesReturnForm({
                 <h2 className="font-medium text-slate-700 mb-2">
                   Customer Details
                 </h2>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <ReusableInput
                     label="Customer Name"
                     value={customerName}
@@ -411,6 +443,23 @@ export function SalesReturnForm({
                 id={id}
               />
             </fieldset>
+            {returnType === "Exchange" && (
+              <fieldset className="w-full  min-w-[1200px]">
+                <SalesExchangeItems
+                  salesExchangeItems={salesExchangeItems}
+                  setSalesExchangeItems={setsalesExchangeItems}
+                  readOnly={readOnly}
+                  branchId={branchId}
+                  sizeList={sizeList}
+                  styleItemList={styleItemList}
+                  colorList={colorList}
+                  uomList={uomList}
+                  taxTemplateId={taxTemplateId}
+                   billNo={billNo}
+                />
+              </fieldset>
+            )}
+
             <div className="grid grid-cols-3 gap-2">
               <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                 <h2 className="font-medium text-slate-700 mb-2 text-base">

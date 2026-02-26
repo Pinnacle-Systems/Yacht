@@ -217,7 +217,7 @@ const SalesBillItemsSelection = ({
                               <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
                                 {item?.Uom?.name}
                               </td>
-                              <td className=" border text-right border-gray-300 text-right text-[11px] py-1.5 px-2">
+                              <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2">
                                 {item.qty}
                               </td>
                               <td className=" border border-gray-300 text-[11px] text-right py-1.5 px-2">

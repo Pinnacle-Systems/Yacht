@@ -8,7 +8,6 @@ import {
 } from "../utils/stockHelper.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 
-
 const xprisma = prisma.$extends({
   result: {
     stock: {
@@ -83,12 +82,12 @@ export async function getPcsStock(req) {
   }
   if (finishedGoodsSalesId) {
     filterConditions.push(
-      `(finishedGoodsSales.id < ${finishedGoodsSalesId} or finishedGoodsSales.id IS NULL)`
+      `(finishedGoodsSales.id < ${finishedGoodsSalesId} or finishedGoodsSales.id IS NULL)`,
     );
   }
   if (finishedGoodsSalesDeliveryId) {
     filterConditions.push(
-      `(finishedGoodsSalesDelivery.id < ${finishedGoodsSalesDeliveryId} or finishedGoodsSalesDelivery.id IS NULL)`
+      `(finishedGoodsSalesDelivery.id < ${finishedGoodsSalesDeliveryId} or finishedGoodsSalesDelivery.id IS NULL)`,
     );
   }
   if (stockTransferFinishedGoodsId) {
@@ -210,7 +209,7 @@ export async function getPcsStock(req) {
   if (pagination) {
     data = data.slice(
       (pageNumber - 1) * parseInt(dataPerPage),
-      pageNumber * dataPerPage
+      pageNumber * dataPerPage,
     );
   }
 
@@ -228,16 +227,16 @@ function manualFilterSearchData(searchYarnAliasName, searchColor, data) {
       color
         ? String(item.name).includes(color)
         : true && fabric
-        ? String(item.fabricName).includes(fabric)
-        : true
+          ? String(item.fabricName).includes(fabric)
+          : true,
     );
   } else {
     return data.filter((item) =>
       color
         ? String(item.name).includes(color)
         : true || fabric
-        ? String(item.fabricName).includes(fabric)
-        : true
+          ? String(item.fabricName).includes(fabric)
+          : true,
     );
   }
 }
@@ -522,12 +521,13 @@ async function get(req) {
       styleNo: "asc",
     },
   });
+  data = data.filter((item) => Number(item._sum?.qty) > 0);
   totalCount = data.length;
   totalQty = data?.reduce((sum, item) => sum + (item._sum?.qty || 0), 0);
   if (pagination) {
     data = data.slice(
       (pageNumber - 1) * parseInt(dataPerPage),
-      pageNumber * dataPerPage
+      pageNumber * dataPerPage,
     );
   }
   return {
@@ -691,7 +691,7 @@ async function getOne() {
         item,
         "price",
         item.storeId,
-        branchId
+        branchId,
       );
       return newItem;
     });

@@ -112,7 +112,7 @@ const MaterialStockReport = forwardRef(
 
     useEffect(() => {
       setCurrentPageNumber(1);
-    }, [serachDocNo, searchDocDate, searchStore,allData,branchId,storeId,styleId,sizeId,fabricId,styleItemId,colorId,itemType]);
+    }, [serachDocNo, searchDocDate, searchStore,branchId,storeId,styleId,itemType]);
 
     useEffect(() => {
       if (allData && onDataLoaded) {

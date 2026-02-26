@@ -304,3 +304,9 @@ export const PaymentTypeData = [
   { show: "UPI", value: "UPI" },
   { show: "COMBINE", value: "COMBINE" },
 ];
+
+export const ReturnTypeDatas = [
+  { show: "General", value: "General" },
+  { show: "Defect", value: "Defect" },
+  { show: "Exchange", value: "Exchange" },
+];

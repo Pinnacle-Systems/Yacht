@@ -298,7 +298,7 @@ export default function SalesBillItems({
       const sgst = (taxable * (taxPercent / 2)) / 100;
       const cgst = (taxable * (taxPercent / 2)) / 100;
 
-      const net = taxable + (sgst + cgst);
+      const net = taxable ;
       return {
         ...row,
         netAmount: Math.round(net),
