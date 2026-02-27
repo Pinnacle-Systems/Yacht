@@ -4,11 +4,15 @@ import secureLocalStorage from "react-secure-storage";
 import { getDateFromDateTimeToDisplay } from "../../../Utils/helper";
 import { Loader } from "../../../Basic/components";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { ReusableInput } from "../../../Utils/CommonInput";
 
 export default function Form() {
+  const today = new Date().toISOString().split("T")[0];
   const [dataPerPage, setDataPerPage] = useState("10");
   const [currentPageNumber, setCurrentPageNumber] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
+  const [fromDate, setFromDate] = useState(today);
+  const [toDate, setToDate] = useState(today);
   const branchId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "currentBranchId",
   );
@@ -26,6 +30,8 @@ export default function Form() {
       dataPerPage,
       finyearId,
       pageNumber: currentPageNumber,
+      fromDate,
+      toDate,
     },
   });
 
@@ -123,11 +129,27 @@ export default function Form() {
   return (
     <>
       <div className="p-1 bg-[#F1F1F0] h-[85%]">
-        <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-          <div>
-            <h1 className="text-xl font-bold text-gray-800">
-              Sales Bill Report
-            </h1>
+        <div className="flex flex-col sm:flex-row justify-between bg-white  px-1  items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
+          <h1 className="text-xl font-semibold text-gray-800">
+            Sales Bill Report
+          </h1>
+          <div className="flex gap-4 font-medium text-lg items-center mt-1">
+            <div className="flex gap-2 items-center">
+              <label>From Date</label>
+              <ReusableInput
+                value={fromDate}
+                setValue={setFromDate}
+                type={"date"}
+              />
+            </div>
+            <div className="flex gap-2 items-center">
+              <label>To Date</label>
+              <ReusableInput
+                value={toDate}
+                setValue={setToDate}
+                type={"date"}
+              />
+            </div>
           </div>
         </div>
 
@@ -205,12 +227,12 @@ export default function Form() {
 
                             <td className="py-1.5 text-left px-4">
                               {" "}
-                              {dataObj?.Customer?.name}
+                              {dataObj?.customerName}
                             </td>
                             <td className="py-1.5 text-right px-10">
                               {" "}
-                              {dataObj?.paymentValue
-                                ? Number(dataObj?.paymentValue).toFixed(2)
+                              {dataObj?.cashAmount
+                                ? Number(dataObj?.cashAmount).toFixed(2)
                                 : "-"}
                             </td>
                             <td className="py-1.5 text-right px-10">
@@ -228,7 +250,7 @@ export default function Form() {
                             <td className="py-1.5 text-right px-10">
                               {" "}
                               {(
-                                Number(dataObj?.paymentValue) +
+                                Number(dataObj?.cashAmount) +
                                 Number(dataObj?.cardAmount) +
                                 Number(dataObj?.upiAmount)
                               ).toFixed(2)}
