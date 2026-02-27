@@ -30,6 +30,13 @@ import showroomStockApi from "../../../redux/uniformService/ShowroomStockService
 import { ReturnTypeDatas } from "../../../Utils/DropdownData";
 import SalesExchangeItems from "./SalesExchangeItems";
 import { groupBy } from "lodash";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Typography,
+} from "@mui/material";
+import { ExpandMore } from "@mui/icons-material";
 export function SalesReturnForm({
   onClose,
   id,
@@ -97,7 +104,8 @@ export function SalesReturnForm({
   const totalAmountBill = netAmountBill + Number(roundOffBill || 0);
 
   const grossAmount = salesExchangeItems.reduce(
-    (sum, row) => sum + (Number(row.qty) || 0) * (Number(row.rate) || 0),
+    (sum, row) =>
+      sum + (Number(row.exchangeQty) || 0) * (Number(row.rate) || 0),
     0,
   );
 
@@ -163,12 +171,21 @@ export function SalesReturnForm({
       return false;
     }
     if (!data?.salesReturnItems || data.salesReturnItems.length === 0) {
-      toast.info("Please add at least one item...!", {
+      toast.info("Please add at least one return item...!", {
         position: "top-center",
+        autoClose: 2000,
       });
       return false;
     }
-
+    if (returnType === "Exchange") {
+      if (!data?.salesExchangeItems || data.salesExchangeItems.length === 0) {
+        toast.info("Please add Exchange item...!", {
+          position: "top-center",
+          autoClose: 2000,
+        });
+        return false;
+      }
+    }
     const filledGoodsItems = data.salesReturnItems.filter(
       (item) => item?.styleItemId,
     );
@@ -181,7 +198,24 @@ export function SalesReturnForm({
       });
       return false;
     }
+    const filledeExchangeItems = data.salesExchangeItems.filter(
+      (item) => item?.styleItemId,
+    );
+    if (
+      !isGridDatasValid(filledeExchangeItems, false, [
+        "exchangeQty",
+        "barcodeId",
+        "rate",
+      ])
+    ) {
+      toast.info("Please fill all required items details...!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      return false;
+    }
     const duplicatesGoods = findDuplicateGoodss(filledGoodsItems);
+    const duplicateExchangeItems = findDuplicateGoodss(filledeExchangeItems);
     if (duplicatesGoods.length > 0) {
       const dup = duplicatesGoods[0];
       Swal.fire({
@@ -193,6 +227,44 @@ export function SalesReturnForm({
                  `,
       });
       return false;
+    }
+    if (duplicateExchangeItems.length > 0) {
+      const dup = duplicateExchangeItems[0];
+      Swal.fire({
+        icon: "warning",
+        title: "Duplicate Item Found",
+        html: `
+                   Barcode - ${dup?.barcodeNo},
+                   Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
+                 `,
+      });
+      return false;
+    }
+    if (returnType === "Exchange") {
+      if (netAmount < totalAmountBill) {
+        Swal.fire({
+          title: "Payment Failed",
+          text: "Please average Return items and Exchange items Net Amount..!",
+          icon: "error",
+        });
+        return false;
+      }
+    }
+    if (paidAmount > totalAmount) {
+      Swal.fire({
+        icon: "error",
+        title: "Payment Error",
+        text: "Paid amount cannot be greater than Total amount",
+      });
+      return false; // stop further execution
+    }
+    if (paidAmount < totalAmount) {
+      Swal.fire({
+        icon: "error",
+        title: "Payment Error",
+        text: "Paid amount cannot be Less than Total amount",
+      });
+      return false; // stop further execution
     }
     return true;
   };
@@ -212,7 +284,7 @@ export function SalesReturnForm({
     termsAndCondition,
     remarks,
     billNo,
-    salesExchangeItems,
+    salesExchangeItems: salesExchangeItems?.filter((item) => item?.barcodeId),
     returnType,
     taxTemplateId,
     isCash,
@@ -522,168 +594,27 @@ export function SalesReturnForm({
                   uomList={uomList}
                   taxTemplateId={taxTemplateId}
                   billNo={billNo}
+                  id={id}
                 />
               </fieldset>
             )}
-
-            <div className="grid grid-cols-3 gap-2">
-              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
-                <h2 className="font-medium text-slate-700 mb-1 text-base">
-                  Remarks
-                </h2>
-                <textarea
-                  readOnly={readOnly}
-                  value={remarks}
-                  onChange={(e) => {
-                    setRemarks(e.target.value);
-                  }}
-                  className={`w-full  overflow-auto ${returnType === "Exchange" ? "h-32" : "h-9"} px-2.5 py-2 text-xs border border-slate-400 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500`}
-                  placeholder="Additional remarks..."
-                  disabled={readOnly}
-                />
-              </div>
-              {returnType === "Exchange" && (
+            {returnType !== "Exchange" && (
+              <div className="grid grid-cols-3 gap-2">
                 <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
-                  <fieldset className="w-full text-slate-700 border h-full p-2 border-slate-400 rounded-md">
-                    <legend className="font-medium">Payment Details</legend>
-                    <div className="gap-3 items-center text-xs">
-                      <div className="flex gap-10 items-center">
-                        <div className="flex gap-2 items-center">
-                          <label className="flex items-center gap-1">
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4 align-middle"
-                              checked={isCash}
-                              disabled={readOnly}
-                              onChange={(e) => setIsCash(e.target.checked)}
-                            />
-                            Cash
-                          </label>
-                          <CommaInput
-                            value={cashAmount}
-                            setValue={setCardAmount}
-                            comma={true}
-                            disabled={readOnly || !isCash}
-                            width={28}
-                          />
-                        </div>
-                        <div className="flex gap-2 items-center">
-                          <label className="flex items-center gap-1">
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4 align-middle"
-                              checked={isCard}
-                              disabled={readOnly}
-                              onChange={(e) => setIsCard(e.target.checked)}
-                            />
-                            Card
-                          </label>
-                          <CommaInput
-                            value={cardAmount}
-                            setValue={setCardAmount}
-                            comma={true}
-                            disabled={readOnly || !isCard}
-                            width={28}
-                          />
-                        </div>
-                      </div>
-                      <div className="items-center text-xs">
-                        <div className="flex gap-4 items-center">
-                          <label className="flex items-center gap-1">
-                            <input
-                              type="checkbox"
-                              checked={isUpI}
-                              className="h-4 w-4 align-middle"
-                              disabled={readOnly}
-                              onChange={(e) => setIsUpI(e.target.checked)}
-                            />
-                            UPI
-                          </label>
-                          <CommaInput
-                            value={upiAmount}
-                            setValue={setUpiAmount}
-                            comma={true}
-                            disabled={readOnly || !isUpI}
-                            width={28}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex justify-between font-bold text-base border-t pt-2 text-indigo-600">
-                      <span>Total Paid Amount </span>
-                      <span>
-                        {Number(paidAmount || 0).toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </span>
-                    </div>
-                  </fieldset>
+                  <h2 className="font-medium text-slate-700 mb-1 text-base">
+                    Remarks
+                  </h2>
+                  <textarea
+                    readOnly={readOnly}
+                    value={remarks}
+                    onChange={(e) => {
+                      setRemarks(e.target.value);
+                    }}
+                    className={`w-full  overflow-auto  h-9 px-2.5 py-2 text-xs border border-slate-400 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500`}
+                    placeholder="Additional remarks..."
+                    disabled={readOnly}
+                  />
                 </div>
-              )}
-              {returnType === "Exchange" && (
-                <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-                  <fieldset className="w-full text-slate-700 border h-full p-3 border-slate-400 rounded-md">
-                    <legend className="font-medium px-2">Summary</legend>
-
-                    <div className="grid grid-cols-2 gap-4 text-xs">
-                      {/* LEFT SIDE — TAX DETAILS */}
-                      <div className="space-y-2 border-r pr-4">
-                        {taxRows.length === 0 && (
-                          <div className="text-slate-400">No Tax</div>
-                        )}
-
-                        {taxRows.map((tax, index) => (
-                          <div key={index} className="space-y-1">
-                            <div className="flex justify-between">
-                              <span>SGST @{tax.halfTax}%</span>
-                              <span>{tax.sgstAmount.toFixed(2)}</span>
-                            </div>
-
-                            <div className="flex justify-between">
-                              <span>CGST @{tax.halfTax}%</span>
-                              <span>{tax.cgstAmount.toFixed(2)}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* RIGHT SIDE — AMOUNT SUMMARY */}
-                      <div className="space-y-2 pl-4">
-                        {/* Gross */}
-                        <div className="flex justify-between">
-                          <span>Gross</span>
-                          <span>{grossAmount.toFixed(2)}</span>
-                        </div>
-
-                        {/* Net */}
-                        <div className="flex justify-between">
-                          <span>Net</span>
-                          <span>{netAmount.toFixed(2)}</span>
-                        </div>
-
-                        {/* Roundoff */}
-                        <div className="flex justify-between items-center">
-                          <span>Roundoff</span>
-                          <span>{roundOff.toFixed(2)}</span>
-                        </div>
-
-                        {/* Total */}
-                        <div className="flex justify-between font-bold text-base border-t pt-2 text-indigo-600">
-                          <span>Total</span>
-                          <span>
-                            {Number(totalAmount || 0).toLocaleString("en-IN", {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </fieldset>
-                </div>
-              )}
-              {returnType !== "Exchange" && (
                 <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                   <h2 className="font-medium text-slate-700 mb-2 text-base">
                     Terms and Condition
@@ -699,8 +630,6 @@ export function SalesReturnForm({
                     disabled={readOnly}
                   />
                 </div>
-              )}
-              {returnType !== "Exchange" && (
                 <div className="border border-slate-200 p-2 bg-white rounded-md  shadow-sm">
                   <h2 className="font-semibold text-slate-800 mb-2 text-base">
                     Summary
@@ -719,8 +648,200 @@ export function SalesReturnForm({
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+            {returnType === "Exchange" && (
+              <Accordion
+                disableGutters
+                elevation={0}
+                square
+                sx={{
+                  "&:before": { display: "none" }, // remove top divider line
+                }}
+              >
+                <AccordionSummary
+                  expandIcon={<ExpandMore />}
+                  sx={{
+                    minHeight: "40px",
+                    "& .MuiAccordionSummary-content": {
+                      margin: "8px 0",
+                    },
+                  }}
+                >
+                  <Typography
+                    component="span"
+                    sx={{ color: "#334155", fontWeight: 500 }} // slate-700 color
+                  >
+                    Other Details
+                  </Typography>{" "}
+                </AccordionSummary>
+                <AccordionDetails
+                  sx={{
+                    paddingTop: 0,
+                    // backgroundColor: "#f1f1f0", // ✅ correct
+                    paddingX: 1,
+                  }}
+                >
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-white rounded-md shadow-sm">
+                      <fieldset className="w-full text-slate-700 border h-full p-1 px-2 border-slate-400 rounded-md">
+                        <legend className="font-medium px-2">Remarks</legend>
+
+                        <textarea
+                          readOnly={readOnly}
+                          value={remarks}
+                          onChange={(e) => setRemarks(e.target.value)}
+                          className="w-full h-32  text-xs   resize-none focus:outline-none"
+                          placeholder="Additional remarks..."
+                          disabled={readOnly}
+                        />
+                      </fieldset>
+                    </div>
+                    <div className=" bg-white rounded-md shadow-sm ">
+                      <fieldset className="w-full text-slate-700 border h-full p-2 border-slate-400 rounded-md">
+                        <legend className="font-medium">Payment Details</legend>
+                        <div className="gap-3 items-center text-xs">
+                          <div className="flex gap-10 items-center">
+                            <div className="flex gap-2 items-center">
+                              <label className="flex items-center gap-1">
+                                <input
+                                  type="checkbox"
+                                  className="h-4 w-4 align-middle"
+                                  checked={isCash}
+                                  disabled={readOnly}
+                                  onChange={(e) => setIsCash(e.target.checked)}
+                                />
+                                Cash
+                              </label>
+                              <CommaInput
+                                value={cashAmount}
+                                setValue={setCashAmount}
+                                comma={true}
+                                disabled={readOnly || !isCash}
+                                width={28}
+                              />
+                            </div>
+                            <div className="flex gap-2 items-center">
+                              <label className="flex items-center gap-1">
+                                <input
+                                  type="checkbox"
+                                  className="h-4 w-4 align-middle"
+                                  checked={isCard}
+                                  disabled={readOnly}
+                                  onChange={(e) => setIsCard(e.target.checked)}
+                                />
+                                Card
+                              </label>
+                              <CommaInput
+                                value={cardAmount}
+                                setValue={setCardAmount}
+                                comma={true}
+                                disabled={readOnly || !isCard}
+                                width={28}
+                              />
+                            </div>
+                          </div>
+                          <div className="items-center text-xs">
+                            <div className="flex gap-4 items-center">
+                              <label className="flex items-center gap-1">
+                                <input
+                                  type="checkbox"
+                                  checked={isUpI}
+                                  className="h-4 w-4 align-middle"
+                                  disabled={readOnly}
+                                  onChange={(e) => setIsUpI(e.target.checked)}
+                                />
+                                UPI
+                              </label>
+                              <CommaInput
+                                value={upiAmount}
+                                setValue={setUpiAmount}
+                                comma={true}
+                                disabled={readOnly || !isUpI}
+                                width={28}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex justify-between font-bold text-base border-t pt-2 text-indigo-600">
+                          <span>Total Paid Amount </span>
+                          <span>
+                            {Number(paidAmount || 0).toLocaleString("en-IN", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </span>
+                        </div>
+                      </fieldset>
+                    </div>
+                    <div className=" bg-white rounded-md shadow-sm">
+                      <fieldset className="w-full text-slate-700 border h-full p-3 border-slate-400 rounded-md">
+                        <legend className="font-medium px-2">Summary</legend>
+
+                        <div className="grid grid-cols-2 gap-4 text-xs">
+                          {/* LEFT SIDE — TAX DETAILS */}
+                          <div className="space-y-2 border-r pr-4">
+                            {taxRows.length === 0 && (
+                              <div className="text-slate-400">No Tax</div>
+                            )}
+
+                            {taxRows.map((tax, index) => (
+                              <div key={index} className="space-y-1">
+                                <div className="flex justify-between">
+                                  <span>SGST @{tax.halfTax}%</span>
+                                  <span>{tax.sgstAmount.toFixed(2)}</span>
+                                </div>
+
+                                <div className="flex justify-between">
+                                  <span>CGST @{tax.halfTax}%</span>
+                                  <span>{tax.cgstAmount.toFixed(2)}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* RIGHT SIDE — AMOUNT SUMMARY */}
+                          <div className="space-y-2 pl-4">
+                            {/* Gross */}
+                            <div className="flex justify-between">
+                              <span>Gross</span>
+                              <span>{grossAmount.toFixed(2)}</span>
+                            </div>
+
+                            {/* Net */}
+                            <div className="flex justify-between">
+                              <span>Net</span>
+                              <span>{netAmount.toFixed(2)}</span>
+                            </div>
+
+                            {/* Roundoff */}
+                            <div className="flex justify-between items-center">
+                              <span>Roundoff</span>
+                              <span>{roundOff.toFixed(2)}</span>
+                            </div>
+
+                            {/* Total */}
+                            <div className="flex justify-between font-bold text-base border-t pt-2 text-indigo-600">
+                              <span>Total</span>
+                              <span>
+                                {Number(totalAmount || 0).toLocaleString(
+                                  "en-IN",
+                                  {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  },
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </fieldset>
+                    </div>
+                  </div>
+                </AccordionDetails>
+              </Accordion>
+            )}
+
             <div className="flex flex-col md:flex-row gap-2 justify-between">
               <div className="flex gap-2 flex-wrap">
                 <button

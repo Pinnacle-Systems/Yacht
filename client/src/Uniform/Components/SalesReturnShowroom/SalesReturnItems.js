@@ -34,7 +34,7 @@ export default function SalesReturnItems({
       styleItemId: "",
       colorId: "",
       selected: false,
-      netAmount: "",
+      netAmount: 0,
     };
     setSalesReturnItems([...salesReturnItems, newRow]);
   };
@@ -63,10 +63,10 @@ export default function SalesReturnItems({
       setSalesReturnItems((prev) => {
         const count = prev.length;
 
-        if (count < 3) {
+        if (count < 2) {
           return [
             ...prev,
-            ...Array.from({ length: 3 - count }, () => ({
+            ...Array.from({ length: 2 - count }, () => ({
               barcodeId: "",
               styleId: "",
               sizeId: "",
@@ -75,7 +75,7 @@ export default function SalesReturnItems({
               styleItemId: "",
               colorId: "",
               selected: false,
-              netAmount: "",
+              netAmount: 0,
             })),
           ];
         }
@@ -84,7 +84,7 @@ export default function SalesReturnItems({
       });
     } else {
       setSalesReturnItems(
-        Array.from({ length: 3 }, () => ({
+        Array.from({ length: 2 }, () => ({
           barcodeId: "",
           styleId: "",
           sizeId: "",
@@ -93,7 +93,7 @@ export default function SalesReturnItems({
           styleItemId: "",
           colorId: "",
           selected: false,
-          netAmount: "",
+          netAmount: 0,
         })),
       );
     }
@@ -126,7 +126,7 @@ export default function SalesReturnItems({
         }
       });
 
-      while (updated.length < 3) {
+      while (updated.length < 2) {
         updated.push({
           barcodeNo: "",
           styleId: "",
@@ -136,7 +136,7 @@ export default function SalesReturnItems({
           styleItemId: "",
           colorId: "",
           selected: false,
-          netAmount: "",
+          netAmount: 0,
         });
       }
 
@@ -201,7 +201,7 @@ export default function SalesReturnItems({
           )}
         </div>
         <div
-          className={`w-full  min-h-[150px] max-h-[150px] overflow-y-auto  mt-1 mb-2`}
+          className={`w-full  min-h-[120px] max-h-[120px] overflow-y-auto  mt-1 mb-2`}
         >
           <table className=" border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
@@ -415,7 +415,12 @@ export default function SalesReturnItems({
                         type="number"
                         className="text-right rounded py-1 px-1 w-full"
                         onFocus={(e) => e.target.select()}
-                        value={row?.netAmount}
+                         value={
+                          row?.netAmount !== undefined &&
+                          row?.netAmount !== null
+                            ? Number(row.netAmount).toFixed(2)
+                            : "0"
+                        }
                         disabled={true}
                       />
                     </td>
@@ -430,7 +435,7 @@ export default function SalesReturnItems({
                           addRow();
                         }
                       }}
-                      disabled={readOnly}
+                      disabled={id || readOnly}
                     />
                   </td>
                 </tr>
@@ -458,7 +463,7 @@ export default function SalesReturnItems({
                     ).reduce(
                       (sum, row) => sum + (Number(row.netAmount) || 0),
                       0,
-                    )}
+                    ).toFixed(2)}
                   </td>
                 )}
 

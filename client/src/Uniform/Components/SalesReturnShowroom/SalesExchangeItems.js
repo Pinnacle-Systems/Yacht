@@ -30,7 +30,7 @@ export default function SalesExchangeItems({
       barcodeId: "",
       styleId: "",
       sizeId: "",
-      qty: "",
+      exchangeQty: "",
       rate: "",
       taxPercent: "",
       discountType: "Percentage",
@@ -70,13 +70,13 @@ export default function SalesExchangeItems({
       setSalesExchangeItems((prev) => {
         const count = prev.length;
 
-        if (count < 3) {
+        if (count < 2) {
           return [
             ...prev,
-            ...Array.from({ length: 3 - count }, () => ({
+            ...Array.from({ length: 2 - count }, () => ({
               styleId: "",
               sizeId: "",
-              qty: "",
+              exchangeQty: "",
               barcodeNo: "",
               barcodeId: "",
               rate: "",
@@ -95,11 +95,11 @@ export default function SalesExchangeItems({
       });
     } else {
       setSalesExchangeItems(
-        Array.from({ length: 3 }, () => ({
+        Array.from({ length: 2 }, () => ({
           barcodeId: "",
           styleId: "",
           sizeId: "",
-          qty: "",
+          exchangeQty: "",
           barcodeNo: "",
           rate: "",
           taxPercent: "",
@@ -115,10 +115,6 @@ export default function SalesExchangeItems({
   }, [salesExchangeItems, setSalesExchangeItems]);
 
   const handleInputChange = async (value, index, field) => {
-    if (field === "qty") {
-      const row = salesExchangeItems[index];
-      const balanceQty = row?.stkQty || 0;
-    }
     setSalesExchangeItems((prev) => {
       const newItems = structuredClone(prev);
       newItems[index][field] = value;
@@ -130,12 +126,12 @@ export default function SalesExchangeItems({
     // Recalculate net amount for all rows whenever dependent fields change
     const updatedRows = salesExchangeItems.map((row) => {
       const rate = parseFloat(row.rate) || 0;
-      const qty = parseFloat(row.qty) || 0;
+      const exchangeQty = parseFloat(row.exchangeQty) || 0;
       const taxPercent = parseFloat(row.taxPercent) || 0;
       const discountValue = parseFloat(row.discountValue) || 0;
       const discountType = row.discountType;
 
-      const gross = rate * qty;
+      const gross = rate * exchangeQty;
 
       let discountAmount = 0;
       if (discountType) {
@@ -197,7 +193,7 @@ export default function SalesExchangeItems({
           colorId: data.colorId,
           uomId: data.uomId,
           barcodeNo: data.barcodeNo,
-          qty: data.qty,
+          exchangeQty: data.qty,
           rate: data.rate,
           barcodeId: data.barcodeId,
           styleId: data.styleId,
@@ -209,7 +205,7 @@ export default function SalesExchangeItems({
           updated.push({
             styleId: "",
             sizeId: "",
-            qty: "",
+            exchangeQty: "",
             styleItemId: "",
             colorId: "",
             selected: false,
@@ -256,7 +252,7 @@ export default function SalesExchangeItems({
           <h2 className="font-medium text-slate-700">Exchange Items</h2>
         </div>
         <div
-          className={`w-full  max-h-[155px] min-h-[155px]  overflow-y-auto  mb-2 mt-1`}
+          className={`w-full  max-h-[130px] min-h-[130px]  overflow-y-auto  mb-2 mt-1`}
         >
           <table className=" border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
@@ -406,7 +402,7 @@ export default function SalesExchangeItems({
                                 sizeId: null,
                                 colorId: null,
                                 uomId: null,
-                                qty: "",
+                                exchangeQty: "",
                                 rate: "",
                                 amount: "",
                                 discountType: "",
@@ -442,7 +438,7 @@ export default function SalesExchangeItems({
                                 sizeId: null,
                                 colorId: null,
                                 uomId: null,
-                                qty: "",
+                                exchangeQty: "",
                                 rate: "",
                                 amount: "",
                                 discountType: "",
@@ -509,19 +505,27 @@ export default function SalesExchangeItems({
                           if (e.code === "Minus" || e.code === "NumpadSubtract")
                             e.preventDefault();
                           if (e.key === "Delete") {
-                            handleInputChange("", index, "qty");
+                            handleInputChange("", index, "exchangeQty");
                           }
                         }}
                         min={"0"}
                         type="number"
                         className="text-right rounded py-1 px-1 w-full"
                         onFocus={(e) => e.target.select()}
-                        value={row?.qty}
+                        value={row?.exchangeQty}
                         onChange={(e) =>
-                          handleInputChange(e.target.value, index, "qty")
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "exchangeQty",
+                          )
                         }
                         onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "qty");
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "exchangeQty",
+                          );
                         }}
                         disabled={true}
                       />
@@ -555,10 +559,11 @@ export default function SalesExchangeItems({
                         onFocus={(e) => e.target.select()}
                         className="text-right rounded py-1 px-1 w-full"
                         value={
-                          !row.qty || !row.rate
+                          !row.exchangeQty || !row.rate
                             ? 0.0
                             : (
-                                parseFloat(row.qty) * parseFloat(row.rate)
+                                parseFloat(row.exchangeQty) *
+                                parseFloat(row.rate)
                               ).toFixed(2)
                         }
                         disabled={true}
@@ -570,14 +575,14 @@ export default function SalesExchangeItems({
                         value={row?.discountType || ""}
                         disabled={readOnly}
                         onChange={(e) => {
-                          if(e.target.value === ""){
-                            handleInputChange("",index,"discountValue")
+                          if (e.target.value === "") {
+                            handleInputChange("", index, "discountValue");
                           }
                           handleInputChange(
                             e.target.value,
                             index,
                             "discountType",
-                          )
+                          );
                         }}
                       >
                         <option value="">Select</option>
@@ -677,15 +682,21 @@ export default function SalesExchangeItems({
                   {(Array.isArray(salesExchangeItems)
                     ? salesExchangeItems
                     : []
-                  ).reduce((sum, row) => sum + (Number(row.qty) || 0), 0)}
+                  ).reduce(
+                    (sum, row) => sum + (Number(row.exchangeQty) || 0),
+                    0,
+                  )}
                 </td>
-                
-                <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5" colSpan={2}>
+
+                <td
+                  className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5"
+                  colSpan={2}
+                >
                   {(Array.isArray(salesExchangeItems) ? salesExchangeItems : [])
                     .reduce((sum, row) => {
-                      const qty = parseFloat(row.qty) || 0;
+                      const exchangeQty = parseFloat(row.exchangeQty) || 0;
                       const rate = parseFloat(row.rate) || 0;
-                      return sum + qty * rate;
+                      return sum + exchangeQty * rate;
                     }, 0)
                     .toFixed(2)}
                 </td>

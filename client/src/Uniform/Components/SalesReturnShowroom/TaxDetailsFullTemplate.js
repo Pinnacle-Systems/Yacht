@@ -94,7 +94,7 @@ const TaxDetailsFullTemplate = ({
     return <Loader />;
   }
   let price = isNaN(parseFloat(row["rate"])) ? 0 : parseFloat(row["rate"]);
-  let qty = isNaN(parseFloat(row["qty"])) ? 0 : parseFloat(row["qty"]);
+  let qty = isNaN(parseFloat(row["exchangeQty"])) ? 0 : parseFloat(row["exchangeQty"]);
    let discountType = row["discountType"];
   let discountValue = isNaN(parseFloat(row["discountValue"]))
     ? 0

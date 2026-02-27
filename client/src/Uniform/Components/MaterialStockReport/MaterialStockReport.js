@@ -34,10 +34,10 @@ const MaterialStockReport = forwardRef(
       onDataLoaded,
       setStockType,
     },
-    ref,
+    ref
   ) => {
     const branchId = secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "currentBranchId",
+      sessionStorage.getItem("sessionId") + "currentBranchId"
     );
 
     const [dataPerPage, setDataPerPage] = useState("10");
@@ -66,7 +66,7 @@ const MaterialStockReport = forwardRef(
     };
 
     const companyId = secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "userCompanyId",
+      sessionStorage.getItem("sessionId") + "userCompanyId"
     );
     const params = {
       branchId,
@@ -107,12 +107,8 @@ const MaterialStockReport = forwardRef(
       },
       {
         skip: !(branchId && storeId),
-      },
+      }
     );
-
-    useEffect(() => {
-      setCurrentPageNumber(1);
-    }, [serachDocNo, searchDocDate, searchStore,branchId,storeId,styleId,itemType]);
 
     useEffect(() => {
       if (allData && onDataLoaded) {
@@ -120,17 +116,11 @@ const MaterialStockReport = forwardRef(
       }
     }, [allData, onDataLoaded]);
 
-    const allDataDetail = allData?.data || [];
+    const allDataDetail = allData?.data;
 
     useImperativeHandle(ref, () => ({
       refetch,
     }));
-
-    useEffect(() => {
-      if (allData?.totalCount) {
-        setTotalCount(allData?.totalCount);
-      }
-    }, [allData, isLoading, isFetching]);
 
     useEffect(() => {
       if (itemType) {
@@ -140,9 +130,13 @@ const MaterialStockReport = forwardRef(
 
     const isLoadingIndicator = isLoading || isFetching;
 
-    const totalPages = Math?.ceil(allData?.totalCount / itemsPerPage);
-    const indexOfLastItem = currentPage * parseInt(10);
+    const totalPages = Math?.ceil(allDataDetail?.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = (allDataDetail || []).slice(
+      indexOfFirstItem,
+      indexOfLastItem
+    );
 
     const handlePageChange = (newPage) => {
       if (newPage >= 1 && newPage <= totalPages) {
@@ -150,14 +144,9 @@ const MaterialStockReport = forwardRef(
         setCurrentPageNumber(newPage); // ensures API fetches that page
       }
     };
-       const Pagination = () => {
+    const Pagination = () => {
       return (
         <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
-          {/* <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-          Showing {indexOfFirstItem + 1} to{" "}
-          {Math.min(indexOfLastItem, allData?.data?.length)} of{" "}
-          {allData?.length} entries
-        </div> */}
           <div className="text-sm text-gray-600 mb-2 sm:mb-0">
             Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
             {Math.min(currentPage * itemsPerPage, allData?.totalCount || 0)} of{" "}
@@ -272,7 +261,7 @@ const MaterialStockReport = forwardRef(
           <>
             <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
               <div className="h-[420px]">
-                {allDataDetail.length > 0 ? (
+                {currentItems.length > 0 ? (
                   <table className="">
                     {itemType === "Fabric" && (
                       <thead className="bg-gray-200 text-gray-800 ">
@@ -337,7 +326,7 @@ const MaterialStockReport = forwardRef(
                       </tbody>
                     ) : (
                       <tbody className="border-2">
-                        {allDataDetail.map((dataObj, index) => {
+                        {currentItems.map((dataObj, index) => {
                           if (itemType === "Fabric") {
                             return (
                               <tr
@@ -359,7 +348,7 @@ const MaterialStockReport = forwardRef(
                                   {findFromList(
                                     dataObj?.styleId,
                                     styleList?.data,
-                                    "sku",
+                                    "sku"
                                   )}
                                 </td>
 
@@ -367,7 +356,7 @@ const MaterialStockReport = forwardRef(
                                   {findFromList(
                                     dataObj?.fabricId,
                                     fabricList?.data,
-                                    "name",
+                                    "name"
                                   )}
                                 </td>
 
@@ -375,7 +364,7 @@ const MaterialStockReport = forwardRef(
                                   {findFromList(
                                     dataObj?.colorId,
                                     colorList?.data,
-                                    "name",
+                                    "name"
                                   )}
                                 </td>
 
@@ -383,7 +372,7 @@ const MaterialStockReport = forwardRef(
                                   {findFromList(
                                     dataObj?.portionId,
                                     portionList?.data,
-                                    "name",
+                                    "name"
                                   )}
                                 </td>
 
@@ -409,7 +398,7 @@ const MaterialStockReport = forwardRef(
                                   {findFromList(
                                     dataObj?.accessoryId,
                                     accessoryList?.data,
-                                    "name",
+                                    "name"
                                   )}
                                 </td>
 
@@ -417,7 +406,7 @@ const MaterialStockReport = forwardRef(
                                   {findFromList(
                                     dataObj?.accessoryGroupId,
                                     accessoryGroupList?.data,
-                                    "name",
+                                    "name"
                                   )}
                                 </td>
 
@@ -425,7 +414,7 @@ const MaterialStockReport = forwardRef(
                                   {findFromList(
                                     dataObj?.colorId,
                                     colorList?.data,
-                                    "name",
+                                    "name"
                                   )}
                                 </td>
 
@@ -433,7 +422,7 @@ const MaterialStockReport = forwardRef(
                                   {findFromList(
                                     dataObj?.sizeId,
                                     sizeList?.data,
-                                    "name",
+                                    "name"
                                   )}
                                 </td>
 
@@ -487,7 +476,7 @@ const MaterialStockReport = forwardRef(
         </div>
       </>
     );
-  },
+  }
 );
 
 export default MaterialStockReport;

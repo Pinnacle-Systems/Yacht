@@ -267,7 +267,13 @@ const PDF = ({ allData, sizeList, fabricList, portionList, colorList, styleList,
                                     flex: 0.5, fontSize: 8, textAlign: "right",
                                 }]}
                             >
-                                {stockType === "Fabric" ? allData?.totalMeter || 0 : allData?.totalQty || 0}
+                                {
+                                    Number(
+                                        stockType === "Fabric"
+                                            ? allData?.totalMeter || 0
+                                            : allData?.totalQty || 0
+                                    ).toFixed(2)
+                                }
                             </Text>
                         </View>
 

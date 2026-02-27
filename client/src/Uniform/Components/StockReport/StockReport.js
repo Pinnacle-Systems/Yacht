@@ -31,10 +31,10 @@ const StockReport = forwardRef(
       setParameter,
       onDataLoaded,
     },
-    ref,
+    ref
   ) => {
     const branchId = secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "currentBranchId",
+      sessionStorage.getItem("sessionId") + "currentBranchId"
     );
 
     const [dataPerPage, setDataPerPage] = useState("10");
@@ -62,7 +62,7 @@ const StockReport = forwardRef(
     };
 
     const companyId = secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "userCompanyId",
+      sessionStorage.getItem("sessionId") + "userCompanyId"
     );
     const params = {
       branchId,
@@ -98,23 +98,8 @@ const StockReport = forwardRef(
       },
       {
         skip: !(branchId && storeId),
-      },
+      }
     );
-
-    useEffect(() => {
-      setCurrentPageNumber(1);
-    }, [
-      serachDocNo,
-      searchDocDate,
-      searchStore,
-      branchId,
-      storeId,
-      styleId,
-      sizeId,
-      fabricId,
-      styleItemId,
-      colorId,
-    ]);
 
     useEffect(() => {
       if (allData && onDataLoaded) {
@@ -122,7 +107,7 @@ const StockReport = forwardRef(
       }
     }, [allData, onDataLoaded]);
 
-    const allDataDetail = allData?.data || [];
+    const allDataDetail = allData?.data;
 
     useImperativeHandle(ref, () => ({
       refetch,
@@ -136,9 +121,13 @@ const StockReport = forwardRef(
 
     const isLoadingIndicator = isLoading || isFetching;
 
-    const totalPages = Math?.ceil(allData?.totalCount / itemsPerPage);
-    const indexOfLastItem = currentPage * parseInt(10);
+    const totalPages = Math?.ceil(allDataDetail?.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = (allDataDetail || []).slice(
+      indexOfFirstItem,
+      indexOfLastItem
+    );
 
     const handlePageChange = (newPage) => {
       if (newPage >= 1 && newPage <= totalPages) {
@@ -149,11 +138,6 @@ const StockReport = forwardRef(
     const Pagination = () => {
       return (
         <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
-          {/* <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-          Showing {indexOfFirstItem + 1} to{" "}
-          {Math.min(indexOfLastItem, allData?.data?.length)} of{" "}
-          {allData?.length} entries
-        </div> */}
           <div className="text-sm text-gray-600 mb-2 sm:mb-0">
             Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
             {Math.min(currentPage * itemsPerPage, allData?.totalCount || 0)} of{" "}
@@ -263,126 +247,128 @@ const StockReport = forwardRef(
           />
         </Modal>
         <div className="flex flex-col w-full h-[93%] overflow-auto">
-          <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
-            <div className="h-[420px]">
-              {allDataDetail.length > 0 ? (
-                <table className="">
-                  <thead className="bg-gray-200 text-gray-800 ">
-                    <tr className="">
-                      <th className=" px-1 py-1.5  font-medium text-[13px]  text-gray-900  text-center  w-12">
-                        <div className="">S No</div>
-                      </th>
+          <>
+            <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
+              <div className="h-[420px]">
+                {currentItems.length > 0 ? (
+                  <table className="">
+                    <thead className="bg-gray-200 text-gray-800 ">
+                      <tr className="">
+                        <th className=" px-1 py-1.5  font-medium text-[13px]  text-gray-900  text-center  w-12">
+                          <div className="">S No</div>
+                        </th>
 
-                      <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                        <div>Style No</div>
-                      </th>
-                      {/* <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
+                        <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
+                          <div>Style No</div>
+                        </th>
+                        {/* <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                           <div>Barcode No</div>
                         </th> */}
-                      <th className="w-72  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                        <div>Style</div>
-                      </th>
-                      <th className="w-52  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                        <div>Fabric</div>
-                      </th>
-                      <th className="w-52  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                        <div>Color</div>
-                      </th>
-                      <th className="w-28  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                        <div>Size</div>
-                      </th>
-                      <th className="w-28  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                        <div>Qty</div>
-                      </th>
-                    </tr>
-                  </thead>
-                  {isLoadingIndicator ? (
-                    <tbody>
-                      <tr>
-                        <td>
-                          <Loader />
-                        </td>
+                        <th className="w-72  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                          <div>Style</div>
+                        </th>
+                        <th className="w-52  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                          <div>Fabric</div>
+                        </th>
+                        <th className="w-52  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                          <div>Color</div>
+                        </th>
+                        <th className="w-28  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                          <div>Size</div>
+                        </th>
+                        <th className="w-28  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                          <div>Qty</div>
+                        </th>
                       </tr>
-                    </tbody>
-                  ) : (
-                    <tbody className="border-2">
-                      {allDataDetail.map((dataObj, index) => (
-                        <tr
-                          tabIndex={0}
-                          key={dataObj.id}
-                          className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${
-                            index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                          }`}
-                        >
-                          <td className="text-center h-8">{index + 1}</td>
-
-                          <td className="py-1.5 text-center">
-                            {dataObj.styleNo}{" "}
-                          </td>
-
-                          {/* <td className="py-1.5 text-center">
-                              {dataObj?.barcode}
-                            </td> */}
-                          <td className="py-1.5 text-center">
-                            {findFromList(
-                              dataObj?.styleItemId,
-                              styleItemList?.data,
-                              "name",
-                            )}
-                          </td>
-                          <td className="py-1.5 text-center">
-                            {findFromList(
-                              dataObj?.fabricId,
-                              fabricList?.data,
-                              "name",
-                            )}
-                          </td>
-                          <td className="py-1.5 text-center">
-                            {findFromList(
-                              dataObj?.colorId,
-                              colorList?.data,
-                              "name",
-                            )}
-                          </td>
-                          <td className="py-1.5 text-center">
-                            {findFromList(
-                              dataObj?.sizeId,
-                              sizeList?.data,
-                              "name",
-                            )}
-                          </td>
-                          <td className="py-1.5 text-center">
-                            {dataObj?.stkQty}
+                    </thead>
+                    {isLoadingIndicator ? (
+                      <tbody>
+                        <tr>
+                          <td>
+                            <Loader />
                           </td>
                         </tr>
-                      ))}
-                    </tbody>
-                  )}
-                  <tfoot className="border-2">
-                    <tr className="bg-gray-100 font-medium text-[14px]  text-gray-900 border-b   border-gray-200">
-                      <td colSpan={6} className="text-right py-1.5">
-                        Total
-                      </td>
-                      <td className="py-1.5 text-center">
-                        {allData?.totalQty}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              ) : (
-                <div className="flex justify-center items-center text-gray-500  text-3xl py-32">
-                  <p>{EMPTY_ICON} No Data Found...! </p>
-                </div>
-              )}
+                      </tbody>
+                    ) : (
+                      <tbody className="border-2">
+                        {currentItems.map((dataObj, index) => (
+                          <tr
+                            tabIndex={0}
+                            key={dataObj.id}
+                            className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${
+                              index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                            }`}
+                          >
+                            <td className="text-center h-8">{index + 1}</td>
+
+                            <td className="py-1.5 text-center">
+                              {dataObj.styleNo}{" "}
+                            </td>
+
+                            {/* <td className="py-1.5 text-center">
+                              {dataObj?.barcode}
+                            </td> */}
+                            <td className="py-1.5 text-center">
+                              {findFromList(
+                                dataObj?.styleItemId,
+                                styleItemList?.data,
+                                "name"
+                              )}
+                            </td>
+                            <td className="py-1.5 text-center">
+                              {findFromList(
+                                dataObj?.fabricId,
+                                fabricList?.data,
+                                "name"
+                              )}
+                            </td>
+                            <td className="py-1.5 text-center">
+                              {findFromList(
+                                dataObj?.colorId,
+                                colorList?.data,
+                                "name"
+                              )}
+                            </td>
+                            <td className="py-1.5 text-center">
+                              {findFromList(
+                                dataObj?.sizeId,
+                                sizeList?.data,
+                                "name"
+                              )}
+                            </td>
+                            <td className="py-1.5 text-center">
+                              {dataObj?.stkQty}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    )}
+                    <tfoot className="border-2">
+                      <tr className="bg-gray-100 font-medium text-[14px]  text-gray-900 border-b   border-gray-200">
+                        <td colSpan={6} className="text-right py-1.5">
+                          Total
+                        </td>
+                        <td className="py-1.5 text-center">
+                          {allData?.totalQty}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                ) : (
+                  <div className="flex justify-center items-center text-gray-500  text-3xl py-32">
+                    <p>{EMPTY_ICON} No Data Found...! </p>
+                  </div>
+                )}
+              </div>
+              <div className="">
+                <Pagination />
+              </div>
             </div>
-            <div className="">
-              <Pagination />
-            </div>
-          </div>
+          </>
         </div>
       </>
     );
-  },
+  }
 );
 
 export default StockReport;
