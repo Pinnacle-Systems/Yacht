@@ -36,6 +36,8 @@ import purchaseReturn from "./images/purchasereturn.png";
 import openingStock from "./images/openingStock.png";
 import stockAdjustment from "./images/stockadjustment.png";
 import salesDelivery from "./images/sales delivery.png";
+import salesBill from "./images/salesBill.png"
+import salesReturn from "./images/salesreturn.png"
 import production from "./images/production.png";
 import cutting from "./images/cuttingproduction.jpg";
 import goodsStock from "./images/goodsstock.jpg";
@@ -181,6 +183,11 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
         "GAUGE MASTER": <img />,
         "LOOP LENGTH MASTER": <img />,
         "DESIGN MASTER": <img />,
+        "PURCHASE BILL":<img src={purchaseInward} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "PURCHASE  RETURN":<img src={purchaseReturn} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "OPENING  STOCK":<img src={openingStock} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "SALES BILL":<img src={salesBill} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "SALES  RETURN":<img src={salesReturn} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
 
 
         "DESIGNATION MASTER" : <span className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow">

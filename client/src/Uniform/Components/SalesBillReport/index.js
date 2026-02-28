@@ -5,6 +5,7 @@ import { getDateFromDateTimeToDisplay } from "../../../Utils/helper";
 import { Loader } from "../../../Basic/components";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { ReusableInput } from "../../../Utils/CommonInput";
+import { FiPrinter } from "react-icons/fi";
 
 export default function Form() {
   const today = new Date().toISOString().split("T")[0];
@@ -13,6 +14,8 @@ export default function Form() {
   const [currentPage, setCurrentPage] = useState(1);
   const [fromDate, setFromDate] = useState(today);
   const [toDate, setToDate] = useState(today);
+  const [pdfOpen, setPdfOpen] = useState(false);
+
   const branchId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "currentBranchId",
   );
@@ -126,6 +129,174 @@ export default function Form() {
     );
   };
 
+  // const DownloadExcel = async (allData) => {
+  //   const dataArray = allData?.data || [];
+
+  //   const workbook = new ExcelJS.Workbook();
+  //   const sheet = workbook.addWorksheet("Stock Report");
+
+  //   /* =========================
+  //      TITLE
+  //   ========================== */
+  //   sheet.mergeCells("A1:G1");
+  //   const titleCell = sheet.getCell("A1");
+  //   titleCell.value = "Stock Report";
+  //   titleCell.font = { bold: true, size: 16 };
+  //   titleCell.alignment = {
+  //     horizontal: "center",
+  //     vertical: "middle",
+  //   };
+  //   sheet.getRow(1).height = 28;
+
+  //   /* =========================
+  //      HEADER
+  //   ========================== */
+  //   const headerRow = [
+  //     "S.No",
+  //     "Barcode",
+  //     "Style No",
+  //     "Style Name",
+  //     "Colour Name",
+  //     "Size",
+  //     "Qty",
+  //   ];
+
+  //   sheet.addRow(headerRow);
+
+  //   const header = sheet.getRow(2);
+  //   header.height = 24;
+
+  //   header.eachCell((cell) => {
+  //     cell.font = { bold: true };
+  //     cell.alignment = {
+  //       horizontal: "center",
+  //       vertical: "middle",
+  //       indent: 1,
+  //     };
+  //     cell.fill = {
+  //       type: "pattern",
+  //       pattern: "solid",
+  //       fgColor: { argb: "FFEFEFEF" },
+  //     };
+  //     cell.border = {
+  //       top: { style: "thin" },
+  //       left: { style: "thin" },
+  //       bottom: { style: "thin" },
+  //       right: { style: "thin" },
+  //     };
+  //   });
+
+  //   /* =========================
+  //      DATA ROWS
+  //   ========================== */
+  //   dataArray.forEach((item, index) => {
+  //     const row = sheet.addRow([
+  //       index + 1,
+  //       item?.barcodeNo || "",
+  //       findFromList(item?.styleId, styleList?.data, "sku") || "",
+  //       findFromList(item?.styleItemId, styleItemList?.data, "name") || "",
+  //       findFromList(item?.colorId, colorList?.data, "name") || "",
+  //       findFromList(item?.sizeId, sizeList?.data, "name") || "",
+  //       item?.qty || 0,
+  //     ]);
+
+  //     row.height = 22;
+  //   });
+
+  //   /* =========================
+  //      TOTAL ROW
+  //   ========================== */
+  //   const totalQty = dataArray.reduce(
+  //     (sum, item) => sum + (Number(item?.qty) || 0),
+  //     0,
+  //   );
+
+  //   const totalRow = sheet.addRow(["", "", "", "", "", "Total", totalQty]);
+  //   totalRow.height = 24;
+
+  //   /* =========================
+  //      COLUMN WIDTHS
+  //   ========================== */
+  //   sheet.columns = [
+  //     { width: 8 },
+  //     { width: 25 },
+  //     { width: 15 },
+  //     { width: 25 },
+  //     { width: 25 },
+  //     { width: 12 },
+  //     { width: 10 },
+  //   ];
+
+  //   /* =========================
+  //      GLOBAL STYLING
+  //   ========================== */
+  //   sheet.eachRow((row, rowNumber) => {
+  //     row.eachCell((cell, colNumber) => {
+  //       // Borders for all cells
+  //       cell.border = {
+  //         top: { style: "thin" },
+  //         left: { style: "thin" },
+  //         bottom: { style: "thin" },
+  //         right: { style: "thin" },
+  //       };
+
+  //       // ✅ Skip Title Row (Row 1)
+  //       if (rowNumber === 1) return;
+
+  //       // Alignment rules for remaining rows
+  //       if (colNumber === 7) {
+  //         cell.alignment = {
+  //           horizontal: "right",
+  //           vertical: "middle",
+  //           indent: 1,
+  //         };
+  //       } else {
+  //         cell.alignment = {
+  //           horizontal: "left",
+  //           vertical: "middle",
+  //           indent: 1,
+  //           wrapText: true,
+  //         };
+  //       }
+
+  //       // Total row styling
+  //       if (rowNumber === sheet.rowCount) {
+  //         cell.font = { bold: true };
+  //         cell.fill = {
+  //           type: "pattern",
+  //           pattern: "solid",
+  //           fgColor: { argb: "FFDDEBF7" },
+  //         };
+  //       }
+  //     });
+  //   });
+
+  //   /* =========================
+  //      FREEZE HEADER ONLY
+  //   ========================== */
+  //   sheet.views = [
+  //     {
+  //       state: "frozen",
+  //       ySplit: 2,
+  //     },
+  //   ];
+
+  //   /* =========================
+  //      EXPORT
+  //   ========================== */
+  //   const buffer = await workbook.xlsx.writeBuffer();
+  //   const blob = new Blob([buffer], {
+  //     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  //   });
+
+  //   const url = URL.createObjectURL(blob);
+  //   const a = document.createElement("a");
+  //   a.href = url;
+  //   a.download = "StockReport.xlsx";
+  //   a.click();
+  //   URL.revokeObjectURL(url);
+  // };
+
   return (
     <>
       <div className="p-1 bg-[#F1F1F0] h-[85%]">
@@ -133,22 +304,42 @@ export default function Form() {
           <h1 className="text-xl font-semibold text-gray-800">
             Sales Bill Report
           </h1>
-          <div className="flex gap-4 font-medium text-lg items-center mt-1">
+          <div className="flex gap-6 font-medium text-lg items-center mt-1">
             <div className="flex gap-2 items-center">
-              <label>From Date</label>
-              <ReusableInput
-                value={fromDate}
-                setValue={setFromDate}
-                type={"date"}
-              />
+              <button
+                className="bg-red-600 text-white px-3 h-6  rounded-md hover:bg-red-700 flex items-center text-xs"
+                onClick={() => {
+                  setPdfOpen(true);
+                }}
+              >
+                <FiPrinter className="w-4 h-4 mr-2" />
+                Print
+              </button>
+              <button
+                className="bg-green-700 text-white px-3 h-6  rounded-md hover:bg-green-800 flex items-center text-sm"
+                // onClick={() => DownloadExcel(allData)}
+              >
+                <FiPrinter className="w-4 h-4 mr-2" />
+                Excel
+              </button>
             </div>
-            <div className="flex gap-2 items-center">
-              <label>To Date</label>
-              <ReusableInput
-                value={toDate}
-                setValue={setToDate}
-                type={"date"}
-              />
+            <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                <label>From Date</label>
+                <ReusableInput
+                  value={fromDate}
+                  setValue={setFromDate}
+                  type={"date"}
+                />
+              </div>
+              <div className="flex gap-2 items-center">
+                <label>To Date</label>
+                <ReusableInput
+                  value={toDate}
+                  setValue={setToDate}
+                  type={"date"}
+                />
+              </div>
             </div>
           </div>
         </div>

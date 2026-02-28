@@ -232,7 +232,7 @@ export default function Form() {
         </div>
         <div className="flex gap-x-5">
           <button
-            className="bg-slate-600 text-white px-3 h-6 mt-1 rounded-md hover:bg-slate-700 flex items-center text-xs"
+            className="bg-red-600 text-white px-3 h-6 mt-1 rounded-md hover:bg-red-700 flex items-center text-xs"
             // disabled={!id}
             onClick={() => {
               setPdfOpen(true);

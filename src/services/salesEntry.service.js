@@ -1161,7 +1161,7 @@ async function getSalesDcDetail(req) {
         uomId: style.uomId,
         salesEntryItemsId: barcode.salesEntryItemsId,
         barcodeSeqId: barcode.barcodeSeqId,
-        rate: style?.salesPrice || null,
+        rate: style?.price || null,
         taxPercent: style?.Hsn?.taxPerc ?? 5,
         qty: 1,
         barcodeId: barcode.id,

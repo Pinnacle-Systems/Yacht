@@ -91,8 +91,8 @@ const BarCodePrintFormat = ({
               >
                 <Text
                   style={{
-                    fontSize: 6,
-                    marginTop: 1,
+                    fontSize: 7,
+                   
                     textAlign: "center",
                   }}
                 >
@@ -108,7 +108,7 @@ const BarCodePrintFormat = ({
                 {/* 🧵 Style No */}
                 <Text
                   style={{
-                    fontSize: 5,
+                    fontSize: 6,
                     marginTop: 1,
                     textAlign: "center",
                   }}

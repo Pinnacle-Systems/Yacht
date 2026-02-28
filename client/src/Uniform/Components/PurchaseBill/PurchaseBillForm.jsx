@@ -27,6 +27,7 @@ import { useAddPurchaseBillMutation, useDeletePurchaseBillMutation, useGetPurcha
 import PurchaseBillSummary from "./PurchaseBillSummary";
 import { useGetSalesEntryQuery, useLazyGetSalesDCDetailQuery } from "../../../redux/uniformService/SalesEntryService";
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
+import { useGetUserByIdQuery } from "../../../redux/services/UsersMasterService";
 
 const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     sizeList,
@@ -85,6 +86,10 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         isFetching: isSingleFetching,
         isLoading: isSingleLoading,
     } = useGetPurchaseBillByIdQuery(id, { skip: !id });
+
+    const { data: userData } = useGetUserByIdQuery(userId, { skip: !userId })
+
+    const isAdmin = userData?.data.isAdmin
 
     const [addData] = useAddPurchaseBillMutation();
     const [updateData] = useUpdatePurchaseBillMutation();
@@ -528,6 +533,23 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                 <div className="grid grid-cols-1 gap-1">
                                     <h2 className="font-medium text-slate-700 mb-2">Supplier Details</h2>
                                     <div className="grid grid-cols-2 gap-1">
+                                        {
+                                            isAdmin && (
+                                                <DropdownNew
+                                                    name="Sales DC No"
+                                                    dataList={salesList?.data}
+                                                    value={dcNo}
+                                                    setValue={handleAddRow}
+                                                    readOnly={readOnly}
+                                                    placeholder={"Select DC"}
+                                                    otherField={"docId"}
+                                                    otherValue={"docId"}
+                                                    disabled={readOnly}
+                                                    clear={true}
+                                                />
+                                            )
+                                        }
+
                                         <DropdownNew
                                             name="Supplier"
                                             dataList={partyList?.data?.filter((item) => item.isSupplier)}
@@ -552,18 +574,6 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                             type={"text"}
                                             readOnly={true}
                                             disabled
-                                        />
-                                        <DropdownNew
-                                            name="Sales DC No"
-                                            dataList={salesList?.data}
-                                            value={dcNo}
-                                            setValue={handleAddRow}
-                                            readOnly={readOnly}
-                                            placeholder={"Select DC"}
-                                            otherField={"docId"}
-                                            otherValue={"docId"}
-                                            disabled={readOnly}
-                                            clear={true}
                                         />
                                     </div>
                                 </div>
