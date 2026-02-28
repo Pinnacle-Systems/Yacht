@@ -188,6 +188,8 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
         "OPENING  STOCK":<img src={openingStock} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
         "SALES BILL":<img src={salesBill} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
         "SALES  RETURN":<img src={salesReturn} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "STOCK REPORT":<img src={materialStock} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
+        "SALES BILL REPORT":<img src={salesReport} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
 
 
         "DESIGNATION MASTER" : <span className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow">

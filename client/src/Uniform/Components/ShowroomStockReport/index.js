@@ -57,7 +57,7 @@ export default function Form() {
       horizontal: "center",
       vertical: "middle",
     };
-    sheet.getRow(1).height = 28;
+    sheet.getRow(1).height = 26;
 
     /* =========================
      HEADER
@@ -75,14 +75,14 @@ export default function Form() {
     sheet.addRow(headerRow);
 
     const header = sheet.getRow(2);
-    header.height = 24;
+    header.height = 22;
 
     header.eachCell((cell) => {
       cell.font = { bold: true };
       cell.alignment = {
-        horizontal: "center",
+        horizontal: "center", // STRICT CENTER
         vertical: "middle",
-        indent: 1,
+        wrapText: true,
       };
       cell.fill = {
         type: "pattern",
@@ -111,7 +111,7 @@ export default function Form() {
         item?.qty || 0,
       ]);
 
-      row.height = 22;
+      row.height = 20;
     });
 
     /* =========================
@@ -123,7 +123,7 @@ export default function Form() {
     );
 
     const totalRow = sheet.addRow(["", "", "", "", "", "Total", totalQty]);
-    totalRow.height = 24;
+    totalRow.height = 22;
 
     /* =========================
      COLUMN WIDTHS
@@ -143,7 +143,7 @@ export default function Form() {
   ========================== */
     sheet.eachRow((row, rowNumber) => {
       row.eachCell((cell, colNumber) => {
-        // Borders for all cells
+        // Border for all
         cell.border = {
           top: { style: "thin" },
           left: { style: "thin" },
@@ -151,10 +151,10 @@ export default function Form() {
           right: { style: "thin" },
         };
 
-        // ✅ Skip Title Row (Row 1)
-        if (rowNumber === 1) return;
+        // ✅ Skip Title & Header
+        if (rowNumber <= 2) return;
 
-        // Alignment rules for remaining rows
+        // Qty right align
         if (colNumber === 7) {
           cell.alignment = {
             horizontal: "right",
@@ -183,7 +183,7 @@ export default function Form() {
     });
 
     /* =========================
-     FREEZE HEADER ONLY
+     FREEZE HEADER
   ========================== */
     sheet.views = [
       {

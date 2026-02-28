@@ -156,6 +156,9 @@ async function get(req) {
         },
       },
     },
+     orderBy: {
+      createdAt: "desc", // 🔥 Descending Order
+    },
   });
   data = manualFilterSearchData(
     searchDocDate,

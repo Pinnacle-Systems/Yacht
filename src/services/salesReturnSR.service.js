@@ -125,6 +125,9 @@ async function get(req) {
         },
       },
     },
+    orderBy: {
+      createdAt: "desc", // 🔥 Descending Order
+    },
   });
   if (searchDocDate) {
     data = data?.filter((item) =>

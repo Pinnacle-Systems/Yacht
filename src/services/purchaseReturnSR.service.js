@@ -140,6 +140,9 @@ async function get(req) {
         },
       },
     },
+     orderBy: {
+      createdAt: "desc", // 🔥 Descending Order
+    },
   });
   totalCount = data.length;
   if (searchDocDate) {

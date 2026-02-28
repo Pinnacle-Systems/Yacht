@@ -6,6 +6,13 @@ import { Loader } from "../../../Basic/components";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { ReusableInput } from "../../../Utils/CommonInput";
 import { FiPrinter } from "react-icons/fi";
+import ExcelJS from "exceljs";
+import { EMPTY_ICON } from "../../../icons";
+import Modal from "../../../UiComponents/Modal";
+import { PDFViewer } from "@react-pdf/renderer";
+import PDF from "./PDF";
+import tw from "../../../Utils/tailwind-react-pdf";
+import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterService";
 
 export default function Form() {
   const today = new Date().toISOString().split("T")[0];
@@ -37,11 +44,21 @@ export default function Form() {
       toDate,
     },
   });
+  const {
+    data: singleData,
+    isFetching: isSingleFetching,
+    isLoading: isSingleLoading,
+  } = useGetBranchByIdQuery(branchId);
 
   const isLoadingIndicator = isLoading || isFetching;
-
-  const totalPages = Math?.ceil(allData?.totalCount / dataPerPage);
-
+  const allDataDetail = allData?.data || [];
+  const totalPages = Math?.ceil(allData?.length / dataPerPage);
+  const indexOfLastItem = currentPage * dataPerPage;
+  const indexOfFirstItem = indexOfLastItem - dataPerPage;
+  const currentItems = (allDataDetail || []).slice(
+    indexOfFirstItem,
+    indexOfLastItem,
+  );
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
@@ -129,183 +146,220 @@ export default function Form() {
     );
   };
 
-  // const DownloadExcel = async (allData) => {
-  //   const dataArray = allData?.data || [];
+  const DownloadExcel = async (allData) => {
+    const dataArray = allData?.data || [];
 
-  //   const workbook = new ExcelJS.Workbook();
-  //   const sheet = workbook.addWorksheet("Stock Report");
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Sales Bill Report");
 
-  //   /* =========================
-  //      TITLE
-  //   ========================== */
-  //   sheet.mergeCells("A1:G1");
-  //   const titleCell = sheet.getCell("A1");
-  //   titleCell.value = "Stock Report";
-  //   titleCell.font = { bold: true, size: 16 };
-  //   titleCell.alignment = {
-  //     horizontal: "center",
-  //     vertical: "middle",
-  //   };
-  //   sheet.getRow(1).height = 28;
+    /* =========================
+     ROW 1 → TITLE
+  ========================== */
+    sheet.mergeCells("A1:H1");
+    const titleCell = sheet.getCell("A1");
+    titleCell.value = "Sales Bill Report";
+    titleCell.font = { bold: true, size: 15 };
+    titleCell.alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
+    sheet.getRow(1).height = 24;
 
-  //   /* =========================
-  //      HEADER
-  //   ========================== */
-  //   const headerRow = [
-  //     "S.No",
-  //     "Barcode",
-  //     "Style No",
-  //     "Style Name",
-  //     "Colour Name",
-  //     "Size",
-  //     "Qty",
-  //   ];
+    /* =========================
+     ROW 2 → PARAMETERS
+  ========================== */
+    sheet.mergeCells("A2:H2");
+    const paramCell = sheet.getCell("A2");
+    paramCell.value = `From Date : ${fromDate}     To Date : ${toDate}`;
+    paramCell.font = { bold: true, size: 11 };
+    paramCell.alignment = {
+      horizontal: "left",
+      vertical: "middle",
+      indent: 1,
+    };
+    sheet.getRow(2).height = 18;
 
-  //   sheet.addRow(headerRow);
+    /* =========================
+     ROW 4 → HEADER
+  ========================== */
+    const headerRow = [
+      "S No",
+      "Sales No",
+      "Sales Date",
+      "Customer",
+      "Cash Amt",
+      "Card Amt",
+      "UPI Amt",
+      "Net Amt",
+    ];
 
-  //   const header = sheet.getRow(2);
-  //   header.height = 24;
+    sheet.addRow(headerRow);
 
-  //   header.eachCell((cell) => {
-  //     cell.font = { bold: true };
-  //     cell.alignment = {
-  //       horizontal: "center",
-  //       vertical: "middle",
-  //       indent: 1,
-  //     };
-  //     cell.fill = {
-  //       type: "pattern",
-  //       pattern: "solid",
-  //       fgColor: { argb: "FFEFEFEF" },
-  //     };
-  //     cell.border = {
-  //       top: { style: "thin" },
-  //       left: { style: "thin" },
-  //       bottom: { style: "thin" },
-  //       right: { style: "thin" },
-  //     };
-  //   });
+    const header = sheet.getRow(3);
+    header.height = 22;
 
-  //   /* =========================
-  //      DATA ROWS
-  //   ========================== */
-  //   dataArray.forEach((item, index) => {
-  //     const row = sheet.addRow([
-  //       index + 1,
-  //       item?.barcodeNo || "",
-  //       findFromList(item?.styleId, styleList?.data, "sku") || "",
-  //       findFromList(item?.styleItemId, styleItemList?.data, "name") || "",
-  //       findFromList(item?.colorId, colorList?.data, "name") || "",
-  //       findFromList(item?.sizeId, sizeList?.data, "name") || "",
-  //       item?.qty || 0,
-  //     ]);
+    header.eachCell((cell) => {
+      cell.font = { bold: true };
+      cell.alignment = {
+        horizontal: "center", // HEADER CENTER ONLY
+        vertical: "middle",
+        wrapText: true,
+      };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFEFEFEF" },
+      };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+    });
 
-  //     row.height = 22;
-  //   });
+    /* =========================
+     DATA ROWS
+  ========================== */
+    dataArray.forEach((item, index) => {
+      const netAmount =
+        Number(item?.cashAmount || 0) +
+        Number(item?.cardAmount || 0) +
+        Number(item?.upiAmount || 0);
 
-  //   /* =========================
-  //      TOTAL ROW
-  //   ========================== */
-  //   const totalQty = dataArray.reduce(
-  //     (sum, item) => sum + (Number(item?.qty) || 0),
-  //     0,
-  //   );
+      const row = sheet.addRow([
+        index + 1,
+        item?.docId || "",
+        item?.docDate ? getDateFromDateTimeToDisplay(item.docDate) : "",
+        item?.customerName || "",
+        Number(item?.cashAmount || 0),
+        Number(item?.cardAmount || 0),
+        Number(item?.upiAmount || 0),
+        netAmount,
+      ]);
 
-  //   const totalRow = sheet.addRow(["", "", "", "", "", "Total", totalQty]);
-  //   totalRow.height = 24;
+      row.height = 20;
+    });
 
-  //   /* =========================
-  //      COLUMN WIDTHS
-  //   ========================== */
-  //   sheet.columns = [
-  //     { width: 8 },
-  //     { width: 25 },
-  //     { width: 15 },
-  //     { width: 25 },
-  //     { width: 25 },
-  //     { width: 12 },
-  //     { width: 10 },
-  //   ];
+    /* =========================
+     TOTAL ROW
+  ========================== */
+    const totalRow = sheet.addRow([
+      "",
+      "",
+      "",
+      "Total",
+      Number(allData?.totalCashAmount || 0),
+      Number(allData?.totalCardAmount || 0),
+      Number(allData?.totalUpiAmount || 0),
+      Number(allData?.totalNetAmount || 0),
+    ]);
 
-  //   /* =========================
-  //      GLOBAL STYLING
-  //   ========================== */
-  //   sheet.eachRow((row, rowNumber) => {
-  //     row.eachCell((cell, colNumber) => {
-  //       // Borders for all cells
-  //       cell.border = {
-  //         top: { style: "thin" },
-  //         left: { style: "thin" },
-  //         bottom: { style: "thin" },
-  //         right: { style: "thin" },
-  //       };
+    totalRow.height = 22;
 
-  //       // ✅ Skip Title Row (Row 1)
-  //       if (rowNumber === 1) return;
+    /* =========================
+     COLUMN WIDTHS
+  ========================== */
+    sheet.columns = [
+      { width: 8 },
+      { width: 20 },
+      { width: 18 },
+      { width: 25 },
+      { width: 15 },
+      { width: 15 },
+      { width: 15 },
+      { width: 18 },
+    ];
 
-  //       // Alignment rules for remaining rows
-  //       if (colNumber === 7) {
-  //         cell.alignment = {
-  //           horizontal: "right",
-  //           vertical: "middle",
-  //           indent: 1,
-  //         };
-  //       } else {
-  //         cell.alignment = {
-  //           horizontal: "left",
-  //           vertical: "middle",
-  //           indent: 1,
-  //           wrapText: true,
-  //         };
-  //       }
+    /* =========================
+     GLOBAL STYLING
+  ========================== */
+    sheet.eachRow((row, rowNumber) => {
+      row.eachCell((cell, colNumber) => {
+        // Border for all cells
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
 
-  //       // Total row styling
-  //       if (rowNumber === sheet.rowCount) {
-  //         cell.font = { bold: true };
-  //         cell.fill = {
-  //           type: "pattern",
-  //           pattern: "solid",
-  //           fgColor: { argb: "FFDDEBF7" },
-  //         };
-  //       }
-  //     });
-  //   });
+        // Skip Title, Parameter, Empty, Header
+        if (rowNumber <= 3) return;
 
-  //   /* =========================
-  //      FREEZE HEADER ONLY
-  //   ========================== */
-  //   sheet.views = [
-  //     {
-  //       state: "frozen",
-  //       ySplit: 2,
-  //     },
-  //   ];
+        // Amount columns right aligned
+        if (colNumber >= 5) {
+          cell.alignment = {
+            horizontal: "right",
+            vertical: "middle",
+            indent: 1,
+          };
+          cell.numFmt = "0.00";
+        } else {
+          // Other data left aligned
+          cell.alignment = {
+            horizontal: "left",
+            vertical: "middle",
+            indent: 1,
+          };
+        }
 
-  //   /* =========================
-  //      EXPORT
-  //   ========================== */
-  //   const buffer = await workbook.xlsx.writeBuffer();
-  //   const blob = new Blob([buffer], {
-  //     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  //   });
+        // Total row styling
+        if (rowNumber === sheet.rowCount) {
+          cell.font = { bold: true };
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFDDEBF7" },
+          };
+        }
+      });
+    });
 
-  //   const url = URL.createObjectURL(blob);
-  //   const a = document.createElement("a");
-  //   a.href = url;
-  //   a.download = "StockReport.xlsx";
-  //   a.click();
-  //   URL.revokeObjectURL(url);
-  // };
+    /* =========================
+     FREEZE HEADER
+  ========================== */
+    sheet.views = [
+      {
+        state: "frozen",
+        ySplit: 3,
+      },
+    ];
+
+    /* =========================
+     EXPORT
+  ========================== */
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "SalesBillReport.xlsx";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <>
+      <Modal
+        isOpen={pdfOpen}
+        onClose={() => setPdfOpen(false)}
+        widthClass={"w-[90%] h-[90%]"}
+      >
+        <PDFViewer style={tw("w-full h-full")}>
+          <PDF allData={allData || []} singleData={singleData}/>
+        </PDFViewer>
+      </Modal>
       <div className="p-1 bg-[#F1F1F0] h-[85%]">
         <div className="flex flex-col sm:flex-row justify-between bg-white  px-1  items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
           <h1 className="text-xl font-semibold text-gray-800">
             Sales Bill Report
           </h1>
-          <div className="flex gap-6 font-medium text-lg items-center mt-1">
-            <div className="flex gap-2 items-center">
+          <div className="flex gap-5 font-medium text-lg items-center mt-1">
+            <div className="flex gap-3 items-center">
               <button
                 className="bg-red-600 text-white px-3 h-6  rounded-md hover:bg-red-700 flex items-center text-xs"
                 onClick={() => {
@@ -317,7 +371,7 @@ export default function Form() {
               </button>
               <button
                 className="bg-green-700 text-white px-3 h-6  rounded-md hover:bg-green-800 flex items-center text-sm"
-                // onClick={() => DownloadExcel(allData)}
+                onClick={() => DownloadExcel(allData)}
               >
                 <FiPrinter className="w-4 h-4 mr-2" />
                 Excel
@@ -348,51 +402,51 @@ export default function Form() {
           <div className="flex flex-col w-full h-[93%] overflow-auto">
             <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
               <div className="h-[420px]">
-                <table className="">
-                  <thead className="bg-gray-200 text-gray-800 ">
-                    <tr className="">
-                      <th className=" px-1 py-1.5  font-medium text-[13px]  text-gray-900  text-center  w-12">
-                        <div className="">S No</div>
-                      </th>
+                {currentItems.length > 0 ? (
+                  <table className="">
+                    <thead className="bg-gray-200 text-gray-800 ">
+                      <tr className="">
+                        <th className=" px-1 py-1.5  font-medium text-[13px]  text-gray-900  text-center  w-12">
+                          <div className="">S No</div>
+                        </th>
 
-                      <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                        <div>Bill No</div>
-                      </th>
-                      <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                        <div>Bill Date</div>
-                      </th>
-                      {/* <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                        <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
+                          <div>Sales No</div>
+                        </th>
+                        <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
+                          <div>Sales Date</div>
+                        </th>
+                        {/* <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Payment Type</div>
                   </th> */}
-                      <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                        <div>Customer</div>
-                      </th>
-                      <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                        <div>Cash Amt</div>
-                      </th>
-                      <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                        <div>Card Amt</div>
-                      </th>
-                      <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                        <div>UPI Amt</div>
-                      </th>
-                      <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                        <div>Net Amt</div>
-                      </th>
-                    </tr>
-                  </thead>
-                  {isLoadingIndicator ? (
-                    <tbody>
-                      <tr>
-                        <td>
-                          <Loader />
-                        </td>
+                        <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                          <div>Customer</div>
+                        </th>
+                        <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                          <div>Cash Amt</div>
+                        </th>
+                        <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                          <div>Card Amt</div>
+                        </th>
+                        <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                          <div>UPI Amt</div>
+                        </th>
+                        <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                          <div>Net Amt</div>
+                        </th>
                       </tr>
-                    </tbody>
-                  ) : (
-                    <tbody className="border-2">
-                      {(allData?.data ? allData?.data : []).map(
-                        (dataObj, index) => (
+                    </thead>
+                    {isLoadingIndicator ? (
+                      <tbody>
+                        <tr>
+                          <td>
+                            <Loader />
+                          </td>
+                        </tr>
+                      </tbody>
+                    ) : (
+                      <tbody className="border-2">
+                        {currentItems.map((dataObj, index) => (
                           <tr
                             tabIndex={0}
                             key={dataObj.id}
@@ -447,30 +501,34 @@ export default function Form() {
                               ).toFixed(2)}
                             </td>
                           </tr>
-                        ),
-                      )}
-                    </tbody>
-                  )}
-                  <tfoot className="border-2">
-                    <tr className="bg-gray-100 font-medium text-[14px]  text-gray-900 border-b   border-gray-200">
-                      <td colSpan={4} className="text-right py-1.5">
-                        Total
-                      </td>
-                      <td className="py-1.5 px-10 text-right">
-                        {Number(allData?.totalCashAmount).toFixed(2)}
-                      </td>
-                      <td className="py-1.5 px-10 text-right">
-                        {Number(allData?.totalCardAmount).toFixed(2)}
-                      </td>
-                      <td className="py-1.5 px-10 text-right">
-                        {Number(allData?.totalUpiAmount).toFixed(2)}
-                      </td>
-                      <td className="py-1.5 px-10 text-right">
-                        {Number(allData?.totalNetAmount).toFixed(2)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
+                        ))}
+                      </tbody>
+                    )}
+                    <tfoot className="border-2">
+                      <tr className="bg-gray-100 font-medium text-[14px]  text-gray-900 border-b   border-gray-200">
+                        <td colSpan={4} className="text-right py-1.5">
+                          Total
+                        </td>
+                        <td className="py-1.5 px-10 text-right">
+                          {Number(allData?.totalCashAmount).toFixed(2)}
+                        </td>
+                        <td className="py-1.5 px-10 text-right">
+                          {Number(allData?.totalCardAmount).toFixed(2)}
+                        </td>
+                        <td className="py-1.5 px-10 text-right">
+                          {Number(allData?.totalUpiAmount).toFixed(2)}
+                        </td>
+                        <td className="py-1.5 px-10 text-right">
+                          {Number(allData?.totalNetAmount).toFixed(2)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                ) : (
+                  <div className="flex justify-center items-center text-gray-500  text-3xl py-32">
+                    <p>{EMPTY_ICON} No Data Found...! </p>
+                  </div>
+                )}
               </div>
               <div className="">
                 <Pagination />

@@ -15,7 +15,7 @@ async function getNextDocId(
   endTime,
   saveType,
   docId,
-  isUpdate
+  isUpdate,
 ) {
   // Case 1: Draft save
   if (saveType) {
@@ -34,7 +34,7 @@ async function getNextDocId(
     });
     const branchObj = await getTableRecordWithId(branchId, "branch");
     let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
+      new Date(),
     )}/SR/1`;
 
     if (lastObject) {
@@ -68,7 +68,7 @@ async function getNextDocId(
 
     const branchObj = await getTableRecordWithId(branchId, "branch");
     let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
+      new Date(),
     )}/SR/1`;
     if (lastObject) {
       newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SR/${
@@ -100,7 +100,7 @@ async function get(req) {
     branchId,
     shortCode,
     finYearDate?.startDateStartTime,
-    finYearDate?.endDateEndTime
+    finYearDate?.endDateEndTime,
   );
   let data;
   let totalCount;
@@ -140,17 +140,20 @@ async function get(req) {
       },
       salesReturnItems: true,
     },
+    orderBy: {
+      createdAt: "desc", // 🔥 Descending Order
+    },
   });
   totalCount = data.length;
   if (searchDocDate) {
     data = data?.filter((item) =>
-      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate)
+      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate),
     );
   }
   if (pagination) {
     data = data.slice(
       (pageNumber - 1) * parseInt(dataPerPage),
-      pageNumber * dataPerPage
+      pageNumber * dataPerPage,
     );
   }
   return {
@@ -220,7 +223,7 @@ async function create(body) {
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(
         finYearDate?.startDateStartTime,
-        finYearDate?.endDateEndTime
+        finYearDate?.endDateEndTime,
       )
     : "";
   let newDocId = await getNextDocId(
@@ -228,7 +231,7 @@ async function create(body) {
     shortCode,
     finYearDate?.startDateStartTime,
     finYearDate?.endDateEndTime,
-    draftSave
+    draftSave,
   );
   let data;
   await prisma.$transaction(async (tx) => {
@@ -250,7 +253,7 @@ async function create(body) {
       data,
       userId,
       branchId,
-      storeId
+      storeId,
     );
   });
   return { statusCode: 0, data };
@@ -262,7 +265,7 @@ async function createSalesReturnItems(
   salesReturn,
   userId,
   branchId,
-  storeId
+  storeId,
 ) {
   const promises = salesReturnItems.map(async (stockDetail) => {
     const createdItem = await tx.salesReturnItems.create({
@@ -370,7 +373,7 @@ async function update(id, body) {
       data,
       userId,
       branchId,
-      storeId
+      storeId,
     );
   });
   return { statusCode: 0, data };
@@ -382,7 +385,7 @@ async function updateSalesReturnItems(
   salesReturn,
   userId,
   branchId,
-  storeId
+  storeId,
 ) {
   const promises = salesReturnItems.map(async (stockDetail) => {
     if (stockDetail.id) {
@@ -497,7 +500,7 @@ async function updateSalesReturnItems(
 function findRemovedItems(dataFound, salesReturnItems) {
   let removedItems = dataFound.salesReturnItems.filter((oldItem) => {
     let result = salesReturnItems.find(
-      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id)
+      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id),
     );
     if (result) return false;
     return true;
@@ -546,8 +549,8 @@ async function getSalesReturnReport(req) {
             ...(from && to ? [{ docDate: { gte: from, lte: to } }] : []),
           ]
         : from && to
-        ? [{ docDate: { gte: from, lte: to } }]
-        : undefined,
+          ? [{ docDate: { gte: from, lte: to } }]
+          : undefined,
     },
     include: {
       salesReturnItems: true,

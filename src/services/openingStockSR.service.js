@@ -128,6 +128,9 @@ async function get(req) {
     include: {
       openingStockItemsSRs: true,
     },
+     orderBy: {
+      createdAt: "desc", // 🔥 Descending Order
+    },
   });
   totalCount = data.length;
   if (searchDocDate) {

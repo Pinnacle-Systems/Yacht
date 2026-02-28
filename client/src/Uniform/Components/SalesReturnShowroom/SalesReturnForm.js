@@ -27,6 +27,7 @@ import {
 import { CommaInput, DropdownInput, DropdownNew } from "../../../Inputs";
 import salesBillApi from "../../../redux/services/SalesBillService";
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
+import purchaseBillApi from "../../../redux/services/PurchaseBillService";
 import { ReturnTypeDatas } from "../../../Utils/DropdownData";
 import SalesExchangeItems from "./SalesExchangeItems";
 import { groupBy } from "lodash";
@@ -249,23 +250,24 @@ export function SalesReturnForm({
         });
         return false;
       }
+      if (paidAmount > totalAmount) {
+        Swal.fire({
+          icon: "error",
+          title: "Payment Error",
+          text: "Paid amount cannot be greater than Total amount",
+        });
+        return false; // stop further execution
+      }
+      if (paidAmount < totalAmount) {
+        Swal.fire({
+          icon: "error",
+          title: "Payment Error",
+          text: "Paid amount cannot be Less than Total amount",
+        });
+        return false; // stop further execution
+      }
     }
-    if (paidAmount > totalAmount) {
-      Swal.fire({
-        icon: "error",
-        title: "Payment Error",
-        text: "Paid amount cannot be greater than Total amount",
-      });
-      return false; // stop further execution
-    }
-    if (paidAmount < totalAmount) {
-      Swal.fire({
-        icon: "error",
-        title: "Payment Error",
-        text: "Paid amount cannot be Less than Total amount",
-      });
-      return false; // stop further execution
-    }
+
     return true;
   };
 
@@ -371,6 +373,7 @@ export function SalesReturnForm({
         });
         dispatch(salesBillApi.util.invalidateTags(["SalesBill"]));
         dispatch(showroomStockApi.util.invalidateTags(["showroomStock"]));
+        dispatch(purchaseBillApi.util.invalidateTags(["PurchaseBill"]));
       } else {
         toast.error(returnData?.message);
       }

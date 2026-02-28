@@ -72,10 +72,6 @@ const StockReport = forwardRef(
     );
 
     useEffect(() => {
-      setCurrentPageNumber(1);
-    }, [serachDocNo, searchDocDate, locationId,styleId,sizeId,styleItemId,colorId,barcodeId]);
-
-    useEffect(() => {
       if (allData && onDataLoaded) {
         onDataLoaded(allData);
       }
@@ -91,9 +87,13 @@ const StockReport = forwardRef(
 
     const isLoadingIndicator = isLoading || isFetching;
 
-    const totalPages = Math?.ceil(allData?.totalCount / itemsPerPage);
-    const indexOfLastItem = currentPage * parseInt(10);
+    const totalPages = Math?.ceil(allDataDetail?.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = (allDataDetail || []).slice(
+      indexOfFirstItem,
+      indexOfLastItem,
+    );
 
     const handlePageChange = (newPage) => {
       if (newPage >= 1 && newPage <= totalPages) {
@@ -104,11 +104,6 @@ const StockReport = forwardRef(
     const Pagination = () => {
       return (
         <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
-          {/* <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-          Showing {indexOfFirstItem + 1} to{" "}
-          {Math.min(indexOfLastItem, allData?.data?.length)} of{" "}
-          {allData?.length} entries
-        </div> */}
           <div className="text-sm text-gray-600 mb-2 sm:mb-0">
             Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
             {Math.min(currentPage * itemsPerPage, allData?.totalCount || 0)} of{" "}
@@ -219,7 +214,7 @@ const StockReport = forwardRef(
           <>
             <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
               <div className="h-[420px]">
-                {allDataDetail.length > 0 ? (
+                {currentItems.length > 0 ? (
                   <table className="">
                     <thead className="bg-gray-200 text-gray-800 ">
                       <tr className="">
@@ -257,7 +252,7 @@ const StockReport = forwardRef(
                       </tbody>
                     ) : (
                       <tbody className="border-2">
-                        {allDataDetail.map((dataObj, index) => (
+                        {currentItems.map((dataObj, index) => (
                           <tr
                             tabIndex={0}
                             key={dataObj.id}

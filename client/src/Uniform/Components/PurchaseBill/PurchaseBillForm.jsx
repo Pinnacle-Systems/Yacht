@@ -367,6 +367,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     };
 
     const handleAddRow = async (newValue) => {
+        setPurchaseBillItems([]);
         setDcNo(newValue);
         const hasUnfilledRequired = purchaseBillItems.some((row) => {
             return row.styleId && !row.qty || row.styleId && !row.rate;
@@ -537,14 +538,14 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                             isAdmin && (
                                                 <DropdownNew
                                                     name="Sales DC No"
-                                                    dataList={salesList?.data}
+                                                    dataList={salesList?.data?.filter((item) => item.salesType === "RETAIL")}
                                                     value={dcNo}
                                                     setValue={handleAddRow}
                                                     readOnly={readOnly}
                                                     placeholder={"Select DC"}
                                                     otherField={"docId"}
                                                     otherValue={"docId"}
-                                                    disabled={readOnly}
+                                                    disabled={readOnly || id}
                                                     clear={true}
                                                 />
                                             )
