@@ -10,7 +10,8 @@ import {
   getReport,
   getSalesInvDetail,
   getSalesInvStyleDetail,
-  getSalesDCDetail
+  getSalesDCDetail,
+  getSalesInvBarcodeDetail,
 } from "../controllers/salesEntry.controller.js";
 
 router.post("/", create);
@@ -22,6 +23,8 @@ router.get("/salesInvDetail", getSalesInvDetail);
 router.get("/salesDCDetail", getSalesDCDetail);
 
 router.get("/salesInvStyleDetail", getSalesInvStyleDetail);
+
+router.get("/salesInvBarcodeDetail", getSalesInvBarcodeDetail);
 
 router.get("/:id", getOne);
 

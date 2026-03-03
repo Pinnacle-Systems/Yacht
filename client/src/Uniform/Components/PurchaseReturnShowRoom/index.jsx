@@ -13,6 +13,7 @@ import PurchaseReturnFormReport from "./PurchaseReturnFormReport";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import purchaseBillApi from "../../../redux/services/PurchaseBillService"
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
+import SalesReturnApi from "../../../redux/uniformService/SalesReturnService"
 
 const MODEL = "Purchase Return";
 
@@ -72,6 +73,7 @@ export default function Form() {
           purchaseBillApi.util.invalidateTags(["PurchaseBill"])
         );
         dispatch(showroomStockApi.util.invalidateTags(["showroomStock"]));
+        dispatch(SalesReturnApi.util.invalidateTags(["salesReturn"]))
       } catch (error) {
         Swal.fire({
           icon: "error",

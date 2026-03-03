@@ -195,6 +195,8 @@ async function getOne(id) {
           StyleItem: true,
           Color: true,
           colorId: true,
+          barcodeNo: true,
+          barcodeId: true,
         },
       },
       Branch: true,
@@ -203,7 +205,52 @@ async function getOne(id) {
     },
   });
   if (!data) return NoRecordFound("salesReturn");
-  return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+  const salesReturn = await prisma.salesReturn.findMany({
+    where: {
+      invNo: data?.invNo,
+      storeId: parseInt(data?.storeId),
+      branchId: parseInt(data?.branchId),
+    },
+    include: {
+      salesReturnItems: {
+        select: {
+          barcode: true,
+          styleNo: true,
+          styleId: true,
+          sizeId: true,
+          colorId: true,
+          fabricId: true,
+          styleItemId: true,
+          returnQty: true,
+        },
+      },
+    },
+  });
+  const allReturnItems = salesReturn.flatMap(
+    (returnEntry) => returnEntry.salesReturnItems,
+  );
+
+  const returnQtyWithData = data?.salesReturnItems.map((item) => {
+    const returnedQty = allReturnItems
+      .filter(
+        (r) =>
+          r.styleId === item.styleId &&
+          r.sizeId === item.sizeId &&
+          r.styleItemId === item.styleItemId &&
+          r.colorId === item.colorId,
+      )
+      .reduce((sum, r) => sum + r.returnQty, 0);
+
+    return {
+      ...item,
+      alreadyReturnQty: returnedQty - item.returnQty,
+      balanceQty: item.qty - returnedQty,
+    };
+  });
+  return {
+    statusCode: 0,
+    data: { ...data, salesReturnItems: returnQtyWithData, ...{ childRecord } },
+  };
 }
 
 async function create(body) {
@@ -218,6 +265,7 @@ async function create(body) {
     locationId,
     customerId,
     invNo,
+    salesType,
   } = await body;
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate
@@ -245,6 +293,7 @@ async function create(body) {
         locationId: parseInt(locationId),
         customerId: parseInt(customerId),
         invNo,
+        salesType,
       },
     });
     await createSalesReturnItems(
@@ -289,6 +338,10 @@ async function createSalesReturnItems(
         styleItemId: stockDetail?.styleItemId
           ? parseInt(stockDetail.styleItemId)
           : null,
+        barcodeId: stockDetail?.barcodeId
+          ? parseInt(stockDetail.barcodeId)
+          : null,
+        barcodeNo: stockDetail?.barcodeNo ?? undefined,
       },
     });
     await tx.stock.create({
@@ -329,6 +382,7 @@ async function update(id, body) {
     locationId,
     customerId,
     invNo,
+    salesType,
   } = await body;
   let data;
   const dataFound = await prisma.salesReturn.findUnique({
@@ -365,6 +419,7 @@ async function update(id, body) {
         locationId: parseInt(locationId),
         customerId: parseInt(customerId),
         invNo,
+        salesType,
       },
     });
     await updateSalesReturnItems(
@@ -414,6 +469,10 @@ async function updateSalesReturnItems(
           styleItemId: stockDetail?.styleItemId
             ? parseInt(stockDetail.styleItemId)
             : null,
+          barcodeId: stockDetail?.barcodeId
+            ? parseInt(stockDetail.barcodeId)
+            : null,
+          barcodeNo: stockDetail?.barcodeNo ?? undefined,
         },
       });
       await tx.stock.updateMany({
@@ -465,6 +524,10 @@ async function updateSalesReturnItems(
           styleItemId: stockDetail?.styleItemId
             ? parseInt(stockDetail.styleItemId)
             : null,
+          barcodeId: stockDetail?.barcodeId
+            ? parseInt(stockDetail.barcodeId)
+            : null,
+          barcodeNo: stockDetail?.barcodeNo ?? undefined,
         },
       });
       await tx.stock.create({

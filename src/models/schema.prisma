@@ -2088,6 +2088,7 @@ model SalesReturn {
   customerId       Int?
   salesReturnItems SalesReturnItems[]
   invNo            String?
+  salesType        String?
 }
 
 model SalesReturnItems {
@@ -2111,6 +2112,9 @@ model SalesReturnItems {
   colorId       Int?
   stocks        Stock[]
   qty           Int?
+  Barcode       Barcode?     @relation(fields: [barcodeId], references: [id])
+  barcodeId     Int?
+  barcodeNo     String?
 }
 
 model PurchaseInward {
@@ -3028,6 +3032,7 @@ model Barcode {
   salesBillItems        SalesBillItems[]
   salesReturnSRItems    SalesReturnSRItems[]
   salesExchangeItems    SalesExchangeItems[]
+  salesReturnItems      SalesReturnItems[]
 }
 
 model OpeningStockSR {

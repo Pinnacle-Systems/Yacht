@@ -51,6 +51,7 @@ export default function SalesReturnForm({
   const [customerId, setCustomerId] = useState("");
   const [pdfOpen, setPdfOpen] = useState("");
   const [invNo, setInvNo] = useState("");
+  const [salesType, setSalesType] = useState("");
   const [getSalesInvDetail] = useLazyGetSalesInvDetailQuery();
   const dispatch = useDispatch();
   const { companyId, userId, finYearId, branchId } = getCommonParams();
@@ -80,9 +81,19 @@ export default function SalesReturnForm({
     const duplicates = [];
 
     items.forEach((row, index) => {
-      const key = [row.styleId || "", row.sizeId || "", row.colorId || ""].join(
-        "-",
-      );
+      let key;
+      if (salesType === "RETAIL") {
+        key = [
+          row.styleId || "",
+          row.sizeId || "",
+          row.colorId || "",
+          row.barcodeId || "",
+        ].join("-");
+      } else {
+        key = [row.styleId || "", row.sizeId || "", row.colorId || ""].join(
+          "-",
+        );
+      }
 
       if (seen.has(key)) {
         duplicates.push({
@@ -165,6 +176,7 @@ export default function SalesReturnForm({
     locationId,
     customerId,
     invNo,
+    salesType,
   };
 
   const syncFormWithDb = useCallback(
@@ -183,6 +195,7 @@ export default function SalesReturnForm({
       setStoreId(data?.storeId ? data.storeId : "");
       setCustomerId(data?.customerId ? data?.customerId : "");
       setInvNo(data?.invNo ? data?.invNo : "");
+      setSalesType(data?.salesType ? data?.salesType : "");
     },
     [id],
   );
@@ -270,6 +283,7 @@ export default function SalesReturnForm({
   };
 
   const handleAddRow = async (newValue) => {
+    setSalesReturnItems([]);
     setInvNo(newValue);
     if (!storeId) {
       toast.info("Please Choose Location...!", {
@@ -287,6 +301,7 @@ export default function SalesReturnForm({
         },
       });
       setCustomerId(salesData?.data?.customerId);
+      setSalesType(salesData?.data?.salesType);
     } catch (error) {
       console.error("Error adding row:", error);
     }
@@ -398,9 +413,14 @@ export default function SalesReturnForm({
                       setCustomerId(value);
                     }}
                     required={true}
-                    disabled={id}
+                    disabled={true}
                     placeholder={"Select Customer"}
                     clear={true}
+                  />
+                  <ReusableInput
+                    label="Sales Type"
+                    readOnly
+                    value={salesType}
                   />
                 </div>
               </div>
@@ -414,6 +434,7 @@ export default function SalesReturnForm({
                 storeId={storeId}
                 customerId={customerId}
                 invNo={invNo}
+                salesType={salesType}
               />
             </fieldset>
             <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">

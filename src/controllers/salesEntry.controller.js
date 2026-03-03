@@ -10,6 +10,7 @@ import {
   getSalesInvDetail as _getSalesInvDetail,
   getSalesDcDetail as _getSalesDcDetail,
   getSalesInvStyleDetail as _getSalesInvStyleDetail,
+  getSalesInvBarcodeDetail as _getSalesInvBarcodeDetail,
 } from "../services/salesEntry.service.js";
 
 async function get(req, res, next) {
@@ -145,6 +146,14 @@ async function getSalesInvStyleDetail(req, res, next) {
   }
 }
 
+async function getSalesInvBarcodeDetail(req, res, next) {
+  try {
+    res.json(await _getSalesInvBarcodeDetail(req));
+  } catch (err) {
+    console.error(`Error`, err.message);
+  }
+}
+
 export {
   get,
   getOne,
@@ -156,4 +165,5 @@ export {
   getSalesInvDetail,
   getSalesDCDetail,
   getSalesInvStyleDetail,
+  getSalesInvBarcodeDetail,
 };

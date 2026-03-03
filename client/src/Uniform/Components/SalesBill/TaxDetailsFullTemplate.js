@@ -10,7 +10,6 @@ const TaxDetailsFullTemplate = ({
   currentIndex: index,
   setCurrentSelectedIndex,
   readOnly,
-  handleInputChange,
   taxTypeId,
 }) => {
   const substract = s;
@@ -94,10 +93,9 @@ const TaxDetailsFullTemplate = ({
   ) {
     return <Loader />;
   }
-
   let price = isNaN(parseFloat(row["rate"])) ? 0 : parseFloat(row["rate"]);
   let qty = isNaN(parseFloat(row["qty"])) ? 0 : parseFloat(row["qty"]);
-  let discountType = row["discountType"];
+   let discountType = row["discountType"];
   let discountValue = isNaN(parseFloat(row["discountValue"]))
     ? 0
     : parseFloat(row["discountValue"]);
@@ -120,6 +118,8 @@ const TaxDetailsFullTemplate = ({
     }
   };
 
+  console.log(taxTermMaster, "taxTerm");
+
   return (
     <div
       className={`${
@@ -138,67 +138,6 @@ const TaxDetailsFullTemplate = ({
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td className="border border-gray-500">Discount Type</td>
-            <td className="border border-gray-500" colSpan={2}>
-              <select
-                disabled={readOnly}
-                className="text-left w-full rounded h-8"
-                value={discountType}
-                onChange={(e) =>
-                  handleInputChange(e.target.value, index, "discountType")
-                }
-                autoFocus={true}
-              >
-                <option hidden>Select</option>
-                {discountTypes.map((option, index) => (
-                  <option key={index} value={option.value}>
-                    {option.show}
-                  </option>
-                ))}
-              </select>
-            </td>
-          </tr>
-          <tr className="h-7">
-            <td className="border border-gray-500">Discount</td>
-            <td className="border border-gray-500" colSpan={2}>
-              <input
-                type="text"
-                disabled={readOnly}
-                className="h-7 w-full text-right"
-                value={discountValue}
-                onChange={(e) =>
-                  handleInputChange(e.target.value, index, "discountValue")
-                }
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    setCurrentSelectedIndex("");
-                  }
-                }}
-                onFocus={(e) => {
-                  e.target.select()
-                }}
-              />
-            </td>
-          </tr>
-          <tr className="h-7">
-            <td className="border border-gray-500">Tax</td>
-            <td className="border border-gray-500" colSpan={2}>
-              <input
-                type="text"
-                // autoFocus
-                disabled={readOnly}
-                className="h-7 w-full text-right"
-                value={taxPercent}
-                onChange={(e) => {
-                  handleInputChange(e.target.value, index, "taxPercent");
-                }}
-                 onFocus={(e) => {
-                  e.target.select()
-                }}
-              />
-            </td>
-          </tr>
           {formulas
             // .filter((item) => !item.isPowise)
             .map((f, i) => (

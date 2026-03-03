@@ -21,6 +21,7 @@ export default function PurchaseBillItems({
   uomList,
   taxTemplateId,
   dcNo,
+  isAdmin
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [currentSelectedIndex, setCurrentSelectedIndex] = useState(null);
@@ -39,6 +40,7 @@ export default function PurchaseBillItems({
       rate: "",
       netAmount: 0,
       discountType: "Percentage",
+      discountValue: "",
     };
     setPurchaseBillItems([...purchaseBillItems, newRow]);
   };
@@ -94,6 +96,7 @@ export default function PurchaseBillItems({
               selected: false,
               netAmount: 0,
               discountType: "Percentage",
+              discountValue: "",
             })),
           ];
         }
@@ -116,6 +119,7 @@ export default function PurchaseBillItems({
           selected: false,
           netAmount: 0,
           discountType: "Percentage",
+          discountValue: "",
         })),
       );
     }
@@ -145,7 +149,7 @@ export default function PurchaseBillItems({
       const sgst = (taxable * (taxPercent / 2)) / 100;
       const cgst = (taxable * (taxPercent / 2)) / 100;
 
-      const net = taxable ;
+      const net = taxable;
 
       return {
         ...row,
@@ -168,7 +172,7 @@ export default function PurchaseBillItems({
   const handleBarcodeEnter = async (index, row) => {
     try {
       const response = await getProductionBarcode({
-        params: { barcodeNo: row.barcodeNo },
+        params: { barcodeNo: row.barcodeNo ,isAdmin : isAdmin},
       }).unwrap();
 
       if (response.statusCode !== 0) {
@@ -214,6 +218,8 @@ export default function PurchaseBillItems({
             uomId: "",
             rate: "",
             netAmount: 0,
+            discountType: "Percentage",
+            discountValue: "",
           });
         }
 
@@ -298,11 +304,11 @@ export default function PurchaseBillItems({
                 >
                   Barcode
                 </th>
-                <th
+                {/* <th
                   className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style No
-                </th>
+                </th> */}
                 <th
                   className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
                 >
@@ -337,6 +343,16 @@ export default function PurchaseBillItems({
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Gross Amt
+                </th>
+                <th
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Disc Type
+                </th>
+                <th
+                  className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Disc
                 </th>
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
@@ -447,16 +463,6 @@ export default function PurchaseBillItems({
                         className="text-left rounded py-1 px-1 w-full  select-none"
                         disabled={true}
                         value={
-                          findFromList(row.styleId, styleList?.data, "sku") ||
-                          ""
-                        }
-                      />
-                    </td>
-                    <td className="py-0.5 border border-gray-300 text-[11px] ">
-                      <input
-                        className="text-left rounded py-1 px-1 w-full  select-none"
-                        disabled={true}
-                        value={
                           findFromList(
                             row.styleItemId,
                             styleItemList?.data,
@@ -558,6 +564,56 @@ export default function PurchaseBillItems({
                         disabled={true}
                       />
                     </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <select
+                        className="text-left rounded py-1 px-1 w-full table-data-input"
+                        value={row?.discountType || ""}
+                        disabled={readOnly}
+                        onChange={(e) => {
+                          if (e.target.value === "") {
+                            handleInputChange("", index, "discountValue");
+                          }
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "discountType",
+                          );
+                        }}
+                      >
+                        <option value="">Select</option>
+                        <option value="Flat">Flat</option>
+                        <option value="Percentage">Perc</option>
+                      </select>
+                    </td>
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        type="number"
+                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        value={row?.discountValue}
+                        disabled={readOnly || row.discountType === ""}
+                        onKeyDown={(e) => {
+                          if (e.code === "Minus" || e.code === "NumpadSubtract")
+                            e.preventDefault();
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "discountValue");
+                          }
+                        }}
+                        onChange={(e) =>
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "discountValue",
+                          )
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "discountValue",
+                          );
+                        }}
+                      />
+                    </td>
                     <td className="py-0.5 border border-gray-300 text-[11px]">
                       <input
                         type="number"
@@ -612,7 +668,7 @@ export default function PurchaseBillItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={8}
+                  colSpan={7}
                 >
                   Total Qty
                 </td>
@@ -632,6 +688,7 @@ export default function PurchaseBillItems({
                     }, 0)
                     .toFixed(2)}
                 </td>
+                <td className="border border-gray-300" colSpan={2}></td>
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
                   {purchaseBillItems
                     ?.reduce(

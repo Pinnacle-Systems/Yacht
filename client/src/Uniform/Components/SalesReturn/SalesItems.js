@@ -4,7 +4,6 @@ import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterS
 import { useLazyGetBarcodeDetailQuery } from "../../../redux/uniformService/StockAdjustmentService";
 import { useGetFabricMasterQuery } from "../../../redux/uniformService/FabricMasterService";
 import { ReusableInput } from "../../../Utils/CommonInput";
-import { useLazyGetStyleDetailQuery } from "../../../redux/services/StockService";
 import { findFromList } from "../../../Utils/helper";
 import { IMAGE_UPLOAD_URL } from "../../../Constants";
 import { useGetStyleItemMasterQuery } from "../../../redux/uniformService/StyleItemMasterService";
@@ -12,7 +11,10 @@ import { toast } from "react-toastify";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { VIEW } from "../../../icons";
 import Swal from "sweetalert2";
-import { useLazyGetSalesInvStyleDetailQuery } from "../../../redux/uniformService/SalesEntryService";
+import {
+  useLazyGetSalesBarcodeStyleDetailQuery,
+  useLazyGetSalesInvStyleDetailQuery,
+} from "../../../redux/uniformService/SalesEntryService";
 import Modal from "../../../UiComponents/Modal";
 import { DropdownNew } from "../../../Inputs";
 
@@ -26,9 +28,11 @@ export default function SalesItems({
   branchId,
   customerId,
   invNo,
+  salesType,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [styleNo, setStyleNo] = useState("");
+  const [barcodeNo, setBarcodeNo] = useState("");
   const [previewImage, setPreviewImage] = useState(null);
   const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
@@ -41,6 +45,7 @@ export default function SalesItems({
   const [uniqueColorIds, setUniqueColorIds] = useState([]);
 
   const [getStyleDetail] = useLazyGetSalesInvStyleDetailQuery();
+  const [getBarcodeDetail] = useLazyGetSalesBarcodeStyleDetailQuery();
 
   const [
     triggerGetBarcodeDetail,
@@ -60,6 +65,9 @@ export default function SalesItems({
       styleItemId: "",
       colorId: "",
       selected: false,
+      alreadyReturnQty: "",
+      barcodeId: "",
+      barcodeNo: "",
     };
     setSalesReturnItems([...salesReturnItems, newRow]);
   };
@@ -104,10 +112,10 @@ export default function SalesItems({
       setSalesReturnItems((prev) => {
         const count = prev.length;
 
-        if (count < 6) {
+        if (count < 3) {
           return [
             ...prev,
-            ...Array.from({ length: 6 - count }, () => ({
+            ...Array.from({ length: 3 - count }, () => ({
               barcode: "",
               styleId: "",
               sizeId: "",
@@ -120,6 +128,9 @@ export default function SalesItems({
               colorId: "",
               selected: false,
               qty: "",
+              alreadyReturnQty: "",
+              barcodeId: "",
+              barcodeNo: "",
             })),
           ];
         }
@@ -128,7 +139,7 @@ export default function SalesItems({
       });
     } else {
       setSalesReturnItems(
-        Array.from({ length: 6 }, () => ({
+        Array.from({ length: 3 }, () => ({
           barcode: "",
           styleId: "",
           sizeId: "",
@@ -141,7 +152,10 @@ export default function SalesItems({
           colorId: "",
           selected: false,
           qty: "",
-        }))
+          alreadyReturnQty: "",
+          barcodeId: "",
+          barcodeNo: "",
+        })),
       );
     }
   }, [salesReturnItems, setSalesReturnItems]);
@@ -149,13 +163,15 @@ export default function SalesItems({
   const handleInputChange = async (value, index, field) => {
     if (field === "returnQty") {
       const row = salesReturnItems[index];
-      const balanceQty = row?.qty || 0;
+      const salesQty = row?.qty || 0;
+      const alreadyReturnQty = row?.alreadyReturnQty;
+      const balanceQty = salesQty - alreadyReturnQty;
 
       if (parseFloat(balanceQty) < parseFloat(value)) {
         Swal.fire({
           icon: "warning",
           title: "Invalid Quantity",
-          text: "Return Qty cannot be more than Sales Qty!",
+          text: `Return Qty cannot be more than Balance Qty!- ${balanceQty}`,
           confirmButtonText: "OK",
         });
         setSalesReturnItems((prev) => {
@@ -200,9 +216,10 @@ export default function SalesItems({
                       stkQty: response.totalQty,
                       styleNo: item.styleNo,
                       fabricId: item.fabricId,
+                      alreadyReturnQty: item.alreadyReturnQty,
                     }
-                  : r
-              )
+                  : r,
+              ),
             );
           } else {
             setSalesReturnItems((prev) =>
@@ -220,9 +237,12 @@ export default function SalesItems({
                       colorId: "",
                       selected: false,
                       qty: "",
+                      alreadyReturnQty: "",
+                      barcodeId: "",
+                      barcodeNo: "",
                     }
-                  : r
-              )
+                  : r,
+              ),
             );
           }
         } catch (err) {
@@ -242,7 +262,7 @@ export default function SalesItems({
           !row.sizeId &&
           !row.styleNo &&
           !row.fabricId &&
-          !row.barcode
+          !row.barcode,
       );
       if (startIndex === -1) startIndex = updated.length;
 
@@ -254,7 +274,7 @@ export default function SalesItems({
         }
       });
 
-      while (updated.length < 6) {
+      while (updated.length < 3) {
         updated.push({
           styleNo: "",
           fabricId: "",
@@ -267,6 +287,9 @@ export default function SalesItems({
           styleItemId: "",
           colorId: "",
           selected: false,
+          alreadyReturnQty: "",
+          barcodeId: "",
+          barcodeNo: "",
         });
       }
 
@@ -282,7 +305,7 @@ export default function SalesItems({
       });
     } else {
       const isFirstTime = salesReturnItems.every(
-        (row) => !row.sizeId && !row.styleId && !row.fabricId
+        (row) => !row.sizeId && !row.styleId && !row.fabricId,
       );
       if (!isFirstTime) {
         // const hasEmpty = salesReturnItems.some((row) => !row.returnQty);
@@ -341,6 +364,60 @@ export default function SalesItems({
     }
   };
 
+  const handleAddRowBarcode = async () => {
+    if (!validateData()) {
+      toast.info("Please Choose Required Fields...!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+    } else {
+      const isFirstTime = salesReturnItems.every(
+        (row) => !row.sizeId && !row.styleId && !row.fabricId,
+      );
+      if (!isFirstTime) {
+        // const hasEmpty = salesReturnItems.some((row) => !row.returnQty);
+        const hasEmpty = salesReturnItems.some((row) => {
+          const hasStyle =
+            row.styleNo !== "" &&
+            row.styleNo !== null &&
+            row.styleNo !== undefined;
+
+          return hasStyle && !row.returnQty;
+        });
+        if (hasEmpty) {
+          toast.info("Please fill all required fields...Before Adding!", {
+            position: "top-center",
+            autoClose: 2000,
+          });
+          return;
+        }
+      }
+      try {
+        const { data: barcodeData } = await getBarcodeDetail({
+          params: {
+            barcodeNo: barcodeNo,
+            invNo: invNo,
+          },
+        });
+        if (barcodeData.statusCode === 1) {
+          toast.info(barcodeData.message, {
+            position: "top-center",
+            autoClose: 2000,
+          });
+          return;
+        }
+        const styleRows = Array.isArray(barcodeData?.data)
+          ? barcodeData.data
+          : [barcodeData.data];
+
+        if (!styleRows) return;
+        fillRows(styleRows);
+      } catch (error) {
+        console.error("Error adding row:", error);
+      }
+    }
+  };
+
   function imageFormatter(styleId) {
     const fileName = findFromList(styleId, styleList?.data, "img");
     if (!fileName) return "/no-image.png"; // fallback image if missing
@@ -369,7 +446,7 @@ export default function SalesItems({
               colorList?.data?.filter(
                 (item) =>
                   Array.isArray(uniqueColorIds) &&
-                  uniqueColorIds.includes(item.id)
+                  uniqueColorIds.includes(item.id),
               ) || []
             }
             value={colorId}
@@ -386,7 +463,7 @@ export default function SalesItems({
             className="bg-green-700 text-white px-2 text-md rounded hover:bg-green-800"
             onClick={() => {
               const filtered = pendingStyleRows.filter(
-                (row) => row.colorId === colorId
+                (row) => row.colorId === colorId,
               );
               fillRows(filtered);
               setShowColorPopup(false);
@@ -396,7 +473,7 @@ export default function SalesItems({
               if (e.key === "Enter") {
                 e.preventDefault();
                 const filtered = pendingStyleRows.filter(
-                  (row) => row.colorId === colorId
+                  (row) => row.colorId === colorId,
                 );
                 fillRows(filtered);
                 setShowColorPopup(false);
@@ -410,25 +487,44 @@ export default function SalesItems({
       </Modal>
       <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[450px] overflow-auto">
         <div className="flex items-center gap-4 sticky top-0 bg-white z-30 mt-2">
-          <ReusableInput
-            label="Style No"
-            value={styleNo}
-            setValue={setStyleNo}
-            type={"text"}
-            required={true}
-            readOnly={readOnly}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.stopPropagation();
-                handleAddRow();
-              }
-            }}
-          />
+          {salesType === "RETAIL" ? (
+            <ReusableInput
+              label="Barcode No"
+              value={barcodeNo}
+              setValue={setBarcodeNo}
+              type={"text"}
+              required={true}
+              readOnly={readOnly}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.stopPropagation();
+                  handleAddRowBarcode();
+                }
+              }}
+            />
+          ) : (
+            <ReusableInput
+              label="Style No"
+              value={styleNo}
+              setValue={setStyleNo}
+              type={"text"}
+              required={true}
+              readOnly={readOnly}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.stopPropagation();
+                  handleAddRow();
+                }
+              }}
+            />
+          )}
         </div>
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">Return Details</h2>
         </div>
-        <div className={`w-full max-h-[300px] overflow-y-auto  my-1`}>
+        <div
+          className={`w-full min-h-[200px] max-h-[300px] overflow-y-auto  my-1`}
+        >
           <table className="w-full border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
@@ -443,7 +539,7 @@ export default function SalesItems({
                       onChange={(e) => {
                         const checked = e.target.checked;
                         setSalesReturnItems((prev) =>
-                          prev.map((row) => ({ ...row, selected: checked }))
+                          prev.map((row) => ({ ...row, selected: checked })),
                         );
                       }}
                       onContextMenu={(e) => {
@@ -466,8 +562,15 @@ export default function SalesItems({
                 >
                   Style No
                 </th>
+                {salesType === "RETAIL" && (
+                  <th
+                    className={`w-24 px-2 py-2 text-center font-medium text-[13px] `}
+                  >
+                    Barcode No
+                  </th>
+                )}
                 <th
-                  className={`w-60 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style
                 </th>
@@ -495,6 +598,11 @@ export default function SalesItems({
                   className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Sales Qty
+                </th>
+                <th
+                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Already Return Qty
                 </th>
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
@@ -556,6 +664,30 @@ export default function SalesItems({
                       }}
                     />
                   </td>
+                  {salesType === "RETAIL" && (
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-left">
+                      <input
+                        onKeyDown={(e) => {
+                          if (e.code === "Minus" || e.code === "NumpadSubtract")
+                            e.preventDefault();
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "barcodeNo");
+                          }
+                        }}
+                        className="text-left rounded py-1 px-1 w-full"
+                        onFocus={(e) => e.target.select()}
+                        value={row?.barcodeNo}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "barcodeNo")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "barcodeNo");
+                        }}
+                        disabled={true}
+                      />
+                    </td>
+                  )}
+
                   <td className="py-0.5 border border-gray-300 text-[11px] ">
                     <select
                       // disabled={readOnly || !!row.barcode}
@@ -585,6 +717,7 @@ export default function SalesItems({
                       ))}
                     </select>
                   </td>
+
                   <td className="border border-gray-300 py-0.5 text-center">
                     {row?.styleId ? (
                       <button
@@ -710,6 +843,36 @@ export default function SalesItems({
                   </td>
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                     <input
+                      type="number"
+                      className="text-right rounded py-1 px-1 w-full table-data-input"
+                      value={row?.alreadyReturnQty}
+                      disabled={true}
+                      onKeyDown={(e) => {
+                        if (e.code === "Minus" || e.code === "NumpadSubtract")
+                          e.preventDefault();
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "alreadyReturnQty");
+                        }
+                      }}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) =>
+                        handleInputChange(
+                          e.target.value,
+                          index,
+                          "alreadyReturnQty",
+                        )
+                      }
+                      onBlur={(e) => {
+                        handleInputChange(
+                          e.target.value,
+                          index,
+                          "alreadyReturnQty",
+                        );
+                      }}
+                    />
+                  </td>
+                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                    <input
                       onKeyDown={(e) => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract")
                           e.preventDefault();
@@ -728,7 +891,7 @@ export default function SalesItems({
                       onBlur={(e) => {
                         handleInputChange(e.target.value, index, "returnQty");
                       }}
-                      disabled={readOnly}
+                      disabled={readOnly || salesType === "RETAIL"}
                       id={`qty-${index}`}
                     />
                   </td>
@@ -742,14 +905,14 @@ export default function SalesItems({
                           e.preventDefault(); // prevent form submit or line break
                           e.stopPropagation();
                           const nextSelect = document.querySelector(
-                            `#qty-${index + 1}`
+                            `#qty-${index + 1}`,
                           );
                           if (nextSelect) {
                             nextSelect.focus();
                             // Optional: visually show focus (since select.open() is not allowed)
                             setTimeout(
                               () => (nextSelect.style.outline = ""),
-                              800
+                              800,
                             );
                           }
                         }
@@ -792,7 +955,10 @@ export default function SalesItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={9}
+                  colSpan={
+                    salesType === "RETAIL" ?
+                    11 : 10
+                  }
                 >
                   Total
                 </td>
@@ -805,7 +971,7 @@ export default function SalesItems({
                 <td className="text-right border border-gray-300 px-1 font-medium text-[12px] py-0.5">
                   {salesReturnItems.reduce(
                     (sum, row) => sum + (Number(row.returnQty) || 0),
-                    0
+                    0,
                   )}
                 </td>
                 {/* <td className="border border-gray-300"></td> */}

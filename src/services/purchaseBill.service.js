@@ -152,11 +152,11 @@ async function get(req) {
         select: {
           qty: true,
           barcodeId: true,
-          barcodeNo:true
+          barcodeNo: true,
         },
       },
     },
-     orderBy: {
+    orderBy: {
       createdAt: "desc", // 🔥 Descending Order
     },
   });
@@ -1049,7 +1049,7 @@ async function getpurchaseBillItems(req) {
 }
 
 async function getBarcodeDetail(req) {
-  const { barcodeNo } = req.query;
+  const { barcodeNo, isAdmin } = req.query;
 
   // 1️⃣ First try fetching by styleNo
   let data = await prisma.barcode.findUnique({
@@ -1075,6 +1075,17 @@ async function getBarcodeDetail(req) {
       },
     },
   });
+
+  if (isAdmin === "false") {
+    const isDispatch = await prisma.salesBillItems.count({
+      where: {
+        barcodeNo: barcodeNo,
+      },
+    });
+    if (isDispatch < 1) {
+      return ErrorResponse("This Barcode not dispatched in HO");
+    }
+  }
 
   return {
     statusCode: 0,

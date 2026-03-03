@@ -28,7 +28,7 @@ import PurchaseBillSummary from "./PurchaseBillSummary";
 import { useGetSalesEntryQuery, useLazyGetSalesDCDetailQuery } from "../../../redux/uniformService/SalesEntryService";
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
 import { useGetUserByIdQuery } from "../../../redux/services/UsersMasterService";
-
+import SalesEntryApi from "../../../redux/uniformService/SalesEntryService"
 const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     sizeList,
     styleItemList,
@@ -184,6 +184,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                     },
                 });
                 dispatch(showroomStockApi.util.invalidateTags(["showroomStock"]));
+                dispatch(SalesEntryApi.util.invalidateTags(["SalesEntry"]))
             } else {
                 Swal.fire({
                     icon: "warning",
@@ -594,6 +595,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                 taxTemplateId={taxTemplateId}
                                 dcNo={dcNo}
                                 styleList={styleList}
+                                isAdmin={isAdmin}
                             />
                         </fieldset>
 

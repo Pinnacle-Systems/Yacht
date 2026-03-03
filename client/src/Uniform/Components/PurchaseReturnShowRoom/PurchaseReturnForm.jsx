@@ -22,7 +22,7 @@ import secureLocalStorage from "react-secure-storage";
 import { useAddPurchaseReturnShowroomMutation, useDeletePurchaseReturnShowroomMutation, useGetPurchaseReturnShowroomByIdQuery, useGetPurchaseReturnShowroomQuery, useUpdatePurchaseReturnShowroomMutation } from "../../../redux/services/PurchaseReturnShowroomService";
 import purchaseBillApi, { useGetPurBillItemsQuery, useGetPurchaseBillQuery } from "../../../redux/services/PurchaseBillService";
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
-
+import SalesReturnApi from "../../../redux/uniformService/SalesReturnService"
 const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
     sizeList,
     styleItemList,
@@ -168,6 +168,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                 });
                 dispatch(purchaseBillApi.util.invalidateTags(["PurchaseBill"]));
                 dispatch(showroomStockApi.util.invalidateTags(["showroomStock"]));
+                dispatch(SalesReturnApi.util.invalidateTags(["salesReturn"]))
             } else {
                 toast.error(returnData?.message);
             }

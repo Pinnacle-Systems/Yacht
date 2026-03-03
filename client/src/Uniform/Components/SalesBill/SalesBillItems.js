@@ -145,34 +145,6 @@ export default function SalesBillItems({
     });
   };
 
-  const calculateNetAmount = (item) => {
-    const qty = parseFloat(item.qty) || 0;
-    const rate = parseFloat(item.rate) || 0;
-    const taxPercent = parseFloat(item.taxPercent) || 0;
-    const discountValue = parseFloat(item.discountValue) || 0;
-    const discountType = item.discountType || "";
-
-    // Gross amount
-    const grossAmount = qty * rate;
-
-    // GST Subtracted
-
-    // Apply Discount
-    let discountAmt = 0;
-    if (discountType === "Flat") discountAmt = discountValue;
-    else if (discountType === "Percentage")
-      discountAmt = (grossAmount * discountValue) / 100;
-
-    const taxable = grossAmount - discountAmt;
-    const sgst = (taxable * (taxPercent / 2)) / 100;
-    const cgst = (taxable * (taxPercent / 2)) / 100;
-
-    // Final net amount
-    const netAmount = taxable - (sgst + cgst);
-
-    return Math.round(netAmount);
-  };
-
   const fillRows = (rowsToFill) => {
     setSalesBillItems((prev) => {
       const updated = [...prev];
@@ -268,12 +240,6 @@ export default function SalesBillItems({
     }
   };
 
-  // const totalNetAmount = useMemo(() => {
-  //   return salesBillItems
-  //     .reduce((sum, row) => sum + (parseFloat(calculateNetAmount(row)) || 0), 0)
-  //     .toFixed(2);
-  // }, [salesBillItems]);
-
   useEffect(() => {
     // Recalculate net amount for all rows whenever dependent fields change
     const updatedRows = salesBillItems.map((row) => {
@@ -298,7 +264,7 @@ export default function SalesBillItems({
       const sgst = (taxable * (taxPercent / 2)) / 100;
       const cgst = (taxable * (taxPercent / 2)) / 100;
 
-      const net = taxable ;
+      const net = taxable;
       return {
         ...row,
         netAmount: Math.round(net),
@@ -365,6 +331,8 @@ export default function SalesBillItems({
             uomId: "",
             rate: "",
             netAmount: 0,
+            discountType: "Percentage",
+            discountValue: "",
           });
         }
 
@@ -518,11 +486,6 @@ export default function SalesBillItems({
                   Barcode
                 </th>
                 <th
-                  className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
-                >
-                  Style No
-                </th>
-                <th
                   className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style Item
@@ -556,6 +519,16 @@ export default function SalesBillItems({
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Gross Amt
+                </th>
+                <th
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Disc Type
+                </th>
+                <th
+                  className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
+                >
+                  Disc
                 </th>
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
@@ -672,15 +645,6 @@ export default function SalesBillItems({
                       className="text-left rounded py-1 px-1 w-full  select-none"
                       disabled={true}
                       value={
-                        findFromList(row.styleId, styleList?.data, "sku") || ""
-                      }
-                    />
-                  </td>
-                  <td className="py-0.5 border border-gray-300 text-[11px] ">
-                    <input
-                      className="text-left rounded py-1 px-1 w-full  select-none"
-                      disabled={true}
-                      value={
                         findFromList(
                           row.styleItemId,
                           styleItemList?.data,
@@ -781,6 +745,56 @@ export default function SalesBillItems({
                       disabled={true}
                     />
                   </td>
+                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                    <select
+                      className="text-left rounded py-1 px-1 w-full table-data-input"
+                      value={row?.discountType || ""}
+                      disabled={readOnly}
+                      onChange={(e) => {
+                        if (e.target.value === "") {
+                          handleInputChange("", index, "discountValue");
+                        }
+                        handleInputChange(
+                          e.target.value,
+                          index,
+                          "discountType",
+                        );
+                      }}
+                    >
+                      <option value="">Select</option>
+                      <option value="Flat">Flat</option>
+                      <option value="Percentage">Percent</option>
+                    </select>
+                  </td>
+                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                    <input
+                      type="number"
+                      className="text-right rounded py-1 px-1 w-full table-data-input"
+                      value={row?.discountValue}
+                      disabled={readOnly || row.discountType === ""}
+                      onKeyDown={(e) => {
+                        if (e.code === "Minus" || e.code === "NumpadSubtract")
+                          e.preventDefault();
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "discountValue");
+                        }
+                      }}
+                      onChange={(e) =>
+                        handleInputChange(
+                          e.target.value,
+                          index,
+                          "discountValue",
+                        )
+                      }
+                      onBlur={(e) => {
+                        handleInputChange(
+                          e.target.value,
+                          index,
+                          "discountValue",
+                        );
+                      }}
+                    />
+                  </td>
                   <td className="py-0.5 border border-gray-300 text-[11px]">
                     <input
                       type="number"
@@ -833,7 +847,7 @@ export default function SalesBillItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={8}
+                  colSpan={7}
                 >
                   Total Qty
                 </td>
@@ -853,8 +867,9 @@ export default function SalesBillItems({
                     }, 0)
                     .toFixed(2)}
                 </td>
+                <td className="border border-gray-300" colSpan={2}></td>
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
-                 {salesBillItems
+                  {salesBillItems
                     ?.reduce(
                       (sum, row) => sum + (Number(row.netAmount) || 0),
                       0,

@@ -561,7 +561,7 @@ export function SalesBillForm({
                     }}
                     min={"0"}
                     type="number"
-                    className="text-right rounded py-1 px-1 w-full border border-slate-300 rounded-md 
+                    className="text-right py-1 px-1 w-full border border-slate-300 rounded-md 
           focus:border-indigo-300 focus:outline-none transition-all duration-200
           hover:border-slate-400"
                     onFocus={(e) => e.target.select()}
@@ -604,7 +604,7 @@ export function SalesBillForm({
                     }}
                     min={"0"}
                     type="number"
-                    className="text-right rounded py-1 px-1 w-full border border-slate-300 rounded-md 
+                    className="text-right py-1 px-1 w-full border border-slate-300 rounded-md 
           focus:border-indigo-300 focus:outline-none transition-all duration-200
           hover:border-slate-400"
                     onFocus={(e) => e.target.select()}

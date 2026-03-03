@@ -13,6 +13,7 @@ import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformServic
 import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServices";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
+import SalesEntryApi from "../../../redux/uniformService/SalesEntryService"
 
 const MODEL = "Purchase Bill";
 
@@ -90,6 +91,7 @@ export default function Form() {
           });
           setShowForm(false);
           dispatch(showroomStockApi.util.invalidateTags(["showroomStock"]));
+          dispatch(SalesEntryApi.util.invalidateTags(["SalesEntry"]))
         } catch (error) {
           Swal.fire({
             icon: "error",

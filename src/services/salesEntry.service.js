@@ -1,4 +1,8 @@
-import { CustomError, NoRecordFound } from "../configs/Responses.js";
+import {
+  CustomError,
+  ErrorResponse,
+  NoRecordFound,
+} from "../configs/Responses.js";
 import { getTableRecordWithId } from "../utils/helperQueries.js";
 import {
   getDateFromDateTime,
@@ -1209,6 +1213,33 @@ async function getSalesInvStyleDetail(req) {
     },
   });
 
+  const salesReturn = await prisma.salesReturn.findMany({
+    where: {
+      invNo: invNo,
+      storeId: parseInt(storeId),
+      branchId: parseInt(branchId),
+    },
+    include: {
+      salesReturnItems: {
+        select: {
+          barcode: true,
+          styleNo: true,
+          styleId: true,
+          sizeId: true,
+          colorId: true,
+          fabricId: true,
+          styleItemId: true,
+          returnQty: true,
+        },
+      },
+    },
+  });
+  const allReturnItems = salesReturn.flatMap(
+    (returnEntry) => returnEntry.salesReturnItems,
+  );
+  const returnItems =
+    allReturnItems.filter((item) => item.styleNo === styleNo) || [];
+
   // 1️⃣ First try fetching by styleNo
   let data = salesEntry.SalesEntryItems.filter(
     (item) => item.styleNo === styleNo,
@@ -1221,10 +1252,138 @@ async function getSalesInvStyleDetail(req) {
     };
   }
 
+  const finalData = data.map((item) => {
+    const returnedQty = returnItems
+      .filter(
+        (r) =>
+          r.styleId === item.styleId &&
+          r.sizeId === item.sizeId &&
+          r.styleItemId === item.styleItemId &&
+          r.colorId === item.colorId,
+      )
+      .reduce((sum, r) => sum + r.returnQty, 0);
+
+    return {
+      ...item,
+      alreadyReturnQty: returnedQty,
+      balanceQty: item.qty - returnedQty,
+    };
+  });
+
   return {
     statusCode: 0,
-    data: data,
+    data: finalData,
   };
+}
+async function getSalesInvBarcodeDetail(req) {
+  const { invNo, barcodeNo } = req.query;
+  if (!invNo || !barcodeNo) {
+    return {
+      statusCode: 400,
+      message: "Please Choose Required Fields",
+    };
+  }
+  const salesEntry = await prisma.salesEntry.findFirst({
+    where: {
+      docId: invNo,
+    },
+    include: {
+      SalesEntryItems: {
+        select: {
+          barcode: true,
+          styleNo: true,
+          styleId: true,
+          sizeId: true,
+          colorId: true,
+          fabricId: true,
+          styleItemId: true,
+          qty: true,
+          id: true,
+        },
+      },
+    },
+  });
+
+  const barcodeItem = await prisma.barcode.findUnique({
+    where: {
+      barcodeNo: barcodeNo,
+    },
+  });
+  if (!barcodeItem) {
+    return ErrorResponse("Barcode Number Not found");
+  }
+  const StockQty = await prisma.stockSummary.aggregate({
+    where: {
+      barcodeId: barcodeItem.id,
+    },
+    _sum: {
+      qty: true,
+    },
+  });
+
+  if (StockQty._sum.qty > 0) {
+    return ErrorResponse(
+      "This Barcode Number is Inward in another Branch Stock",
+    );
+  } else {
+    const data = salesEntry.SalesEntryItems.find(
+      (item) => item.id === barcodeItem.salesEntryItemsId,
+    );
+    if (!data) {
+      return ErrorResponse("Barcode Not Found in This Invoice");
+    }
+    const salesReturn = await prisma.salesReturn.findMany({
+      where: {
+        invNo: invNo,
+      },
+      include: {
+        salesReturnItems: {
+          select: {
+            barcode: true,
+            styleNo: true,
+            styleId: true,
+            sizeId: true,
+            colorId: true,
+            fabricId: true,
+            styleItemId: true,
+            returnQty: true,
+            barcodeId: true,
+            barcodeNo: true,
+          },
+        },
+      },
+    });
+    const allReturnItems = salesReturn.flatMap(
+      (returnEntry) => returnEntry.salesReturnItems,
+    );
+    const returnItems =
+      allReturnItems.filter((item) => item.barcodeNo === barcodeNo) || [];
+
+    const returnedQty = returnItems
+      .filter(
+        (r) =>
+          r.styleId === data.styleId &&
+          r.sizeId === data.sizeId &&
+          r.styleItemId === data.styleItemId &&
+          r.colorId === data.colorId,
+      )
+      .reduce((sum, r) => sum + r.returnQty, 0);
+
+    const finalData = {
+      ...data,
+      alreadyReturnQty: returnedQty,
+      balanceQty: data.qty - returnedQty,
+      qty: 1, // since barcode return always 1
+      returnQty: 1 - returnedQty,
+      barcodeNo: barcodeItem.barcodeNo,
+      barcodeId: barcodeItem.id,
+    };
+
+    return {
+      statusCode: 0,
+      data: finalData,
+    };
+  }
 }
 
 export {
@@ -1238,4 +1397,5 @@ export {
   getSalesInvDetail,
   getSalesDcDetail,
   getSalesInvStyleDetail,
+  getSalesInvBarcodeDetail,
 };
