@@ -455,7 +455,7 @@ export default function PurchaseBillItems({
                             });
                           }
                         }}
-                        disabled={readOnly || dcNo || row.styleItemId}
+                        disabled={readOnly || dcNo || row.styleItemId || isAdmin}
                       />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">

@@ -1137,6 +1137,15 @@ async function getSalesDcDetail(req) {
       },
     },
   });
+
+  const salesReturn = await prisma.salesReturn.findMany({
+    where: {
+      invNo: dcNo,
+    },
+    include: {
+      salesReturnItems: true,
+    },
+  });
   const salesEntryItemIds = data?.SalesEntryItems.map((item) => item.id) || [];
 
   const barcodes = await prisma.barcode.findMany({
@@ -1144,9 +1153,13 @@ async function getSalesDcDetail(req) {
       salesEntryItemsId: { in: salesEntryItemIds },
     },
   });
-
+  const returnItems = salesReturn.flatMap((sr) => sr.salesReturnItems);
+  const returnedBarcodeIds = new Set(returnItems.map((item) => item.barcodeId));
+  const filteredBarcodes = barcodes.filter(
+    (barcode) => !returnedBarcodeIds.has(barcode.id),
+  );
   const barcodeWithRate = await Promise.all(
-    barcodes.map(async (barcode) => {
+    filteredBarcodes.map(async (barcode) => {
       const style = await prisma.style.findUnique({
         where: {
           id: barcode.styleId,

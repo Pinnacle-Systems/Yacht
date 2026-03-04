@@ -1085,6 +1085,18 @@ async function getBarcodeDetail(req) {
     if (isDispatch < 1) {
       return ErrorResponse("This Barcode not dispatched in HO");
     }
+  } else {
+    const isReturn = await prisma.salesReturnItems.count({
+      where: {
+        barcodeNo: barcodeNo,
+      },
+    });
+    console.log(isReturn, "isReturn");
+    if (isReturn > 0) {
+      return ErrorResponse(
+        "This Barcode number is Return in Production Company",
+      );
+    }
   }
 
   return {
