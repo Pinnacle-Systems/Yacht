@@ -330,6 +330,9 @@ async function get(req) {
       },
       StockAdjustmentItems: true,
     },
+    orderBy: {
+      createdAt: "desc", // 🔥 Descending Order
+    },
   });
   totalCount = data.length;
   if (searchDocDate) {

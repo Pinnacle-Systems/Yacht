@@ -6,32 +6,26 @@ import React, { useState } from "react";
 import Swal from "sweetalert2";
 import "./swalStyles.css";
 
-
-
-
-
 export function getImageUrlPath(fileName) {
-  return `${IMAGE_UPLOAD_URL}${fileName}`
+  return `${IMAGE_UPLOAD_URL}${fileName}`;
 }
 export function findFromListFromMatchField(valueField, value, list, property) {
-  if (!list) return ""
-  let data = list.find(i => i?.[valueField] == value)
-  if (!data) return ""
-  return data[property]
+  if (!list) return "";
+  let data = list.find((i) => i?.[valueField] == value);
+  if (!data) return "";
+  return data[property];
 }
-
 
 export function findFromListFromSizeList(valueField, value, list, property) {
-  if (!list) return ""
-  let data = list.find(i => i?.[valueField] == value)
-  if (!data) return ""
-  return data[property]?.length
+  if (!list) return "";
+  let data = list.find((i) => i?.[valueField] == value);
+  if (!data) return "";
+  return data[property]?.length;
 }
 
-
 export function generateSessionId(length = 8) {
-  let result = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = "";
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   const charactersLength = characters.length;
   let counter = 0;
   while (counter < length) {
@@ -42,14 +36,23 @@ export function generateSessionId(length = 8) {
 }
 
 export function findDateInRange(fromDate, toDate, checkDate) {
-  if ((fromDate <= checkDate) && (checkDate <= toDate)) {
-    return true
+  if (fromDate <= checkDate && checkDate <= toDate) {
+    return true;
   }
   return false;
 }
 
-export function latestExpireDateWithinNDays(latesExpireDate = secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "latestActivePlanExpireDate"), n = 20) {
-  if (differenceInTimeToInDays(differenceInTime(new Date(latesExpireDate), new Date())) <= n) {
+export function latestExpireDateWithinNDays(
+  latesExpireDate = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "latestActivePlanExpireDate",
+  ),
+  n = 20,
+) {
+  if (
+    differenceInTimeToInDays(
+      differenceInTime(new Date(latesExpireDate), new Date()),
+    ) <= n
+  ) {
     return true;
   }
   return false;
@@ -63,7 +66,6 @@ export function differenceInTimeToInDays(differenceInTime) {
   return differenceInTime / (1000 * 3600 * 24);
 }
 
-
 export const getDateArray = function (start, end) {
   let arr = [];
   let dt = new Date(start);
@@ -73,10 +75,10 @@ export const getDateArray = function (start, end) {
     dt.setDate(dt.getDate() + 1);
   }
   return arr;
-}
+};
 
 // React paginate, page index starts with 0 ,
-//  actual page number starts with 1 so, input to 
+//  actual page number starts with 1 so, input to
 // react-paginate and valueFrom react-paginate converted
 
 export function pageNumberToReactPaginateIndex(pageNumber) {
@@ -88,27 +90,45 @@ export function reactPaginateIndexToPageNumber(pageIndex) {
 }
 
 export function viewBase64String(base64String) {
-  return "data:image/png;base64, " + base64String
+  return "data:image/png;base64, " + base64String;
 }
 
 export function hasPermission(permission) {
-  if (Boolean(secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "superAdmin"))) {
+  if (
+    Boolean(
+      secureLocalStorage.getItem(
+        sessionStorage.getItem("sessionId") + "superAdmin",
+      ),
+    )
+  ) {
     return true;
   }
-  return JSON.parse(secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userRole")).role.RoleOnPage.find(item => item.pageId === parseInt(secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "currentPage")))[permission]
+  return JSON.parse(
+    secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "userRole",
+    ),
+  ).role.RoleOnPage.find(
+    (item) =>
+      item.pageId ===
+      parseInt(
+        secureLocalStorage.getItem(
+          sessionStorage.getItem("sessionId") + "currentPage",
+        ),
+      ),
+  )[permission];
 }
 
 export function getYearShortCode(fromDate, toDate) {
-  return `${new Date(fromDate).getFullYear().toString().slice(2)}-${new Date(toDate).getFullYear().toString().slice(2)}`
+  return `${new Date(fromDate).getFullYear().toString().slice(2)}-${new Date(toDate).getFullYear().toString().slice(2)}`;
 }
 
 export const handleKeyDown = (event, callback) => {
   let charCode = String.fromCharCode(event.which).toLowerCase();
-  if ((event.ctrlKey || event.metaKey) && charCode === 's') {
+  if ((event.ctrlKey || event.metaKey) && charCode === "s") {
     event.preventDefault();
     callback();
   }
-}
+};
 
 export function calculateAge(dob) {
   var diff_ms = Date.now() - dob.getTime();
@@ -118,201 +138,242 @@ export function calculateAge(dob) {
 }
 
 export function isSameDay(d1, d2) {
-  return moment.utc(d1).format("YYYY-MM-DD") === moment.utc(d2).format("YYYY-MM-DD")
+  return (
+    moment.utc(d1).format("YYYY-MM-DD") === moment.utc(d2).format("YYYY-MM-DD")
+  );
 }
 
 // Convert number to words
 
-const arr = x => Array.from(x);
-const num = x => Number(x) || 0;
-const isEmpty = xs => xs.length === 0;
-const take = n => xs => xs.slice(0, n);
-const drop = n => xs => xs.slice(n);
-const reverse = xs => xs.slice(0).reverse();
-const comp = f => g => x => f(g(x));
-const not = x => !x;
-const chunk = n => xs =>
+const arr = (x) => Array.from(x);
+const num = (x) => Number(x) || 0;
+const isEmpty = (xs) => xs.length === 0;
+const take = (n) => (xs) => xs.slice(0, n);
+const drop = (n) => (xs) => xs.slice(n);
+const reverse = (xs) => xs.slice(0).reverse();
+const comp = (f) => (g) => (x) => f(g(x));
+const not = (x) => !x;
+const chunk = (n) => (xs) =>
   isEmpty(xs) ? [] : [take(n)(xs), ...chunk(n)(drop(n)(xs))];
 
 // numToWords :: (Number a, String a) => a -> String
-export const numToWords = n => {
-
+export const numToWords = (n) => {
   let a = [
-    '', 'one', 'two', 'three', 'four',
-    'five', 'six', 'seven', 'eight', 'nine',
-    'ten', 'eleven', 'twelve', 'thirteen', 'fourteen',
-    'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'
+    "",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "eleven",
+    "twelve",
+    "thirteen",
+    "fourteen",
+    "fifteen",
+    "sixteen",
+    "seventeen",
+    "eighteen",
+    "nineteen",
   ];
 
   let b = [
-    '', '', 'twenty', 'thirty', 'forty',
-    'fifty', 'sixty', 'seventy', 'eighty', 'ninety'
+    "",
+    "",
+    "twenty",
+    "thirty",
+    "forty",
+    "fifty",
+    "sixty",
+    "seventy",
+    "eighty",
+    "ninety",
   ];
 
   let g = [
-    '', 'thousand', 'million', 'billion', 'trillion', 'quadrillion',
-    'quintillion', 'sextillion', 'septillion', 'octillion', 'nonillion'
+    "",
+    "thousand",
+    "million",
+    "billion",
+    "trillion",
+    "quadrillion",
+    "quintillion",
+    "sextillion",
+    "septillion",
+    "octillion",
+    "nonillion",
   ];
 
   // this part is really nasty still
   // it might edit this again later to show how Monoids could fix this up
   let makeGroup = ([ones, tens, huns]) => {
     return [
-      num(huns) === 0 ? '' : a[huns] + ' hundred ',
-      num(ones) === 0 ? b[tens] : b[tens] && b[tens] + '-' || '',
-      a[tens + ones] || a[ones]
-    ].join('');
+      num(huns) === 0 ? "" : a[huns] + " hundred ",
+      num(ones) === 0 ? b[tens] : (b[tens] && b[tens] + "-") || "",
+      a[tens + ones] || a[ones],
+    ].join("");
   };
 
-  let thousand = (group, i) => group === '' ? group : `${group} ${g[i]}`;
+  let thousand = (group, i) => (group === "" ? group : `${group} ${g[i]}`);
 
-  if (typeof n === 'number')
-    return numToWords(String(n));
-  else if (n === '0')
-    return 'zero';
+  if (typeof n === "number") return numToWords(String(n));
+  else if (n === "0") return "zero";
   else
     return comp(chunk(3))(reverse)(arr(n))
       .map(makeGroup)
       .map(thousand)
       .filter(comp(not)(isEmpty))
       .reverse()
-      .join(' ');
+      .join(" ");
 };
 
-
 export function titleCase(str) {
-  str = str.toLowerCase().split(' ');
+  str = str.toLowerCase().split(" ");
   for (var i = 0; i < str.length; i++) {
     str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1);
   }
-  return str.join(' ');
+  return str.join(" ");
 }
 
-export const getDateFromDateTime = (dateTime) => moment.utc(dateTime).format("DD-MM-YYYY")
-export const getDateFromDateTimeToDisplay = (dateTime) => moment.utc(dateTime).format("DD-MM-YYYY")
-
+export const getDateFromDateTime = (dateTime) =>
+  moment.utc(dateTime).format("DD-MM-YYYY");
+export const getDateFromDateTimeToDisplay = (dateTime) =>
+  moment.utc(dateTime).format("DD-MM-YYYY");
 
 export function findFromList(id, list, property) {
-
-
-
-
-  if (!list) return ""
+  if (!list) return "";
   // let data = list?.filter(j => j.active).find(i => parseInt(i.id) === parseInt(id))
-  let data = list?.find(i => parseInt(i.id) === parseInt(id))
-  if (!data) return ""
+  let data = list?.find((i) => parseInt(i.id) === parseInt(id));
+  if (!data) return "";
 
-
-
-  return data[property]
+  return data[property];
 }
 export function findFromListReturnsItem(id, list) {
-  if (!list) return ""
-  let data = list.find(i => parseInt(i.id) === parseInt(id))
-  if (!data) return ""
-  return data
+  if (!list) return "";
+  let data = list.find((i) => parseInt(i.id) === parseInt(id));
+  if (!data) return "";
+  return data;
 }
 
 export function isBetweenRange(startValue, endValue, value) {
-  return (parseFloat(startValue) <= parseFloat(value)) && (parseFloat(value) <= parseFloat(endValue))
+  return (
+    parseFloat(startValue) <= parseFloat(value) &&
+    parseFloat(value) <= parseFloat(endValue)
+  );
 }
 
 export function substract(num1, num2) {
   let n1 = parseFloat(num1) * 1000;
   let n2 = parseFloat(num2) * 1000;
-  let result = (n1 - n2) / 1000
+  let result = (n1 - n2) / 1000;
   return result;
 }
 
 export function getAllowableReturnQty(inwardedQty, returnedQty, stockQty) {
   let balanceReturnQty = parseFloat(inwardedQty) + parseFloat(returnedQty);
-  return (balanceReturnQty < parseFloat(stockQty)) ? balanceReturnQty : parseFloat(stockQty)
+  return balanceReturnQty < parseFloat(stockQty)
+    ? balanceReturnQty
+    : parseFloat(stockQty);
 }
 
 export function priceWithTax(price, tax) {
-  if (!price) return 0
-  if (!tax) return parseFloat(price)
-  let taxAmount = (parseFloat(price) / 100) * parseFloat(tax)
-  return parseFloat(price) + taxAmount
+  if (!price) return 0;
+  if (!tax) return parseFloat(price);
+  let taxAmount = (parseFloat(price) / 100) * parseFloat(tax);
+  return parseFloat(price) + taxAmount;
 }
 
 export function getItemFullNameFromShortCode(shortCode) {
   let fullForm = "";
   switch (shortCode) {
     case "GY":
-      fullForm = "GreyYarn"
+      fullForm = "GreyYarn";
       break;
     case "GF":
-      fullForm = "GreyFabric"
+      fullForm = "GreyFabric";
       break;
     case "DY":
-      fullForm = "DyedYarn"
+      fullForm = "DyedYarn";
       break;
     case "DF":
-      fullForm = "DyedFabric"
+      fullForm = "DyedFabric";
       break;
     default:
       break;
   }
-  return fullForm
+  return fullForm;
 }
 
 export function filterGodown(store, itemShortCode) {
   if (itemShortCode.includes("Y")) {
-    return store.isYarn
+    return store.isYarn;
   } else if (itemShortCode.includes("F")) {
-    return store.isFabric
+    return store.isFabric;
   }
 }
 
 export const params = {
   companyId: secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
+    sessionStorage.getItem("sessionId") + "userCompanyId",
   ),
   branchId: secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "currentBranchId"
+    sessionStorage.getItem("sessionId") + "currentBranchId",
   ),
   userId: secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userId"
+    sessionStorage.getItem("sessionId") + "userId",
   ),
-  finYearId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + 'currentFinYear')
+  finYearId: secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "currentFinYear",
+  ),
 };
 
 export const getCommonParams = () => ({
   companyId: secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
+    sessionStorage.getItem("sessionId") + "userCompanyId",
   ),
   branchId: secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "currentBranchId"
+    sessionStorage.getItem("sessionId") + "currentBranchId",
   ),
   userId: secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userId"
+    sessionStorage.getItem("sessionId") + "userId",
   ),
-  finYearId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + 'currentFinYear')
-})
+  finYearId: secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "currentFinYear",
+  ),
+});
 
 export function convertSpaceToUnderScore(str) {
-
-  return str.toLowerCase().trim().split(' ').join('_');
+  return str.toLowerCase().trim().split(" ").join("_");
 }
 
-  export const isRowEmpty = (row) => {
-    return Object.values(row).every(
-      (v) => v === "" || v === null || v === undefined || v === 0
-    );
-  };
+export const isRowEmpty = (row) => {
+  return Object.values(row).every(
+    (v) => v === "" || v === null || v === undefined || v === 0,
+  );
+};
 
-export function isGridDatasValid(datas, isRequiredAllData, mandatoryFields = []) {
-
+export function isGridDatasValid(
+  datas,
+  isRequiredAllData,
+  mandatoryFields = [],
+) {
   if (isRequiredAllData) {
-    let gridDatasValid = datas.every(obj =>
-      Object.values(obj).every(value => value !== "" && value !== null && value !== 0))
-    return gridDatasValid
-  }
-  else {
-    let gridDatasValid = datas.every(obj =>
-      mandatoryFields.every(field => (obj[field]) && (obj[field] !== "") && (obj[field] !== null)
-      ))
+    let gridDatasValid = datas.every((obj) =>
+      Object.values(obj).every(
+        (value) => value !== "" && value !== null && value !== 0,
+      ),
+    );
+    return gridDatasValid;
+  } else {
+    let gridDatasValid = datas.every((obj) =>
+      mandatoryFields.every(
+        (field) => obj[field] && obj[field] !== "" && obj[field] !== null,
+      ),
+    );
     return gridDatasValid;
   }
 }
@@ -325,11 +386,16 @@ export const groupBy = function (xs, key) {
 };
 
 export function sumArray(arr, property) {
-  return arr.reduce((total, current) => parseFloat(total) + parseFloat(current[property]), 0)
+  return arr.reduce(
+    (total, current) => parseFloat(total) + parseFloat(current[property]),
+    0,
+  );
 }
 
 export function getBalanceBillQty(inwardQty, returnQty, alreadyBilledQty) {
-  return substract(substract(inwardQty, returnQty), alreadyBilledQty).toFixed(3)
+  return substract(substract(inwardQty, returnQty), alreadyBilledQty).toFixed(
+    3,
+  );
 }
 
 export function printDiv(divName) {
@@ -341,18 +407,21 @@ export function printDiv(divName) {
 }
 
 export function getDiscountAmount(discountType, discountValue, grossAmount) {
-  return discountType ? ((discountType === 'Flat') ? discountValue : grossAmount / 100 * parseFloat(discountValue)) : 0
+  return discountType
+    ? discountType === "Flat"
+      ? discountValue
+      : (grossAmount / 100) * parseFloat(discountValue)
+    : 0;
 }
 
 export function getPriceColumnFromPriceRange(priceRange) {
   const i = {
-    ECONOMY: 'lowPrice',
-    STANDARD: 'mediumPrice',
-    PREMIER: 'highPrice',
-  }
-  return i[priceRange]
+    ECONOMY: "lowPrice",
+    STANDARD: "mediumPrice",
+    PREMIER: "highPrice",
+  };
+  return i[priceRange];
 }
-
 
 export function renameFile(originalFile) {
   const file = new File([originalFile], Date.now() + originalFile.name, {
@@ -362,10 +431,9 @@ export function renameFile(originalFile) {
   return file;
 }
 
-
 export async function classListData(data) {
   let classData = data;
-  const order = { "PLAYSCHOOL": 0, "PRE-KG": 1, "LKG": 2, "UKG": 3 };
+  const order = { PLAYSCHOOL: 0, "PRE-KG": 1, LKG: 2, UKG: 3 };
 
   classData.sort((a, b) => {
     const extractParts = (className) => {
@@ -373,7 +441,11 @@ export async function classListData(data) {
       if (!match) return [Infinity, "", ""];
 
       let [_, prefix, num, suffix] = match;
-      num = num ? parseInt(num, 10) : (order[prefix] !== undefined ? order[prefix] : Infinity);
+      num = num
+        ? parseInt(num, 10)
+        : order[prefix] !== undefined
+          ? order[prefix]
+          : Infinity;
 
       return [order[prefix] !== undefined ? order[prefix] : num, num, suffix];
     };
@@ -387,16 +459,18 @@ export async function classListData(data) {
   });
 }
 
+export function handleMailSend(
+  blob,
+  mailAddress,
+  subject,
+  fileName,
+  logo,
+  heading,
+) {
+  const path = require("path");
 
-
-
-export function handleMailSend(blob, mailAddress, subject, fileName, logo, heading) {
-
-
-  const path = require('path');
-
-  let blobData = new Blob([blob], { type: 'application/pdf' });
-  let file = new File([blobData], 'document.pdf', { type: 'application/pdf' });
+  let blobData = new Blob([blob], { type: "application/pdf" });
+  let file = new File([blobData], "document.pdf", { type: "application/pdf" });
   let form = new FormData();
   form.append("file", file);
   form.append("mailAddress", mailAddress);
@@ -408,17 +482,15 @@ export function handleMailSend(blob, mailAddress, subject, fileName, logo, headi
 
   fetch(`${process.env.REACT_APP_SERVER_URL}sendMail`, {
     method: "POST",
-    body: form
-  }).then(res => {
-
-    toast.success("Mail Send SuccessFully");
-  }).catch(err => {
-    toast.error("Please Resend !")
-  });
+    body: form,
+  })
+    .then((res) => {
+      toast.success("Mail Send SuccessFully");
+    })
+    .catch((err) => {
+      toast.error("Please Resend !");
+    });
 }
-
-
-
 
 export function handleMailSendWithMultipleAttachments(
   FromEmailAddress,
@@ -431,11 +503,14 @@ export function handleMailSendWithMultipleAttachments(
   ccList,
   setActive,
   setForm,
-  setLoading
+  setLoading,
 ) {
   const normalizeEmails = (emails) => {
     if (Array.isArray(emails)) return emails;
-    return emails.split(/[,;]+/).map((e) => e.trim()).filter((e) => e);
+    return emails
+      .split(/[,;]+/)
+      .map((e) => e.trim())
+      .filter((e) => e);
   };
 
   const toMailIds = normalizeEmails(toEmail);
@@ -444,7 +519,8 @@ export function handleMailSendWithMultipleAttachments(
   const joinToMailIds = toMailIds.join(", ");
   const joinCCMailIds = ccMailIds.join(", ");
 
-  const receivedFiles = attachments?.map((j) => ({ fileName: j.filePath })) || [];
+  const receivedFiles =
+    attachments?.map((j) => ({ fileName: j.filePath })) || [];
 
   let form = new FormData();
 
@@ -486,9 +562,9 @@ export function handleMailSendWithMultipleAttachments(
           Swal.showLoading();
         },
       }).then(() => {
-        setForm(false)
+        setForm(false);
         setActive("order");
-        setLoading(false)
+        setLoading(false);
       });
     })
     .catch((err) => {
@@ -502,17 +578,19 @@ export function handleMailSendWithMultipleAttachments(
           popup: "payment-swal-popup",
         },
       }).then(() => {
-        setForm(false)
+        setForm(false);
         setActive("order");
-        setLoading(false)
+        setLoading(false);
       });
     });
 }
 
-
-
-
-export default function RightClickMenu({ data, setData, rowKey = "id", actions }) {
+export default function RightClickMenu({
+  data,
+  setData,
+  rowKey = "id",
+  actions,
+}) {
   const [contextMenu, setContextMenu] = useState(null);
 
   const handleRightClick = (event, rowIndex) => {
@@ -539,7 +617,9 @@ export default function RightClickMenu({ data, setData, rowKey = "id", actions }
     <>
       {/* Render children with right-click support */}
       {React.Children.map(actions, (child) =>
-        React.cloneElement(child, { onContextMenu: (e) => handleRightClick(e, child.props.index) })
+        React.cloneElement(child, {
+          onContextMenu: (e) => handleRightClick(e, child.props.index),
+        }),
       )}
 
       {/* Context Menu */}
@@ -573,7 +653,7 @@ export default function RightClickMenu({ data, setData, rowKey = "id", actions }
                 >
                   {action.label}
                 </button>
-              ) : null
+              ) : null,
             )}
           </div>
         </div>
@@ -583,15 +663,16 @@ export default function RightClickMenu({ data, setData, rowKey = "id", actions }
 }
 
 export function formatCamelCase(str) {
-      if (!str) return "";
-      return str
-        .replace(/([a-z])([A-Z])/g, "$1 $2") // insert space before capital letters
-        .toUpperCase();
-    }
+  if (!str) return "";
+  return str
+    .replace(/([a-z])([A-Z])/g, "$1 $2") // insert space before capital letters
+    .toUpperCase();
+}
 
-
-
-
-
-
-
+export const getTimeFromDateTime = (dateTime) => {
+  return new Date(dateTime).toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};

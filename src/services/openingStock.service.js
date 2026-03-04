@@ -186,6 +186,9 @@ async function get(req) {
       },
       OpeningStockItems: true,
     },
+    orderBy: {
+      createdAt: "desc", // 🔥 Descending Order
+    },
   });
   totalCount = data.length;
   if (searchDocDate) {

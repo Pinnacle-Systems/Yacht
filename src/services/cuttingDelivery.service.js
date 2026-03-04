@@ -15,7 +15,7 @@ async function getNextDocId(
   endTime,
   saveType,
   docId,
-  isUpdate
+  isUpdate,
 ) {
   // Case 1: Draft save
   if (saveType) {
@@ -34,7 +34,7 @@ async function getNextDocId(
     });
     const branchObj = await getTableRecordWithId(branchId, "branch");
     let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
+      new Date(),
     )}/CPD/1`;
 
     if (lastObject) {
@@ -68,7 +68,7 @@ async function getNextDocId(
 
     const branchObj = await getTableRecordWithId(branchId, "branch");
     let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
+      new Date(),
     )}/CPD/1`;
     if (lastObject) {
       newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/CPD/${
@@ -87,7 +87,7 @@ function manualFilterSearchData(searchDelDate, searchDueDate, data) {
         : true) &&
       (searchDueDate
         ? String(getDateFromDateTime(item.dueDate)).includes(searchDueDate)
-        : true)
+        : true),
   );
 }
 
@@ -112,7 +112,7 @@ async function get(req) {
     branchId,
     shortCode,
     finYearDate?.startDateStartTime,
-    finYearDate?.endDateEndTime
+    finYearDate?.endDateEndTime,
   );
   let data;
   let totalCount;
@@ -160,17 +160,20 @@ async function get(req) {
         },
       },
     },
+    orderBy: {
+      createdAt: "desc", // 🔥 Descending Order
+    },
   });
   totalCount = data.length;
   if (searchDocDate) {
     data = data?.filter((item) =>
-      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate)
+      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate),
     );
   }
   if (pagination) {
     data = data.slice(
       (pageNumber - 1) * parseInt(dataPerPage),
-      pageNumber * dataPerPage
+      pageNumber * dataPerPage,
     );
   }
 
@@ -311,12 +314,12 @@ async function getOne(id) {
         },
       });
       const currentProcess = processGroupList.find(
-        (item) => item.processId === parseInt(data.fromProcessId)
+        (item) => item.processId === parseInt(data.fromProcessId),
       );
       let nextProcessId;
       if (currentProcess) {
         const nextProcess = processGroupList.find(
-          (item) => item.seqNo === currentProcess.seqNo + 1
+          (item) => item.seqNo === currentProcess.seqNo + 1,
         );
         nextProcessId = nextProcess?.processId;
       }
@@ -340,7 +343,7 @@ async function getOne(id) {
             ...sz,
             minQty: usedQty._sum.issueQty,
           };
-        })
+        }),
       );
       return {
         ...item,
@@ -348,7 +351,7 @@ async function getOne(id) {
         stockQty: usedQty,
         sizeDetails: sizeDetailsWithStkQty,
       };
-    })
+    }),
   );
   return {
     statusCode: 0,
@@ -363,7 +366,7 @@ async function getOne(id) {
 function findRemovedItems(dataFound, cuttingDeliveryItems) {
   let removedItems = dataFound.cuttingDeliveryItems.filter((oldItem) => {
     let result = cuttingDeliveryItems.find(
-      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id)
+      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id),
     );
     if (result) return false;
     return true;
@@ -393,7 +396,7 @@ async function create(body) {
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(
         finYearDate?.startDateStartTime,
-        finYearDate?.endDateEndTime
+        finYearDate?.endDateEndTime,
       )
     : "";
   let newDocId = await getNextDocId(
@@ -401,7 +404,7 @@ async function create(body) {
     shortCode,
     finYearDate?.startDateStartTime,
     finYearDate?.endDateEndTime,
-    draftSave
+    draftSave,
   );
   let data;
   const exist = await prisma.cuttingDelivery.findFirst({
@@ -450,7 +453,7 @@ async function create(body) {
       userId,
       branchId,
       storeId,
-      fromProcessId
+      fromProcessId,
     );
   });
   return { statusCode: 0, data };
@@ -463,7 +466,7 @@ async function createCuttingDeliveryItems(
   userId,
   branchId,
   storeId,
-  fromProcessId
+  fromProcessId,
 ) {
   const promises = cuttingDeliveryItems.map(async (deliveryDetail, index) => {
     const orderQty = deliveryDetail?.orderQty
@@ -674,7 +677,7 @@ async function update(id, body) {
       userId,
       branchId,
       fromProcessId,
-      storeId
+      storeId,
     );
   });
   return { statusCode: 0, data };
@@ -687,7 +690,7 @@ async function updateCuttingDeliveryItems(
   userId,
   branchId,
   fromProcessId,
-  storeId
+  storeId,
 ) {
   const promises = cuttingDeliveryItems.map(async (deliveryDetail) => {
     const orderQty = deliveryDetail?.orderQty

@@ -1,7 +1,10 @@
 import { useGetSalesBillReportQuery } from "../../../redux/services/SalesBillService";
 import { useState } from "react";
 import secureLocalStorage from "react-secure-storage";
-import { getDateFromDateTimeToDisplay } from "../../../Utils/helper";
+import {
+  getDateFromDateTimeToDisplay,
+  getTimeFromDateTime,
+} from "../../../Utils/helper";
 import { Loader } from "../../../Basic/components";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { ReusableInput } from "../../../Utils/CommonInput";
@@ -22,7 +25,7 @@ export default function Form() {
   const [fromDate, setFromDate] = useState(today);
   const [toDate, setToDate] = useState(today);
   const [pdfOpen, setPdfOpen] = useState(false);
-
+  const [viewType, setViewType] = useState("Normal");
   const branchId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "currentBranchId",
   );
@@ -73,74 +76,103 @@ export default function Form() {
           {Math.min(currentPage * dataPerPage, allData?.totalCount || 0)} of{" "}
           {allData?.totalCount || 0} entries
         </div>
-        <div className="flex gap-1">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`px-3 py-1 rounded-md ${
-              currentPage === 1
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : "bg-white text-gray-600 hover:bg-gray-100"
-            }`}
-          >
-            <FaChevronLeft className="inline" />
-          </button>
+        <div className="flex gap-4">
+          <div className="flex items-center gap-6">
+            {/* Normal */}
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="viewType"
+                value="Normal"
+                checked={viewType === "Normal"}
+                onChange={(e) => setViewType(e.target.value)}
+                className="accent-blue-600"
+              />
+              <span className="font-medium">Normal View</span>
+            </label>
 
-          {Array?.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            let pageNum;
-            if (totalPages <= 5) {
-              pageNum = i + 1;
-            } else if (currentPage <= 3) {
-              pageNum = i + 1;
-            } else if (currentPage >= totalPages - 2) {
-              pageNum = totalPages - 4 + i;
-            } else {
-              pageNum = currentPage - 2 + i;
-            }
+            {/* Detail */}
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="viewType"
+                value="Detail"
+                checked={viewType === "Detail"}
+                onChange={(e) => setViewType(e.target.value)}
+                className="accent-blue-600"
+              />
+              <span className="font-medium">Detail View</span>
+            </label>
+          </div>
+          <div className="flex gap-1">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 rounded-md ${
+                currentPage === 1
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <FaChevronLeft className="inline" />
+            </button>
 
-            return (
+            {Array?.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => handlePageChange(pageNum)}
+                  className={`px-3 py-1 rounded-md ${
+                    currentPage === pageNum
+                      ? "bg-indigo-800 text-white"
+                      : "bg-white text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+
+            {totalPages > 5 && currentPage < totalPages - 2 && (
+              <span className="px-3 py-1">...</span>
+            )}
+
+            {totalPages > 5 && currentPage < totalPages - 2 && (
               <button
-                key={pageNum}
-                onClick={() => handlePageChange(pageNum)}
+                onClick={() => handlePageChange(totalPages)}
                 className={`px-3 py-1 rounded-md ${
-                  currentPage === pageNum
+                  currentPage === totalPages
                     ? "bg-indigo-800 text-white"
                     : "bg-white text-gray-600 hover:bg-gray-100"
                 }`}
               >
-                {pageNum}
+                {totalPages}
               </button>
-            );
-          })}
+            )}
 
-          {totalPages > 5 && currentPage < totalPages - 2 && (
-            <span className="px-3 py-1">...</span>
-          )}
-
-          {totalPages > 5 && currentPage < totalPages - 2 && (
             <button
-              onClick={() => handlePageChange(totalPages)}
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
               className={`px-3 py-1 rounded-md ${
                 currentPage === totalPages
-                  ? "bg-indigo-800 text-white"
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                   : "bg-white text-gray-600 hover:bg-gray-100"
               }`}
             >
-              {totalPages}
+              <FaChevronRight className="inline" />
             </button>
-          )}
-
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded-md ${
-              currentPage === totalPages
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : "bg-white text-gray-600 hover:bg-gray-100"
-            }`}
-          >
-            <FaChevronRight className="inline" />
-          </button>
+          </div>
         </div>
       </div>
     );
@@ -342,6 +374,13 @@ export default function Form() {
     URL.revokeObjectURL(url);
   };
 
+  const allItems = allDataDetail?.flatmap((item) => item.salesItem || []) || [];
+
+  const totalQty = allItems?.reduce(
+    (sum, item) => sum + (item.qty || item.exchangeQty || 0),
+    0,
+  );
+
   return (
     <>
       <Modal
@@ -350,11 +389,11 @@ export default function Form() {
         widthClass={"w-[90%] h-[90%]"}
       >
         <PDFViewer style={tw("w-full h-full")}>
-          <PDF allData={allData || []} singleData={singleData}/>
+          <PDF allData={allData || []} singleData={singleData} />
         </PDFViewer>
       </Modal>
-      <div className="p-1 bg-[#F1F1F0] h-[85%]">
-        <div className="flex flex-col sm:flex-row justify-between bg-white  px-1  items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
+      <div className="py-1 bg-[#F1F1F0] h-[85%]">
+        <div className="flex flex-col sm:flex-row justify-between bg-white  px-1  items-center mb-2 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
           <h1 className="text-xl font-semibold text-gray-800">
             Sales Bill Report
           </h1>
@@ -410,30 +449,53 @@ export default function Form() {
                           <div className="">S No</div>
                         </th>
 
-                        <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
+                        <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-36">
                           <div>Sales No</div>
                         </th>
-                        <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
+                        <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-28">
                           <div>Sales Date</div>
                         </th>
-                        {/* <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                    <div>Payment Type</div>
-                  </th> */}
-                        <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                        <th className="w-24  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                          <div>Time</div>
+                        </th>
+                        <th className="w-64  px-3   font-medium text-[13px] text-gray-900  text-center ">
                           <div>Customer</div>
                         </th>
-                        <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                          <div>Cash Amt</div>
-                        </th>
-                        <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                          <div>Card Amt</div>
-                        </th>
-                        <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                          <div>UPI Amt</div>
-                        </th>
-                        <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                          <div>Net Amt</div>
-                        </th>
+                        {viewType === "Normal" && (
+                          <>
+                            <th className="w-28  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                              <div>Cash Amt</div>
+                            </th>
+                            <th className="w-28  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                              <div>Card Amt</div>
+                            </th>
+                            <th className="w-28  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                              <div>UPI Amt</div>
+                            </th>
+                            <th className="w-40  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                              <div>Net Amt</div>
+                            </th>
+                          </>
+                        )}
+                        {viewType === "Detail" && (
+                          <>
+                            <th className="w-32  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                              <div>Barcode</div>
+                            </th>
+                            <th className="w-64  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                              <div>Item Name</div>
+                            </th>
+                            <th className="w-20  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                              <div>Size</div>
+                            </th>
+                            <th className="w-20  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                              <div>Unit</div>
+                            </th>
+                            <th className="w-20  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                              <div>Qty</div>
+                            </th>
+                          </>
+                        )}
                       </tr>
                     </thead>
                     {isLoadingIndicator ? (
@@ -446,81 +508,152 @@ export default function Form() {
                       </tbody>
                     ) : (
                       <tbody className="border-2">
-                        {currentItems.map((dataObj, index) => (
-                          <tr
-                            tabIndex={0}
-                            key={dataObj.id}
-                            className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${
-                              index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                            }`}
-                          >
-                            <td className="text-center ">{index + 1}</td>
+                        {currentItems.map((dataObj, index) => {
+                          const salesItems = dataObj?.salesItem || [];
 
-                            <td className="py-1.5 text-left px-4">
-                              {dataObj.docId}{" "}
-                            </td>
+                          // 🔹 NORMAL VIEW (unchanged)
+                          if (viewType === "Normal") {
+                            return (
+                              <tr
+                                key={dataObj.id}
+                                className={`hover:bg-gray-50 border-b border-gray-200 text-[12px] ${
+                                  index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                                } ${
+                                  dataObj?.salesType === "Exchange"
+                                    ? "text-red-500 font-semibold"
+                                    : "text-black"
+                                }`}
+                              >
+                                <td className="text-center">{index + 1}</td>
+                                <td className="py-1.5 px-4">{dataObj.docId}</td>
+                                <td className="py-1.5 px-4">
+                                  {dataObj?.docDate
+                                    ? getDateFromDateTimeToDisplay(
+                                        dataObj.docDate,
+                                      )
+                                    : ""}
+                                </td>
+                                <td className="py-1.5 px-4">
+                                  {dataObj?.createdAt
+                                    ? getTimeFromDateTime(dataObj.createdAt)
+                                    : ""}
+                                </td>
+                                <td className="py-1.5 px-4">
+                                  {dataObj?.customerName} - {dataObj?.mobileNo}
+                                </td>
 
-                            <td className="py-1.5 text-left px-4">
-                              {dataObj?.docDate
-                                ? getDateFromDateTimeToDisplay(dataObj.docDate)
-                                : ""}
-                            </td>
-                            {/* <td className="py-1.5 text-left px-4">
-                          {" "}
-                          {dataObj?.paymentType}
-                        </td> */}
+                                <td className="py-1.5 text-right px-10">
+                                  {Number(dataObj?.cashAmount || 0).toFixed(2)}
+                                </td>
+                                <td className="py-1.5 text-right px-10">
+                                  {Number(dataObj?.cardAmount || 0).toFixed(2)}
+                                </td>
+                                <td className="py-1.5 text-right px-10">
+                                  {Number(dataObj?.upiAmount || 0).toFixed(2)}
+                                </td>
+                                <td className="py-1.5 text-right px-10">
+                                  {(
+                                    Number(dataObj?.cashAmount || 0) +
+                                    Number(dataObj?.cardAmount || 0) +
+                                    Number(dataObj?.upiAmount || 0)
+                                  ).toFixed(2)}
+                                </td>
+                              </tr>
+                            );
+                          }
 
-                            <td className="py-1.5 text-left px-4">
-                              {" "}
-                              {dataObj?.customerName}
-                            </td>
-                            <td className="py-1.5 text-right px-10">
-                              {" "}
-                              {dataObj?.cashAmount
-                                ? Number(dataObj?.cashAmount).toFixed(2)
-                                : "-"}
-                            </td>
-                            <td className="py-1.5 text-right px-10">
-                              {" "}
-                              {dataObj?.cardAmount
-                                ? Number(dataObj?.cardAmount).toFixed(2)
-                                : "-"}
-                            </td>
-                            <td className="py-1.5 text-right px-10">
-                              {" "}
-                              {dataObj?.upiAmount
-                                ? Number(dataObj?.upiAmount).toFixed(2)
-                                : "-"}
-                            </td>
-                            <td className="py-1.5 text-right px-10">
-                              {" "}
-                              {(
-                                Number(dataObj?.cashAmount) +
-                                Number(dataObj?.cardAmount) +
-                                Number(dataObj?.upiAmount)
-                              ).toFixed(2)}
-                            </td>
-                          </tr>
-                        ))}
+                          // 🔹 DETAIL VIEW
+                          return salesItems.map((item, itemIndex) => (
+                            <tr
+                              key={`${dataObj.id}-${itemIndex}`}
+                              className={`hover:bg-gray-50 border-b border-gray-200 text-[12px] ${
+                                index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                              } ${
+                                dataObj?.salesType === "Exchange"
+                                  ? "text-red-500 font-semibold"
+                                  : "text-black"
+                              }`}
+                            >
+                              {/* Show Bill Data Only First Item Row */}
+                              <td className="text-center">
+                                {itemIndex === 0 ? index + 1 : ""}
+                              </td>
+
+                              <td className="py-1.5 px-4">
+                                {itemIndex === 0 ? dataObj.docId : ""}
+                              </td>
+
+                              <td className="py-1.5 px-4">
+                                {itemIndex === 0
+                                  ? getDateFromDateTimeToDisplay(
+                                      dataObj.docDate,
+                                    )
+                                  : ""}
+                              </td>
+
+                              <td className="py-1.5 px-4">
+                                {itemIndex === 0
+                                  ? getTimeFromDateTime(dataObj.createdAt)
+                                  : ""}
+                              </td>
+
+                              <td className="py-1.5 px-4">
+                                {itemIndex === 0
+                                  ? `${dataObj.customerName} - ${dataObj.mobileNo}`
+                                  : ""}
+                              </td>
+                              <td className="py-1.5 px-4 ">
+                                {item?.barcodeNo}
+                              </td>
+                              {/* 🔹 Item Columns */}
+                              <td className="py-1.5 px-4 ">
+                                {item?.StyleItem?.name}
+                              </td>
+                              <td className="py-1.5 px-4 text-center">
+                                {item?.Size?.name}
+                              </td>
+                              <td className="py-1.5 px-4 text-center">
+                                {item?.Uom?.name}
+                              </td>
+                              <td className="py-1.5 px-4 text-right">
+                                {dataObj?.salesType === "General"
+                                  ? item?.qty
+                                  : item?.exchangeQty}
+                              </td>
+                            </tr>
+                          ));
+                        })}
                       </tbody>
                     )}
                     <tfoot className="border-2">
                       <tr className="bg-gray-100 font-medium text-[14px]  text-gray-900 border-b   border-gray-200">
-                        <td colSpan={4} className="text-right py-1.5">
+                        <td
+                          colSpan={viewType === "Normal" ? 5 : 9}
+                          className="text-right py-1.5 px-1"
+                        >
                           Total
                         </td>
-                        <td className="py-1.5 px-10 text-right">
-                          {Number(allData?.totalCashAmount).toFixed(2)}
-                        </td>
-                        <td className="py-1.5 px-10 text-right">
-                          {Number(allData?.totalCardAmount).toFixed(2)}
-                        </td>
-                        <td className="py-1.5 px-10 text-right">
-                          {Number(allData?.totalUpiAmount).toFixed(2)}
-                        </td>
-                        <td className="py-1.5 px-10 text-right">
-                          {Number(allData?.totalNetAmount).toFixed(2)}
-                        </td>
+                        {viewType === "Normal" && (
+                          <>
+                            <td className="py-1.5 px-10 text-right">
+                              {Number(allData?.totalCashAmount).toFixed(2)}
+                            </td>
+                            <td className="py-1.5 px-10 text-right">
+                              {Number(allData?.totalCardAmount).toFixed(2)}
+                            </td>
+                            <td className="py-1.5 px-10 text-right">
+                              {Number(allData?.totalUpiAmount).toFixed(2)}
+                            </td>
+                            <td className="py-1.5 px-10 text-right">
+                              {Number(allData?.totalNetAmount).toFixed(2)}
+                            </td>
+                          </>
+                        )}
+                        {viewType === "Detail" && (
+                          <td className="py-1.5 px-10 text-right">
+                            {totalQty}
+                          </td>
+                        )}
                       </tr>
                     </tfoot>
                   </table>

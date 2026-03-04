@@ -193,6 +193,22 @@ async function getSalesReport(req) {
       salesBillItems: {
         select: {
           qty: true,
+          StyleItem: {
+            select: {
+              name: true,
+            },
+          },
+          Size: {
+            select: {
+              name: true,
+            },
+          },
+          Uom: {
+            select: {
+              name: true,
+            },
+          },
+          barcodeNo: true,
         },
       },
     },
@@ -222,6 +238,22 @@ async function getSalesReport(req) {
       salesExchangeItems: {
         select: {
           exchangeQty: true,
+          StyleItem: {
+            select: {
+              name: true,
+            },
+          },
+          Size: {
+            select: {
+              name: true,
+            },
+          },
+          Uom: {
+            select: {
+              name: true,
+            },
+          },
+          barcodeNo: true,
         },
       },
     },
@@ -240,6 +272,8 @@ async function getSalesReport(req) {
     upiAmount: item.upiAmount || 0,
     totalAmount:
       (item.paymentValue || 0) + (item.cardAmount || 0) + (item.upiAmount || 0),
+    salesType: "General",
+    salesItem: item.salesBillItems,
   }));
 
   // Normalize Sales Returns (Exchange)
@@ -256,6 +290,8 @@ async function getSalesReport(req) {
     upiAmount: item.upiAmount || 0,
     totalAmount:
       (item.cashAmount || 0) + (item.cardAmount || 0) + (item.upiAmount || 0),
+    salesType: "Exchange",
+    salesItem: item.salesExchangeItems,
   }));
   const combinedData = [...formattedBills, ...formattedReturns].sort(
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
