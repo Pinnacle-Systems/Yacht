@@ -254,7 +254,6 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                 "styleItemId",
                 "sizeId",
                 "returnQty",
-                "uomId",
                 "styleId",
                 "barcodeId"
             ])

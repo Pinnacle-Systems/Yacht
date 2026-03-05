@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import secureLocalStorage from "react-secure-storage";
 import {
+  findFromList,
   getDateFromDateTimeToDisplay,
   reactPaginateIndexToPageNumber,
 } from "../../../Utils/helper";
@@ -15,6 +16,8 @@ const SalesBillReport = ({
   onEdit,
   onDelete,
   rowActions = true,
+  isHo,
+  branchList,
 }) => {
   const branchId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "currentBranchId",
@@ -29,7 +32,7 @@ const SalesBillReport = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [searchType, setSearchType] = useState("");
   const [searchCustomer, setSearchCustomer] = useState("");
-
+  const [searchDelivery, setSearchDelivery] = useState("");
   const handleOnclick = (e) => {
     setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
   };
@@ -44,7 +47,14 @@ const SalesBillReport = ({
 
   useEffect(() => {
     setCurrentPageNumber(1);
-  }, [serachDocNo, searchDocDate, searchMobile, searchType, searchCustomer]);
+  }, [
+    serachDocNo,
+    searchDocDate,
+    searchMobile,
+    searchType,
+    searchCustomer,
+    searchDelivery,
+  ]);
 
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId",
@@ -193,12 +203,21 @@ const SalesBillReport = ({
                   {/* <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Payment Type</div>
                   </th> */}
-                  <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                    <div>Customer</div>
-                  </th>
-                  <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                    <div>Contact No</div>
-                  </th>
+                  {!isHo && (
+                    <>
+                      <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                        <div>Customer</div>
+                      </th>
+                      <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                        <div>Contact No</div>
+                      </th>
+                    </>
+                  )}
+                  {isHo && (
+                    <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                      <div>Customer</div>
+                    </th>
+                  )}
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
                   </th>
@@ -240,28 +259,45 @@ const SalesBillReport = ({
                       }}
                     />
                   </th> */}
-                  <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
-                    <input
-                      type="text"
-                      className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
-                      placeholder="Search"
-                      value={searchCustomer}
-                      onChange={(e) => {
-                        setSearchCustomer(e.target.value);
-                      }}
-                    />
-                  </th>
-                  <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
-                    <input
-                      type="text"
-                      className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
-                      placeholder="Search"
-                      value={searchMobile}
-                      onChange={(e) => {
-                        setSearchMobile(e.target.value);
-                      }}
-                    />
-                  </th>
+                  {!isHo && (
+                    <>
+                      <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                        <input
+                          type="text"
+                          className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                          placeholder="Search"
+                          value={searchCustomer}
+                          onChange={(e) => {
+                            setSearchCustomer(e.target.value);
+                          }}
+                        />
+                      </th>
+                      <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                        <input
+                          type="text"
+                          className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                          placeholder="Search"
+                          value={searchMobile}
+                          onChange={(e) => {
+                            setSearchMobile(e.target.value);
+                          }}
+                        />
+                      </th>
+                    </>
+                  )}
+                  {/* {isHo && (
+                    <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                      <input
+                        type="text"
+                        className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                        placeholder="Search"
+                        value={searchDelivery}
+                        onChange={(e) => {
+                          setSearchDelivery(e.target.value);
+                        }}
+                      />
+                    </th>
+                  )} */}
                   <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center "></th>
                 </tr>
               </thead>
@@ -299,15 +335,28 @@ const SalesBillReport = ({
                           {" "}
                           {dataObj?.paymentType}
                         </td> */}
-
-                        <td className="py-1.5 text-left px-4">
-                          {" "}
-                          {dataObj?.Customer?.name}
-                        </td>
-                         <td className="py-1.5 text-left px-4">
-                          {" "}
-                          {dataObj?.Customer?.mobileNo}
-                        </td>
+                        {!isHo && (
+                          <>
+                            <td className="py-1.5 text-left px-4">
+                              {" "}
+                              {dataObj?.Customer?.name}
+                            </td>
+                            <td className="py-1.5 text-left px-4">
+                              {" "}
+                              {dataObj?.Customer?.mobileNo}
+                            </td>
+                          </>
+                        )}
+                        {isHo && (
+                          <td className="py-1.5 text-left px-4">
+                            {" "}
+                            {findFromList(
+                              dataObj?.deliveryToId,
+                              branchList?.data,
+                              "branchName",
+                            )}
+                          </td>
+                        )}
                         {rowActions && (
                           <td className=" w-[30px] border-gray-200 gap-1 px-2 justify-end">
                             <div className="flex">

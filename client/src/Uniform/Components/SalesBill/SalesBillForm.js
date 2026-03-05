@@ -1,11 +1,7 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import { CommaInput, DropdownInput } from "../../../Inputs";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { CommaInput, DropdownInput, DropdownNew } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
-import {
-  findFromList,
-  getCommonParams,
-  isGridDatasValid,
-} from "../../../Utils/helper";
+import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import { ReusableInput } from "../../../Utils/CommonInput";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -46,6 +42,8 @@ export function SalesBillForm({
   taxTypeList,
   styleList,
   singleDataBranch,
+  isHo,
+  branchList
 }) {
   const [pdfOpen, setPdfOpen] = useState(false);
   const [docId, setDocId] = useState("New");
@@ -67,6 +65,7 @@ export function SalesBillForm({
   const [isUpI, setIsUpI] = useState(false);
   const [cardAmount, setCardAmount] = useState("");
   const [upiAmount, setUpiAmount] = useState("");
+  const [deliveryToId, setDeliveryToId] = useState("");
 
   const dispatch = useDispatch();
   const customerNameRef = useRef(null);
@@ -81,6 +80,9 @@ export function SalesBillForm({
     isFetching: isSingleCustomerFetching,
     isLoading: isSingleCustomerLoading,
   } = useGetCustomerByIdQuery(customerId, { skip: !customerId });
+
+
+
 
   const isLoadingIndicator = isSingleFetching || isSingleLoading;
 
@@ -107,12 +109,22 @@ export function SalesBillForm({
   };
 
   const validateData = (data) => {
-    if (!data?.customerId || !data?.customerName || !data?.taxTemplateId) {
-      toast.info("Please fill all required fields...!", {
-        position: "top-center",
-        autoClose: 2000,
-      });
-      return false;
+    if (!isHo) {
+      if (!data?.customerId || !data?.customerName || !data?.taxTemplateId) {
+        toast.info("Please fill all required fields...!", {
+          position: "top-center",
+          autoClose: 2000,
+        });
+        return false;
+      }
+    } else {
+      if (!data?.deliveryToId || !data?.taxTemplateId) {
+        toast.info("Please fill all required fields...!", {
+          position: "top-center",
+          autoClose: 2000,
+        });
+        return false;
+      }
     }
 
     // 2️⃣ At least one item required
@@ -199,6 +211,7 @@ export function SalesBillForm({
     isUpI,
     cardAmount,
     upiAmount,
+    deliveryToId,
   };
 
   const syncFormWithDb = useCallback(
@@ -231,6 +244,7 @@ export function SalesBillForm({
       setIsUpI(data?.isUpI || false);
       setCardAmount(data?.cardAmount || "");
       setUpiAmount(data?.upiAmount || "");
+      setDeliveryToId(data?.deliveryToId ? data?.deliveryToId : "");
     },
     [id],
   );
@@ -320,7 +334,7 @@ export function SalesBillForm({
   };
 
   const grossAmount = salesBillItems.reduce(
-    (sum, row) => sum +   (Number(row.qty) || 0) * (Number(row.rate) || 0),
+    (sum, row) => sum + (Number(row.qty) || 0) * (Number(row.rate) || 0),
     0,
   );
   const taxGroupWise = groupBy(salesBillItems, "taxPercent");
@@ -474,31 +488,57 @@ export function SalesBillForm({
                   />
                 </div>
               </div>
-              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                <h2 className="font-medium text-slate-700 mb-2">
-                  Customer Details
-                </h2>
-                <div className="grid grid-cols-3 gap-2">
-                  <CustomerSearchComponent
-                    setCustomerId={setCustomerId}
-                    customerId={customerId}
-                    name="Contact No"
-                    readOnly={readOnly}
-                    id={id}
-                    autoFocus={id ? false : true}
-                    focusNext={() => customerNameRef.current?.focus()}
-                  />
-                  <ReusableInput
-                    ref={customerNameRef}
-                    label="Customer Name"
-                    value={customerName}
-                    setValue={setCustomerName}
-                    type={"text"}
-                    readOnly={readOnly}
-                    required={true}
-                  />
+              {!isHo && (
+                <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                  <h2 className="font-medium text-slate-700 mb-2">
+                    Customer Details
+                  </h2>
+                  <div className="grid grid-cols-3 gap-2">
+                    <CustomerSearchComponent
+                      setCustomerId={setCustomerId}
+                      customerId={customerId}
+                      name="Contact No"
+                      readOnly={readOnly}
+                      id={id}
+                      autoFocus={id ? false : true}
+                      focusNext={() => customerNameRef.current?.focus()}
+                    />
+                    <ReusableInput
+                      ref={customerNameRef}
+                      label="Customer Name"
+                      value={customerName}
+                      setValue={setCustomerName}
+                      type={"text"}
+                      readOnly={readOnly}
+                      required={true}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
+              {isHo && (
+                <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                  <h2 className="font-medium text-slate-700 mb-2">
+                    Delivery To
+                  </h2>
+                  <div className="grid grid-cols-3 gap-2">
+                    <DropdownNew
+                      name="Showroom / Franchisee"
+                      dataList={branchList?.data?.filter(
+                        (item) => item.id !== branchId,
+                      )}
+                      value={deliveryToId}
+                      setValue={(value) => {
+                        setDeliveryToId(value);
+                      }}
+                      required={true}
+                      disabled={readOnly || id}
+                      otherField={"branchName"}
+                      placeholder={"Select Showroom"}
+                      autoFocus={true}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
             <fieldset className="w-full  min-w-[1200px]">
               <SalesBillItems
@@ -531,20 +571,19 @@ export function SalesBillForm({
                 />
               </div> */}
 
-              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
-                <h2 className="font-medium text-slate-700 mb-1 text-base">
-                  Remarks
-                </h2>
-                <textarea
-                  readOnly={readOnly}
-                  value={remarks}
-                  onChange={(e) => {
-                    setRemarks(e.target.value);
-                  }}
-                  className="w-full  overflow-auto h-32 px-2.5 py-2 text-xs border border-slate-400 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-                  placeholder="Additional remarks..."
-                  disabled={readOnly}
-                />
+              <div className="bg-white border border-slate-200 rounded-md p-2 shadow-sm">
+                <fieldset className="w-full text-slate-700 border h-full p-1 px-2 border-slate-400 rounded-md">
+                  <legend className="font-medium px-2">Remarks</legend>
+
+                  <textarea
+                    readOnly={readOnly}
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                    className="w-full h-32  text-xs   resize-none focus:outline-none"
+                    placeholder="Additional remarks..."
+                    disabled={readOnly}
+                  />
+                </fieldset>
               </div>
 
               <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
@@ -556,7 +595,7 @@ export function SalesBillForm({
                         <label className="flex items-center gap-1">
                           <input
                             type="checkbox"
-                             className="h-4 w-4 align-middle"
+                            className="h-4 w-4 align-middle"
                             checked={isCash}
                             disabled={readOnly}
                             onChange={(e) => setIsCash(e.target.checked)}
@@ -575,7 +614,7 @@ export function SalesBillForm({
                         <label className="flex items-center gap-1">
                           <input
                             type="checkbox"
-                             className="h-4 w-4 align-middle"
+                            className="h-4 w-4 align-middle"
                             checked={isCard}
                             disabled={readOnly}
                             onChange={(e) => setIsCard(e.target.checked)}
@@ -597,7 +636,7 @@ export function SalesBillForm({
                           <input
                             type="checkbox"
                             checked={isUpI}
-                             className="h-4 w-4 align-middle"
+                            className="h-4 w-4 align-middle"
                             disabled={readOnly}
                             onChange={(e) => setIsUpI(e.target.checked)}
                           />

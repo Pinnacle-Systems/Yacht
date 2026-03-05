@@ -212,7 +212,7 @@ export default function ReadyGoods({
             colorId: "",
             selected: false,
             uomId: "",
-            styleNo:""
+            styleNo: "",
           });
         }
 
@@ -413,13 +413,28 @@ export default function ReadyGoods({
                       />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px]">
-                      <input
-                        className="text-left rounded py-1 px-1 w-full   select-none"
-                        readOnly
-                        value={
-                          findFromList(row.uomId, uomList?.data, "name") || ""
+                      <FxSelect
+                        value={row.uomId}
+                        onChange={(val) =>
+                          handleInputChange(val, index, "uomId")
                         }
-                        disabled={true}
+                        options={(uomList?.data || [])
+                          .filter((item) => item.active)
+                          .map((item) => ({
+                            label: item.name,
+                            value: item.id,
+                          }))}
+                        readOnly={readOnly || row.id}
+                        placeholder=""
+                        onBlur={() =>
+                          handleInputChange(row.uomId, index, "uomId")
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "uomId");
+                          }
+                        }}
+                        disabled={readOnly}
                       />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">

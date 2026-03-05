@@ -3,12 +3,13 @@ import { prisma } from "../lib/prisma.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 
 async function getSRBarcodeDetail(req) {
-  const { barcodeNo } = req.query;
+  const { barcodeNo,branchId } = req.query;
 
   // 1️⃣ First try fetching by styleNo
   let data = await prisma.stockSummary.findFirst({
     where: {
       barcodeNo: barcodeNo,
+      branchId:parseInt(branchId)
     },
     select: {
       barcodeNo: true,

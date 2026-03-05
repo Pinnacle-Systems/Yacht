@@ -7,11 +7,22 @@ import {
   update as _update,
   remove as _remove,
   getSalesBillDetail as _getSaleBillDetail,
-  getSalesReport as _getSalesReport
+  getSalesReport as _getSalesReport,
+  getHOSalesDetail as _getHOSalesDetail,
+  getHOSalesList as _getHOSalesList,
 } from "../services/salesBill.service.js";
 
 async function get(req, res, next) {
   res.json(await _get(req));
+  try {
+    console.log(res.statusCode);
+  } catch (err) {
+    console.error(`Error `, err.message);
+  }
+}
+
+async function getHOSalesList(req, res, next) {
+  res.json(await _getHOSalesList(req));
   try {
     console.log(res.statusCode);
   } catch (err) {
@@ -118,4 +129,22 @@ async function getSalesReport(req, res, next) {
   }
 }
 
-export { get, getOne, create, update, remove, getSaleBillDetail,getSalesReport };
+async function getHOSalesDetail(req, res, next) {
+  try {
+    res.json(await _getHOSalesDetail(req));
+  } catch (err) {
+    console.error(`Error`, err.message);
+  }
+}
+
+export {
+  get,
+  getOne,
+  create,
+  update,
+  remove,
+  getSaleBillDetail,
+  getSalesReport,
+  getHOSalesDetail,
+  getHOSalesList
+};

@@ -149,6 +149,20 @@ async function get(req) {
   return { statusCode: 0, data, nextDocId: docId, totalCount };
 }
 
+async function getHOSalesList(req) {
+  const { branchId } = req.query;
+  let data = await prisma.salesBill.findMany({
+    where: {
+      deliveryToId: branchId ? parseInt(branchId) : undefined,
+    },
+    orderBy: {
+      createdAt: "desc", // 🔥 Descending Order
+    },
+  });
+  const totalCount = data.length;
+  return { statusCode: 0, data, totalCount };
+}
+
 async function getSalesReport(req) {
   const {
     branchId,
@@ -416,6 +430,7 @@ async function create(body) {
       isUpI,
       cardAmount,
       upiAmount,
+      deliveryToId,
     } = await body;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate
@@ -433,15 +448,18 @@ async function create(body) {
     let data;
     validateUniqueBarcode(salesBillItems);
     await prisma.$transaction(async (tx) => {
-      await tx.customer.update({
-        where: { id: customerId ? parseInt(customerId) : undefined },
-        data: {
-          name: customerName ? customerName : undefined,
-        },
-      });
-      const customerObj = await tx.customer.findUnique({
-        where: { id: customerId ? parseInt(customerId) : undefined },
-      });
+      let customerObj = null;
+      if (customerId) {
+        await tx.customer.update({
+          where: { id: customerId ? parseInt(customerId) : undefined },
+          data: {
+            name: customerName ? customerName : undefined,
+          },
+        });
+        customerObj = await tx.customer.findUnique({
+          where: { id: customerId ? parseInt(customerId) : undefined },
+        });
+      }
       data = await tx.salesBill.create({
         data: {
           docId: newDocId,
@@ -452,7 +470,7 @@ async function create(body) {
           createdById: parseInt(userId),
           // paymentType,
           customerId: customerId ? parseInt(customerId) : undefined,
-          mobileNo: customerObj ? customerObj.mobileNo : undefined,
+          mobileNo: customerObj?.mobileNo || null,
           termsAndCondition,
           remarks,
           discountType,
@@ -466,6 +484,7 @@ async function create(body) {
           isUpI: Boolean(isUpI),
           cardAmount: cardAmount ? parseFloat(cardAmount) : null,
           upiAmount: upiAmount ? parseFloat(upiAmount) : null,
+          deliveryToId: deliveryToId ? parseInt(deliveryToId) : undefined,
         },
       });
 
@@ -588,6 +607,7 @@ async function update(id, body) {
     isUpI,
     cardAmount,
     upiAmount,
+    deliveryToId,
   } = await body;
   let data;
   validateUniqueBarcode(salesBillItems);
@@ -655,6 +675,7 @@ async function update(id, body) {
           discountValue === "" || discountValue == null
             ? null
             : Number(discountValue),
+        deliveryToId: deliveryToId ? parseInt(deliveryToId) : undefined,
       },
     });
     await updateSalesBillItems(tx, salesBillItems, data, userId, branchId);
@@ -978,6 +999,82 @@ async function getSalesBillDetail(req) {
   };
 }
 
+async function getHOSalesDetail(req) {
+  const { dcNo } = req.query;
+
+  let data = await prisma.salesBill.findFirst({
+    where: {
+      docId: dcNo,
+    },
+    select: {
+      salesBillItems: {
+        select: {
+          id: true,
+          salesBillId: true,
+          styleId: true,
+          sizeId: true,
+          qty: true,
+          styleItemId: true,
+          colorId: true,
+          barcodeId: true,
+          barcodeNo: true,
+        },
+      },
+    },
+  });
+
+  const barcodes = data?.salesBillItems || [];
+
+  const salesReturn = await prisma.salesReturnSR.findMany({
+    where: {
+      billNo: dcNo,
+    },
+    include: {
+      salesReturnSRItems: true,
+    },
+  });
+
+  const returnItems = salesReturn.flatMap((sr) => sr.salesReturnSRItems);
+  const returnedBarcodeIds = new Set(returnItems.map((item) => item.barcodeId));
+  const filteredBarcodes = barcodes.filter(
+    (barcode) => !returnedBarcodeIds.has(barcode.id),
+  );
+  const barcodeWithRate = await Promise.all(
+    filteredBarcodes.map(async (barcode) => {
+      const style = await prisma.style.findUnique({
+        where: {
+          id: barcode.styleId,
+        },
+        include: {
+          Hsn: {
+            select: {
+              taxPerc: true,
+            },
+          },
+        },
+      });
+      return {
+        barcodeNo: barcode.barcodeNo,
+        styleId: barcode.styleId,
+        styleItemId: barcode.styleItemId,
+        sizeId: barcode.sizeId,
+        colorId: barcode.colorId,
+        uomId: style.uomId,
+        rate: style?.price || null,
+        taxPercent: style?.Hsn?.taxPerc ?? 5,
+        qty: 1,
+        barcodeId: barcode.barcodeId,
+      };
+    }),
+  );
+
+  if (!data) return NoRecordFound("Sales Bill");
+  return {
+    statusCode: 0,
+    data: barcodeWithRate,
+  };
+}
+
 export {
   get,
   getOne,
@@ -986,4 +1083,6 @@ export {
   remove,
   getSalesBillDetail,
   getSalesReport,
+  getHOSalesDetail,
+  getHOSalesList
 };

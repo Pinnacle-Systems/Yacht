@@ -22,6 +22,7 @@ export default function SalesBillItems({
   colorList,
   uomList,
   styleList,
+  branchId
 }) {
   const [barcodeNo, setbarcodeNo] = useState("");
   const [contextMenu, setContextMenu] = useState(null);
@@ -285,7 +286,7 @@ export default function SalesBillItems({
   const handleBarcodeEnter = async (index, row) => {
     try {
       const response = await getBarcodeDetails({
-        params: { barcodeNo: row.barcodeNo },
+        params: { barcodeNo: row.barcodeNo , branchId : branchId},
       }).unwrap();
 
       if (response.statusCode !== 0) {

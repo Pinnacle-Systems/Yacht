@@ -29,6 +29,11 @@ async function getOne(id) {
                 select: {
                     id: true
                 }
+            },
+             company:{
+                select:{
+                    name:true
+                }
             }
         }
     })

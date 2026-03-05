@@ -1091,7 +1091,6 @@ async function getBarcodeDetail(req) {
         barcodeNo: barcodeNo,
       },
     });
-    console.log(isReturn, "isReturn");
     if (isReturn > 0) {
       return ErrorResponse(
         "This Barcode number is Return in Production Company",

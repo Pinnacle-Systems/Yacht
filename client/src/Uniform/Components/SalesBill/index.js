@@ -18,7 +18,7 @@ import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMaste
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
 import purchaseBillApi from "../../../redux/services/PurchaseBillService";
 import OpeningStockSRApi from "../../../redux/uniformService/OpeningStockSRServices";
-import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterService";
+import { useGetBranchByIdQuery, useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -45,9 +45,11 @@ export default function Form() {
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
   const { data: taxTypeList } = useGetTaxTemplateQuery({ params });
   const { data: styleList } = useGetStyleMasterQuery({ params });
-
+  const { data: branchList } = useGetBranchQuery({ params: { companyId } });
   const [removeData] = useDeleteSalesBillMutation();
-
+  const isHo =
+    singleDataBranch?.data?.company?.name ===
+    singleDataBranch?.data?.branchName;
   const handleView = (orderId) => {
     setId(orderId);
     setShowForm(true);
@@ -140,6 +142,8 @@ export default function Form() {
             onEdit={handleEdit}
             onDelete={handleDelete}
             itemsPerPage={10}
+            isHo={isHo}
+            branchList={branchList}
           />
         </div>
       </div>
@@ -162,6 +166,8 @@ export default function Form() {
           taxTypeList={taxTypeList}
           styleList={styleList}
           singleDataBranch={singleDataBranch}
+          isHo={isHo}
+          branchList={branchList}
         />
       )}
     </>

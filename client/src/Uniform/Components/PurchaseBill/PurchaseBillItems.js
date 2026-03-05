@@ -21,7 +21,7 @@ export default function PurchaseBillItems({
   uomList,
   taxTemplateId,
   dcNo,
-  isAdmin
+  isAdmin,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [currentSelectedIndex, setCurrentSelectedIndex] = useState(null);
@@ -172,7 +172,7 @@ export default function PurchaseBillItems({
   const handleBarcodeEnter = async (index, row) => {
     try {
       const response = await getProductionBarcode({
-        params: { barcodeNo: row.barcodeNo ,isAdmin : isAdmin},
+        params: { barcodeNo: row.barcodeNo, isAdmin: isAdmin },
       }).unwrap();
 
       if (response.statusCode !== 0) {
@@ -455,7 +455,7 @@ export default function PurchaseBillItems({
                             });
                           }
                         }}
-                        disabled={readOnly || dcNo || row.styleItemId || isAdmin}
+                        disabled={true}
                       />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px] ">

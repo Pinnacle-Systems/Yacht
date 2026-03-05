@@ -49,8 +49,6 @@ export default function Form() {
   });
   const {
     data: singleData,
-    isFetching: isSingleFetching,
-    isLoading: isSingleLoading,
   } = useGetBranchByIdQuery(branchId);
 
   const isLoadingIndicator = isLoading || isFetching;

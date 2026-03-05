@@ -2882,6 +2882,7 @@ model SalesBill {
   isUpI             Boolean?         @default(false)
   cardAmount        Float?
   upiAmount         Float?
+  deliveryToId      Int?
 }
 
 model SalesBillItems {

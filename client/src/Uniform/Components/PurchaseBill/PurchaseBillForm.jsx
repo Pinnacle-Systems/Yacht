@@ -27,8 +27,9 @@ import { useAddPurchaseBillMutation, useDeletePurchaseBillMutation, useGetPurcha
 import PurchaseBillSummary from "./PurchaseBillSummary";
 import { useGetSalesEntryQuery, useLazyGetSalesDCDetailQuery } from "../../../redux/uniformService/SalesEntryService";
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
-import { useGetUserByIdQuery } from "../../../redux/services/UsersMasterService";
 import SalesEntryApi from "../../../redux/uniformService/SalesEntryService"
+import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterService";
+import { useGetHOSalesListQuery, useGetSalesBillQuery, useLazyGetHOSalesDetailQuery } from "../../../redux/services/SalesBillService";
 const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     sizeList,
     styleItemList,
@@ -64,9 +65,13 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     const [discountValue, setDiscountValue] = useState();
     const [termsAndCondition, setTermsAndCondition] = useState("");
     const [getSalesDCDetail] = useLazyGetSalesDCDetailQuery();
+    const [getHOSalesDetail] = useLazyGetHOSalesDetailQuery();
 
     const { data: salesList } = useGetSalesEntryQuery({
         params: { companyId, branchId },
+    });
+    const { data: hoSalesList } = useGetHOSalesListQuery({
+        params: { branchId },
     });
     const finyearId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "currentFinYear"
@@ -87,9 +92,13 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         isLoading: isSingleLoading,
     } = useGetPurchaseBillByIdQuery(id, { skip: !id });
 
-    const { data: userData } = useGetUserByIdQuery(userId, { skip: !userId })
+    const { data: branchData } = useGetBranchByIdQuery(branchId, {
+        skip: !branchId,
+    });
 
-    const isAdmin = userData?.data.isAdmin
+    const isAdmin = branchData?.data?.company?.name === branchData?.data?.branchName;
+
+    // const isAdmin = userData?.data.isAdmin
 
     const [addData] = useAddPurchaseBillMutation();
     const [updateData] = useUpdatePurchaseBillMutation();
@@ -252,6 +261,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         if (!data?.purchaseBillItems || data.purchaseBillItems.length === 0) {
             toast.info("Please add at least one item...!", {
                 position: "top-center",
+                autoClose: 2000
             });
             return false;
         }
@@ -265,7 +275,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
             !isGridDatasValid(
                 filledGoodsItems,
                 false,
-                ["styleItemId", "sizeId", "qty", "uomId", "rate", "styleId", "barcodeId"]
+                ["styleItemId", "sizeId", "qty", "rate", "styleId", "barcodeId"]
             )
         ) {
             toast.info("Please fill all required items details...!", {
@@ -432,6 +442,71 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         }
     };
 
+    const handleAddRowHO = async (newValue) => {
+        setPurchaseBillItems([]);
+        setDcNo(newValue);
+        const hasUnfilledRequired = purchaseBillItems.some((row) => {
+            return row.styleId && !row.qty || row.styleId && !row.rate;
+        });
+
+        if (hasUnfilledRequired) {
+            toast.info("Please fill all required fields before adding...!", {
+                position: "top-center",
+            });
+            return;
+        }
+        try {
+            const { data: hoSalesData } = await getHOSalesDetail({
+                params: {
+                    dcNo: newValue,
+                },
+            });
+            const salesItems = hoSalesData?.data;
+            if (!salesItems) return;
+            setPurchaseBillItems((prev) => {
+                const updated = [...prev];
+                // Find first empty slot index
+                let startIndex = updated.findIndex(
+                    (row) =>
+                        !row.styleId &&
+                        !row.sizeId &&
+                        !row.barcodeNo &&
+                        !row.styleItemId
+                );
+                if (startIndex === -1) startIndex = updated.length;
+
+                // Fill in sizeRows starting at first empty slot
+                salesItems.forEach((row, i) => {
+                    if (startIndex + i < updated.length) {
+                        updated[startIndex + i] = row;
+                    } else {
+                        updated.push(row); // append if no empty slot
+                    }
+                });
+
+                // Ensure at least 6 rows
+                while (updated.length < 3) {
+                    updated.push({
+                        styleId: "",
+                        sizeId: "",
+                        qty: "",
+                        styleItemId: "",
+                        colorId: "",
+                        selected: false,
+                        barcodeNo: "",
+                        barcodeId: "",
+                        rate: "",
+                        uomId: "",
+                    });
+                }
+
+                return updated;
+            });
+        } catch (error) {
+            console.error("Error adding row:", error);
+        }
+    };
+
     useEffect(() => {
         if (!taxTemplateId && taxTypeList?.data?.length > 0) {
             setTaxTemplateId(taxTypeList.data[0].id);
@@ -536,7 +611,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                     <h2 className="font-medium text-slate-700 mb-2">Supplier Details</h2>
                                     <div className="grid grid-cols-2 gap-1">
                                         {
-                                            isAdmin && (
+                                            isAdmin ? (
                                                 <DropdownNew
                                                     name="Sales DC No"
                                                     dataList={salesList?.data?.filter((item) => item.salesType === "RETAIL")}
@@ -549,8 +624,23 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                                     disabled={readOnly || id}
                                                     clear={true}
                                                 />
+                                            ) : (
+                                                <DropdownNew
+                                                    name="Sales DC No"
+                                                    dataList={hoSalesList?.data}
+                                                    value={dcNo}
+                                                    setValue={handleAddRowHO}
+                                                    readOnly={readOnly}
+                                                    placeholder={"Select DC"}
+                                                    otherField={"docId"}
+                                                    otherValue={"docId"}
+                                                    disabled={readOnly || id}
+                                                    clear={true}
+                                                />
                                             )
                                         }
+
+
 
                                         <DropdownNew
                                             name="Supplier"

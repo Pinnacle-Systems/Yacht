@@ -194,7 +194,7 @@ export default function BillItems({
   const calculateNetAmount = (item) => {
     const qty = parseFloat(item.qty) || 0;
     const price = parseFloat(item.price) || 0;
-    const taxPercent = parseFloat(item.taxPercent) || 0;
+    // const taxPercent = parseFloat(item.taxPercent) || 0;
     const discountValue = parseFloat(item.discountValue) || 0;
     const discountType = item.discountType || "";
 
@@ -202,16 +202,16 @@ export default function BillItems({
     const grossAmount = qty * price;
 
     // GST Subtracted
-    const amountAfterGST = grossAmount - (grossAmount * taxPercent) / 100;
+    // const amountAfterGST = grossAmount - (grossAmount * taxPercent) / 100;
 
     // Apply Discount
     let discountAmt = 0;
     if (discountType === "Flat") discountAmt = discountValue;
     else if (discountType === "Percent")
-      discountAmt = (amountAfterGST * discountValue) / 100;
+      discountAmt = (grossAmount * discountValue) / 100;
 
     // Final net amount
-    const netAmount = amountAfterGST - discountAmt;
+    const netAmount = grossAmount - discountAmt;
 
     return netAmount.toFixed(2);
   };
