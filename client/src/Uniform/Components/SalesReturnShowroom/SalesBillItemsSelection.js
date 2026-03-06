@@ -80,7 +80,7 @@ const SalesBillItemsSelection = ({
   }
 
   function getSelectAll(salesReturnItems) {
-    return salesReturnItems?.every((item) => isItemAddedd(item.id));
+    return salesReturnItems?.filter((row) => (row.usedQty ?? 0) === 0).every((item) => isItemAddedd(item.id));
   }
 
   return (
@@ -90,7 +90,7 @@ const SalesBillItemsSelection = ({
           {/* HEADER */}
           <div className="flex items-center gap-2">
             <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-              Purchase Inward Items
+              Sales Bill Items
             </h2>
           </div>
           <div className="flex gap-2">
@@ -190,7 +190,11 @@ const SalesBillItemsSelection = ({
                             <tr
                               key={index}
                               className={`${index % 2 === 0 ? "bg-white" : "bg-gray-100"} border-b cursor-pointer`}
-                              onClick={() => handleChangee(item?.id, item)}
+                              onClick={() => {
+                                if ((item.usedQty ?? 0) > 0) return;
+                                handleChangee(item?.id, item);
+                              }}
+                              disabled={(item.usedQty ?? 0) > 0}
                             >
                               <td className="text-center py-2 border border-gray-300">
                                 <input
@@ -198,6 +202,7 @@ const SalesBillItemsSelection = ({
                                   className="cursor-pointer"
                                   checked={isItemAddedd(item.id, item)}
                                   readOnly
+                                  disabled={(item.usedQty ?? 0) > 0}
                                 />
                               </td>
 

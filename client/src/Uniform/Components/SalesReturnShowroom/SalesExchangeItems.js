@@ -19,6 +19,7 @@ export default function SalesExchangeItems({
   colorList,
   uomList,
   billNo,
+  branchId
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [currentSelectedIndex, setCurrentSelectedIndex] = useState("");
@@ -168,7 +169,7 @@ export default function SalesExchangeItems({
   const handleBarcodeEnter = async (index, row) => {
     try {
       const response = await getBarcodeDetails({
-        params: { barcodeNo: row.barcodeNo },
+        params: { barcodeNo: row.barcodeNo,branchId:branchId },
       }).unwrap();
 
       if (response.statusCode !== 0) {

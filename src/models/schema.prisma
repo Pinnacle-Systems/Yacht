@@ -153,6 +153,8 @@ model Branch {
   salesReturnSRs          SalesReturnSR[]
   barcodes                Barcode[]
   openingStockSRs         OpeningStockSR[]
+  salesReturnSRsDelivery  SalesReturnSR[]          @relation(name: "delivery")
+  salesBillsDelivery      SalesBill[]              @relation(name: "delivery")
 }
 
 model UserOnBranch {
@@ -2882,6 +2884,7 @@ model SalesBill {
   isUpI             Boolean?         @default(false)
   cardAmount        Float?
   upiAmount         Float?
+  DeliveryTo        Branch?          @relation("delivery", fields: [deliveryToId], references: [id])
   deliveryToId      Int?
 }
 
@@ -2912,33 +2915,36 @@ model SalesBillItems {
 }
 
 model SalesReturnSR {
-  id                 Int                  @id @default(autoincrement())
-  docId              String
-  docDate            DateTime?
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  createdBy          User?                @relation("createdBy", fields: [createdById], references: [id])
-  createdById        Int?
-  updatedBy          User?                @relation("updatedBy", fields: [updatedById], references: [id])
-  updatedById        Int?
-  Branch             Branch?              @relation(fields: [branchId], references: [id])
-  branchId           Int?
-  Customer           Customer?            @relation(fields: [customerId], references: [id])
-  customerId         Int?
-  remarks            String?
-  termsAndCondition  String?
-  billNo             String?
-  mobileNo           String?
-  customerName       String?
-  returnType         String?
-  isCash             Boolean?             @default(false)
-  isCard             Boolean?             @default(false)
-  isUpI              Boolean?             @default(false)
-  cardAmount         Float?
-  upiAmount          Float?
-  cashAmount         Float?
-  taxTemplate        TaxTemplate?         @relation(fields: [taxTemplateId], references: [id])
-  taxTemplateId      Int?
+  id                Int          @id @default(autoincrement())
+  docId             String
+  docDate           DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  createdBy         User?        @relation("createdBy", fields: [createdById], references: [id])
+  createdById       Int?
+  updatedBy         User?        @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById       Int?
+  Branch            Branch?      @relation(fields: [branchId], references: [id])
+  branchId          Int?
+  Customer          Customer?    @relation(fields: [customerId], references: [id])
+  customerId        Int?
+  remarks           String?
+  termsAndCondition String?
+  billNo            String?
+  mobileNo          String?
+  customerName      String?
+  returnType        String?
+  isCash            Boolean?     @default(false)
+  isCard            Boolean?     @default(false)
+  isUpI             Boolean?     @default(false)
+  cardAmount        Float?
+  upiAmount         Float?
+  cashAmount        Float?
+  taxTemplate       TaxTemplate? @relation(fields: [taxTemplateId], references: [id])
+  taxTemplateId     Int?
+  DeliveryTo        Branch?      @relation("delivery", fields: [deliveryToId], references: [id])
+  deliveryToId      Int?
+
   salesReturnSRItems SalesReturnSRItems[]
   salesExchangeItems SalesExchangeItems[]
 }

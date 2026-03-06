@@ -8,6 +8,7 @@ import {
 import { Loader } from "../../../Basic/components";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useGetSalesBillQuery } from "../../../redux/services/SalesBillService";
+import FxSelect from "../../../Inputs";
 
 const SalesBillReport = ({
   onClick,
@@ -32,7 +33,7 @@ const SalesBillReport = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [searchType, setSearchType] = useState("");
   const [searchCustomer, setSearchCustomer] = useState("");
-  const [searchDelivery, setSearchDelivery] = useState("");
+  const [searchDeliveryTo, setSearchDeliveryTo] = useState("");
   const handleOnclick = (e) => {
     setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
   };
@@ -43,6 +44,7 @@ const SalesBillReport = ({
     searchMobile,
     searchType,
     searchCustomer,
+    searchDeliveryTo,
   };
 
   useEffect(() => {
@@ -53,7 +55,7 @@ const SalesBillReport = ({
     searchMobile,
     searchType,
     searchCustomer,
-    searchDelivery,
+    searchDeliveryTo,
   ]);
 
   const companyId = secureLocalStorage.getItem(
@@ -79,6 +81,7 @@ const SalesBillReport = ({
       dataPerPage,
       finyearId,
       pageNumber: currentPageNumber,
+      searchDeliveryTo,
     },
   });
 
@@ -285,19 +288,19 @@ const SalesBillReport = ({
                       </th>
                     </>
                   )}
-                  {/* {isHo && (
+                  {isHo && (
                     <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
                       <input
                         type="text"
                         className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
                         placeholder="Search"
-                        value={searchDelivery}
+                        value={searchDeliveryTo}
                         onChange={(e) => {
-                          setSearchDelivery(e.target.value);
+                          setSearchDeliveryTo(e.target.value);
                         }}
                       />
                     </th>
-                  )} */}
+                  )}
                   <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center "></th>
                 </tr>
               </thead>

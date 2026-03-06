@@ -208,16 +208,27 @@ async function getOne(id) {
   });
 
   if (!data) return NoRecordFound("purchaseBill");
+  const branchId = data?.branchId;
   const itemsWithUsedQty = await Promise.all(
     data.purchaseBillItems.map(async (item) => {
       const childRecordSales = await prisma.salesBillItems.count({
         where: {
           barcodeId: item.barcodeId,
+          SalesBill: {
+            is: {
+              branchId: parseInt(branchId),
+            },
+          },
         },
       });
       const childRecordReturn = await prisma.purchasReturnItemsSR.count({
         where: {
           barcodeId: item.barcodeId,
+          PurchaseReturnShowRoom: {
+            is: {
+              branchId: parseInt(branchId),
+            },
+          },
         },
       });
       return {
@@ -232,12 +243,22 @@ async function getOne(id) {
   const childRecordReturn = await prisma.purchasReturnItemsSR.count({
     where: {
       barcodeId: { in: barcodeIds },
+      PurchaseReturnShowRoom: {
+        is: {
+          branchId: parseInt(branchId),
+        },
+      },
     },
   });
 
   const childRecordSales = await prisma.salesBillItems.count({
     where: {
       barcodeId: { in: barcodeIds },
+      SalesBill: {
+        is: {
+          branchId: parseInt(branchId),
+        },
+      },
     },
   });
   return {
@@ -924,15 +945,15 @@ function manualFilterSearchDatapurchaseBillItems(
   );
 }
 
-async function getAllDatapurchaseBillItems(data) {
+async function getAllDatapurchaseBillItems(data, branchId) {
   let promises = data?.map(async (item) => {
-    let data = await getPurchaseBillItemById(item.id);
+    let data = await getPurchaseBillItemById(item.id,branchId);
     return data.data;
   });
   return Promise.all(promises);
 }
 
-async function getPurchaseBillItemById(id) {
+async function getPurchaseBillItemById(id,branchId) {
   const data = await prisma.purchaseBillItems.findUnique({
     where: { id: parseInt(id) },
     include: {
@@ -953,6 +974,7 @@ async function getPurchaseBillItemById(id) {
       barcodeNo: data.barcodeNo,
       sizeId: data.sizeId,
       styleId: data.styleId,
+      branchId: parseInt(branchId)
     },
     _sum: { qty: true },
   });
@@ -1031,7 +1053,7 @@ async function getpurchaseBillItems(req) {
       );
     }
 
-    data = await getAllDatapurchaseBillItems(data);
+    data = await getAllDatapurchaseBillItems(data, branchId);
   } else {
     data = await prisma.purchaseBillItems.findMany({
       where: {

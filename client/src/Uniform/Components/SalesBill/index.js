@@ -18,7 +18,10 @@ import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMaste
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
 import purchaseBillApi from "../../../redux/services/PurchaseBillService";
 import OpeningStockSRApi from "../../../redux/uniformService/OpeningStockSRServices";
-import { useGetBranchByIdQuery, useGetBranchQuery } from "../../../redux/services/BranchMasterService";
+import {
+  useGetBranchByIdQuery,
+  useGetBranchQuery,
+} from "../../../redux/services/BranchMasterService";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -72,7 +75,13 @@ export default function Form() {
       if (data?.data?.childRecord > 0) {
         Swal.fire({
           icon: "error",
-          title: "This Transaction items used in Sales Return",
+          title: "This Transaction used in Sales Return",
+          text: "Data cannot be deleted!",
+        });
+      } else if (data?.data?.childRecordSRInward > 0) {
+        Swal.fire({
+          icon: "error",
+          title: "This Transaction used in Another Show Room Purchase",
           text: "Data cannot be deleted!",
         });
       } else {

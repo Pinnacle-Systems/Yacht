@@ -14,6 +14,10 @@ import { useDeleteSalesReturnSRMutation } from "../../../redux/uniformService/Sa
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import salesBillApi from "../../../redux/services/SalesBillService";
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
+import {
+  useGetBranchByIdQuery,
+  useGetBranchQuery,
+} from "../../../redux/services/BranchMasterService";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -25,15 +29,19 @@ export default function Form() {
     branchId,
     companyId,
   };
+  const { data: singleDataBranch } = useGetBranchByIdQuery(branchId);
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
   const { data: taxTypeList } = useGetTaxTemplateQuery({ params });
   const { data: styleList } = useGetStyleMasterQuery({ params });
+  const { data: branchList } = useGetBranchQuery({ params: { companyId } });
 
   const [removeData] = useDeleteSalesReturnSRMutation();
-
+  const isHo =
+    singleDataBranch?.data?.company?.name ===
+    singleDataBranch?.data?.branchName;
   const handleView = (orderId) => {
     setId(orderId);
     setShowForm(true);
@@ -117,6 +125,7 @@ export default function Form() {
             onEdit={handleEdit}
             onDelete={handleDelete}
             itemsPerPage={10}
+            isHo={isHo}
           />
         </div>
       </div>
@@ -138,6 +147,8 @@ export default function Form() {
           uomList={uomList}
           taxTypeList={taxTypeList}
           styleList={styleList}
+          isHo={isHo}
+          branchList={branchList}
         />
       )}
     </>

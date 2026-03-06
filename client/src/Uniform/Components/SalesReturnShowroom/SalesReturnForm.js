@@ -49,6 +49,8 @@ export function SalesReturnForm({
   colorList,
   uomList,
   styleList,
+  isHo,
+  branchList,
 }) {
   const [docId, setDocId] = useState("New");
   const [docDate, setDocDate] = useState("");
@@ -71,6 +73,7 @@ export function SalesReturnForm({
   const [cardAmount, setCardAmount] = useState("");
   const [upiAmount, setUpiAmount] = useState("");
   const [cashAmount, setCashAmount] = useState("");
+  const [deliveryToId, setDeliveryToId] = useState("");
 
   const paidAmount =
     Number(cashAmount || 0) + Number(cardAmount || 0) + Number(upiAmount || 0);
@@ -164,12 +167,22 @@ export function SalesReturnForm({
   };
 
   const validateData = (data) => {
-    if (!data?.customerName || !data?.billNo) {
-      toast.info("Please fill all required fields...!", {
-        position: "top-center",
-        autoClose: 2000,
-      });
-      return false;
+    if (!isHo) {
+      if (!data?.customerName || !data?.billNo) {
+        toast.info("Please fill all required fields...!", {
+          position: "top-center",
+          autoClose: 2000,
+        });
+        return false;
+      }
+    } else {
+      if (!data?.billNo) {
+        toast.info("Please fill all required fields...!", {
+          position: "top-center",
+          autoClose: 2000,
+        });
+        return false;
+      }
     }
     if (!data?.salesReturnItems || data.salesReturnItems.length === 0) {
       toast.info("Please add at least one return item...!", {
@@ -295,6 +308,7 @@ export function SalesReturnForm({
     cardAmount,
     upiAmount,
     cashAmount,
+    deliveryToId,
   };
 
   const syncFormWithDb = useCallback(
@@ -330,6 +344,7 @@ export function SalesReturnForm({
       setCardAmount(data?.cardAmount || "");
       setUpiAmount(data?.upiAmount || "");
       setCashAmount(data?.cashAmount || "");
+      setDeliveryToId(data?.deliveryToId ? data?.deliveryToId : "");
     },
     [id],
   );
@@ -456,12 +471,14 @@ export function SalesReturnForm({
         params: {
           billNo: newValue,
           branchId,
+          companyId,
         },
       });
       setCustomerId(salesData?.data?.customerId);
       setCustomerName(salesData?.data?.customerName);
       setMobileNo(salesData?.data?.mobileNo);
       setTaxTemplateId(salesData?.data?.taxTemplateId);
+      setDeliveryToId(salesData?.data?.deliveryToId)
       const salesItems = salesData?.data?.salesBillItems;
       if (!salesItems) return;
       setTempItems(salesItems);
@@ -546,24 +563,45 @@ export function SalesReturnForm({
                 <h2 className="font-medium text-slate-700 mb-2">
                   Customer Details
                 </h2>
-                <div className="grid grid-cols-2 gap-2">
-                  <ReusableInput
-                    label="Customer Name"
-                    value={customerName}
-                    setValue={setCustomerName}
-                    type={"text"}
-                    readOnly={true}
-                    required={true}
-                  />
-                  <ReusableInput
-                    label="Contact No"
-                    value={mobileNo}
-                    setValue={setMobileNo}
-                    type={"text"}
-                    readOnly={true}
-                    required={true}
-                  />
-                </div>
+                {!isHo && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <ReusableInput
+                      label="Customer Name"
+                      value={customerName}
+                      setValue={setCustomerName}
+                      type={"text"}
+                      readOnly={true}
+                      required={true}
+                    />
+                    <ReusableInput
+                      label="Contact No"
+                      value={mobileNo}
+                      setValue={setMobileNo}
+                      type={"text"}
+                      readOnly={true}
+                      required={true}
+                    />
+                  </div>
+                )}
+                {isHo && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <DropdownNew
+                      name="Showroom / Franchisee"
+                      dataList={branchList?.data?.filter(
+                        (item) => item.id !== branchId,
+                      )}
+                      value={deliveryToId}
+                      setValue={(value) => {
+                        setDeliveryToId(value);
+                      }}
+                      required={true}
+                      disabled={true}
+                      otherField={"branchName"}
+                      placeholder={"Select Showroom"}
+                      autoFocus={true}
+                    />
+                  </div>
+                )}
               </div>
             </div>
             <fieldset className="w-full  min-w-[1200px]">

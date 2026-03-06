@@ -43,6 +43,7 @@ async function get(req) {
     startDate,
     endDate,
     searchInvNo,
+    searchType,
   } = req.query;
   const { startTime: startDateStartTime } = getDateTimeRange(startDate);
   const { endTime: endDateEndTime } = getDateTimeRange(endDate);
@@ -105,6 +106,9 @@ async function get(req) {
           ? { contains: searchMobile }
           : undefined,
       },
+      DeliveryTo: {
+        branchName: Boolean(searchType) ? { contains: searchType } : undefined,
+      },
       billNo: Boolean(searchInvNo)
         ? {
             contains: searchInvNo,
@@ -122,6 +126,11 @@ async function get(req) {
         select: {
           barcodeId: true,
           barcodeNo: true,
+        },
+      },
+      DeliveryTo: {
+        select: {
+          branchName: true,
         },
       },
     },
@@ -223,6 +232,7 @@ async function create(body) {
       upiAmount,
       cashAmount,
       taxTemplateId,
+      deliveryToId,
     } = await body;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate
@@ -261,6 +271,7 @@ async function create(body) {
           cardAmount: cardAmount ? parseFloat(cardAmount) : null,
           upiAmount: upiAmount ? parseFloat(upiAmount) : null,
           cashAmount: cashAmount ? parseFloat(cashAmount) : null,
+          deliveryToId: deliveryToId ? parseInt(deliveryToId) : undefined,
         },
       });
       await createSalesReturnItems(
@@ -476,6 +487,7 @@ async function update(id, body) {
     cardAmount,
     upiAmount,
     cashAmount,
+    deliveryToId,
   } = await body;
   let data;
   validateUniqueBarcode(salesReturnItems);
@@ -574,6 +586,7 @@ async function update(id, body) {
         cardAmount: cardAmount ? parseFloat(cardAmount) : null,
         upiAmount: upiAmount ? parseFloat(upiAmount) : null,
         cashAmount: cashAmount ? parseFloat(cashAmount) : null,
+        deliveryToId: deliveryToId ? parseInt(deliveryToId) : undefined,
       },
     });
     await updateSalesReturnItems(

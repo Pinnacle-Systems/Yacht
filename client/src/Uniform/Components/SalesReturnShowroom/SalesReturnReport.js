@@ -15,6 +15,7 @@ const SalesReturnReport = ({
   onEdit,
   onDelete,
   rowActions = true,
+  isHo,
 }) => {
   const branchId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "currentBranchId",
@@ -42,12 +43,20 @@ const SalesReturnReport = ({
     searchType,
     searchCustomer,
     searchMobile,
-    searchInvNo
+    searchInvNo,
   };
 
   useEffect(() => {
     setCurrentPageNumber(1);
-  }, [serachDocNo, searchDocDate, searchStore, searchType, searchCustomer, searchMobile, searchInvNo]);
+  }, [
+    serachDocNo,
+    searchDocDate,
+    searchStore,
+    searchType,
+    searchCustomer,
+    searchMobile,
+    searchInvNo,
+  ]);
 
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId",
@@ -193,15 +202,24 @@ const SalesReturnReport = ({
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
                     <div>Return Date</div>
                   </th>
-                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-44">
+                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-44">
                     <div>Sales Bill No</div>
                   </th>
-                  <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                    <div>Customer</div>
-                  </th>
-                  <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                    <div>Contact No</div>
-                  </th>
+                  {!isHo && (
+                    <>
+                      <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                        <div>Customer</div>
+                      </th>
+                      <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                        <div>Contact No</div>
+                      </th>
+                    </>
+                  )}
+                  {isHo && (
+                    <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                      <div>Customer</div>
+                    </th>
+                  )}
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
                   </th>
@@ -243,39 +261,45 @@ const SalesReturnReport = ({
                       }}
                     />
                   </th>
-                  {/* <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
-                    <input
-                      type="text"
-                      className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
-                      placeholder="Search"
-                      value={searchType}
-                      onChange={(e) => {
-                        setSearchType(e.target.value);
-                      }}
-                    />
-                  </th> */}
-                  <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
-                    <input
-                      type="text"
-                      className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
-                      placeholder="Search"
-                      value={searchCustomer}
-                      onChange={(e) => {
-                        setSearchCustomer(e.target.value);
-                      }}
-                    />
-                  </th>
-                  <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
-                    <input
-                      type="text"
-                      className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
-                      placeholder="Search"
-                      value={searchMobile}
-                      onChange={(e) => {
-                        setSearchMobile(e.target.value);
-                      }}
-                    />
-                  </th>
+                  {!isHo && (
+                    <>
+                      <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                        <input
+                          type="text"
+                          className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                          placeholder="Search"
+                          value={searchCustomer}
+                          onChange={(e) => {
+                            setSearchCustomer(e.target.value);
+                          }}
+                        />
+                      </th>
+                      <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                        <input
+                          type="text"
+                          className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                          placeholder="Search"
+                          value={searchMobile}
+                          onChange={(e) => {
+                            setSearchMobile(e.target.value);
+                          }}
+                        />
+                      </th>
+                    </>
+                  )}
+                  {isHo && (
+                    <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                      <input
+                        type="text"
+                        className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                        placeholder="Search"
+                        value={searchType}
+                        onChange={(e) => {
+                          setSearchType(e.target.value);
+                        }}
+                      />
+                    </th>
+                  )}
                   <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center "></th>
                 </tr>
               </thead>
@@ -309,17 +333,27 @@ const SalesReturnReport = ({
                             ? getDateFromDateTimeToDisplay(dataObj.docDate)
                             : ""}
                         </td>
-                         <td className="py-1.5 text-left px-4">
+                        <td className="py-1.5 text-left px-4">
                           {dataObj?.billNo}
                         </td>
-                        <td className="py-1.5 text-left px-4">
-                          {" "}
-                          {dataObj?.customerName}
-                        </td>
-                         <td className="py-1.5 text-left px-4">
-                          {" "}
-                          {dataObj?.mobileNo}
-                        </td>
+                        {!isHo && (
+                          <>
+                            <td className="py-1.5 text-left px-4">
+                              {" "}
+                              {dataObj?.customerName}
+                            </td>
+                            <td className="py-1.5 text-left px-4">
+                              {" "}
+                              {dataObj?.mobileNo}
+                            </td>
+                          </>
+                        )}
+                        {isHo && (
+                          <td className="py-1.5 text-left px-4">
+                            {" "}
+                            {dataObj?.DeliveryTo?.branchName}
+                          </td>
+                        )}
                         {rowActions && (
                           <td className=" w-[30px] border-gray-200 gap-1 px-2 justify-end">
                             <div className="flex">

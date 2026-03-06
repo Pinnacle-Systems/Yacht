@@ -44,6 +44,7 @@ async function get(req) {
     startDate,
     endDate,
     supplier,
+    searchDeliveryTo,
   } = req.query;
   const { startTime: startDateStartTime } = getDateTimeRange(startDate);
   const { endTime: endDateEndTime } = getDateTimeRange(endDate);
@@ -106,6 +107,11 @@ async function get(req) {
           ? { contains: searchMobile }
           : undefined,
       },
+      DeliveryTo: {
+        branchName: Boolean(searchDeliveryTo)
+          ? { contains: searchDeliveryTo }
+          : undefined,
+      },
     },
     include: {
       Customer: {
@@ -118,6 +124,11 @@ async function get(req) {
       salesBillItems: {
         select: {
           qty: true,
+        },
+      },
+      DeliveryTo: {
+        select: {
+          branchName: true,
         },
       },
     },
@@ -358,16 +369,32 @@ async function getOne(id) {
   });
 
   if (!data) return NoRecordFound("salesBill");
+  const branchId = data?.branchId;
   const itemsWithUsedQty = await Promise.all(
     data.salesBillItems.map(async (item) => {
       const childRecordReturn = await prisma.salesReturnSRItems.count({
         where: {
           barcodeId: item.barcodeId,
+          SalesReturnSR: {
+            is: {
+              branchId: parseInt(branchId),
+            },
+          },
+        },
+      });
+      const usedBarcodes = await prisma.purchaseBillItems.count({
+        where: {
+          barcodeId: item.barcodeId,
+          PurchaseBill: {
+            isNot: {
+              branchId: parseInt(branchId),
+            },
+          },
         },
       });
       return {
         ...item,
-        usedQty: childRecordReturn || 0,
+        usedQty: childRecordReturn + usedBarcodes,
       };
     }),
   );
@@ -377,6 +404,16 @@ async function getOne(id) {
   const childRecord = await prisma.salesReturnSRItems.count({
     where: {
       barcodeId: { in: barcodeIds },
+      SalesReturnSR: {
+        is: {
+          branchId: parseInt(branchId),
+        },
+      },
+    },
+  });
+  const childRecordSRInward = await prisma.purchaseBill.count({
+    where: {
+      dcNo: { in: data.docId },
     },
   });
   return {
@@ -385,6 +422,7 @@ async function getOne(id) {
       ...data,
       salesBillItems: itemsWithUsedQty,
       childRecord,
+      childRecordSRInward: childRecordSRInward,
     },
   };
 }
@@ -936,7 +974,7 @@ async function remove(id) {
 }
 
 async function getSalesBillDetail(req) {
-  const { billNo, branchId } = req.query;
+  const { billNo, branchId, companyId } = req.query;
 
   let data = await prisma.salesBill.findFirst({
     where: {
@@ -990,11 +1028,68 @@ async function getSalesBillDetail(req) {
     },
   });
 
+  const company = await prisma.company.findUnique({
+    where: {
+      id: parseInt(companyId),
+    },
+  });
+  const branch = await prisma.branch.findFirst({
+    where: {
+      branchName: company.name,
+    },
+  });
+  const hoBranchId = parseInt(branch.id);
+
+  const itemsWithUsedQty = await Promise.all(
+    data.salesBillItems.map(async (item) => {
+      const usedBarcodesInPurchase = await prisma.purchaseBillItems.count({
+        where: {
+          barcodeId: item.barcodeId,
+          PurchaseBill: {
+            is: {
+              branchId: {
+                notIn: [parseInt(branchId), hoBranchId],
+              },
+            },
+          },
+        },
+      });
+      const usedBarcodesInReturn = await prisma.purchasReturnItemsSR.count({
+        where: {
+          barcodeId: item.barcodeId,
+          PurchaseReturnShowRoom: {
+            isNot: {
+              branchId: parseInt(branchId),
+            },
+          },
+        },
+      });
+      const usedBarcodesInSalesReturn = await prisma.salesReturnSRItems.count({
+        where: {
+          barcodeId: item.barcodeId,
+          SalesReturnSR: {
+            is: {
+              branchId: parseInt(branchId),
+            },
+          },
+        },
+      });
+      return {
+        ...item,
+        usedQty:
+          usedBarcodesInPurchase -
+          usedBarcodesInReturn +
+          usedBarcodesInSalesReturn,
+      };
+    }),
+  );
+
   if (!data) return NoRecordFound("Sales Bill");
   return {
     statusCode: 0,
     data: {
       ...data,
+      salesBillItems: itemsWithUsedQty,
     },
   };
 }
@@ -1037,7 +1132,7 @@ async function getHOSalesDetail(req) {
   const returnItems = salesReturn.flatMap((sr) => sr.salesReturnSRItems);
   const returnedBarcodeIds = new Set(returnItems.map((item) => item.barcodeId));
   const filteredBarcodes = barcodes.filter(
-    (barcode) => !returnedBarcodeIds.has(barcode.id),
+    (barcode) => !returnedBarcodeIds.has(barcode.barcodeId),
   );
   const barcodeWithRate = await Promise.all(
     filteredBarcodes.map(async (barcode) => {
@@ -1084,5 +1179,5 @@ export {
   getSalesBillDetail,
   getSalesReport,
   getHOSalesDetail,
-  getHOSalesList
+  getHOSalesList,
 };

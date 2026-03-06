@@ -27,7 +27,8 @@ import { useAddPurchaseBillMutation, useDeletePurchaseBillMutation, useGetPurcha
 import PurchaseBillSummary from "./PurchaseBillSummary";
 import { useGetSalesEntryQuery, useLazyGetSalesDCDetailQuery } from "../../../redux/uniformService/SalesEntryService";
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
-import SalesEntryApi from "../../../redux/uniformService/SalesEntryService"
+import SalesEntryApi from "../../../redux/uniformService/SalesEntryService";
+import salesBillApi from "../../../redux/services/SalesBillService";
 import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterService";
 import { useGetHOSalesListQuery, useGetSalesBillQuery, useLazyGetHOSalesDetailQuery } from "../../../redux/services/SalesBillService";
 const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
@@ -194,6 +195,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                 });
                 dispatch(showroomStockApi.util.invalidateTags(["showroomStock"]));
                 dispatch(SalesEntryApi.util.invalidateTags(["SalesEntry"]))
+                // dispatch(salesBillApi.util.invalidateTags(["SalesBill"]));
             } else {
                 Swal.fire({
                     icon: "warning",
