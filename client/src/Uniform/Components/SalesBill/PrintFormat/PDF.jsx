@@ -521,6 +521,10 @@ const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, single
                                 <Text style={styles.summaryTitle}>Summary</Text>
                                 {taxRows?.map((tax, index) => (
                                     <View key={index}>
+                                        <View style={styles.summaryRow}>
+                                            <Text style={styles.summaryLabel}>Overall Gross Amount</Text>
+                                            <Text style={styles.summaryValue}>{overallGrossAmount}</Text>
+                                        </View>
                                         {/* SGST Row */}
                                         <View style={styles.summaryRow}>
                                             <Text style={styles.summaryLabel}>
@@ -543,10 +547,7 @@ const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, single
                                     </View>
                                 ))}
 
-                                <View style={styles.summaryRow}>
-                                    <Text style={styles.summaryLabel}>Overall Gross Amount</Text>
-                                    <Text style={styles.summaryValue}>{overallGrossAmount}</Text>
-                                </View>
+
                                 <View style={styles.summaryRow}>
                                     <Text style={styles.summaryLabel}>Overall Net Amount</Text>
                                     <Text style={styles.summaryValue}>{overallNetAmount}</Text>

@@ -358,7 +358,40 @@ async function getOne(id) {
   let data = await prisma.salesBill.findUnique({
     where: { id: parseInt(id) },
     include: {
-      salesBillItems: true,
+      salesBillItems: {
+        select: {
+          id: true,
+          salesBillId: true,
+          styleId: true,
+          sizeId: true,
+          qty: true,
+          styleItemId: true,
+          colorId: true,
+          uomId: true,
+          barcodeNo: true,
+          rate: true,
+          discountType: true,
+          discountValue: true,
+          taxPercent: true,
+          netAmount: true,
+          barcodeId: true,
+          StyleItem: {
+            select: {
+              name: true,
+            },
+          },
+           Size: {
+            select: {
+              name: true,
+            },
+          },
+           Uom: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
       Customer: {
         select: {
           name: true,

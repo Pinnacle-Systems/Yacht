@@ -10,8 +10,28 @@ const PurchaseBillSummary = ({
   discountValue,
   setDiscountValue,
 }) => {
+  const calculateTaxableAmt = (item) => {
+    const qty = parseFloat(item.qty) || 0;
+    const rate = parseFloat(item.rate) || 0;
+    const discountValue = parseFloat(item.discountValue) || 0;
+    const discountType = item.discountType || "";
+    const taxPercent = item.taxPercent || 0;
+    // Gross amount
+    const grossAmount = qty * rate;
+    let discountAmount = 0;
+    if (discountType) {
+      if (discountType === "Flat") {
+        discountAmount = discountValue;
+      } else {
+        discountAmount = (grossAmount * discountValue) / 100;
+      }
+    }
+    const netAmount = grossAmount - discountAmount;
+    const taxable = netAmount / (1 + taxPercent / 100);
+    return taxable;
+  };
   const totalAmount = purchaseBillItems.reduce(
-    (sum, row) => sum + (Number(row.taxable) || 0),
+    (sum, row) => sum + (calculateTaxableAmt(row) || 0),
     0,
   );
 
@@ -42,7 +62,7 @@ const PurchaseBillSummary = ({
     .filter(([taxPercent]) => Number(taxPercent) > 0) // ignore null / 0
     .map(([taxPercent, items]) => {
       const taxable = items.reduce(
-        (sum, item) => sum +  (Number(item.taxable) || 0),
+        (sum, item) => sum + (calculateTaxableAmt(item) || 0),
         0,
       );
 
@@ -179,7 +199,10 @@ const PurchaseBillSummary = ({
               Amount in Words
             </td>
             <td colSpan={2} className="border border-gray-500 text-right">
-              {numberToWords.toWords(netAmount)} Only
+              {numberToWords
+                .toWords(netAmount)
+                .replace(/\b\w/g, (c) => c.toUpperCase())}{" "}
+              Only
             </td>
           </tr>
         </tbody>

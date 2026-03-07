@@ -344,3 +344,56 @@ label,input,h1,h2,h3,h4,h5,h6,header,nav,ul,li,a,table,thead,tbody,th,tr,td,p,sp
 
 /* styles.css */
 
+ /* POS Printer ---------------------------------------- */
+
+ .pos-receipt {
+  width: 72mm;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.pos-center {
+  text-align: center;
+}
+
+.pos-bold {
+  font-weight: bold;
+}
+
+.pos-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.pos-items {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pos-items th {
+  border-bottom: 1px dashed black;
+  padding-bottom: 6px;
+}
+
+.pos-items td {
+  padding: 2px 0;
+}
+
+.pos-left {
+  text-align: left;
+}
+
+.pos-right {
+  text-align: right;
+}
+
+.pos-divider {
+  border-top: 1px dashed black;
+  margin: 5px 0;
+}
+
+.pos-dividerY {
+  border-top: 1px dashed black;
+    border-bottom: 1px dashed black;
+  margin: 5px 0;
+}

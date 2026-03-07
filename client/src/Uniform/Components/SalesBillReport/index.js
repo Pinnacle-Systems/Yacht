@@ -19,7 +19,7 @@ import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterServi
 
 export default function Form() {
   const today = new Date().toISOString().split("T")[0];
-  const [dataPerPage, setDataPerPage] = useState("10");
+  const [dataPerPage, setDataPerPage] = useState(10);
   const [currentPageNumber, setCurrentPageNumber] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [fromDate, setFromDate] = useState(today);
@@ -372,7 +372,7 @@ export default function Form() {
     URL.revokeObjectURL(url);
   };
 
-  const allItems = allDataDetail?.flatmap((item) => item.salesItem || []) || [];
+  const allItems = allDataDetail?.flatMap((item) => item.salesItem || []);
 
   const totalQty = allItems?.reduce(
     (sum, item) => sum + (item.qty || item.exchangeQty || 0),
@@ -648,7 +648,7 @@ export default function Form() {
                           </>
                         )}
                         {viewType === "Detail" && (
-                          <td className="py-1.5 px-10 text-right">
+                          <td className="py-1.5 px-4 text-right">
                             {totalQty}
                           </td>
                         )}

@@ -32,7 +32,9 @@ async function getOne(id) {
             },
              company:{
                 select:{
-                    name:true
+                    name:true,
+                    contactMobile:true,
+                    code:true
                 }
             }
         }

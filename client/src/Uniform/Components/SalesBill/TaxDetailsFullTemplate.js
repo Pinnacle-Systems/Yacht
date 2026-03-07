@@ -118,7 +118,6 @@ const TaxDetailsFullTemplate = ({
     }
   };
 
-  console.log(taxTermMaster, "taxTerm");
 
   return (
     <div

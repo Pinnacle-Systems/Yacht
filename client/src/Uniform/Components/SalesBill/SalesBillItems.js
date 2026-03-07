@@ -22,7 +22,7 @@ export default function SalesBillItems({
   colorList,
   uomList,
   styleList,
-  branchId
+  branchId,
 }) {
   const [barcodeNo, setbarcodeNo] = useState("");
   const [contextMenu, setContextMenu] = useState(null);
@@ -261,11 +261,8 @@ export default function SalesBillItems({
         }
       }
 
-      const taxable = gross - discountAmount;
-      const sgst = (taxable * (taxPercent / 2)) / 100;
-      const cgst = (taxable * (taxPercent / 2)) / 100;
-
-      const net = taxable;
+      const net = gross - discountAmount;
+      const taxable = net / (1 + taxPercent / 100);
       return {
         ...row,
         netAmount: Math.round(net),
@@ -286,7 +283,7 @@ export default function SalesBillItems({
   const handleBarcodeEnter = async (index, row) => {
     try {
       const response = await getBarcodeDetails({
-        params: { barcodeNo: row.barcodeNo , branchId : branchId},
+        params: { barcodeNo: row.barcodeNo, branchId: branchId },
       }).unwrap();
 
       if (response.statusCode !== 0) {
@@ -769,6 +766,7 @@ export default function SalesBillItems({
                   </td>
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                     <input
+                      id={`discountValue-input-${index}`}
                       type="number"
                       className="text-right rounded py-1 px-1 w-full table-data-input"
                       value={row?.discountValue}
@@ -778,6 +776,22 @@ export default function SalesBillItems({
                           e.preventDefault();
                         if (e.key === "Delete") {
                           handleInputChange("", index, "discountValue");
+                        }
+                        if (e.key === "ArrowDown") {
+                          e.preventDefault();
+                          const nextInput = document.getElementById(
+                            `discountValue-input-${index + 1}`,
+                          );
+                          nextInput?.focus();
+                        }
+
+                        // Optional: Move to previous row
+                        if (e.key === "ArrowUp") {
+                          e.preventDefault();
+                          const prevInput = document.getElementById(
+                            `discountValue-input-${index - 1}`,
+                          );
+                          prevInput?.focus();
                         }
                       }}
                       onChange={(e) =>
@@ -794,6 +808,7 @@ export default function SalesBillItems({
                           "discountValue",
                         );
                       }}
+                      onFocus={(e) => e.target.select()}
                     />
                   </td>
                   <td className="py-0.5 border border-gray-300 text-[11px]">
