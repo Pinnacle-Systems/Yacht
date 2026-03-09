@@ -8,7 +8,7 @@ import SRHeader from "../../../../Utils/SRHeader";
 import { groupBy } from "lodash";
 
 
-const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, singleDataBranch, grossAmount, netAmount, roundOff, taxRows, salesBillItems }) => {
+const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, singleDataBranch, grossAmount, netAmount, roundOff, taxRows, salesBillItems,roundOffType }) => {
     const styles = StyleSheet.create({
         page: { padding: 5 },
 
@@ -196,6 +196,11 @@ const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, single
     const overallNetAmount =
         netAmount.toFixed(2);
 
+    const sumNetAmount = singleData?.salesBillItems.reduce(
+        (sum, row) => sum + (Number(row.netAmount) || 0),
+        0,
+    );
+
     return (
         <Document>
             <SRPageWrapper heading={"Sales Delivery"} singleData={singleData} header={false}>
@@ -308,15 +313,13 @@ const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, single
                                 </Text>
                                 <Text style={tw("text-xs ml-1")}>
                                     {" "}
-                                    {singleData?.Customer?.name
-                                        ? singleData.Customer.name
-                                            .toLowerCase()
-                                            .replace(/\b\w/g, (char) => char.toUpperCase())
+                                    {singleData?.DeliveryTo?.branchName
+                                        ? singleData.DeliveryTo.branchName
                                         : ""}
                                 </Text>
                             </View>
                             {/*Customer Phone No */}
-                            <View style={tw("flex flex-row gap-x-2")}>
+                            {/* <View style={tw("flex flex-row gap-x-2")}>
                                 <Text
                                     style={[
                                         tw("text-xs font-bold"),
@@ -340,7 +343,7 @@ const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, single
                                 <Text style={tw("text-xs ml-2")}>
                                     {singleData?.Customer?.mobileNo || ""}
                                 </Text>
-                            </View>
+                            </View> */}
                         </View>
                     </View>
 
@@ -522,7 +525,7 @@ const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, single
                                 {taxRows?.map((tax, index) => (
                                     <View key={index}>
                                         <View style={styles.summaryRow}>
-                                            <Text style={styles.summaryLabel}>Overall Gross Amount</Text>
+                                            <Text style={styles.summaryLabel}> Gross Amount</Text>
                                             <Text style={styles.summaryValue}>{overallGrossAmount}</Text>
                                         </View>
                                         {/* SGST Row */}
@@ -549,13 +552,13 @@ const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, single
 
 
                                 <View style={styles.summaryRow}>
-                                    <Text style={styles.summaryLabel}>Overall Net Amount</Text>
-                                    <Text style={styles.summaryValue}>{overallNetAmount}</Text>
+                                    <Text style={styles.summaryLabel}> Net Amount</Text>
+                                    <Text style={styles.summaryValue}>{sumNetAmount.toFixed(2)}</Text>
                                 </View>
 
                                 <View style={styles.summaryRow}>
                                     <Text style={styles.summaryLabel}>Round Off</Text>
-                                    <Text style={styles.summaryValue}>{roundOff.toFixed(2)}</Text>
+                                    <Text style={styles.summaryValue}>{roundOffType === "PLUS" ? "+" : "-"} {Number(roundOff || 0).toFixed(2)}</Text>
                                 </View>
 
                                 <View

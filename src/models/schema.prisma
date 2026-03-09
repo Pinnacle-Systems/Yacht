@@ -2886,6 +2886,8 @@ model SalesBill {
   upiAmount         Float?
   DeliveryTo        Branch?          @relation("delivery", fields: [deliveryToId], references: [id])
   deliveryToId      Int?
+  roundOffType      String?
+  roundOffValue     Float?
 }
 
 model SalesBillItems {

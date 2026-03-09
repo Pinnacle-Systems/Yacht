@@ -236,6 +236,11 @@ async function getSalesReport(req) {
           barcodeNo: true,
         },
       },
+      DeliveryTo: {
+        select: {
+          branchName: true,
+        },
+      },
     },
   });
   let returnData = await prisma.salesReturnSR.findMany({
@@ -257,6 +262,11 @@ async function getSalesReport(req) {
         select: {
           name: true,
           mobileNo: true,
+        },
+      },
+      DeliveryTo: {
+        select: {
+          branchName: true,
         },
       },
 
@@ -299,6 +309,7 @@ async function getSalesReport(req) {
       (item.paymentValue || 0) + (item.cardAmount || 0) + (item.upiAmount || 0),
     salesType: "General",
     salesItem: item.salesBillItems,
+    deliveryTo: item.DeliveryTo?.branchName,
   }));
 
   // Normalize Sales Returns (Exchange)
@@ -317,6 +328,7 @@ async function getSalesReport(req) {
       (item.cashAmount || 0) + (item.cardAmount || 0) + (item.upiAmount || 0),
     salesType: "Exchange",
     salesItem: item.salesExchangeItems,
+    deliveryTo: item.DeliveryTo?.branchName,
   }));
   const combinedData = [...formattedBills, ...formattedReturns].sort(
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
@@ -380,12 +392,12 @@ async function getOne(id) {
               name: true,
             },
           },
-           Size: {
+          Size: {
             select: {
               name: true,
             },
           },
-           Uom: {
+          Uom: {
             select: {
               name: true,
             },
@@ -398,11 +410,34 @@ async function getOne(id) {
           mobileNo: true,
         },
       },
+      DeliveryTo: {
+        select: {
+          branchName: true,
+        },
+      },
     },
   });
 
   if (!data) return NoRecordFound("salesBill");
   const branchId = data?.branchId;
+  const branchDetails = await prisma.branch.findUnique({
+    where: {
+      id: data.branchId,
+    },
+    select: {
+      company: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+  const branch = await prisma.branch.findFirst({
+    where: {
+      branchName: branchDetails?.company.name,
+    },
+  });
+  const hoBranchId = parseInt(branch.id);
   const itemsWithUsedQty = await Promise.all(
     data.salesBillItems.map(async (item) => {
       const childRecordReturn = await prisma.salesReturnSRItems.count({
@@ -418,9 +453,16 @@ async function getOne(id) {
       const usedBarcodes = await prisma.purchaseBillItems.count({
         where: {
           barcodeId: item.barcodeId,
+          // PurchaseBill: {
+          //   isNot: {
+          //     branchId: parseInt(branchId),
+          //   },
+          // },
           PurchaseBill: {
-            isNot: {
-              branchId: parseInt(branchId),
+            is: {
+              branchId: {
+                notIn: [parseInt(branchId), hoBranchId],
+              },
             },
           },
         },
@@ -502,6 +544,8 @@ async function create(body) {
       cardAmount,
       upiAmount,
       deliveryToId,
+      roundOffType,
+      roundOffValue,
     } = await body;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate
@@ -556,6 +600,11 @@ async function create(body) {
           cardAmount: cardAmount ? parseFloat(cardAmount) : null,
           upiAmount: upiAmount ? parseFloat(upiAmount) : null,
           deliveryToId: deliveryToId ? parseInt(deliveryToId) : undefined,
+          roundOffType,
+          roundOffValue:
+            roundOffValue === "" || roundOffValue == null
+              ? null
+              : Number(roundOffValue),
         },
       });
 
@@ -679,6 +728,8 @@ async function update(id, body) {
     cardAmount,
     upiAmount,
     deliveryToId,
+    roundOffType,
+    roundOffValue,
   } = await body;
   let data;
   validateUniqueBarcode(salesBillItems);
@@ -747,6 +798,11 @@ async function update(id, body) {
             ? null
             : Number(discountValue),
         deliveryToId: deliveryToId ? parseInt(deliveryToId) : undefined,
+        roundOffType,
+        roundOffValue:
+          roundOffValue === "" || roundOffValue == null
+            ? null
+            : Number(roundOffValue),
       },
     });
     await updateSalesBillItems(tx, salesBillItems, data, userId, branchId);
