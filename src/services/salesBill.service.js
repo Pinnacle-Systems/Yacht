@@ -269,6 +269,27 @@ async function getSalesReport(req) {
           branchName: true,
         },
       },
+      salesReturnSRItems: {
+        select: {
+          returnQty: true,
+          StyleItem: {
+            select: {
+              name: true,
+            },
+          },
+          Size: {
+            select: {
+              name: true,
+            },
+          },
+          Uom: {
+            select: {
+              name: true,
+            },
+          },
+          barcodeNo: true,
+        },
+      },
 
       salesExchangeItems: {
         select: {
@@ -293,6 +314,7 @@ async function getSalesReport(req) {
       },
     },
   });
+  console.log(returnData, "returnData");
   // Normalize Sales Bills
   const formattedBills = data.map((item) => ({
     id: item.id,
@@ -313,24 +335,38 @@ async function getSalesReport(req) {
   }));
 
   // Normalize Sales Returns (Exchange)
-  const formattedReturns = returnData.map((item) => ({
-    id: item.id,
-    docId: item.docId,
-    docDate: item.docDate,
-    createdAt: item.createdAt,
-    customerName: item.customerName,
-    mobileNo: item.mobileNo,
-    type: "Exchange",
-    cashAmount: item.cashAmount || 0,
-    cardAmount: item.cardAmount || 0,
-    upiAmount: item.upiAmount || 0,
-    totalAmount:
-      (item.cashAmount || 0) + (item.cardAmount || 0) + (item.upiAmount || 0),
-    salesType: "Exchange",
-    salesItem: item.salesExchangeItems,
-    deliveryTo: item.DeliveryTo?.branchName,
-  }));
-  const combinedData = [...formattedBills, ...formattedReturns].sort(
+  const formattedExchange = returnData.map((item) => {
+    const exchangeItems = (item.salesExchangeItems || []).map((ex) => ({
+      ...ex,
+      qty: ex.exchangeQty,
+    }));
+
+    const returnItems = (item.salesReturnSRItems || []).map((ret) => ({
+      ...ret,
+      qty: -ret.returnQty,
+    }));
+
+    return {
+      id: item.id,
+      docId: item.docId,
+      docDate: item.docDate,
+      createdAt: item.createdAt,
+      customerName: item.customerName,
+      mobileNo: item.mobileNo,
+      type: "Exchange",
+      cashAmount: item.cashAmount || 0,
+      cardAmount: item.cardAmount || 0,
+      upiAmount: item.upiAmount || 0,
+      totalAmount:
+        (item.cashAmount || 0) + (item.cardAmount || 0) + (item.upiAmount || 0),
+      salesType: "Exchange",
+
+      salesItem: [...exchangeItems, ...returnItems],
+
+      deliveryTo: item.DeliveryTo?.branchName,
+    };
+  });
+  const combinedData = [...formattedBills, ...formattedExchange].sort(
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
   );
   const totalCount = combinedData.length;

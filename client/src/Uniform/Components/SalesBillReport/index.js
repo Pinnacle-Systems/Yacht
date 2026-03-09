@@ -47,9 +47,12 @@ export default function Form() {
       toDate,
     },
   });
-  const {
-    data: singleData,
-  } = useGetBranchByIdQuery(branchId);
+  const { data: singleData } = useGetBranchByIdQuery(branchId);
+  const { data: branchData } = useGetBranchByIdQuery(branchId, {
+    skip: !branchId,
+  });
+  const isAdmin =
+    branchData?.data?.company?.name === branchData?.data?.branchName;
 
   const isLoadingIndicator = isLoading || isFetching;
   const allDataDetail = allData?.data || [];
@@ -176,7 +179,7 @@ export default function Form() {
     );
   };
 
-  const DownloadExcel = async (allData) => {
+  const DownloadExcel = async (allData, viewType) => {
     const dataArray = allData?.data || [];
 
     const workbook = new ExcelJS.Workbook();
@@ -185,43 +188,55 @@ export default function Form() {
     /* =========================
      ROW 1 → TITLE
   ========================== */
-    sheet.mergeCells("A1:H1");
+    sheet.mergeCells("A1:J1");
     const titleCell = sheet.getCell("A1");
     titleCell.value = "Sales Bill Report";
     titleCell.font = { bold: true, size: 15 };
-    titleCell.alignment = {
-      horizontal: "center",
-      vertical: "middle",
-    };
+    titleCell.alignment = { horizontal: "center", vertical: "middle" };
     sheet.getRow(1).height = 24;
 
     /* =========================
      ROW 2 → PARAMETERS
   ========================== */
-    sheet.mergeCells("A2:H2");
+    sheet.mergeCells("A2:J2");
     const paramCell = sheet.getCell("A2");
     paramCell.value = `From Date : ${fromDate}     To Date : ${toDate}`;
     paramCell.font = { bold: true, size: 11 };
-    paramCell.alignment = {
-      horizontal: "left",
-      vertical: "middle",
-      indent: 1,
-    };
+    paramCell.alignment = { horizontal: "left", vertical: "middle", indent: 1 };
     sheet.getRow(2).height = 18;
 
     /* =========================
-     ROW 4 → HEADER
+     HEADER
   ========================== */
-    const headerRow = [
-      "S No",
-      "Sales No",
-      "Sales Date",
-      "Customer",
-      "Cash Amt",
-      "Card Amt",
-      "UPI Amt",
-      "Net Amt",
-    ];
+
+    let headerRow = [];
+
+    if (viewType === "Normal") {
+      headerRow = [
+        "S No",
+        "Sales No",
+        "Sales Date",
+        "Time",
+        "Customer",
+        "Cash Amt",
+        "Card Amt",
+        "UPI Amt",
+        "Net Amt",
+      ];
+    } else {
+      headerRow = [
+        "S No",
+        "Sales No",
+        "Sales Date",
+        "Time",
+        "Customer",
+        "Barcode",
+        "Item Name",
+        "Size",
+        "Unit",
+        "Qty",
+      ];
+    }
 
     sheet.addRow(headerRow);
 
@@ -231,15 +246,17 @@ export default function Form() {
     header.eachCell((cell) => {
       cell.font = { bold: true };
       cell.alignment = {
-        horizontal: "center", // HEADER CENTER ONLY
+        horizontal: "center",
         vertical: "middle",
         wrapText: true,
       };
+
       cell.fill = {
         type: "pattern",
         pattern: "solid",
         fgColor: { argb: "FFEFEFEF" },
       };
+
       cell.border = {
         top: { style: "thin" },
         left: { style: "thin" },
@@ -251,62 +268,117 @@ export default function Form() {
     /* =========================
      DATA ROWS
   ========================== */
-    dataArray.forEach((item, index) => {
+
+    dataArray.forEach((dataObj, index) => {
+      const salesItems = dataObj?.salesItem || [];
+
       const netAmount =
-        Number(item?.cashAmount || 0) +
-        Number(item?.cardAmount || 0) +
-        Number(item?.upiAmount || 0);
+        Number(dataObj?.cashAmount || 0) +
+        Number(dataObj?.cardAmount || 0) +
+        Number(dataObj?.upiAmount || 0);
 
-      const row = sheet.addRow([
-        index + 1,
-        item?.docId || "",
-        item?.docDate ? getDateFromDateTimeToDisplay(item.docDate) : "",
-        item?.customerName || "",
-        Number(item?.cashAmount || 0),
-        Number(item?.cardAmount || 0),
-        Number(item?.upiAmount || 0),
-        netAmount,
-      ]);
+      /* ========= NORMAL VIEW ========= */
 
-      row.height = 20;
+      if (viewType === "Normal") {
+        sheet.addRow([
+          index + 1,
+          dataObj?.docId || "",
+          dataObj?.docDate ? getDateFromDateTimeToDisplay(dataObj.docDate) : "",
+          dataObj?.createdAt ? getTimeFromDateTime(dataObj.createdAt) : "",
+          !isAdmin
+            ? `${dataObj?.customerName || ""} - ${dataObj?.mobileNo || ""}`
+            : dataObj?.deliveryTo,
+          Number(dataObj?.cashAmount || 0),
+          Number(dataObj?.cardAmount || 0),
+          Number(dataObj?.upiAmount || 0),
+          netAmount,
+        ]);
+      } else {
+        /* ========= DETAIL VIEW ========= */
+        salesItems.forEach((item, itemIndex) => {
+          sheet.addRow([
+            itemIndex === 0 ? index + 1 : "",
+            itemIndex === 0 ? dataObj?.docId : "",
+            itemIndex === 0
+              ? getDateFromDateTimeToDisplay(dataObj.docDate)
+              : "",
+            itemIndex === 0 ? getTimeFromDateTime(dataObj.createdAt) : "",
+            !isAdmin
+              ? `${dataObj?.customerName || ""} - ${dataObj?.mobileNo || ""}`
+              : dataObj?.deliveryTo,
+            item?.barcodeNo || "",
+            item?.StyleItem?.name || "",
+            item?.Size?.name || "",
+            item?.Uom?.name || "",
+            item?.qty || 0,
+          ]);
+        });
+      }
     });
 
     /* =========================
      TOTAL ROW
   ========================== */
-    const totalRow = sheet.addRow([
-      "",
-      "",
-      "",
-      "Total",
-      Number(allData?.totalCashAmount || 0),
-      Number(allData?.totalCardAmount || 0),
-      Number(allData?.totalUpiAmount || 0),
-      Number(allData?.totalNetAmount || 0),
-    ]);
 
-    totalRow.height = 22;
+    if (viewType === "Normal") {
+      sheet.addRow([
+        "",
+        "",
+        "",
+        "",
+        "Total",
+        Number(allData?.totalCashAmount || 0),
+        Number(allData?.totalCardAmount || 0),
+        Number(allData?.totalUpiAmount || 0),
+        Number(allData?.totalNetAmount || 0),
+      ]);
+    } else {
+      const totalQty = dataArray.reduce((sum, bill) => {
+        return (
+          sum +
+          (bill.salesItem || []).reduce((s, i) => s + Number(i.qty || 0), 0)
+        );
+      }, 0);
+
+      sheet.addRow(["", "", "", "", "", "", "", "", "Total", totalQty]);
+    }
 
     /* =========================
      COLUMN WIDTHS
   ========================== */
-    sheet.columns = [
-      { width: 8 },
-      { width: 20 },
-      { width: 18 },
-      { width: 25 },
-      { width: 15 },
-      { width: 15 },
-      { width: 15 },
-      { width: 18 },
-    ];
+
+    sheet.columns =
+      viewType === "Normal"
+        ? [
+            { width: 8 },
+            { width: 20 },
+            { width: 15 },
+            { width: 12 },
+            { width: 30 },
+            { width: 15 },
+            { width: 15 },
+            { width: 15 },
+            { width: 18 },
+          ]
+        : [
+            { width: 8 },
+            { width: 20 },
+            { width: 15 },
+            { width: 12 },
+            { width: 30 },
+            { width: 20 },
+            { width: 28 },
+            { width: 10 },
+            { width: 10 },
+            { width: 10 },
+          ];
 
     /* =========================
      GLOBAL STYLING
   ========================== */
+
     sheet.eachRow((row, rowNumber) => {
       row.eachCell((cell, colNumber) => {
-        // Border for all cells
         cell.border = {
           top: { style: "thin" },
           left: { style: "thin" },
@@ -314,19 +386,22 @@ export default function Form() {
           right: { style: "thin" },
         };
 
-        // Skip Title, Parameter, Empty, Header
         if (rowNumber <= 3) return;
 
-        // Amount columns right aligned
-        if (colNumber >= 5) {
+        if (viewType === "Normal" && colNumber >= 6) {
           cell.alignment = {
             horizontal: "right",
             vertical: "middle",
             indent: 1,
           };
           cell.numFmt = "0.00";
+        } else if (viewType === "Detail" && colNumber === 10) {
+          cell.alignment = {
+            horizontal: "right",
+            vertical: "middle",
+            indent: 1,
+          };
         } else {
-          // Other data left aligned
           cell.alignment = {
             horizontal: "left",
             vertical: "middle",
@@ -334,7 +409,6 @@ export default function Form() {
           };
         }
 
-        // Total row styling
         if (rowNumber === sheet.rowCount) {
           cell.font = { bold: true };
           cell.fill = {
@@ -349,6 +423,7 @@ export default function Form() {
     /* =========================
      FREEZE HEADER
   ========================== */
+
     sheet.views = [
       {
         state: "frozen",
@@ -359,25 +434,26 @@ export default function Form() {
     /* =========================
      EXPORT
   ========================== */
+
     const buffer = await workbook.xlsx.writeBuffer();
+
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
 
     const url = URL.createObjectURL(blob);
+
     const a = document.createElement("a");
     a.href = url;
     a.download = "SalesBillReport.xlsx";
     a.click();
+
     URL.revokeObjectURL(url);
   };
 
   const allItems = allDataDetail?.flatMap((item) => item.salesItem || []);
 
-  const totalQty = allItems?.reduce(
-    (sum, item) => sum + (item.qty || item.exchangeQty || 0),
-    0,
-  );
+  const totalQty = allItems?.reduce((sum, item) => sum + item.qty, 0);
 
   return (
     <>
@@ -408,7 +484,7 @@ export default function Form() {
               </button>
               <button
                 className="bg-green-700 text-white px-3 h-6  rounded-md hover:bg-green-800 flex items-center text-sm"
-                onClick={() => DownloadExcel(allData)}
+                onClick={() => DownloadExcel(allData, viewType)}
               >
                 <FiPrinter className="w-4 h-4 mr-2" />
                 Excel
@@ -536,9 +612,16 @@ export default function Form() {
                                     ? getTimeFromDateTime(dataObj.createdAt)
                                     : ""}
                                 </td>
-                                <td className="py-1.5 px-4">
-                                  {dataObj?.customerName} - {dataObj?.mobileNo}
-                                </td>
+                                {isAdmin ? (
+                                  <td className="py-1.5 px-4">
+                                    {dataObj?.deliveryTo}
+                                  </td>
+                                ) : (
+                                  <td className="py-1.5 px-4">
+                                    {dataObj?.customerName} -{" "}
+                                    {dataObj?.mobileNo}
+                                  </td>
+                                )}
 
                                 <td className="py-1.5 text-right px-10">
                                   {Number(dataObj?.cashAmount || 0).toFixed(2)}
@@ -595,11 +678,17 @@ export default function Form() {
                                   : ""}
                               </td>
 
-                              <td className="py-1.5 px-4">
-                                {itemIndex === 0
-                                  ? `${dataObj.customerName} - ${dataObj.mobileNo}`
-                                  : ""}
-                              </td>
+                              {isAdmin ? (
+                                <td className="py-1.5 px-4">
+                                  {itemIndex === 0 ? dataObj?.deliveryTo : ""}
+                                </td>
+                              ) : (
+                                <td className="py-1.5 px-4">
+                                  {itemIndex === 0
+                                    ? `${dataObj.customerName} - ${dataObj.mobileNo}`
+                                    : ""}
+                                </td>
+                              )}
                               <td className="py-1.5 px-4 ">
                                 {item?.barcodeNo}
                               </td>
@@ -614,9 +703,7 @@ export default function Form() {
                                 {item?.Uom?.name}
                               </td>
                               <td className="py-1.5 px-4 text-right">
-                                {dataObj?.salesType === "General"
-                                  ? item?.qty
-                                  : item?.exchangeQty}
+                                {item?.qty}
                               </td>
                             </tr>
                           ));
@@ -648,9 +735,7 @@ export default function Form() {
                           </>
                         )}
                         {viewType === "Detail" && (
-                          <td className="py-1.5 px-4 text-right">
-                            {totalQty}
-                          </td>
+                          <td className="py-1.5 px-4 text-right">{totalQty}</td>
                         )}
                       </tr>
                     </tfoot>
