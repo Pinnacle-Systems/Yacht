@@ -179,22 +179,23 @@ export function SalesBillForm({
       });
       return false;
     }
-
-    if (paidAmount > totalAmount) {
-      Swal.fire({
-        icon: "error",
-        title: "Payment Error",
-        text: "Paid amount cannot be greater than Total amount",
-      });
-      return false; // stop further execution
-    }
-    if (paidAmount < totalAmount) {
-      Swal.fire({
-        icon: "error",
-        title: "Payment Error",
-        text: "Paid amount cannot be Less than Total amount",
-      });
-      return false; // stop further execution
+    if (!isHo) {
+      if (paidAmount > totalAmount) {
+        Swal.fire({
+          icon: "error",
+          title: "Payment Error",
+          text: "Paid amount cannot be greater than Total amount",
+        });
+        return false; // stop further execution
+      }
+      if (paidAmount < totalAmount) {
+        Swal.fire({
+          icon: "error",
+          title: "Payment Error",
+          text: "Paid amount cannot be Less than Total amount",
+        });
+        return false; // stop further execution
+      }
     }
 
     return true;
@@ -283,12 +284,17 @@ export function SalesBillForm({
         returnData = await callback(data).unwrap();
       }
       if (returnData.statusCode === 0) {
-        handlePrint();
         if (nextProcess == "new") {
+          if (!isHo) {
+            handlePrint();
+          }
           setId(0);
           setDocId("New");
           syncFormWithDb(undefined);
         } else {
+          if (!isHo) {
+            handlePrint();
+          }
           onClose();
         }
         Swal.fire({
@@ -430,7 +436,6 @@ export function SalesBillForm({
       setPdfOpen(true);
     } else {
       handlePrint();
-      console.log(receiptRef.current);
     }
   };
 
@@ -661,81 +666,83 @@ export function SalesBillForm({
               </div>
 
               <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
-                <fieldset className="w-full text-slate-700 border h-full p-2 border-slate-400 rounded-md">
-                  <legend className="font-medium">Payment Details</legend>
-                  <div className="gap-3 items-center text-xs">
-                    <div className="flex gap-10 items-center">
-                      <div className="flex gap-2 items-center">
-                        <label className="flex items-center gap-1">
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 align-middle"
-                            checked={isCash}
-                            disabled={readOnly}
-                            onChange={(e) => setIsCash(e.target.checked)}
+                {!isHo && (
+                  <fieldset className="w-full text-slate-700 border h-full p-2 border-slate-400 rounded-md">
+                    <legend className="font-medium">Payment Details</legend>
+                    <div className="gap-3 items-center text-xs">
+                      <div className="flex gap-10 items-center">
+                        <div className="flex gap-2 items-center">
+                          <label className="flex items-center gap-1">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 align-middle"
+                              checked={isCash}
+                              disabled={readOnly}
+                              onChange={(e) => setIsCash(e.target.checked)}
+                            />
+                            Cash
+                          </label>
+                          <CommaInput
+                            value={paymentValue}
+                            setValue={setPaymentValue}
+                            comma={true}
+                            disabled={readOnly || !isCash}
+                            width={28}
                           />
-                          Cash
-                        </label>
-                        <CommaInput
-                          value={paymentValue}
-                          setValue={setPaymentValue}
-                          comma={true}
-                          disabled={readOnly || !isCash}
-                          width={28}
-                        />
+                        </div>
+                        <div className="flex gap-2 items-center">
+                          <label className="flex items-center gap-1">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 align-middle"
+                              checked={isCard}
+                              disabled={readOnly}
+                              onChange={(e) => setIsCard(e.target.checked)}
+                            />
+                            Card
+                          </label>
+                          <CommaInput
+                            value={cardAmount}
+                            setValue={setCardAmount}
+                            comma={true}
+                            disabled={readOnly || !isCard}
+                            width={28}
+                          />
+                        </div>
                       </div>
-                      <div className="flex gap-2 items-center">
-                        <label className="flex items-center gap-1">
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 align-middle"
-                            checked={isCard}
-                            disabled={readOnly}
-                            onChange={(e) => setIsCard(e.target.checked)}
+                      <div className="items-center text-xs">
+                        <div className="flex gap-4 items-center">
+                          <label className="flex items-center gap-1">
+                            <input
+                              type="checkbox"
+                              checked={isUpI}
+                              className="h-4 w-4 align-middle"
+                              disabled={readOnly}
+                              onChange={(e) => setIsUpI(e.target.checked)}
+                            />
+                            UPI
+                          </label>
+                          <CommaInput
+                            value={upiAmount}
+                            setValue={setUpiAmount}
+                            comma={true}
+                            disabled={readOnly || !isUpI}
+                            width={28}
                           />
-                          Card
-                        </label>
-                        <CommaInput
-                          value={cardAmount}
-                          setValue={setCardAmount}
-                          comma={true}
-                          disabled={readOnly || !isCard}
-                          width={28}
-                        />
+                        </div>
                       </div>
                     </div>
-                    <div className="items-center text-xs">
-                      <div className="flex gap-4 items-center">
-                        <label className="flex items-center gap-1">
-                          <input
-                            type="checkbox"
-                            checked={isUpI}
-                            className="h-4 w-4 align-middle"
-                            disabled={readOnly}
-                            onChange={(e) => setIsUpI(e.target.checked)}
-                          />
-                          UPI
-                        </label>
-                        <CommaInput
-                          value={upiAmount}
-                          setValue={setUpiAmount}
-                          comma={true}
-                          disabled={readOnly || !isUpI}
-                          width={28}
-                        />
-                      </div>
+                    <div className="flex justify-between font-bold text-base border-t pt-2 text-indigo-600">
+                      <span>Total Paid Amount </span>
+                      <span>
+                        {Number(paidAmount || 0).toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
                     </div>
-                  </div>
-                  <div className="flex justify-between font-bold text-base border-t pt-2 text-indigo-600">
-                    <span>Total Paid Amount </span>
-                    <span>
-                      {Number(paidAmount || 0).toLocaleString("en-IN", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </span>
-                  </div>
-                </fieldset>
+                  </fieldset>
+                )}
               </div>
 
               <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">

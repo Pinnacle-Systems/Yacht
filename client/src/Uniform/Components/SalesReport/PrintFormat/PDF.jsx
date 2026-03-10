@@ -116,10 +116,6 @@ const PDF = ({ allData, customerList }) => {
     });
 
 
-    useEffect(() => {
-        console.log("Single Data Fetched", allData,)
-    }, [allData])
-
     const calculateNetAmount = (item) => {
         const qty = parseFloat(item.qty) || 0;
         const price = parseFloat(item.price) || 0;

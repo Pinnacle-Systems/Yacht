@@ -467,7 +467,7 @@ export default function Form() {
         widthClass={"w-[90%] h-[90%]"}
       >
         <PDFViewer style={tw("w-full h-full")}>
-          <PDF allData={allData || []} singleData={singleData} />
+          <PDF allData={allData || []} singleData={singleData} viewType={viewType} isAdmin={isAdmin}/>
         </PDFViewer>
       </Modal>
       <div className="py-1 bg-[#F1F1F0] h-[85%]">

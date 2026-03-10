@@ -36,11 +36,11 @@ const PosReceipt = React.forwardRef(({ singleData, branchData, taxRows, grossAmo
         toWords(totalNetAmt)
             .replace(/\b\w/g, (c) => c.toUpperCase()) +
         " Only";
-
+    
     return (
         <div ref={ref} className="pos-receipt py-1 bg-white">
 
-            <div className="pos-center pos-bold">{branchData?.company?.code || ""}</div>
+            <div className="pos-center pos-bold">{branchData?.branchCode || ""}</div>
             <div className="pos-center">{branchData?.address || ""}</div>
             <div className="pos-center">Ph: {branchData?.company?.contactMobile || ""}</div>
 
