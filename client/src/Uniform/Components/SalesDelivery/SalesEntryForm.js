@@ -438,7 +438,7 @@ export function SalesBillForm({
                     value={salesType}
                     setValue={setSalesType}
                     required={true}
-                    readOnly={id}
+                    readOnly={readOnly}
                     autoFocus={true}
                   />
                 </div>

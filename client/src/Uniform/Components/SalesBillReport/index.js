@@ -304,8 +304,12 @@ export default function Form() {
               : "",
             itemIndex === 0 ? getTimeFromDateTime(dataObj.createdAt) : "",
             !isAdmin
-              ? `${dataObj?.customerName || ""} - ${dataObj?.mobileNo || ""}`
-              : dataObj?.deliveryTo,
+              ? itemIndex === 0
+                ? `${dataObj?.customerName || ""} - ${dataObj?.mobileNo || ""}`
+                : ""
+              : itemIndex === 0
+                ? dataObj?.deliveryTo
+                : "",
             item?.barcodeNo || "",
             item?.StyleItem?.name || "",
             item?.Size?.name || "",

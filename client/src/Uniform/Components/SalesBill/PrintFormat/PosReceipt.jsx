@@ -2,7 +2,7 @@ import React from "react";
 import { getTimeFromDateTime } from "../../../../Utils/helper";
 import { toWords } from "number-to-words";
 
-const PosReceipt = React.forwardRef(({ singleData, branchData, taxRows, grossAmount,roundOffValue,roundOffType, totalNetAmt}, ref) => {
+const PosReceipt = React.forwardRef(({ singleData, branchData, taxRows, grossAmount, roundOffValue, roundOffType, totalNetAmt }, ref) => {
     const salesBillItems = singleData?.salesBillItems || [];
     const uniqueStyleIds = [...new Set(salesBillItems.map(i => i.styleItemId))];
     const totalItems = uniqueStyleIds?.length;
@@ -38,7 +38,7 @@ const PosReceipt = React.forwardRef(({ singleData, branchData, taxRows, grossAmo
         " Only";
 
     return (
-        <div ref={ref} className="pos-receipt py-1">
+        <div ref={ref} className="pos-receipt py-1 bg-white">
 
             <div className="pos-center pos-bold">{branchData?.company?.code || ""}</div>
             <div className="pos-center">{branchData?.address || ""}</div>
@@ -110,10 +110,10 @@ const PosReceipt = React.forwardRef(({ singleData, branchData, taxRows, grossAmo
                             </td>
                             <td className="pos-right">
                                 {!item.qty || !item.rate
-                          ? 0.0
-                          : (
-                              parseFloat(item.qty) * parseFloat(item.rate)
-                            ).toFixed(2)}
+                                    ? 0.0
+                                    : (
+                                        parseFloat(item.qty) * parseFloat(item.rate)
+                                    ).toFixed(2)}
                             </td>
                         </tr>
                     ))}
@@ -128,9 +128,9 @@ const PosReceipt = React.forwardRef(({ singleData, branchData, taxRows, grossAmo
                 <span>Total Amount</span>
                 <span> {(Array.isArray(salesBillItems) ? salesBillItems : [])
                     .reduce((sum, row) => {
-                      const qty = parseFloat(row.qty) || 0;
-                      const rate = parseFloat(row.rate) || 0;
-                      return sum + qty * rate;
+                        const qty = parseFloat(row.qty) || 0;
+                        const rate = parseFloat(row.rate) || 0;
+                        return sum + qty * rate;
                     }, 0)
                     .toFixed(2)}</span>
             </div>

@@ -78,7 +78,7 @@ export function SalesBillForm({
   const [roundOffOpen, setRoundOffOpen] = useState("");
   const receiptRef = useRef();
   const handlePrint = useReactToPrint({
-    content: () => receiptRef.current,
+    contentRef: receiptRef,
   });
   const dispatch = useDispatch();
   const customerNameRef = useRef(null);
@@ -430,6 +430,7 @@ export function SalesBillForm({
       setPdfOpen(true);
     } else {
       handlePrint();
+      console.log(receiptRef.current);
     }
   };
 
@@ -789,7 +790,10 @@ export function SalesBillForm({
                             className="text-slate-500 "
                           />
                         </div>
-                        <span>{roundOffType === "PLUS" ? "+" : "-"} {Number(roundOffValue || 0).toFixed(2)}</span>
+                        <span>
+                          {roundOffType === "PLUS" ? "+" : "-"}{" "}
+                          {Number(roundOffValue || 0).toFixed(2)}
+                        </span>
                       </div>
 
                       {/* Total */}
