@@ -483,7 +483,7 @@ const StyleMaster = () => {
                               setValue={setStyleItemId}
                               required={false}
                               readOnly={readOnly}
-                              disabled={childRecord.current > 0}
+                              // disabled={childRecord.current > 0}
                             />
                           </div>
                           <div className="mb-5 w-48">
