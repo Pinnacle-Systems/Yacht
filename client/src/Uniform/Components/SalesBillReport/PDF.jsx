@@ -5,7 +5,7 @@ import SRPageWrapper from "../../../Utils/SRPageWrapper";
 import SRHeader from "../../../Utils/SRHeader";
 import { findFromList, getDateFromDateTimeToDisplay, getTimeFromDateTime } from "../../../Utils/helper";
 
-const PDF = ({ allData, singleData, viewType, isAdmin }) => {
+const PDF = ({ allData, singleData, viewType, isAdmin, totalQty }) => {
 
     const styles = StyleSheet.create({
         page: { padding: 5 },
@@ -132,12 +132,10 @@ const PDF = ({ allData, singleData, viewType, isAdmin }) => {
                 { label: "S.No", flex: 0.3 },
                 { label: "Sales No", flex: 0.8 },
                 { label: "Sales Date", flex: 0.5 },
-                { label: " Time", flex: 0.5 },
                 { label: "Customer", flex: 1.5 },
                 { label: "Barcode", flex: 0.8 },
                 { label: "Item Name", flex: 1.5 },
                 { label: "Size", flex: 0.5 },
-                { label: "Unit", flex: 0.5 },
                 { label: "Qty", flex: 0.5 },
             ];
 
@@ -168,7 +166,7 @@ const PDF = ({ allData, singleData, viewType, isAdmin }) => {
                         {/*  Grouped Rows */}
 
                         {(allData?.data || []).map((dataObj, index) => {
-                            const salesItems = dataObj?.SalesEntryItems || [];
+                            const salesItems = dataObj?.salesItem || [];
 
                             // 🔹 NORMAL VIEW
                             if (viewType === "Normal") {
@@ -256,30 +254,27 @@ const PDF = ({ allData, singleData, viewType, isAdmin }) => {
                                     </Text>
 
                                     {/* SALES NO */}
-                                    <Text style={[styles.tableCell, { flex: 0.7 }]}>
+                                    <Text style={[styles.tableCell, { flex: 0.8 }]}>
                                         {itemIndex === 0 ? dataObj?.docId : ""}
                                     </Text>
 
                                     {/* DATE */}
-                                    <Text style={[styles.tableCell, { flex: 0.7 }]}>
+                                    <Text style={[styles.tableCell, { flex: 0.5 }]}>
                                         {itemIndex === 0 && dataObj?.docDate
                                             ? getDateFromDateTimeToDisplay(dataObj.docDate)
                                             : ""}
                                     </Text>
-                                    <Text style={[styles.tableCell, { flex: 0.8 }]}>
-                                        {dataObj?.createdAt
-                                            ? getTimeFromDateTime(dataObj.createdAt)
-                                            : ""}
-                                    </Text>
                                     {/* CUSTOMER */}
                                     <Text style={[styles.tableCell, { flex: 1.5 }]}>
-                                        {itemIndex === 0
-                                            ? dataObj?.customerName
-                                            : ""}
+                                        {
+                                            isAdmin
+                                                ? (itemIndex === 0 ? dataObj?.deliveryTo : "")
+                                                : (itemIndex === 0 ? `${dataObj.customerName} - ${dataObj.mobileNo}` : "")
+                                        }
                                     </Text>
 
                                     {/* BARCODE */}
-                                    <Text style={[styles.tableCell, { flex: 1 }]}>
+                                    <Text style={[styles.tableCell, { flex: 0.8 }]}>
                                         {item?.barcodeNo}
                                     </Text>
 
@@ -293,11 +288,6 @@ const PDF = ({ allData, singleData, viewType, isAdmin }) => {
                                         {item?.Size?.name}
                                     </Text>
 
-                                    {/* UNIT */}
-                                    <Text style={[styles.tableCell, { flex: 0.5, textAlign: "center" }]}>
-                                        {item?.Uom?.name}
-                                    </Text>
-
                                     {/* QTY */}
                                     <Text style={[styles.tableCell, { flex: 0.5, textAlign: "right" }]}>
                                         {item?.qty}
@@ -305,55 +295,88 @@ const PDF = ({ allData, singleData, viewType, isAdmin }) => {
                                 </View>
                             ));
                         })}
-                        <View
-                            style={[
-                                {
-                                    flexDirection: "row",
-                                    width: "100%",
-                                    borderBottomWidth: 1,
-                                    borderBottomColor: "#D1D5DB",
-                                    borderLeftColor: "#D1D5DB",
-                                    borderLeftWidth: 1,
-                                },
-                            ]}
-                        >
-                            <Text
-                                style={[styles.tableCell, {
-                                    flex: 4, fontSize: 8, textAlign: "right",
-                                }]}
-                            >
-                                Total
-                            </Text>
-                            <Text
-                                style={[styles.tableCell, {
-                                    flex: 0.5, fontSize: 8, textAlign: "right",
-                                }]}
-                            >
-                                {Number(allData?.totalCashAmount).toFixed(2)}
-                            </Text>
-                            <Text
-                                style={[styles.tableCell, {
-                                    flex: 0.5, fontSize: 8, textAlign: "right",
-                                }]}
-                            >
-                                {Number(allData?.totalCardAmount).toFixed(2)}
-                            </Text>
-                            <Text
-                                style={[styles.tableCell, {
-                                    flex: 0.5, fontSize: 8, textAlign: "right",
-                                }]}
-                            >
-                                {Number(allData?.totalUpiAmount).toFixed(2)}
-                            </Text>
+                        {
+                            viewType === "Normal" ? (
+                                <View
+                                    style={[
+                                        {
+                                            flexDirection: "row",
+                                            width: "100%",
+                                            borderBottomWidth: 1,
+                                            borderBottomColor: "#D1D5DB",
+                                            borderLeftColor: "#D1D5DB",
+                                            borderLeftWidth: 1,
+                                        },
+                                    ]}
+                                >
+                                    <Text
+                                        style={[styles.tableCell, {
+                                            flex: 4, fontSize: 8, textAlign: "right",
+                                        }]}
+                                    >
+                                        Total
+                                    </Text>
+                                    <Text
+                                        style={[styles.tableCell, {
+                                            flex: 0.5, fontSize: 8, textAlign: "right",
+                                        }]}
+                                    >
+                                        {Number(allData?.totalCashAmount).toFixed(2)}
+                                    </Text>
+                                    <Text
+                                        style={[styles.tableCell, {
+                                            flex: 0.5, fontSize: 8, textAlign: "right",
+                                        }]}
+                                    >
+                                        {Number(allData?.totalCardAmount).toFixed(2)}
+                                    </Text>
+                                    <Text
+                                        style={[styles.tableCell, {
+                                            flex: 0.5, fontSize: 8, textAlign: "right",
+                                        }]}
+                                    >
+                                        {Number(allData?.totalUpiAmount).toFixed(2)}
+                                    </Text>
 
-                            <Text
-                                style={[styles.tableCell, {
-                                    flex: 0.5, fontSize: 8, textAlign: "right",
-                                }]}
-                            >
-                                {Number(allData?.totalNetAmount).toFixed(2)}
-                            </Text>
-                        </View>
+                                    <Text
+                                        style={[styles.tableCell, {
+                                            flex: 0.5, fontSize: 8, textAlign: "right",
+                                        }]}
+                                    >
+                                        {Number(allData?.totalNetAmount).toFixed(2)}
+                                    </Text>
+                                </View>
+                            ) : (
+                                <View
+                                    style={[
+                                        {
+                                            flexDirection: "row",
+                                            width: "100%",
+                                            borderBottomWidth: 1,
+                                            borderBottomColor: "#D1D5DB",
+                                            borderLeftColor: "#D1D5DB",
+                                            borderLeftWidth: 1,
+                                        },
+                                    ]}
+                                >
+                                    <Text
+                                        style={[styles.tableCell, {
+                                            flex: 6.5, fontSize: 8, textAlign: "right",
+                                        }]}
+                                    >
+                                        Total
+                                    </Text>
+                                    <Text
+                                        style={[styles.tableCell, {
+                                            flex: 0.5, fontSize: 8, textAlign: "right",
+                                        }]}
+                                    >
+                                        {totalQty}
+                                    </Text>
+                                </View>
+                            )
+                        }
+
 
                     </View>
 

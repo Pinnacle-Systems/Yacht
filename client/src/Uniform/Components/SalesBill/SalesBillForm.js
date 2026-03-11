@@ -34,7 +34,6 @@ import { useReactToPrint } from "react-to-print";
 import EditIcon from "@mui/icons-material/Edit";
 import { adjTypeData } from "../../../Utils/DropdownData";
 import { Button } from "@mui/material";
-import { event } from "jquery";
 
 export function SalesBillForm({
   onClose,
@@ -76,6 +75,8 @@ export function SalesBillForm({
   const [roundOffType, setRoundOffType] = useState("PLUS");
   const [roundOffValue, setRoundOffValue] = useState("");
   const [roundOffOpen, setRoundOffOpen] = useState("");
+  const [savedData, setSavedData] = useState("");
+
   const receiptRef = useRef();
   const handlePrint = useReactToPrint({
     contentRef: receiptRef,
@@ -284,19 +285,22 @@ export function SalesBillForm({
         returnData = await callback(data).unwrap();
       }
       if (returnData.statusCode === 0) {
-        if (nextProcess == "new") {
-          if (!isHo) {
-            handlePrint();
+        setSavedData(returnData?.data);
+        setTimeout(() => {
+          if (nextProcess == "new") {
+            if (!isHo) {
+              handlePrint();
+            }
+            setId(0);
+            setDocId("New");
+            syncFormWithDb(undefined);
+          } else {
+            if (!isHo) {
+              handlePrint();
+            }
+            onClose();
           }
-          setId(0);
-          setDocId("New");
-          syncFormWithDb(undefined);
-        } else {
-          if (!isHo) {
-            handlePrint();
-          }
-          onClose();
-        }
+        }, 100);
         Swal.fire({
           title: text + "  " + "Successfully",
           icon: "success",
@@ -868,6 +872,10 @@ export function SalesBillForm({
                   roundOffValue={roundOffValue}
                   roundOffType={roundOffType}
                   totalNetAmt={totalAmount}
+                  salesBillItems={salesBillItems?.filter((item) => item?.styleItemId)}
+                  savedData={savedData}
+                  sizeList={sizeList}
+                  styleItemList={styleItemList}
                 />
               </div>
             </div>

@@ -1,9 +1,9 @@
 import React from "react";
-import { getTimeFromDateTime } from "../../../../Utils/helper";
+import { findFromList, getTimeFromDateTime } from "../../../../Utils/helper";
 import { toWords } from "number-to-words";
 
-const PosReceipt = React.forwardRef(({ singleData, branchData, taxRows, grossAmount, roundOffValue, roundOffType, totalNetAmt }, ref) => {
-    const salesBillItems = singleData?.salesBillItems || [];
+const PosReceipt = React.forwardRef(({ singleData, branchData, taxRows, grossAmount, roundOffValue, roundOffType, totalNetAmt, salesBillItems, savedData,sizeList,styleItemList }, ref) => {
+    const receiptData = savedData || singleData || {};
     const uniqueStyleIds = [...new Set(salesBillItems.map(i => i.styleItemId))];
     const totalItems = uniqueStyleIds?.length;
     const totalQty = salesBillItems.reduce((sum, r) => sum + (r.qty || 0), 0);
@@ -36,12 +36,12 @@ const PosReceipt = React.forwardRef(({ singleData, branchData, taxRows, grossAmo
         toWords(totalNetAmt)
             .replace(/\b\w/g, (c) => c.toUpperCase()) +
         " Only";
-    
+
     return (
         <div ref={ref} className="pos-receipt py-1 bg-white">
 
-            <div className="pos-center pos-bold">{branchData?.branchCode || ""}</div>
-            <div className="pos-center">{branchData?.address || ""}</div>
+            <div className="pos-center pos-bold">{branchData?.company?.code || ""}</div>
+            <div className="pos-center text-[10px]">{branchData?.address || ""}</div>
             <div className="pos-center">Ph: {branchData?.company?.contactMobile || ""}</div>
 
             <div className="pos-divider" />
@@ -50,14 +50,14 @@ const PosReceipt = React.forwardRef(({ singleData, branchData, taxRows, grossAmo
                 <div>
                     <div className="flex ">
                         <span>B.No : </span>
-                        <span className="px-1">{singleData?.docId?.split("/").pop() || ""}</span>
+                        <span className="px-1">{receiptData?.docId?.split("/").pop() || ""}</span>
                     </div>
 
                     <div className="flex">
                         <span>Date :</span>
                         <span className="px-1">
-                            {(singleData?.docDate
-                                ? new Date(singleData.docDate)
+                            {(receiptData?.docDate
+                                ? new Date(receiptData.docDate)
                                 : new Date()
                             ).toLocaleDateString()}
                         </span>
@@ -65,8 +65,8 @@ const PosReceipt = React.forwardRef(({ singleData, branchData, taxRows, grossAmo
                     <div className="flex">
                         <span>Time :</span>
                         <span className="px-1">
-                            {singleData?.createdAt
-                                ? getTimeFromDateTime(singleData.createdAt)
+                            {receiptData?.createdAt
+                                ? getTimeFromDateTime(receiptData.createdAt)
                                 : new Date().toLocaleTimeString()}
                         </span>
                     </div>
@@ -74,13 +74,13 @@ const PosReceipt = React.forwardRef(({ singleData, branchData, taxRows, grossAmo
                 <div>
                     <div className="flex ">
                         <span>To : </span>
-                        <span className="px-1">{singleData?.customerName || ""}</span>
+                        <span className="px-1">{receiptData?.customerName || ""}</span>
                     </div>
 
                     <div className="flex">
                         <span>Ph :</span>
                         <span className="px-1">
-                            {singleData?.mobileNo || ""}
+                            {receiptData?.mobileNo || ""}
                         </span>
                     </div>
                 </div>
@@ -101,9 +101,9 @@ const PosReceipt = React.forwardRef(({ singleData, branchData, taxRows, grossAmo
                 </thead>
 
                 <tbody>
-                    {salesBillItems.map((item, i) => (
+                    {salesBillItems?.map((item, i) => (
                         <tr key={i}>
-                            <td className="pos-left">{item?.StyleItem?.name || ""}-{item?.Size?.name}</td>
+                            <td className="pos-left">{findFromList(item?.styleItemId, styleItemList?.data, "name") || ""}-{findFromList(item?.sizeId, sizeList?.data, "name") || ""}</td>
                             <td>{item.qty || ""} {item?.Uom?.name}</td>
                             <td className="pos-right">
                                 {Number(item.rate).toFixed(2) || ""}

@@ -314,7 +314,6 @@ async function getSalesReport(req) {
       },
     },
   });
-  console.log(returnData, "returnData");
   // Normalize Sales Bills
   const formattedBills = data.map((item) => ({
     id: item.id,
