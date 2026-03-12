@@ -155,6 +155,7 @@ model Branch {
   openingStockSRs         OpeningStockSR[]
   salesReturnSRsDelivery  SalesReturnSR[]          @relation(name: "delivery")
   salesBillsDelivery      SalesBill[]              @relation(name: "delivery")
+  salesReturnSRItems      SalesReturnSRItems[]
 }
 
 model UserOnBranch {
@@ -2971,6 +2972,9 @@ model SalesReturnSRItems {
   Barcode         Barcode?           @relation(fields: [barcodeId], references: [id])
   barcodeId       Int?
   netAmount       Float?
+  DeliveryTo      Branch?            @relation(fields: [deliveryToId], references: [id])
+  deliveryToId    Int?
+  billNo          String?
 }
 
 model SalesExchangeItems {

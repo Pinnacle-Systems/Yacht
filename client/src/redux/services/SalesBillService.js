@@ -72,6 +72,19 @@ const salesBillApi = createApi({
       },
       providesTags: ["SalesBill"],
     }),
+     getSalesBarcodeDetail: builder.query({
+      query: ({ params }) => {
+        return {
+          url: `${SALES_BILL_API}/salesBarcodeDetail`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["SalesBill"],
+    }),
     getSalesBillById: builder.query({
       query: (id) => {
         return {
@@ -133,6 +146,7 @@ export const {
   useGetSalesBillQuery,
   useGetSalesBillReportQuery,
   useLazyGetHOSalesDetailQuery,
+  useLazyGetSalesBarcodeDetailQuery,
   useGetHOSalesListQuery,
   useGetSalesBillByIdQuery,
   useLazyGetSalesBillByIdQuery,

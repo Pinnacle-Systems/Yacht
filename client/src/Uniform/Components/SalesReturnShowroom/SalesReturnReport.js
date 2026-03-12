@@ -185,10 +185,10 @@ const SalesReturnReport = ({
   };
 
   return (
-    <div className="flex flex-col w-full h-[93%] overflow-auto">
+    <div className="flex flex-col w-full overflow-auto">
       <>
         <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
-          <div className="h-[420px]">
+          <div className="h-[480px]">
             <table className="">
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">
@@ -203,10 +203,13 @@ const SalesReturnReport = ({
                     <div>Return Date</div>
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-44">
-                    <div>Sales Bill No</div>
+                    <div>Return Type</div>
                   </th>
                   {!isHo && (
                     <>
+                      <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-44">
+                        <div>Sales Bill No</div>
+                      </th>
                       <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
                         <div>Customer</div>
                       </th>
@@ -214,11 +217,6 @@ const SalesReturnReport = ({
                         <div>Contact No</div>
                       </th>
                     </>
-                  )}
-                  {isHo && (
-                    <th className="w-48  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                      <div>Customer</div>
-                    </th>
                   )}
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
@@ -250,19 +248,30 @@ const SalesReturnReport = ({
                       }}
                     />
                   </th>
-                  <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-44">
+                  <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
                     <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
                       placeholder="Search"
-                      value={searchInvNo}
+                      value={searchType}
                       onChange={(e) => {
-                        setSearchInvNo(e.target.value);
+                        setSearchType(e.target.value);
                       }}
                     />
                   </th>
                   {!isHo && (
                     <>
+                      <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-44">
+                        <input
+                          type="text"
+                          className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                          placeholder="Search"
+                          value={searchInvNo}
+                          onChange={(e) => {
+                            setSearchInvNo(e.target.value);
+                          }}
+                        />
+                      </th>
                       <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
                         <input
                           type="text"
@@ -286,19 +295,6 @@ const SalesReturnReport = ({
                         />
                       </th>
                     </>
-                  )}
-                  {isHo && (
-                    <th className="w-48  px-1 font-medium text-[13px]  text-gray-900  text-center ">
-                      <input
-                        type="text"
-                        className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
-                        placeholder="Search"
-                        value={searchType}
-                        onChange={(e) => {
-                          setSearchType(e.target.value);
-                        }}
-                      />
-                    </th>
                   )}
                   <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center "></th>
                 </tr>
@@ -334,10 +330,13 @@ const SalesReturnReport = ({
                             : ""}
                         </td>
                         <td className="py-1.5 text-left px-4">
-                          {dataObj?.billNo}
+                          {dataObj?.returnType}
                         </td>
                         {!isHo && (
                           <>
+                            <td className="py-1.5 text-left px-4">
+                              {dataObj?.billNo}
+                            </td>
                             <td className="py-1.5 text-left px-4">
                               {" "}
                               {dataObj?.customerName}
@@ -347,12 +346,6 @@ const SalesReturnReport = ({
                               {dataObj?.mobileNo}
                             </td>
                           </>
-                        )}
-                        {isHo && (
-                          <td className="py-1.5 text-left px-4">
-                            {" "}
-                            {dataObj?.DeliveryTo?.branchName}
-                          </td>
                         )}
                         {rowActions && (
                           <td className=" w-[30px] border-gray-200 gap-1 px-2 justify-end">

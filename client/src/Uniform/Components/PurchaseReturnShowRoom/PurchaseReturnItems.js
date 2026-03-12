@@ -90,11 +90,11 @@ export default function PurchaseReturnItems({
       setPurchaseReturnItems((prev) => {
         const filledRows = prev.length;
 
-        if (filledRows < 4) {
+        if (filledRows < 5) {
           // add empty rows until total becomes 6
           return [
             ...prev,
-            ...Array.from({ length: 4 - filledRows }, () => ({
+            ...Array.from({ length: 5 - filledRows }, () => ({
               styleId: "",
               sizeId: "",
               stkQty: "",
@@ -115,7 +115,7 @@ export default function PurchaseReturnItems({
     } else {
       // if null/undefined, initialize with 6 empty rows
       setPurchaseReturnItems(
-        Array.from({ length: 4 }, () => ({
+        Array.from({ length: 5 }, () => ({
           styleId: "",
           sizeId: "",
           stkQty: "",
@@ -184,7 +184,7 @@ export default function PurchaseReturnItems({
           )}
         </div>
         <div
-          className={`w-full max-h-[192px] min-h-[192px] overflow-y-auto  mb-2 mt-1`}
+          className={`w-full max-h-[230px] min-h-[230px] overflow-y-auto  mb-2 mt-1`}
         >
           <table className=" border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">

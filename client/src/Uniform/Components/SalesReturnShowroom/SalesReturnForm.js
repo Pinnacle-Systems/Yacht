@@ -64,7 +64,7 @@ export function SalesReturnForm({
   const [termsAndCondition, setTermsAndCondition] = useState("");
   const [remarks, setRemarks] = useState("");
   const [billNo, setBillNo] = useState("");
-  const [returnType, setReturnType] = useState("Exchange");
+  const [returnType, setReturnType] = useState("");
   const [taxTemplateId, setTaxTemplateId] = useState("");
   const [salesExchangeItems, setsalesExchangeItems] = useState([]);
   const [isCash, setIsCash] = useState(true);
@@ -169,14 +169,6 @@ export function SalesReturnForm({
   const validateData = (data) => {
     if (!isHo) {
       if (!data?.customerName || !data?.billNo) {
-        toast.info("Please fill all required fields...!", {
-          position: "top-center",
-          autoClose: 2000,
-        });
-        return false;
-      }
-    } else {
-      if (!data?.billNo) {
         toast.info("Please fill all required fields...!", {
           position: "top-center",
           autoClose: 2000,
@@ -336,7 +328,9 @@ export function SalesReturnForm({
         data?.termsAndCondition ? data.termsAndCondition : "",
       );
       setRemarks(data?.remarks ? data.remarks : "");
-      setReturnType(data?.returnType ? data?.returnType : "Exchange");
+      setReturnType(
+        data?.returnType ? data?.returnType : isHo ? "General" : "Exchange",
+      );
       setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "");
       setIsCash(data?.isCash || true);
       setIsCard(data?.isCard || false);
@@ -478,7 +472,7 @@ export function SalesReturnForm({
       setCustomerName(salesData?.data?.customerName);
       setMobileNo(salesData?.data?.mobileNo);
       setTaxTemplateId(salesData?.data?.taxTemplateId);
-      setDeliveryToId(salesData?.data?.deliveryToId)
+      setDeliveryToId(salesData?.data?.deliveryToId);
       const salesItems = salesData?.data?.salesBillItems;
       if (!salesItems) return;
       setTempItems(salesItems);
@@ -534,7 +528,13 @@ export function SalesReturnForm({
                 <div className="grid grid-cols-2 gap-2">
                   <DropdownInput
                     name="Return Type"
-                    options={ReturnTypeDatas}
+                    options={
+                      isHo
+                        ? ReturnTypeDatas.filter(
+                            (item) => item.value !== "Exchange",
+                          )
+                        : ReturnTypeDatas
+                    }
                     value={returnType}
                     setValue={setReturnType}
                     required={true}
@@ -545,24 +545,28 @@ export function SalesReturnForm({
                     }}
                     autoFocus={true}
                   />
-                  <DropdownNew
-                    name="Sales Bill No"
-                    dataList={salesList?.data}
-                    value={billNo}
-                    setValue={handleAddRow}
-                    required={true}
-                    readOnly={readOnly}
-                    placeholder={"Select Sales"}
-                    otherField={"docId"}
-                    otherValue={"docId"}
-                    disabled={id}
-                  />
+                  {!isHo && (
+                    <DropdownNew
+                      name="Sales Bill No"
+                      dataList={salesList?.data}
+                      value={billNo}
+                      setValue={handleAddRow}
+                      required={true}
+                      readOnly={readOnly}
+                      placeholder={"Select Sales"}
+                      otherField={"docId"}
+                      otherValue={"docId"}
+                      disabled={id}
+                    />
+                  )}
                 </div>
               </div>
               <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                <h2 className="font-medium text-slate-700 mb-2">
-                  Customer Details
-                </h2>
+                {!isHo && (
+                  <h2 className="font-medium text-slate-700 mb-2">
+                    Customer Details
+                  </h2>
+                )}
                 {!isHo && (
                   <div className="grid grid-cols-2 gap-2">
                     <ReusableInput
@@ -583,7 +587,7 @@ export function SalesReturnForm({
                     />
                   </div>
                 )}
-                {isHo && (
+                {/* {isHo && (
                   <div className="grid grid-cols-2 gap-2">
                     <DropdownNew
                       name="Showroom / Franchisee"
@@ -601,7 +605,7 @@ export function SalesReturnForm({
                       autoFocus={true}
                     />
                   </div>
-                )}
+                )} */}
               </div>
             </div>
             <fieldset className="w-full  min-w-[1200px]">
@@ -620,6 +624,8 @@ export function SalesReturnForm({
                 styleList={styleList}
                 id={id}
                 returnType={returnType}
+                isHo={isHo}
+                branchList={branchList}
               />
             </fieldset>
             {returnType === "Exchange" && (
@@ -636,6 +642,7 @@ export function SalesReturnForm({
                   taxTemplateId={taxTemplateId}
                   billNo={billNo}
                   id={id}
+                  isHo={isHo}
                 />
               </fieldset>
             )}

@@ -178,10 +178,10 @@ const PurchaseBillFormReport = ({
   };
 
   return (
-    <div className="flex flex-col w-full h-[90%] overflow-auto">
+    <div className="flex flex-col w-full overflow-auto">
       <>
         <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
-          <div className="h-[400px]">
+          <div className="h-[480px]">
             <table className="">
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">

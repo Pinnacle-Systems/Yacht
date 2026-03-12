@@ -1023,6 +1023,7 @@ async function getpurchaseBillItems(req) {
             ? parseInt(headerData.supplierId)
             : undefined,
           invNo: invNo ? invNo : undefined,
+          branchId: parseInt(branchId)
         },
       },
       include: {

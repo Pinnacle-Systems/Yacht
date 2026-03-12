@@ -73,14 +73,21 @@ const SalesBillItemsSelection = ({
   }
   function handleSelectAllChange(value, salesReturnItems) {
     if (value) {
-      salesReturnItems?.forEach((item) => addItem(item.id, item));
+      salesReturnItems
+        ?.filter((row) => (row.usedQty ?? 0) === 0)
+        .forEach((item) => addItem(item.id, item));
     } else {
-      salesReturnItems?.forEach((item) => removeItem(item.id));
+      salesReturnItems
+        ?.filter((row) => (row.usedQty ?? 0) === 0)
+        .forEach((item) => removeItem(item.id));
     }
   }
 
   function getSelectAll(salesReturnItems) {
-    return salesReturnItems?.filter((row) => (row.usedQty ?? 0) === 0).every((item) => isItemAddedd(item.id));
+    console.log(salesReturnItems, "salesReturnItems");
+    return salesReturnItems
+      ?.filter((row) => (row.usedQty ?? 0) === 0)
+      .every((item) => isItemAddedd(item.id));
   }
 
   return (
@@ -159,15 +166,17 @@ const SalesBillItemsSelection = ({
                           <th className="px-1 py-1.5 border border-gray-300 text-xs text-gray-800  w-32">
                             Color
                           </th>
-
-                          <th className="px-1 py-1.5 border border-gray-300 text-xs text-gray-800  w-16">
-                            Unit
-                          </th>
                           <th className="px-1 py-1.5 border border-gray-300 text-xs text-gray-800  w-20">
                             Sales Qty
                           </th>
                           <th className="px-1 py-1.5 border border-gray-300 text-xs text-gray-800  w-20">
                             Rate
+                          </th>
+                          <th className="px-1 py-1.5 border border-gray-300 text-xs text-gray-800  w-16">
+                            Discount Type
+                          </th>
+                          <th className="px-1 py-1.5 border border-gray-300 text-xs text-gray-800  w-16">
+                            Discount Value
                           </th>
                           <th className="px-1 py-1.5 border border-gray-300 text-xs text-gray-800  w-20">
                             Net Amount
@@ -222,14 +231,17 @@ const SalesBillItemsSelection = ({
                               <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
                                 {item?.Color?.name}
                               </td>
-                              <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
-                                {item?.Uom?.name}
-                              </td>
                               <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2">
                                 {item.qty}
                               </td>
                               <td className=" border border-gray-300 text-[11px] text-right py-1.5 px-2">
                                 {item.rate?.toFixed(2)}
+                              </td>
+                               <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                                {item?.discountType}
+                              </td>
+                               <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                                {item?.discountValue}
                               </td>
                               <td className=" border border-gray-300 text-[11px] text-right py-1.5 px-2">
                                 {item.netAmount?.toFixed(2)}

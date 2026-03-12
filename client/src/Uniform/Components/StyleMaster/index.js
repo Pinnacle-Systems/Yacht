@@ -289,7 +289,6 @@ const StyleMaster = () => {
   const handleDelete = async (id) => {
     if (id) {
       const data = allData?.data?.find((item) => item.id === id);
-      console.log(data);
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }

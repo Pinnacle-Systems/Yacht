@@ -10,6 +10,7 @@ import {
   getSalesReport as _getSalesReport,
   getHOSalesDetail as _getHOSalesDetail,
   getHOSalesList as _getHOSalesList,
+  getSalesBarcodeDetail as _getSalesBarcodeDetail
 } from "../services/salesBill.service.js";
 
 async function get(req, res, next) {
@@ -137,6 +138,14 @@ async function getHOSalesDetail(req, res, next) {
   }
 }
 
+async function getSalesBarcodeDetail(req, res, next) {
+  try {
+    res.json(await _getSalesBarcodeDetail(req));
+  } catch (err) {
+    console.error(`Error`, err.message);
+  }
+}
+
 export {
   get,
   getOne,
@@ -146,5 +155,6 @@ export {
   getSaleBillDetail,
   getSalesReport,
   getHOSalesDetail,
-  getHOSalesList
+  getHOSalesList,
+  getSalesBarcodeDetail
 };

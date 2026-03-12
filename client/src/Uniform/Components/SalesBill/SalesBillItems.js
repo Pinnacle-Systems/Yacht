@@ -479,7 +479,7 @@ export default function SalesBillItems({
                   S.No
                 </th>
                 <th
-                  className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Barcode
                 </th>

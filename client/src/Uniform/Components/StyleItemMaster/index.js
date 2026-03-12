@@ -40,8 +40,6 @@ export default function Form() {
     isFetching,
   } = useGetStyleItemMasterQuery({ params, searchParams: searchValue });
 
-  console.log(allData, "datatat");
-
   const {
     data: singleData,
     isFetching: isSingleFetching,

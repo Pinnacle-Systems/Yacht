@@ -5,6 +5,7 @@ import Modal from "../../../UiComponents/Modal";
 import SalesBillItemsSelection from "./SalesBillItemsSelection";
 import Swal from "sweetalert2";
 import { findFromList } from "../../../Utils/helper";
+import { useLazyGetSalesBarcodeDetailQuery } from "../../../redux/services/SalesBillService";
 
 export default function SalesReturnItems({
   salesReturnItems,
@@ -21,9 +22,15 @@ export default function SalesReturnItems({
   billNo,
   styleList,
   returnType,
+  isHo,
+  branchList,
+  branchId,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [fillGrid, setFillGrid] = useState(false);
+  const [getBarcodeDetails, { data: barcodeData }] =
+    useLazyGetSalesBarcodeDetailQuery();
+
   const addRow = () => {
     const newRow = {
       barcodeId: "",
@@ -35,6 +42,8 @@ export default function SalesReturnItems({
       colorId: "",
       selected: false,
       netAmount: 0,
+      billNo: "",
+      deliveryToId: "",
     };
     setSalesReturnItems([...salesReturnItems, newRow]);
   };
@@ -76,6 +85,8 @@ export default function SalesReturnItems({
               colorId: "",
               selected: false,
               netAmount: 0,
+              billNo: "",
+              deliveryToId: "",
             })),
           ];
         }
@@ -94,6 +105,8 @@ export default function SalesReturnItems({
           colorId: "",
           selected: false,
           netAmount: 0,
+          billNo: "",
+          deliveryToId: "",
         })),
       );
     }
@@ -137,11 +150,95 @@ export default function SalesReturnItems({
           colorId: "",
           selected: false,
           netAmount: 0,
+          billNo: "",
+          deliveryToId: "",
         });
       }
 
       return updated;
     });
+  };
+
+  const handleBarcodeEnter = async (index, row) => {
+    try {
+      const response = await getBarcodeDetails({
+        params: { barcodeNo: row.barcodeNo, branchId: branchId },
+      }).unwrap();
+
+      if (response.statusCode !== 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "Not Found",
+          text: response?.message || "Failed to fetch barcode details",
+        });
+        return;
+      }
+
+      const data = response.data;
+      const duplicate = salesReturnItems?.filter(
+        (item) => item.barcodeId === data.barcodeId,
+      );
+      if (duplicate.length > 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "Duplicate",
+          text: "The Barcode Number is Already Exist,Cannot add!.",
+        });
+      }else{
+
+        setSalesReturnItems((prev) => {
+          const updated = [...prev];
+          const isLastRow = index === prev.length - 1;
+  
+          updated[index] = {
+            ...updated[index],
+            styleItemId: data.styleItemId,
+            sizeId: data.sizeId,
+            colorId: data.colorId,
+            uomId: data.uomId,
+            barcodeNo: data.barcodeNo,
+            barcodeId: data.barcodeId,
+            styleId: data.styleId,
+            returnQty: data.returnQty,
+            billNo: data?.billNo,
+            deliveryToId: data?.deliveryToId,
+          };
+  
+          // Add new row if last
+          if (isLastRow) {
+            updated.push({
+              styleId: "",
+              sizeId: "",
+              qty: "",
+              styleItemId: "",
+              colorId: "",
+              selected: false,
+              barcodeNo: "",
+              barcodeId: "",
+              uomId: "",
+              rate: "",
+              netAmount: 0,
+              discountType: "Percentage",
+              discountValue: "",
+              billNo: "",
+              deliveryToId: "",
+            });
+          }
+  
+          return updated;
+        });
+        // Focus next row
+        setTimeout(() => {
+          const nextInput = document.querySelector(
+            `#barcodeNo-input-${index + 1}`,
+          );
+          nextInput?.focus();
+        }, 0);
+      }
+
+    } catch (error) {
+      console.error("Barcode fetch failed:", error);
+    }
   };
 
   return (
@@ -160,12 +257,12 @@ export default function SalesReturnItems({
           onClose={() => setFillGrid(false)}
         />
       </Modal>
-      <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[360px] overflow-auto overflow-x-auto w-full">
+      <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[400px] overflow-auto overflow-x-auto w-full">
         <div className="flex items-center mt-1">
           <h2 className="font-medium text-slate-700">Return Items</h2>
-          {!id && (
+          {!id && !isHo && (
             <button
-              className={`font-bold  bord ${returnType === "Exchange" ? "ml-[1000px]" : "ml-[900px]"} text-sm bg-blue-500 rounded-md text-white px-2
+              className={`font-bold  bord ${returnType === "Exchange" ? "ml-[950px]" : "ml-[900px]"} text-sm bg-blue-500 rounded-md text-white px-2
               `}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -201,7 +298,7 @@ export default function SalesReturnItems({
           )}
         </div>
         <div
-          className={`w-full  min-h-[120px] max-h-[120px] overflow-y-auto  mt-1 mb-2`}
+          className={`w-full  ${isHo ? "min-h-[250px] max-h-[250px]" : "min-h-[120px] max-h-[120px]"} overflow-y-auto  mt-1 mb-2`}
         >
           <table className=" border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
@@ -232,7 +329,7 @@ export default function SalesReturnItems({
                 </th>
 
                 <th
-                  className={`w-12 px-4 py-2 text-center font-medium text-[13px]`}
+                  className={`w-10 px-4 py-2 text-center font-medium text-[13px]`}
                 >
                   S.No
                 </th>
@@ -241,6 +338,20 @@ export default function SalesReturnItems({
                 >
                   Barcode
                 </th>
+                {isHo && (
+                  <>
+                    <th
+                      className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                    >
+                      Bill No
+                    </th>
+                    <th
+                      className={`w-44 px-4 py-2 text-center font-medium text-[13px] `}
+                    >
+                      Customer
+                    </th>
+                  </>
+                )}
                 <th
                   className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
                 >
@@ -252,7 +363,7 @@ export default function SalesReturnItems({
                   Style Item
                 </th>
                 <th
-                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Size
                 </th>
@@ -262,7 +373,7 @@ export default function SalesReturnItems({
                   Color
                 </th>
                 <th
-                  className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Unit
                 </th>
@@ -313,11 +424,31 @@ export default function SalesReturnItems({
                   </td>
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-left">
                     <input
-                      onKeyDown={(e) => {
+                      id={`barcodeNo-input-${index}`}
+                      onKeyDown={async (e) => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract")
                           e.preventDefault();
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "barcodeNo");
+                        if (e.key === "Delete" || e.key === "") {
+                          setSalesReturnItems((prev) => {
+                            const newBlend = [...prev];
+                            newBlend[index] = {
+                              barcodeId: "",
+                              styleId: "",
+                              sizeId: "",
+                              returnQty: "",
+                              barcodeNo: "",
+                              styleItemId: "",
+                              colorId: "",
+                              selected: false,
+                              netAmount: 0,
+                            };
+                            return newBlend;
+                          });
+                        }
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleBarcodeEnter(index, row);
                         }
                       }}
                       className="text-left rounded py-1 px-1 w-full"
@@ -328,10 +459,51 @@ export default function SalesReturnItems({
                       }
                       onBlur={(e) => {
                         handleInputChange(e.target.value, index, "barcodeNo");
+                        if (e.target.value === "") {
+                          setSalesReturnItems((prev) => {
+                            const newBlend = [...prev];
+                            newBlend[index] = {
+                              barcodeId: "",
+                              styleId: "",
+                              sizeId: "",
+                              returnQty: "",
+                              barcodeNo: "",
+                              styleItemId: "",
+                              colorId: "",
+                              selected: false,
+                              netAmount: 0,
+                            };
+                            return newBlend;
+                          });
+                        }
                       }}
-                      disabled={true}
+                      disabled={id || !isHo}
                     />
                   </td>
+                  {isHo && (
+                    <>
+                      <td className="py-0.5 border border-gray-300 text-[11px] ">
+                        <input
+                          className="text-left rounded py-1 px-1 w-full  select-none"
+                          disabled={true}
+                          value={row.billNo}
+                        />
+                      </td>
+                      <td className="py-0.5 border border-gray-300 text-[11px] ">
+                        <input
+                          className="text-left rounded py-1 px-1 w-full  select-none"
+                          disabled={true}
+                          value={
+                            findFromList(
+                              row.deliveryToId,
+                              branchList?.data,
+                              "branchName",
+                            ) || ""
+                          }
+                        />
+                      </td>
+                    </>
+                  )}
                   <td className="py-0.5 border border-gray-300 text-[11px] ">
                     <input
                       className="text-left rounded py-1 px-1 w-full  select-none"
@@ -415,7 +587,7 @@ export default function SalesReturnItems({
                         type="number"
                         className="text-right rounded py-1 px-1 w-full"
                         onFocus={(e) => e.target.select()}
-                         value={
+                        value={
                           row?.netAmount !== undefined &&
                           row?.netAmount !== null
                             ? Number(row.netAmount).toFixed(2)
@@ -445,7 +617,7 @@ export default function SalesReturnItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={8}
+                  colSpan={isHo ? 10 : 8}
                 >
                   Total
                 </td>
@@ -457,13 +629,12 @@ export default function SalesReturnItems({
                 </td>
                 {returnType === "Exchange" && (
                   <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
-                    {(Array.isArray(salesReturnItems)
-                      ? salesReturnItems
-                      : []
-                    ).reduce(
-                      (sum, row) => sum + (Number(row.netAmount) || 0),
-                      0,
-                    ).toFixed(2)}
+                    {(Array.isArray(salesReturnItems) ? salesReturnItems : [])
+                      .reduce(
+                        (sum, row) => sum + (Number(row.netAmount) || 0),
+                        0,
+                      )
+                      .toFixed(2)}
                   </td>
                 )}
 

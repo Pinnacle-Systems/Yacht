@@ -186,10 +186,10 @@ const SalesBillReport = ({
   };
 
   return (
-    <div className="flex flex-col w-full h-[93%] overflow-auto">
+    <div className="flex flex-col w-full overflow-auto">
       <>
         <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
-          <div className="h-[420px]">
+          <div className="h-[480px]">
             <table className="">
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">

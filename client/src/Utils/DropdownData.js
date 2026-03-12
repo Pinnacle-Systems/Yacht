@@ -157,6 +157,7 @@ export const packingCategoryOption = [
 export const salesTypes = [
   { show: "WHOLE SALE", value: "WHOLESALE" },
   { show: "RETAIL", value: "RETAIL" },
+  { show: "TO SHOWROOM", value: "SHOWROOM" },
 ];
 
 export const salePriceRange = [

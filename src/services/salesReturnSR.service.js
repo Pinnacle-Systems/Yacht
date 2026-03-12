@@ -106,9 +106,11 @@ async function get(req) {
           ? { contains: searchMobile }
           : undefined,
       },
-      DeliveryTo: {
-        branchName: Boolean(searchType) ? { contains: searchType } : undefined,
-      },
+      returnType: Boolean(searchType)
+        ? {
+            contains: searchType,
+          }
+        : undefined,
       billNo: Boolean(searchInvNo)
         ? {
             contains: searchInvNo,
@@ -263,7 +265,7 @@ async function create(body) {
           termsAndCondition: termsAndCondition ? termsAndCondition : "",
           remarks,
           customerName: customerName ? customerName : undefined,
-          taxTemplateId: parseInt(taxTemplateId),
+          taxTemplateId: taxTemplateId ? parseInt(taxTemplateId) : undefined,
           returnType,
           isCash: Boolean(isCash),
           isCard: Boolean(isCard),
@@ -271,7 +273,7 @@ async function create(body) {
           cardAmount: cardAmount ? parseFloat(cardAmount) : null,
           upiAmount: upiAmount ? parseFloat(upiAmount) : null,
           cashAmount: cashAmount ? parseFloat(cashAmount) : null,
-          deliveryToId: deliveryToId ? parseInt(deliveryToId) : undefined,
+          // deliveryToId: deliveryToId ? parseInt(deliveryToId) : undefined,
         },
       });
       await createSalesReturnItems(
@@ -333,6 +335,10 @@ async function createSalesReturnItems(
         netAmount: itemDetails?.netAmount
           ? parseInt(itemDetails.netAmount)
           : null,
+        deliveryToId: itemDetails?.deliveryToId
+          ? parseInt(itemDetails?.deliveryToId)
+          : undefined,
+        billNo: itemDetails?.billNo ? itemDetails?.billNo : undefined,
       },
     });
     await tx.stockLedger.create({
@@ -647,6 +653,10 @@ async function updateSalesReturnItems(
           netAmount: itemDetails?.netAmount
             ? parseInt(itemDetails.netAmount)
             : null,
+          deliveryToId: itemDetails?.deliveryToId
+            ? parseInt(itemDetails?.deliveryToId)
+            : undefined,
+          billNo: itemDetails?.billNo ? itemDetails?.billNo : undefined,
         },
       });
       const existingStock = await tx.stockLedger.findFirst({
@@ -771,6 +781,10 @@ async function updateSalesReturnItems(
           netAmount: itemDetails?.netAmount
             ? parseInt(itemDetails.netAmount)
             : null,
+          deliveryToId: itemDetails?.deliveryToId
+            ? parseInt(itemDetails?.deliveryToId)
+            : undefined,
+          billNo: itemDetails?.billNo ? itemDetails?.billNo : undefined,
         },
       });
 

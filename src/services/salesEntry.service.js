@@ -683,7 +683,7 @@ async function updateSalesEntryItems(
           },
         });
       }
-      if (salesType === "RETAIL") {
+      if (salesType === "SHOWROOM") {
         const newQty = stockDetail?.qty ? parseInt(stockDetail.qty) : 0;
         const existingBarcodes = await tx.barcode.findMany({
           where: {
@@ -832,7 +832,7 @@ async function updateSalesEntryItems(
             : null,
         },
       });
-      if (salesType === "RETAIL") {
+      if (salesType === "SHOWROOM") {
         const barcodeSeq = await tx.barcodeSequence.findFirst({
           where: {
             companyId: parseInt(companyId),
@@ -995,7 +995,7 @@ async function createSalesEntryItems(
           : null,
       },
     });
-    if (salesType === "RETAIL") {
+    if (salesType === "SHOWROOM") {
       const barcodeSeq = await tx.barcodeSequence.findFirst({
         where: {
           companyId: parseInt(companyId),

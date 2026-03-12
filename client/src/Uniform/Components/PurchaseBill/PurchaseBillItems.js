@@ -78,11 +78,11 @@ export default function PurchaseBillItems({
       setPurchaseBillItems((prev) => {
         const filledRows = prev.length;
 
-        if (filledRows < 3) {
+        if (filledRows < 5) {
           // add empty rows until total becomes 6
           return [
             ...prev,
-            ...Array.from({ length: 3 - filledRows }, () => ({
+            ...Array.from({ length: 5 - filledRows }, () => ({
               styleId: "",
               sizeId: "",
               qty: "",
@@ -105,7 +105,7 @@ export default function PurchaseBillItems({
     } else {
       // if null/undefined, initialize with 6 empty rows
       setPurchaseBillItems(
-        Array.from({ length: 3 }, () => ({
+        Array.from({ length: 5 }, () => ({
           styleId: "",
           sizeId: "",
           qty: "",
@@ -259,7 +259,7 @@ export default function PurchaseBillItems({
           <h2 className="font-medium text-slate-700">List Of Items</h2>
         </div>
         <div
-          className={`w-full max-h-[150px] min-h-[150px]   overflow-y-auto  mb-2 mt-1`}
+          className={`w-full max-h-[210px] min-h-[210px]   overflow-y-auto  mb-2 mt-1`}
         >
           <table className=" border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">

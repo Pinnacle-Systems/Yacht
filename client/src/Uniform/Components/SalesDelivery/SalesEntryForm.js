@@ -62,7 +62,7 @@ export function SalesBillForm({
   const [customerId, setCustomerId] = useState("");
   const [contactPerson, setContactPerson] = useState("");
   const [contactNumber, setContactNumber] = useState("");
-  const [salesType, setSalesType] = useState("");
+  const [salesType, setSalesType] = useState("WHOLESALE");
   const [destinationId, setDestinationId] = useState("");
   const [overAllDisc, setOverAllDisc] = useState("");
   const [roundOff, setRoundOff] = useState("");
@@ -217,7 +217,7 @@ export function SalesBillForm({
       setContactNumber(data?.contactNumber ? data?.contactNumber : "");
       setContactPerson(data?.contactPerson ? data?.contactPerson : "");
       setDestinationId(data?.destinationId ? data?.destinationId : "");
-      setSalesType(data?.salesType ? data?.salesType : "");
+      setSalesType(data?.salesType ? data?.salesType : "WHOLESALE");
       setOverAllDisc(data?.overAllDisc ? data?.overAllDisc : "");
       setRoundOff(data?.roundOff ? data?.roundOff : "");
       setBarcodes(data?.barcodes ? data?.barcodes : []);
@@ -667,7 +667,7 @@ export function SalesBillForm({
                   <FaRegFilePdf className="w-4 h-4 mr-2" />
                   Pdf
                 </button>
-                {salesType === "RETAIL" && (
+                {salesType === "SHOWROOM" && (
                   <button
                     className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm"
                     onClick={() => {

@@ -92,7 +92,7 @@ const BarCodePrintFormat = ({
                 <Text
                   style={{
                     fontSize: 7,
-                   
+                   marginBottom:1,
                     textAlign: "center",
                   }}
                 >
@@ -102,14 +102,14 @@ const BarCodePrintFormat = ({
                 <BarcodeGenerator
                   value={code.barcodeNo}
                   width={labelWidthPt * 0.9}
-                  height={labelHeightPt * 0.40}
+                  height={labelHeightPt * 0.30}
                 />
 
                 {/* 🧵 Style No */}
                 <Text
                   style={{
-                    fontSize: 6,
-                    marginTop: 1,
+                    fontSize: 9,
+                    marginTop: 2,
                     textAlign: "center",
                   }}
                 >
@@ -119,8 +119,8 @@ const BarCodePrintFormat = ({
                 {/* 📏 Size */}
                 <Text
                   style={{
-                    fontSize: 7,
-                    marginTop: 1,
+                    fontSize: 6,
+                    marginTop: 2,
                     textAlign: "center",
                   }}
                 >
@@ -128,8 +128,8 @@ const BarCodePrintFormat = ({
                 </Text>
                 <Text
                   style={{
-                    fontSize: 7,
-                    marginTop: 1,
+                    fontSize: 8,
+                    marginTop: 2,
                     textAlign: "center",
                   }}
                 >

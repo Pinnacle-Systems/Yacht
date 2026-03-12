@@ -1,5 +1,5 @@
 import { prisma } from "../lib/prisma.js";
-import { NoRecordFound } from "../configs/Responses.js";
+import { ErrorResponse, NoRecordFound } from "../configs/Responses.js";
 import {
   getDateFromDateTime,
   getDateTimeRange,
@@ -1141,6 +1141,8 @@ async function getSalesBillDetail(req) {
           id: true,
           barcodeId: true,
           netAmount: true,
+          discountType: true,
+          discountValue: true,
         },
       },
       Customer: {
@@ -1244,16 +1246,22 @@ async function getHOSalesDetail(req) {
 
   const barcodes = data?.salesBillItems || [];
 
-  const salesReturn = await prisma.salesReturnSR.findMany({
+  // const salesReturn = await prisma.salesReturnSR.findMany({
+  //   where: {
+  //     billNo: dcNo,
+  //   },
+  //   include: {
+  //     salesReturnSRItems: true,
+  //   },
+  // });
+  // const returnItems = salesReturn.flatMap((sr) => sr.salesReturnSRItems);
+
+  const returnItems = await prisma.salesReturnSRItems.findMany({
     where: {
       billNo: dcNo,
     },
-    include: {
-      salesReturnSRItems: true,
-    },
   });
 
-  const returnItems = salesReturn.flatMap((sr) => sr.salesReturnSRItems);
   const returnedBarcodeIds = new Set(returnItems.map((item) => item.barcodeId));
   const filteredBarcodes = barcodes.filter(
     (barcode) => !returnedBarcodeIds.has(barcode.barcodeId),
@@ -1294,6 +1302,76 @@ async function getHOSalesDetail(req) {
   };
 }
 
+async function getSalesBarcodeDetail(req) {
+  const { barcodeNo, branchId } = req.query;
+
+  // 1️⃣ First try fetching by styleNo
+  let data = await prisma.salesBillItems.findFirst({
+    where: {
+      barcodeNo: barcodeNo,
+      SalesBill: {
+        branchId: parseInt(branchId),
+      },
+    },
+    include: {
+      SalesBill: true,
+    },
+    orderBy: {
+      id: "desc",
+    },
+  });
+
+  const childRecord = await prisma.salesReturnSRItems.count({
+    where: {
+      barcodeNo: barcodeNo,
+      billNo: data?.SalesBill?.docId,
+    },
+  });
+  if (childRecord > 0) {
+    return ErrorResponse("Barcode Number is Already Return");
+  }
+
+  const barcodeCount = await prisma.stockSummary.aggregate({
+    where: {
+      branchId: {
+        notIn: parseInt(branchId),
+      },
+      barcodeNo: barcodeNo,
+    },
+    _sum: {
+      qty: true,
+    },
+  });
+
+  if (barcodeCount?._sum?.qty > 0) {
+    return ErrorResponse(
+      "Cannot Return the Barcode Number.This Barcode is stock in another branch!.",
+    );
+  }
+
+  // 2️⃣ If no data found, try fetching by barCode
+  if (!data || data.length === 0 || data === null) {
+    return ErrorResponse("Barcode Number Not Found");
+  }
+
+  return {
+    statusCode: 0,
+    data: {
+      salesBillId: data?.salesBillId,
+      styleId: data?.styleId,
+      sizeId: data?.sizeId,
+      returnQty: data?.qty,
+      styleItemId: data?.styleItemId,
+      colorId: data?.colorId,
+      uomId: data?.uomId,
+      barcodeNo: data?.barcodeNo,
+      barcodeId: data?.barcodeId,
+      billNo: data?.SalesBill?.docId,
+      deliveryToId: data?.SalesBill?.deliveryToId,
+    },
+  };
+}
+
 export {
   get,
   getOne,
@@ -1304,4 +1382,5 @@ export {
   getSalesReport,
   getHOSalesDetail,
   getHOSalesList,
+  getSalesBarcodeDetail,
 };

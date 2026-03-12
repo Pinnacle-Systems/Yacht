@@ -151,14 +151,15 @@ const Header = ({ profile, setProfile, setLogout, logout }) => {
     return { id: pageId, name: findElement(pageId, pageGroup?.data) };
   });
   const { userId, branchId } = getCommonParams();
-  const { data: branch } = useGetBranchByIdQuery(branchId, { skip: !branchId });
+  const { data: branchData } = useGetBranchByIdQuery(branchId, { skip: !branchId });
+
 
   return (
     <div className="py-1 w-full flex justify-between items-center bg-white shadow-sm fixed z-50 px-4">
       {/* Logo */}
 
       {/* <img className="rounded-lg h-8 w-32" src={logo3}   alt="peenics logo" /> */}
-      <h1 className="text-black font-semibold">YACHT</h1>
+      <h1 className="text-black font-semibold">{branchData?.data?.branchName}</h1>
 
       {/* dropdown  */}
       {/* <div className="drop">
