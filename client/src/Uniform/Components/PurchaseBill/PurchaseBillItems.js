@@ -1,5 +1,5 @@
 import { useLazyGetStyleMasterByIdQuery } from "../../../redux/uniformService/StyleMasterService";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import FxSelect from "../../../Inputs";
 import Swal from "sweetalert2";
@@ -25,6 +25,8 @@ export default function PurchaseBillItems({
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [currentSelectedIndex, setCurrentSelectedIndex] = useState(null);
+  const [verifyBarcodeNo, setVerifyBarcodeNo] = useState(""); // NEW
+  const verifyInputRef = useRef(null);
 
   const addRow = () => {
     const newRow = {
@@ -41,6 +43,7 @@ export default function PurchaseBillItems({
       netAmount: 0,
       discountType: "Percentage",
       discountValue: "",
+      verified: false,
     };
     setPurchaseBillItems([...purchaseBillItems, newRow]);
   };
@@ -73,6 +76,36 @@ export default function PurchaseBillItems({
     setContextMenu(null);
   };
 
+  const handleVerifyBarcode = () => {
+    const trimmed = verifyBarcodeNo.trim();
+
+    if (!trimmed) return;
+
+    const matchIndex = purchaseBillItems.findIndex(
+      (item) => item.barcodeNo === trimmed,
+    );
+
+    if (matchIndex === -1) {
+      Swal.fire({
+        icon: "warning",
+        title: "Not Found",
+        text: `Barcode "${trimmed}" does not exist in the item list.`,
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } else {
+      setPurchaseBillItems((prev) => {
+        const updated = structuredClone(prev);
+        updated[matchIndex].verified = true;
+        return updated;
+      });
+    }
+
+    // Always clear and refocus
+    setVerifyBarcodeNo("");
+    setTimeout(() => verifyInputRef.current?.focus(), 0);
+  };
+
   useEffect(() => {
     if (purchaseBillItems) {
       setPurchaseBillItems((prev) => {
@@ -93,6 +126,7 @@ export default function PurchaseBillItems({
               barcodeId: "",
               uomId: "",
               rate: "",
+              verified: false,
               selected: false,
               netAmount: 0,
               discountType: "Percentage",
@@ -120,6 +154,7 @@ export default function PurchaseBillItems({
           netAmount: 0,
           discountType: "Percentage",
           discountValue: "",
+          verified: false,
         })),
       );
     }
@@ -220,6 +255,7 @@ export default function PurchaseBillItems({
             netAmount: 0,
             discountType: "Percentage",
             discountValue: "",
+            verified: false,
           });
         }
 
@@ -255,8 +291,29 @@ export default function PurchaseBillItems({
         />
       </Modal>
       <div className="border border-slate-200  bg-white rounded-md shadow-sm max-h-[450px] px-2 overflow-auto">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center py-1">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
+          {(!isAdmin && !id) && (
+            <div className="flex items-center gap-2 mr-5">
+              <label className="text-[13px] font-semibold  text-red-600 whitespace-nowrap">
+                Verify Barcode
+              </label>
+              <input
+                ref={verifyInputRef}
+                className="border border-red-500 rounded px-2 py-0.5 text-[12px] w-40  focus:outline-none focus:ring-1 focus:ring-red-400 placeholder-red-500"
+                placeholder="Scan or type barcode..."
+                value={verifyBarcodeNo}
+                onChange={(e) => setVerifyBarcodeNo(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleVerifyBarcode();
+                  }
+                }}
+                disabled={readOnly}
+              />
+            </div>
+          )}
         </div>
         <div
           className={`w-full max-h-[210px] min-h-[210px]   overflow-y-auto  mb-2 mt-1`}
@@ -364,11 +421,13 @@ export default function PurchaseBillItems({
                 >
                   Tax Details
                 </th>
-                <th
-                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
-                >
-                  Actions
-                </th>
+                {(!isAdmin && !id) && (
+                  <th
+                    className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
+                  >
+                    Verified
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -648,7 +707,7 @@ export default function PurchaseBillItems({
                       </button>
                     </td>
 
-                    <td className="w-2 border border-gray-300">
+                    {/* <td className="w-2 border border-gray-300">
                       <input
                         className="w-full"
                         onKeyDown={(e) => {
@@ -659,7 +718,21 @@ export default function PurchaseBillItems({
                         }}
                         disabled={readOnly}
                       />
+                    </td> */}
+                    {
+                      (!isAdmin && !id) && (
+
+                    <td className="border border-gray-300 text-[11px] py-0.5 text-center">
+                      <input
+                        type="checkbox"
+                        checked={row.verified || false}
+                        readOnly={true}
+                        tabIndex={-1}
+                        className="justify-center flex items-center mx-auto accent-green-600"
+                      />
                     </td>
+                      )
+                    }
                   </tr>
                 ),
               )}

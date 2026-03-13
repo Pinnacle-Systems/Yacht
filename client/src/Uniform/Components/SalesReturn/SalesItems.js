@@ -40,8 +40,8 @@ export default function SalesItems({
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
   const [pendingStyleRows, setPendingStyleRows] = useState([]);
-  const [showColorPopup, setShowColorPopup] = useState(false);
-  const [colorId, setColorId] = useState("");
+  const [showSizePopup, setShowSizePopup] = useState(false);
+  const [selectedSizeIds, setSelectedSizeIds] = useState([]);
   const [uniqueColorIds, setUniqueColorIds] = useState([]);
 
   const [getStyleDetail] = useLazyGetSalesInvStyleDetailQuery();
@@ -344,19 +344,15 @@ export default function SalesItems({
         const styleRows = styleData?.data;
         if (!styleRows) return;
 
-        const colorIds = [
-          ...new Set(styleRows.map((row) => row.colorId).filter(Boolean)),
+        const uniqueSizeIds = [
+          ...new Set(styleRows.map((row) => row.sizeId).filter(Boolean)),
         ];
-        setUniqueColorIds(colorIds);
-        if (
-          colorIds.length < 1 ||
-          colorIds.length === 1 ||
-          colorIds.length === null
-        ) {
+        if (uniqueSizeIds.length <= 1) {
           fillRows(styleRows);
-        } else if (colorIds.length > 1) {
+        } else {
           setPendingStyleRows(styleRows);
-          setShowColorPopup(true);
+          setSelectedSizeIds(uniqueSizeIds); // Default: all selected
+          setShowSizePopup(true);
         }
       } catch (error) {
         console.error("Error adding row:", error);
@@ -418,6 +414,11 @@ export default function SalesItems({
     }
   };
 
+  const getSizeName = (sizeId) => {
+    const row = pendingStyleRows.find((r) => r.sizeId === sizeId);
+    return row?.Size?.name || sizeId;
+  };
+
   function imageFormatter(styleId) {
     const fileName = findFromList(styleId, styleList?.data, "img");
     if (!fileName) return "/no-image.png"; // fallback image if missing
@@ -431,53 +432,89 @@ export default function SalesItems({
     return false;
   };
 
+  const handleSizeConfirm = () => {
+    if (selectedSizeIds.length === 0) {
+      toast.info("Please select at least one size!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      return;
+    }
+    const filtered = pendingStyleRows.filter((row) =>
+      selectedSizeIds.includes(row.sizeId),
+    );
+    fillRows(filtered);
+    setShowSizePopup(false);
+    setSelectedSizeIds([]);
+  };
+
   return (
     <>
       <Modal
-        isOpen={showColorPopup}
-        onClose={() => setShowColorPopup(false)}
-        widthClass={"w-[220px]"}
+        isOpen={showSizePopup}
+        onClose={() => setShowSizePopup(false)}
+        widthClass={"w-[260px]"}
       >
-        <p className="text-md font-medium">Select Color</p>
-        <div className="w-40 my-4">
-          <DropdownNew
-            name="Color"
-            dataList={
-              colorList?.data?.filter(
-                (item) =>
-                  Array.isArray(uniqueColorIds) &&
-                  uniqueColorIds.includes(item.id),
-              ) || []
+        <p className="text-md font-medium mb-3">Select Sizes</p>
+
+        {/* All checkbox */}
+        <label className="flex items-center gap-2 mb-2 cursor-pointer font-medium">
+          <input
+            type="checkbox"
+            checked={
+              selectedSizeIds.length ===
+              [...new Set(pendingStyleRows.map((r) => r.sizeId))].length
             }
-            value={colorId}
-            setValue={(value) => {
-              setColorId(value);
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedSizeIds([
+                  ...new Set(pendingStyleRows.map((r) => r.sizeId)),
+                ]);
+              } else {
+                setSelectedSizeIds([]);
+              }
             }}
-            required={false}
-            clear={true}
-            autoFocus={true}
+            className="w-4 h-4"
           />
+          All
+        </label>
+
+        <hr className="mb-2" />
+
+        {/* Individual size checkboxes */}
+        <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
+          {[...new Set(pendingStyleRows.map((r) => r.sizeId))].map((sizeId) => (
+            <label
+              key={sizeId}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={selectedSizeIds.includes(sizeId)}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedSizeIds((prev) => [...prev, sizeId]);
+                  } else {
+                    setSelectedSizeIds((prev) =>
+                      prev.filter((id) => id !== sizeId),
+                    );
+                  }
+                }}
+                className="w-4 h-4"
+              />
+              {getSizeName(sizeId)}
+            </label>
+          ))}
         </div>
-        <div className="flex justify-end mt-6">
+
+        <div className="flex justify-end mt-4">
           <button
-            className="bg-green-700 text-white px-2 text-md rounded hover:bg-green-800"
-            onClick={() => {
-              const filtered = pendingStyleRows.filter(
-                (row) => row.colorId === colorId,
-              );
-              fillRows(filtered);
-              setShowColorPopup(false);
-              setColorId("");
-            }}
+            className="bg-green-700 text-white px-3 py-1 text-md rounded hover:bg-green-800"
+            onClick={handleSizeConfirm}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                const filtered = pendingStyleRows.filter(
-                  (row) => row.colorId === colorId,
-                );
-                fillRows(filtered);
-                setShowColorPopup(false);
-                setColorId("");
+                handleSizeConfirm();
               }
             }}
           >
@@ -487,7 +524,7 @@ export default function SalesItems({
       </Modal>
       <div className="border border-slate-200 px-2 bg-white rounded-md shadow-sm max-h-[450px] overflow-auto">
         <div className="flex items-center gap-4 sticky top-0 bg-white z-30 mt-2">
-          {salesType === "RETAIL" ? (
+          {salesType === "SHOWROOM" ? (
             <ReusableInput
               label="Barcode No"
               value={barcodeNo}
@@ -955,10 +992,7 @@ export default function SalesItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={
-                    salesType === "RETAIL" ?
-                    11 : 10
-                  }
+                  colSpan={salesType === "RETAIL" ? 11 : 10}
                 >
                   Total
                 </td>

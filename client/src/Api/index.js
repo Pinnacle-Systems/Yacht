@@ -48,6 +48,7 @@ export const ORDER_IMPORT_API = "orderImport";
 export const SAMPLE_API = "sample";
 export const COLOR_API = "color";
 export const PORTION_API = "portion";
+export const REFERENCE_API = "reference"
 export const FABRIC_API = "fabric";
 export const PROCESS_API = "process";
 export const PANEL_API = "panel";

@@ -7,7 +7,7 @@ async function get(req) {
 
     const data = await prisma.country.findMany({
         where: {
-            companyId: companyId ? parseInt(companyId) : undefined,
+            // companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
         }
     });

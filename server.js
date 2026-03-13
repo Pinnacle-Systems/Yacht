@@ -86,6 +86,7 @@ import {
   barcodeSeq,
   showRoomStock,
   openingStockSR,
+  referenceMaster,
 } from "./src/routes/index.js";
 
 import { socketMain } from "./src/sockets/socket.js";
@@ -192,6 +193,7 @@ app.use("/purchaseReturn", purchaseReturn);
 app.use("/materialStock", materialStock);
 app.use("/productionStock", productionStock);
 app.use("/portion", portionMaster);
+app.use("/reference", referenceMaster);
 app.use("/cuttingOrder", cuttingOrder);
 app.use("/cuttingDelivery", cuttingDelivery);
 app.use("/productionDelivery", productionDelivery);

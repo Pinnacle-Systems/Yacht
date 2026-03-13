@@ -302,6 +302,18 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
             return false;
         }
 
+        if (!isAdmin) {
+            const unVerified = data?.purchaseBillItems?.filter((item) => !item.verified);
+            if (unVerified?.length > 0) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Items Not Verified",
+                    text: "Please Verify the Barcode Number before Save!."
+                });
+                return false;
+            }
+        }
+
         return true;
     };
 
@@ -509,9 +521,13 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
         }
     };
 
+    const defaultId = taxTypeList?.data?.find(
+        (item) => item.name === "DEFAULT",
+    );
+
     useEffect(() => {
         if (!taxTemplateId && taxTypeList?.data?.length > 0) {
-            setTaxTemplateId(taxTypeList.data[0].id);
+            setTaxTemplateId(defaultId?.id ?? 0);
         }
     }, [taxTypeList, taxTemplateId]);
 
@@ -616,7 +632,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                             isAdmin ? (
                                                 <DropdownNew
                                                     name="Sales DC No"
-                                                    dataList={salesList?.data?.filter((item) => item.salesType === "RETAIL")}
+                                                    dataList={salesList?.data?.filter((item) => item.salesType === "SHOWROOM")}
                                                     value={dcNo}
                                                     setValue={handleAddRow}
                                                     readOnly={readOnly}

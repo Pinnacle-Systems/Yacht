@@ -81,6 +81,7 @@ model Company {
   processGroups       ProcessGroup[]
   customers           Customer[]
   barcodeSequences    BarcodeSequence[]
+  references          Reference[]
 }
 
 model Subscription {
@@ -3082,4 +3083,13 @@ model OpeningStockItemsSR {
   barcodes         Barcode[]
   remarks          String?
   styleNo          String?
+}
+
+model Reference {
+  id         Int      @id @default(autoincrement())
+  name       String?
+  active     Boolean? @default(true)
+  Company    Company? @relation(fields: [companyId], references: [id])
+  companyId  Int?
+  percentage Float?
 }

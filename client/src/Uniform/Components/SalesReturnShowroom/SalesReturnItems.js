@@ -120,45 +120,6 @@ export default function SalesReturnItems({
     });
   };
 
-  const fillRows = (rowsToFill) => {
-    setSalesReturnItems((prev) => {
-      const updated = [...prev];
-
-      let startIndex = updated.findIndex(
-        (row) =>
-          !row.styleId && !row.sizeId && !row.barcodeNo && !row.barcodeId,
-      );
-
-      if (startIndex === -1) startIndex = updated.length;
-
-      rowsToFill.forEach((row, i) => {
-        if (startIndex + i < updated.length) {
-          updated[startIndex + i] = row;
-        } else {
-          updated.push(row);
-        }
-      });
-
-      while (updated.length < 2) {
-        updated.push({
-          barcodeNo: "",
-          styleId: "",
-          sizeId: "",
-          returnQty: "",
-          barcodeId: "",
-          styleItemId: "",
-          colorId: "",
-          selected: false,
-          netAmount: 0,
-          billNo: "",
-          deliveryToId: "",
-        });
-      }
-
-      return updated;
-    });
-  };
-
   const handleBarcodeEnter = async (index, row) => {
     try {
       const response = await getBarcodeDetails({
@@ -171,7 +132,20 @@ export default function SalesReturnItems({
           title: "Not Found",
           text: response?.message || "Failed to fetch barcode details",
         });
-        return;
+         setSalesReturnItems((prev) => {
+          const updated = [...prev];
+          updated[index] = {
+            barcodeNo: "",
+            styleItemId: null,
+            styleId: "",
+            sizeId: null,
+            colorId: null,
+            uomId: null,
+            barcodeId: "",
+            selected: false,
+          };
+          return updated;
+        });
       }
 
       const data = response.data;
@@ -183,6 +157,20 @@ export default function SalesReturnItems({
           icon: "warning",
           title: "Duplicate",
           text: "The Barcode Number is Already Exist,Cannot add!.",
+        });
+        setSalesReturnItems((prev) => {
+          const updated = [...prev];
+          updated[index] = {
+            barcodeNo: "",
+            styleItemId: null,
+            styleId: "",
+            sizeId: null,
+            colorId: null,
+            uomId: null,
+            barcodeId: "",
+            selected: false,
+          };
+          return updated;
         });
       }else{
 
@@ -472,6 +460,8 @@ export default function SalesReturnItems({
                               colorId: "",
                               selected: false,
                               netAmount: 0,
+                              billNo:"",
+                              deliveryToId:""
                             };
                             return newBlend;
                           });

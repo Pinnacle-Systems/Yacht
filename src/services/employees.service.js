@@ -135,7 +135,7 @@ async function get(req) {
   const data = await prisma.employee.findMany({
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
-      // active: active ? Boolean(active) : undefined,
+      active: active ? Boolean(active) : undefined,
       // EmployeeCategory: {
       //     name: employeeCategory
       // }

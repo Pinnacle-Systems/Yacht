@@ -172,9 +172,9 @@ export default function Form() {
     // userId: secureLocalStorage.getItem(
     //   sessionStorage.getItem("sessionId") + "userId"
     // ),
-    // branchId: secureLocalStorage.getItem(
-    //   sessionStorage.getItem("sessionId") + "currentBranchId"
-    // ),
+    branchId: secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "currentBranchId"
+    ),
   };
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -197,8 +197,6 @@ export default function Form() {
     isLoading,
     isFetching,
   } = useGetEmployeeQuery({ params });
-
-  console.log(allData, "allData");
 
   const { data: shiftTemplate } = useGetShiftTemplateMasterQuery({ params });
 
@@ -378,13 +376,11 @@ export default function Form() {
   useEffect(() => {
     if (singleData?.data) {
       const cleanedData = cleanData(singleData?.data);
-      console.log(cleanedData, "cleanedData");
 
       syncFormWithDb(cleanedData);
     }
   }, [singleData, syncFormWithDb]);
 
-  console.log(singleData, "single");
 
   const data = {
     branchId: secureLocalStorage.getItem(
@@ -516,7 +512,6 @@ export default function Form() {
       console.log("handle");
     }
   };
-  console.log(employeeCategoryList?.data, "employeeCategoryList?.data");
   const validateData = (data) => {
     if (data?.firstName && data?.departmentId) {
       return true;
@@ -766,10 +761,8 @@ export default function Form() {
 
   const submitLeavingForm = () => {
     if (id) {
-      console.log("called id");
       handleSubmitCustom(updateData, data, "Updated");
     } else {
-      console.log("called no id");
       handleSubmitCustom(addData, data, "Added");
     }
     setLeavingForm(false);
@@ -811,8 +804,6 @@ export default function Form() {
     setStep(tabNumber);
     // }
   };
-
-  console.log(familyDetails, "familyDetails");
 
   useEffect(() => {
     if (bankDetails?.length >= 1) return;
@@ -923,7 +914,6 @@ export default function Form() {
       return updated;
     });
 
-    console.log("bankDetails updated after delete");
   }
   function deleteEducationRow(rowIndex) {
     if (readOnly) return toast.error("Turn on Edit Mode...");
@@ -934,7 +924,6 @@ export default function Form() {
       return updated;
     });
 
-    console.log("EducationDetails updated after delete");
   }
   function deleteFamilyRow(rowIndex) {
     if (readOnly) return toast.error("Turn on Edit Mode...");
@@ -945,20 +934,17 @@ export default function Form() {
       return updated;
     });
 
-    console.log("FamilyDetails updated after delete");
   }
   const handleView = (id) => {
     setId(id);
     setForm(true);
     setReadOnly(true);
-    console.log("view");
     setStep("Basic Details");
   };
   const handleEdit = (id) => {
     setId(id);
     setForm(true);
     setReadOnly(false);
-    console.log("Edit");
     setStep("Basic Details");
   };
   const columns = [
@@ -1022,9 +1008,6 @@ export default function Form() {
       }); // clear when unchecked
     }
   };
-  console.log(presentAddress, "presentAddress");
-
-  console.log(permanentAddress, "permanentAddress");
 
   const handlePresentChange = (field, value) => {
     setPresentAddress((prev) => {

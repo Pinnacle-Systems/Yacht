@@ -417,9 +417,13 @@ export function SalesBillForm({
     Number(cardAmount || 0) +
     Number(upiAmount || 0);
 
+  const defaultId = taxTypeList?.data?.find(
+    (item) => item.name === "DEFAULT",
+  );
+
   useEffect(() => {
     if (!taxTemplateId && taxTypeList?.data?.length > 0) {
-      setTaxTemplateId(taxTypeList.data[0].id);
+      setTaxTemplateId(defaultId?.id ?? 0);
     }
   }, [taxTypeList, taxTemplateId]);
 
@@ -872,7 +876,9 @@ export function SalesBillForm({
                   roundOffValue={roundOffValue}
                   roundOffType={roundOffType}
                   totalNetAmt={totalAmount}
-                  salesBillItems={salesBillItems?.filter((item) => item?.styleItemId)}
+                  salesBillItems={salesBillItems?.filter(
+                    (item) => item?.styleItemId,
+                  )}
                   savedData={savedData}
                   sizeList={sizeList}
                   styleItemList={styleItemList}

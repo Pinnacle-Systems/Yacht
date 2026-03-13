@@ -472,7 +472,7 @@ export default function Form() {
       </Modal>
       <div className="py-1 bg-[#F1F1F0] h-[85%]">
         <div className="flex flex-col sm:flex-row justify-between bg-white  px-1  items-center mb-2 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-          <h1 className="text-xl font-semibold text-gray-800">
+          <h1 className="text-xl font-bold text-gray-800">
             Sales Bill Report
           </h1>
           <div className="flex gap-5 font-medium text-lg items-center mt-1">
@@ -518,7 +518,7 @@ export default function Form() {
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <div className="flex flex-col w-full h-[93%] overflow-auto">
             <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
-              <div className="h-[420px]">
+              <div className="h-[480px]">
                 {currentItems.length > 0 ? (
                   <table className="">
                     <thead className="bg-gray-200 text-gray-800 ">

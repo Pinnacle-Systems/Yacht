@@ -88,7 +88,8 @@ import {
   BarcodeSeqmaster,
   ShowRoomStockReport,
   OpeningStockSR,
-  SalesBillReport
+  SalesBillReport,
+  ReferenceMaster
 } from "../../../Uniform/Components";
 import NewOrder from "../../../Uniform/Components/NewOrder";
 import Manufacture from "../../../Uniform/Components/styleesheet/Manufacture";
@@ -193,7 +194,8 @@ const ActiveTabList = () => {
     "BARCODE SEQ MASTER": <BarcodeSeqmaster />,
     "STOCK REPORT": <ShowRoomStockReport />,
     "OPENING  STOCK": <OpeningStockSR />,
-    "SALES BILL REPORT": <SalesBillReport />
+    "SALES BILL REPORT": <SalesBillReport />,
+    "REFERENCE MASTER": <ReferenceMaster />
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

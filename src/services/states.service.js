@@ -7,9 +7,9 @@ async function get(req) {
     const { companyId, active } = req.query
     const data = await prisma.state.findMany({
         where: {
-            country: {
-                companyId: companyId ? parseInt(companyId) : undefined,
-            },
+            // country: {
+            //     companyId: companyId ? parseInt(companyId) : undefined,
+            // },
             active: active ? Boolean(active) : undefined,
         },
         include: {

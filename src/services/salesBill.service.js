@@ -437,6 +437,11 @@ async function getOne(id) {
               name: true,
             },
           },
+          Style:{
+            select:{
+              sku:true
+            }
+          }
         },
       },
       Customer: {

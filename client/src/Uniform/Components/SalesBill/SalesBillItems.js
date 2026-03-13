@@ -292,58 +292,107 @@ export default function SalesBillItems({
           title: "Not Found",
           text: response?.message || "Failed to fetch barcode details",
         });
-        return;
+        setSalesBillItems((prev) => {
+          const updated = [...prev];
+          updated[index] = {
+            barcodeNo: "",
+            styleItemId: null,
+            styleId: "",
+            sizeId: null,
+            colorId: null,
+            uomId: null,
+            qty: "",
+            rate: "",
+            amount: "",
+            discountType: "",
+            discountValue: "",
+            taxPercent: "",
+            barcodeId: "",
+            selected: false,
+          };
+          return updated;
+        });
       }
 
       const data = response.data;
-
-      setSalesBillItems((prev) => {
-        const updated = [...prev];
-        const isLastRow = index === prev.length - 1;
-
-        updated[index] = {
-          ...updated[index],
-          styleItemId: data.styleItemId,
-          sizeId: data.sizeId,
-          colorId: data.colorId,
-          uomId: data.uomId,
-          barcodeNo: data.barcodeNo,
-          qty: data.qty,
-          rate: data.rate,
-          barcodeId: data.barcodeId,
-          styleId: data.styleId,
-          taxPercent: data.taxPercent,
-        };
-
-        // Add new row if last
-        if (isLastRow) {
-          updated.push({
-            styleId: "",
-            sizeId: "",
-            qty: "",
-            styleItemId: "",
-            colorId: "",
-            selected: false,
+      const duplicate = salesBillItems?.filter(
+        (item) => item.barcodeId === data.barcodeId,
+      );
+      if (duplicate.length > 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "Duplicate",
+          text: "The Barcode Number is Already Exist,Cannot add!.",
+        });
+        setSalesBillItems((prev) => {
+          const updated = [...prev];
+          updated[index] = {
             barcodeNo: "",
-            barcodeId: "",
-            uomId: "",
+            styleItemId: null,
+            styleId: "",
+            sizeId: null,
+            colorId: null,
+            uomId: null,
+            qty: "",
             rate: "",
-            netAmount: 0,
-            discountType: "Percentage",
+            amount: "",
+            discountType: "",
             discountValue: "",
-          });
-        }
+            taxPercent: "",
+            barcodeId: "",
+            selected: false,
+          };
+          return updated;
+        });
+      } else {
+        setSalesBillItems((prev) => {
+          const updated = [...prev];
+          const isLastRow = index === prev.length - 1;
 
-        return updated;
-      });
+          updated[index] = {
+            ...updated[index],
+            styleItemId: data.styleItemId,
+            sizeId: data.sizeId,
+            colorId: data.colorId,
+            uomId: data.uomId,
+            barcodeNo: data.barcodeNo,
+            qty: data.qty,
+            rate: data.rate,
+            barcodeId: data.barcodeId,
+            styleId: data.styleId,
+            taxPercent: data.taxPercent,
+          };
 
-      // Focus next row
-      setTimeout(() => {
-        const nextInput = document.querySelector(
-          `#barcodeNo-input-${index + 1}`,
-        );
-        nextInput?.focus();
-      }, 0);
+          // Add new row if last
+          if (isLastRow) {
+            updated.push({
+              styleId: "",
+              sizeId: "",
+              qty: "",
+              styleItemId: "",
+              colorId: "",
+              selected: false,
+              barcodeNo: "",
+              barcodeId: "",
+              uomId: "",
+              rate: "",
+              netAmount: 0,
+              discountType: "Percentage",
+              discountValue: "",
+            });
+          }
+
+          return updated;
+        });
+
+        // Focus next row
+        setTimeout(() => {
+          const nextInput = document.querySelector(
+            `#barcodeNo-input-${index + 1}`,
+          );
+          nextInput?.focus();
+        }, 0);
+      }
     } catch (error) {
       console.error("Barcode fetch failed:", error);
     }

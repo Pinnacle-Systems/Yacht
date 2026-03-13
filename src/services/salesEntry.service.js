@@ -1221,6 +1221,11 @@ async function getSalesInvStyleDetail(req) {
           fabricId: true,
           styleItemId: true,
           qty: true,
+          Size: {
+            select: {
+              name: true,
+            },
+          },
         },
       },
     },

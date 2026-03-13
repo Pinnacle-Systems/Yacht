@@ -8,7 +8,7 @@ import SRHeader from "../../../../Utils/SRHeader";
 import { groupBy } from "lodash";
 
 
-const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, singleDataBranch, grossAmount, netAmount, roundOff, taxRows, salesBillItems,roundOffType }) => {
+const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, singleDataBranch, grossAmount, netAmount, roundOff, taxRows, salesBillItems, roundOffType }) => {
     const styles = StyleSheet.create({
         page: { padding: 5 },
 
@@ -353,15 +353,14 @@ const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, single
                         <View fixed style={styles.tableHeader}>
                             {[
                                 { label: "S.No", flex: 0.5 },
-                                { label: "Style No", flex: 1 },
+                                { label: "Barcode No", flex: 1.8 },
                                 { label: "Style Item", flex: 2 },
                                 { label: "Size", flex: 0.8 },
                                 { label: "Color", flex: 2 },
                                 { label: "Qty", flex: 0.8 },
                                 { label: "Rate", flex: 1 },
-                                { label: "Tax %", flex: 0.8 },
                                 { label: "Disc Type", flex: 1 },
-                                { label: "Discount", flex: 1 },
+                                { label: "Disc", flex: 0.8 },
                                 { label: "Gross Amt", flex: 1.3 },
                                 { label: "Net Amt", flex: 1.3 },
                             ].map((header, index) => (
@@ -384,64 +383,65 @@ const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, single
                         </View>
                         {/*  Grouped Rows */}
 
-                        {(salesBillItems || []).filter((item) => item.barcodeId).map((item, index) => {
-                            const isEven = index % 2 === 0;
-                            const gross = item.rate * item.qty;
-                            return (
-                                <View
-                                    key={index}
+                        {(salesBillItems || []).slice().sort((a, b) =>
+                            String(a?.Style?.sku ?? "").localeCompare(String(b?.Style?.sku ?? ""), undefined, {
+                                numeric: true,
+                                sensitivity: "base",
+                            })).filter((item) => item.barcodeId).map((item, index) => {
+                                const isEven = index % 2 === 0;
+                                const gross = item.rate * item.qty;
+                                return (
+                                    <View
+                                        key={index}
 
-                                    style={{
-                                        flexDirection: "row",
-                                        width: "100%",
-                                        borderBottomWidth: 1,
-                                        borderBottomColor: "#D8B4FE",
-                                        borderLeftColor: "#D8B4FE",
-                                        backgroundColor: isEven ? "#FAF5FF" : "#FFFFFF",
-                                        borderLeftWidth: 1
-                                    }}
-                                >
-                                    <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7, textAlign: "center" }]}>
-                                        {index + 1}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
-                                        {findFromList(item.styleId, styleList?.data, "sku") || ""}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
-                                        {findFromList(item.styleItemId, styleItemList?.data, "name") || ""}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7 }]}>
-                                        {findFromList(item.sizeId, sizeList?.data, "name") || ""}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
-                                        {findFromList(item.colorId, colorList?.data, "name") || ""}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7, textAlign: "right" }]}>
-                                        {item.qty || 0}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7, textAlign: "right" }]}>
-                                        {Number(item.rate || 0).toFixed(2)}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7, textAlign: "right" }]}>
-                                        {item.taxPercent || 0}%
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
-                                        {item.discountType === "Percentage" ? "Perc" : item.discountType || ""}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1, fontSize: 7, textAlign: "right" }]}>
-                                        {item.discountValue || 0}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1.3, fontSize: 7, textAlign: "right" }]}>
-                                        {gross.toFixed(2)}
-                                    </Text>
-                                    <Text style={[styles.tableCell, { flex: 1.3, fontSize: 7, textAlign: "right" }]}>
-                                        {item?.netAmount !== undefined && item?.netAmount !== null
-                                            ? Number(item.netAmount).toFixed(2)
-                                            : "0"}
-                                    </Text>
-                                </View>
-                            );
-                        })}
+                                        style={{
+                                            flexDirection: "row",
+                                            width: "100%",
+                                            borderBottomWidth: 1,
+                                            borderBottomColor: "#D8B4FE",
+                                            borderLeftColor: "#D8B4FE",
+                                            backgroundColor: isEven ? "#FAF5FF" : "#FFFFFF",
+                                            borderLeftWidth: 1
+                                        }}
+                                    >
+                                        <Text style={[styles.tableCell, { flex: 0.5, fontSize: 7, textAlign: "center" }]}>
+                                            {index + 1}
+                                        </Text>
+                                        <Text style={[styles.tableCell, { flex: 1.8, fontSize: 7 }]}>
+                                            {item?.barcodeNo}
+                                        </Text>
+                                        <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
+                                            {findFromList(item.styleItemId, styleItemList?.data, "name") || ""}
+                                        </Text>
+                                        <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7 }]}>
+                                            {findFromList(item.sizeId, sizeList?.data, "name") || ""}
+                                        </Text>
+                                        <Text style={[styles.tableCell, { flex: 2, fontSize: 7 }]}>
+                                            {findFromList(item.colorId, colorList?.data, "name") || ""}
+                                        </Text>
+                                        <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7, textAlign: "right" }]}>
+                                            {item.qty || 0}
+                                        </Text>
+                                        <Text style={[styles.tableCell, { flex: 1, fontSize: 7, textAlign: "right" }]}>
+                                            {Number(item.rate || 0).toFixed(2)}
+                                        </Text>
+                                        <Text style={[styles.tableCell, { flex: 1, fontSize: 7 }]}>
+                                            {item.discountType === "Percentage" ? "Perc" : item.discountType || ""}
+                                        </Text>
+                                        <Text style={[styles.tableCell, { flex: 0.8, fontSize: 7, textAlign: "right" }]}>
+                                            {item.discountValue || 0}
+                                        </Text>
+                                        <Text style={[styles.tableCell, { flex: 1.3, fontSize: 7, textAlign: "right" }]}>
+                                            {gross.toFixed(2)}
+                                        </Text>
+                                        <Text style={[styles.tableCell, { flex: 1.3, fontSize: 7, textAlign: "right" }]}>
+                                            {item?.netAmount !== undefined && item?.netAmount !== null
+                                                ? Number(item.netAmount).toFixed(2)
+                                                : "0"}
+                                        </Text>
+                                    </View>
+                                );
+                            })}
                         <View
                             style={{
                                 flexDirection: "row",
@@ -457,7 +457,7 @@ const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, single
                                 style={[
                                     styles.tableCell,
                                     {
-                                        flex: 5.7,
+                                        flex: 7.6,
                                         fontSize: 8,
                                         textAlign: "right",
                                         fontWeight: "bold",
@@ -472,7 +472,7 @@ const PDF = ({ singleData, styleList, styleItemList, sizeList, colorList, single
                                 style={[
                                     styles.tableCell,
                                     {
-                                        flex: 0.6,
+                                        flex: 0.7,
                                         fontSize: 8,
                                         textAlign: "right",
                                         fontWeight: "bold",
