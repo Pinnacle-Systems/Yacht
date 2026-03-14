@@ -34,6 +34,7 @@ import { useReactToPrint } from "react-to-print";
 import EditIcon from "@mui/icons-material/Edit";
 import { adjTypeData } from "../../../Utils/DropdownData";
 import { Button } from "@mui/material";
+import { useGetReferenceMasterByIdQuery } from "../../../redux/uniformService/ReferenceMasterService";
 
 export function SalesBillForm({
   onClose,
@@ -50,6 +51,8 @@ export function SalesBillForm({
   singleDataBranch,
   isHo,
   branchList,
+  salesPersonList,
+  referenceList,
 }) {
   const [pdfOpen, setPdfOpen] = useState(false);
   const [docId, setDocId] = useState("New");
@@ -76,6 +79,8 @@ export function SalesBillForm({
   const [roundOffValue, setRoundOffValue] = useState("");
   const [roundOffOpen, setRoundOffOpen] = useState("");
   const [savedData, setSavedData] = useState("");
+  const [salesPersonId, setSalesPersonId] = useState("");
+  const [referenceId, setReferenceId] = useState("");
 
   const receiptRef = useRef();
   const handlePrint = useReactToPrint({
@@ -94,6 +99,8 @@ export function SalesBillForm({
     isFetching: isSingleCustomerFetching,
     isLoading: isSingleCustomerLoading,
   } = useGetCustomerByIdQuery(customerId, { skip: !customerId });
+
+  const { data: referenceData } = useGetReferenceMasterByIdQuery(referenceId);
 
   const isLoadingIndicator = isSingleFetching || isSingleLoading;
 
@@ -121,7 +128,12 @@ export function SalesBillForm({
 
   const validateData = (data) => {
     if (!isHo) {
-      if (!data?.customerId || !data?.customerName || !data?.taxTemplateId) {
+      if (
+        !data?.customerId ||
+        !data?.customerName ||
+        !data?.taxTemplateId ||
+        !data?.salesPersonId
+      ) {
         toast.info("Please fill all required fields...!", {
           position: "top-center",
           autoClose: 2000,
@@ -226,6 +238,8 @@ export function SalesBillForm({
     deliveryToId,
     roundOffType,
     roundOffValue,
+    salesPersonId,
+    referenceId,
   };
 
   const syncFormWithDb = useCallback(
@@ -261,6 +275,8 @@ export function SalesBillForm({
       setDeliveryToId(data?.deliveryToId ? data?.deliveryToId : "");
       setRoundOffType(data?.roundOffType ? data?.roundOffType : "PLUS");
       setRoundOffValue(data?.roundOffValue ? data?.roundOffValue : "");
+      setSalesPersonId(data?.salesPersonId ? data?.salesPersonId : "");
+      setReferenceId(data?.referenceId ? data?.referenceId : "");
     },
     [id],
   );
@@ -417,9 +433,7 @@ export function SalesBillForm({
     Number(cardAmount || 0) +
     Number(upiAmount || 0);
 
-  const defaultId = taxTypeList?.data?.find(
-    (item) => item.name === "DEFAULT",
-  );
+  const defaultId = taxTypeList?.data?.find((item) => item.name === "DEFAULT");
 
   useEffect(() => {
     if (!taxTemplateId && taxTypeList?.data?.length > 0) {
@@ -576,19 +590,36 @@ export function SalesBillForm({
                     readOnly={true}
                     disabled
                   />
-                  <DropdownInput
-                    name="Tax Type"
-                    options={dropDownListObject(
-                      taxTypeList ? taxTypeList?.data : [],
-                      "name",
-                      "id",
-                    )}
-                    value={taxTemplateId}
-                    setValue={setTaxTemplateId}
-                    required={true}
-                    readOnly={readOnly || id}
-                    // autoFocus={true}
-                  />
+                  {isHo && (
+                    <DropdownInput
+                      name="Tax Type"
+                      options={dropDownListObject(
+                        taxTypeList ? taxTypeList?.data : [],
+                        "name",
+                        "id",
+                      )}
+                      value={taxTemplateId}
+                      setValue={setTaxTemplateId}
+                      required={true}
+                      readOnly={readOnly || id}
+                      // autoFocus={true}
+                    />
+                  )}
+                  {!isHo && (
+                    <DropdownInput
+                      name="Sales Person"
+                      options={dropDownListObject(
+                        salesPersonList ? salesPersonList?.data : [],
+                        "firstName",
+                        "id",
+                      )}
+                      value={salesPersonId}
+                      setValue={setSalesPersonId}
+                      required={true}
+                      readOnly={readOnly}
+                      autoFocus={!isHo ? true : false}
+                    />
+                  )}
                 </div>
               </div>
               {!isHo && (
@@ -603,7 +634,7 @@ export function SalesBillForm({
                       name="Contact No"
                       readOnly={readOnly}
                       id={id}
-                      autoFocus={id ? false : true}
+                      // autoFocus={id ? false : true}
                       focusNext={() => customerNameRef.current?.focus()}
                     />
                     <ReusableInput
@@ -615,6 +646,17 @@ export function SalesBillForm({
                       readOnly={readOnly}
                       required={true}
                     />
+                    {!isHo && (
+                      <DropdownNew
+                        name="Reference"
+                        dataList={referenceList?.data}
+                        value={referenceId}
+                        setValue={(value) => setReferenceId(value)}
+                        disabled={readOnly}
+                        placeholder={"Select Reference"}
+                        clear={true}
+                      />
+                    )}
                   </div>
                 </div>
               )}
@@ -637,7 +679,7 @@ export function SalesBillForm({
                       disabled={readOnly || id}
                       otherField={"branchName"}
                       placeholder={"Select Showroom"}
-                      autoFocus={true}
+                      autoFocus={isHo ? true : false}
                     />
                   </div>
                 </div>
@@ -655,6 +697,9 @@ export function SalesBillForm({
                 uomList={uomList}
                 taxTemplateId={taxTemplateId}
                 styleList={styleList}
+                referenceId={referenceId}
+                referenceData={referenceData}
+                isHo={isHo}
               />
             </fieldset>
             <div className="grid grid-cols-3 gap-2">

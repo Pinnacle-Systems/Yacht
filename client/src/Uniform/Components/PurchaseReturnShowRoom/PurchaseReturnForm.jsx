@@ -28,7 +28,8 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
     styleItemList,
     colorList,
     uomList,
-    styleList
+    styleList,
+    isHo,
 }) => {
     const [docId, setDocId] = useState("New");
     const [supplierId, setSupplierId] = useState("");
@@ -218,12 +219,15 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
     };
 
     const validateData = (data) => {
-        if (!data.supplierId || !data.invNo) {
-            toast.info("Please fill all required fields...!", {
-                position: "top-center",
-                autoClose: 2000
-            });
-            return false;
+        if (!isHo) {
+
+            if (!data.supplierId || !data.invNo) {
+                toast.info("Please fill all required fields...!", {
+                    position: "top-center",
+                    autoClose: 2000
+                });
+                return false;
+            }
         }
         if (!data.purchaseReturnItems || data.purchaseReturnItems.length === 0) {
             toast.info("Please add at least one item...!", {
@@ -357,55 +361,61 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                         readOnly={true}
                                         disabled
                                     />
-                                    <DropdownNew
-                                        name="Inv No"
-                                        dataList={purchaseList?.data}
-                                        value={invNo}
-                                        setValue={(value) => {
-                                            setPurchaseReturnItems([])
-                                            setInvNo(value)
-                                        }}
-                                        required={true}
-                                        readOnly={readOnly}
-                                        placeholder={"Select Inv"}
-                                        otherField={"invNo"}
-                                        otherValue={"invNo"}
-                                        disabled={id}
-                                        autoFocus={true}
-                                    />
+
+                                    {!isHo && (
+                                        <DropdownNew
+                                            name="Inv No"
+                                            dataList={purchaseList?.data}
+                                            value={invNo}
+                                            setValue={(value) => {
+                                                setPurchaseReturnItems([])
+                                                setInvNo(value)
+                                            }}
+                                            required={true}
+                                            readOnly={readOnly}
+                                            placeholder={"Select Inv"}
+                                            otherField={"invNo"}
+                                            otherValue={"invNo"}
+                                            disabled={id}
+                                            autoFocus={true}
+                                        />
+                                    )
+                                    }
+
                                 </div>
                             </div>
                             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                                <div className="grid grid-cols-1 gap-1">
-                                    <h2 className="font-medium text-slate-700 mb-2">Supplier Details</h2>
-                                    <div className="grid grid-cols-3 gap-1">
-                                        <DropdownNew
-                                            name="Supplier"
-                                            dataList={partyList?.data?.filter((item) => item.isSupplier)}
-                                            value={supplierId}
-                                            setValue={(value) => {
-                                                setSupplierId(value);
-                                            }}
-                                            required={true}
-                                            readonly={true}
-                                            placeholder={"Select Supplier"}
-                                        />
-                                        <ReusableInput
-                                            label="Contact Person"
-                                            value={contactPerson}
-                                            type={"text"}
-                                            readOnly={true}
-                                            disabled
-                                        />
-                                        <ReusableInput
-                                            label="Contact Number"
-                                            value={contactNumber}
-                                            type={"text"}
-                                            readOnly={true}
-                                            disabled
-                                        />
-                                    </div>
-                                </div>
+                                {!isHo && (
+                                    <div className="grid grid-cols-1 gap-1">
+                                        <h2 className="font-medium text-slate-700 mb-2">Supplier Details</h2>
+                                        <div className="grid grid-cols-3 gap-1">
+                                            <DropdownNew
+                                                name="Supplier"
+                                                dataList={partyList?.data?.filter((item) => item.isSupplier)}
+                                                value={supplierId}
+                                                setValue={(value) => {
+                                                    setSupplierId(value);
+                                                }}
+                                                required={true}
+                                                readonly={true}
+                                                placeholder={"Select Supplier"}
+                                            />
+                                            <ReusableInput
+                                                label="Contact Person"
+                                                value={contactPerson}
+                                                type={"text"}
+                                                readOnly={true}
+                                                disabled
+                                            />
+                                            <ReusableInput
+                                                label="Contact Number"
+                                                value={contactNumber}
+                                                type={"text"}
+                                                readOnly={true}
+                                                disabled
+                                            />
+                                        </div>
+                                    </div>)}
                             </div>
 
                         </div>
@@ -426,6 +436,8 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                 branchId={branchId}
                                 tempItems={tempItems}
                                 setTempItems={setTempItems}
+                                isHo={isHo}
+                                partyList={partyList}
                             />
                         </fieldset>
 

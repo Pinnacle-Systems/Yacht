@@ -375,6 +375,7 @@ model Employee {
   productionStocks         ProductionStock[]
   emailNew                 String?
   cuttingDeliveries        CuttingDelivery[]
+  salesBills               SalesBill[]
 }
 
 model EmployeeBankDetails {
@@ -628,6 +629,8 @@ model Party {
   productionEntries         ProductionEntry[]
   purchaseBills             PurchaseBill[]
   purchaseReturnShowRooms   PurchaseReturnShowRoom[]
+  purchasReturnItemsSRs     PurchasReturnItemsSR[]
+  salesReturnItems          SalesReturnItems[]
 }
 
 model PartyBranch {
@@ -2119,6 +2122,9 @@ model SalesReturnItems {
   Barcode       Barcode?     @relation(fields: [barcodeId], references: [id])
   barcodeId     Int?
   barcodeNo     String?
+  Customer      Party?       @relation(fields: [customerId], references: [id])
+  customerId    Int?
+  billNo        String?
 }
 
 model PurchaseInward {
@@ -2841,6 +2847,9 @@ model PurchasReturnItemsSR {
   stockLedgers             StockLedger[]
   Barcode                  Barcode?                @relation(fields: [barcodeId], references: [id])
   barcodeId                Int?
+  Supplier                 Party?                  @relation(fields: [supplierId], references: [id])
+  supplierId               Int?
+  billNo                   String?
 }
 
 model Customer {
@@ -2890,6 +2899,10 @@ model SalesBill {
   deliveryToId      Int?
   roundOffType      String?
   roundOffValue     Float?
+  SalesPerson       Employee?        @relation(fields: [salesPersonId], references: [id])
+  salesPersonId     Int?
+  Reference         Reference?       @relation(fields: [referenceId], references: [id])
+  referenceId       Int?
 }
 
 model SalesBillItems {
@@ -3086,10 +3099,11 @@ model OpeningStockItemsSR {
 }
 
 model Reference {
-  id         Int      @id @default(autoincrement())
+  id         Int         @id @default(autoincrement())
   name       String?
-  active     Boolean? @default(true)
-  Company    Company? @relation(fields: [companyId], references: [id])
+  active     Boolean?    @default(true)
+  Company    Company?    @relation(fields: [companyId], references: [id])
   companyId  Int?
   percentage Float?
+  salesBills SalesBill[]
 }

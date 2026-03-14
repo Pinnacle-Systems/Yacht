@@ -45,6 +45,7 @@ import materialStock from "./images/materialstock.png";
 import salesReport from "./images/sales report.png";
 import salesReturnReport from "./images/sales return report.png";
 import stockSummary from "./images/summary report.png"
+import reference from "./images/reference.jpg"
 import { Search } from "lucide-react";
 import { push } from "../../../redux/features/opentabs";
 import secureLocalStorage from "react-secure-storage";
@@ -190,7 +191,7 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
         "SALES  RETURN":<img src={salesReturn} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
         "STOCK REPORT":<img src={materialStock} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
         "SALES BILL REPORT":<img src={salesReport} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
-
+        "REFERENCE MASTER":<img src={reference} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />,
 
         "DESIGNATION MASTER" : <span className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow">
                 <img src={designation} alt="designation" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow"/>

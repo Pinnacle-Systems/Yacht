@@ -8,7 +8,6 @@ import { Loader } from "../../../Basic/components";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useGetPurchaseReturnShowroomQuery } from "../../../redux/services/PurchaseReturnShowroomService";
 
-
 const PurchaseReturnFormReport = ({
   onClick,
   onView,
@@ -17,9 +16,10 @@ const PurchaseReturnFormReport = ({
   onDelete,
   rowActions = true,
   searchStyleId,
+  isHo,
 }) => {
   const branchId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "currentBranchId"
+    sessionStorage.getItem("sessionId") + "currentBranchId",
   );
 
   const [dataPerPage, setDataPerPage] = useState("10");
@@ -60,10 +60,10 @@ const PurchaseReturnFormReport = ({
   ]);
 
   const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
+    sessionStorage.getItem("sessionId") + "userCompanyId",
   );
   const finyearId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "currentFinYear"
+    sessionStorage.getItem("sessionId") + "currentFinYear",
   );
   const params = {
     branchId,
@@ -208,13 +208,17 @@ const PurchaseReturnFormReport = ({
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
                     <div>Return Date</div>
                   </th>
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <div>Inv No</div>
-                  </th>
-                  <th className="w-64  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                    <div>Supplier</div>
-                  </th>
-                 
+                  {!isHo && (
+                    <>
+                      <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
+                        <div>Inv No</div>
+                      </th>
+                      <th className="w-64  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                        <div>Supplier</div>
+                      </th>
+                    </>
+                  )}
+
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
                   </th>
@@ -245,29 +249,33 @@ const PurchaseReturnFormReport = ({
                       }}
                     />
                   </th>
-                  <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <input
-                      type="text"
-                      className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
-                      placeholder="Search"
-                      value={searchInvNo}
-                      onChange={(e) => {
-                        setSearchInvNo(e.target.value);
-                      }}
-                    />
-                  </th>
-                  <th className="w-64  px-1 font-medium text-[13px]  text-gray-900  text-center ">
-                    <input
-                      type="text"
-                      className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
-                      placeholder="Search"
-                      value={searchSupplier}
-                      onChange={(e) => {
-                        setSearchSupplier(e.target.value);
-                      }}
-                    />
-                  </th>
-                  
+                  {!isHo && (
+                    <>
+                      <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-40">
+                        <input
+                          type="text"
+                          className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                          placeholder="Search"
+                          value={searchInvNo}
+                          onChange={(e) => {
+                            setSearchInvNo(e.target.value);
+                          }}
+                        />
+                      </th>
+                      <th className="w-64  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                        <input
+                          type="text"
+                          className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                          placeholder="Search"
+                          value={searchSupplier}
+                          onChange={(e) => {
+                            setSearchSupplier(e.target.value);
+                          }}
+                        />
+                      </th>
+                    </>
+                  )}
+
                   <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center "></th>
                 </tr>
               </thead>
@@ -301,14 +309,17 @@ const PurchaseReturnFormReport = ({
                             ? getDateFromDateTimeToDisplay(dataObj.docDate)
                             : ""}
                         </td>
-                       
-                        <td className="py-1.5 text-left px-4">
-                          {dataObj?.invNo}
-                        </td>
-                        <td className="py-1.5 text-left px-4">
-                          {" "}
-                          {dataObj?.Supplier?.name}
-                        </td>
+                        {!isHo && (
+                          <>
+                            <td className="py-1.5 text-left px-4">
+                              {dataObj?.invNo}
+                            </td>
+                            <td className="py-1.5 text-left px-4">
+                              {" "}
+                              {dataObj?.Supplier?.name}
+                            </td>
+                          </>
+                        )}
                         {rowActions && (
                           <td className=" w-[30px] border-gray-200 gap-1 px-2 justify-end">
                             <div className="flex">
@@ -370,7 +381,7 @@ const PurchaseReturnFormReport = ({
                           </td>
                         )}
                       </tr>
-                    )
+                    ),
                   )}
                 </tbody>
               )}

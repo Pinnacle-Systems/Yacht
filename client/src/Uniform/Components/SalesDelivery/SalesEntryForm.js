@@ -41,6 +41,7 @@ import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMaste
 import purchaseInwardEntryApi from "../../../redux/uniformService/PurchaseInwardEntry";
 import purchaseReturnApi from "../../../redux/services/PurchaseReturnService";
 import BarCodePrintFormat from "./Barcode/BarcodePrintFormat";
+import { useSalesEntryRefetch } from "../../../CustomHooks/salesDelivery";
 
 export function SalesBillForm({
   onClose,
@@ -72,6 +73,7 @@ export function SalesBillForm({
   const dispatch = useDispatch();
   const isLoadingIndicator = isSingleFetching || isSingleLoading;
 
+  useSalesEntryRefetch();
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
 
   const { data: partyList } = useGetPartyQuery({
@@ -262,6 +264,13 @@ export function SalesBillForm({
             Swal.showLoading();
           },
         });
+        dispatch(OpeningStockApi.util.invalidateTags(["OpeningStock"]));
+        dispatch(StockAdjustmentApi.util.invalidateTags(["StockAdjustment"]));
+        dispatch(
+          purchaseInwardEntryApi.util.invalidateTags(["purchaseInwardEntry"]),
+        );
+        dispatch(purchaseReturnApi.util.invalidateTags(["PurchaseReturn"]));
+        // dispatch(purchaseBillApi.util.invalidateTags(["PurchaseBill"]));
       } else {
         toast.error(returnData?.message);
       }
@@ -296,12 +305,6 @@ export function SalesBillForm({
     } else {
       handleSubmitCustom(addData, data, "Added", nextProcess);
     }
-    dispatch(OpeningStockApi.util.invalidateTags(["OpeningStock"]));
-    dispatch(StockAdjustmentApi.util.invalidateTags(["StockAdjustment"]));
-    dispatch(
-      purchaseInwardEntryApi.util.invalidateTags(["purchaseInwardEntry"]),
-    );
-    dispatch(purchaseReturnApi.util.invalidateTags(["PurchaseReturn"]));
   };
 
   const handlePartyChange = (selectedId, field) => {

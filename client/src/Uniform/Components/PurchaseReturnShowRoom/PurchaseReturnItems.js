@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import FxSelect from "../../../Inputs";
 import Swal from "sweetalert2";
 import Modal from "../../../UiComponents/Modal";
 import PurchaseBillItemsSelection from "./PurchaseBillItemsSelection";
 import { findFromList } from "../../../Utils/helper";
+import { useLazyGetSRBarcodeDetailQuery } from "../../../redux/uniformService/ShowroomStockService";
 export default function PurchaseReturnItems({
   purchaseReturnItems,
   setPurchaseReturnItems,
@@ -21,9 +20,14 @@ export default function PurchaseReturnItems({
   tempItems,
   setTempItems,
   styleList,
+  isHo,
+  partyList,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [fillGrid, setFillGrid] = useState(false);
+
+  const [getBarcodeDetails, { data: barcodeData }] =
+    useLazyGetSRBarcodeDetailQuery();
 
   const addRow = () => {
     const newRow = {
@@ -38,6 +42,8 @@ export default function PurchaseReturnItems({
       uomId: "",
       returnQty: "",
       barcodeId: "",
+      billNo: "",
+      supplierId: "",
     };
     setPurchaseReturnItems([...purchaseReturnItems, newRow]);
   };
@@ -107,6 +113,8 @@ export default function PurchaseReturnItems({
               uomId: "",
               returnQty: "",
               selected: false,
+              billNo: "",
+              supplierId: "",
             })),
           ];
         }
@@ -128,10 +136,123 @@ export default function PurchaseReturnItems({
           uomId: "",
           returnQty: "",
           selected: false,
+          billNo: "",
+          supplierId: "",
         })),
       );
     }
   }, [purchaseReturnItems, setPurchaseReturnItems]);
+
+  const handleBarcodeEnter = async (index, row) => {
+    try {
+      const response = await getBarcodeDetails({
+        params: { barcodeNo: row.barcodeNo, branchId: branchId },
+      }).unwrap();
+
+      if (response.statusCode !== 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "Not Found",
+          text: response?.message || "Failed to fetch barcode details",
+        });
+        setPurchaseReturnItems((prev) => {
+          const updated = [...prev];
+          updated[index] = {
+            barcodeNo: "",
+            styleItemId: null,
+            styleId: "",
+            sizeId: null,
+            colorId: null,
+            uomId: null,
+            barcodeId: "",
+            selected: false,
+            billNo: "",
+            supplierId: "",
+            returnQty: "",
+          };
+          return updated;
+        });
+      }
+
+      const data = response.data;
+      const duplicate = purchaseReturnItems?.filter(
+        (item) => item.barcodeId === data.barcodeId,
+      );
+      if (duplicate.length > 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "Duplicate",
+          text: "The Barcode Number is Already Exist,Cannot add!.",
+        });
+        purchaseReturnItems((prev) => {
+          const updated = [...prev];
+          updated[index] = {
+            barcodeNo: "",
+            styleItemId: null,
+            styleId: "",
+            sizeId: null,
+            colorId: null,
+            uomId: null,
+            barcodeId: "",
+            selected: false,
+            billNo: "",
+            supplierId: "",
+            returnQty: "",
+          };
+          return updated;
+        });
+      } else {
+        setPurchaseReturnItems((prev) => {
+          const updated = [...prev];
+          const isLastRow = index === prev.length - 1;
+
+          updated[index] = {
+            ...updated[index],
+            styleItemId: data.styleItemId,
+            sizeId: data.sizeId,
+            colorId: data.colorId,
+            uomId: data.uomId,
+            barcodeNo: data.barcodeNo,
+            barcodeId: data.barcodeId,
+            styleId: data.styleId,
+            returnQty: data.qty,
+            stkQty: data?.qty,
+            billNo: data?.billNo,
+            supplierId: data?.supplierId,
+          };
+
+          // Add new row if last
+          if (isLastRow) {
+            updated.push({
+              styleId: "",
+              sizeId: "",
+              qty: "",
+              styleItemId: "",
+              colorId: "",
+              selected: false,
+              barcodeNo: "",
+              barcodeId: "",
+              uomId: "",
+              billNo: "",
+              supplierId: "",
+              returnQty: "",
+            });
+          }
+
+          return updated;
+        });
+        // Focus next row
+        setTimeout(() => {
+          const nextInput = document.querySelector(
+            `#barcodeNo-input-${index + 1}`,
+          );
+          nextInput?.focus();
+        }, 0);
+      }
+    } catch (error) {
+      console.error("Barcode fetch failed:", error);
+    }
+  };
 
   return (
     <>
@@ -155,7 +276,7 @@ export default function PurchaseReturnItems({
       <div className="border border-slate-200  bg-white rounded-md shadow-sm max-h-[400px] px-2 overflow-auto">
         <div className="flex items-center mt-1">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
-          {!id && (
+          {!id && !isHo && (
             <button
               className="font-bold  bord ml-[1027px] text-sm bg-blue-500 rounded-md text-white px-2"
               onKeyDown={(e) => {
@@ -226,6 +347,20 @@ export default function PurchaseReturnItems({
                 >
                   Barcode
                 </th>
+                {isHo && (
+                  <>
+                    <th
+                      className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                    >
+                      Bill No
+                    </th>
+                    <th
+                      className={`w-44 px-4 py-2 text-center font-medium text-[13px] `}
+                    >
+                      Supplier
+                    </th>
+                  </>
+                )}
                 <th
                   className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
                 >
@@ -296,11 +431,34 @@ export default function PurchaseReturnItems({
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-left">
                       <input
-                        onKeyDown={(e) => {
+                        id={`barcodeNo-input-${index}`}
+                        onKeyDown={async (e) => {
                           if (e.code === "Minus" || e.code === "NumpadSubtract")
                             e.preventDefault();
-                          if (e.key === "Delete") {
-                            handleInputChange("", index, "barcodeNo");
+                          if (e.key === "Delete" || e.key === "") {
+                            setPurchaseReturnItems((prev) => {
+                              const newBlend = [...prev];
+                              newBlend[index] = {
+                                barcodeId: "",
+                                styleId: "",
+                                sizeId: "",
+                                returnQty: "",
+                                barcodeNo: "",
+                                styleItemId: "",
+                                colorId: "",
+                                selected: false,
+                                uomId: "",
+                                stkQty: "",
+                                billNo: "",
+                                supplierId: "",
+                              };
+                              return newBlend;
+                            });
+                          }
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleBarcodeEnter(index, row);
                           }
                         }}
                         className="text-left rounded py-1 px-1 w-full"
@@ -311,10 +469,53 @@ export default function PurchaseReturnItems({
                         }
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "barcodeNo");
+                          if (e.target.value === "") {
+                            setPurchaseReturnItems((prev) => {
+                              const newBlend = [...prev];
+                              newBlend[index] = {
+                                barcodeId: "",
+                                styleId: "",
+                                sizeId: "",
+                                returnQty: "",
+                                barcodeNo: "",
+                                styleItemId: "",
+                                colorId: "",
+                                selected: false,
+                                stkQty: "",
+                                billNo: "",
+                                supplierId: "",
+                              };
+                              return newBlend;
+                            });
+                          }
                         }}
-                        disabled={true}
+                        disabled={id || !isHo || row?.billNo}
                       />
                     </td>
+                    {isHo && (
+                      <>
+                        <td className="py-0.5 border border-gray-300 text-[11px] ">
+                          <input
+                            className="text-left rounded py-1 px-1 w-full  select-none"
+                            disabled={true}
+                            value={row.billNo}
+                          />
+                        </td>
+                        <td className="py-0.5 border border-gray-300 text-[11px] ">
+                          <input
+                            className="text-left rounded py-1 px-1 w-full  select-none"
+                            disabled={true}
+                            value={
+                              findFromList(
+                                row.supplierId,
+                                partyList?.data,
+                                "name",
+                              ) || ""
+                            }
+                          />
+                        </td>
+                      </>
+                    )}
                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                       <input
                         className="text-left rounded py-1 px-1 w-full  select-none"
@@ -448,7 +649,7 @@ export default function PurchaseReturnItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={9}
+                  colSpan={isHo ? 11 : 9}
                 >
                   Total Qty
                 </td>

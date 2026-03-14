@@ -31,6 +31,7 @@ import SalesEntryApi from "../../../redux/uniformService/SalesEntryService";
 import salesBillApi from "../../../redux/services/SalesBillService";
 import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterService";
 import { useGetHOSalesListQuery, useGetSalesBillQuery, useLazyGetHOSalesDetailQuery } from "../../../redux/services/SalesBillService";
+import { useSalesEntryRefetch } from "../../../CustomHooks/salesDelivery";
 const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     sizeList,
     styleItemList,
@@ -67,7 +68,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     const [termsAndCondition, setTermsAndCondition] = useState("");
     const [getSalesDCDetail] = useLazyGetSalesDCDetailQuery();
     const [getHOSalesDetail] = useLazyGetHOSalesDetailQuery();
-
+    useSalesEntryRefetch();
     const { data: salesList } = useGetSalesEntryQuery({
         params: { companyId, branchId },
     });
@@ -393,7 +394,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
 
     const handleAddRow = async (newValue) => {
         setPurchaseBillItems([]);
-        setDcNo(newValue);
+        setInvNo(newValue);
         const hasUnfilledRequired = purchaseBillItems.some((row) => {
             return row.styleId && !row.qty || row.styleId && !row.rate;
         });
@@ -410,6 +411,8 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                     dcNo: newValue,
                 },
             });
+            setInvValue(salesData?.invValue ? salesData?.invValue : "");
+            setInvDate(salesData?.invDate ? moment.utc(salesData?.invDate).format("YYYY-MM-DD") : "");
             const salesItems = salesData?.data;
             if (!salesItems) return;
             setPurchaseBillItems((prev) => {
@@ -458,7 +461,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
 
     const handleAddRowHO = async (newValue) => {
         setPurchaseBillItems([]);
-        setDcNo(newValue);
+        setInvNo(newValue);
         const hasUnfilledRequired = purchaseBillItems.some((row) => {
             return row.styleId && !row.qty || row.styleId && !row.rate;
         });
@@ -475,6 +478,8 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                     dcNo: newValue,
                 },
             });
+            setInvValue(hoSalesData?.invValue ? hoSalesData?.invValue : "");
+            setInvDate(hoSalesData?.invDate ? moment.utc(hoSalesData?.invDate).format("YYYY-MM-DD") : "");
             const salesItems = hoSalesData?.data;
             if (!salesItems) return;
             setPurchaseBillItems((prev) => {
@@ -598,14 +603,45 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                                 <h2 className="font-medium text-slate-700 mb-2">Bill Details</h2>
                                 <div className="grid grid-cols-2 gap-1">
-                                    <TextInput
+                                    {/* <TextInput
                                         name={"Inv No"}
                                         value={invNo}
                                         setValue={setInvNo}
                                         readOnly={readOnly}
                                         required
                                         autoFocus={true}
-                                    />
+                                    /> */}
+                                    {
+                                        isAdmin ? (
+                                            <DropdownNew
+                                                name="Inv No"
+                                                dataList={salesList?.data?.filter((item) => item.salesType === "SHOWROOM")}
+                                                value={invNo}
+                                                setValue={handleAddRow}
+                                                readOnly={readOnly}
+                                                placeholder={"Select Inv"}
+                                                otherField={"docId"}
+                                                otherValue={"docId"}
+                                                disabled={readOnly || id}
+                                                clear={true}
+                                                required={true}
+                                            />
+                                        ) : (
+                                            <DropdownNew
+                                                name="Inv No"
+                                                dataList={hoSalesList?.data}
+                                                value={invNo}
+                                                setValue={handleAddRowHO}
+                                                readOnly={readOnly}
+                                                placeholder={"Select Inv"}
+                                                otherField={"docId"}
+                                                otherValue={"docId"}
+                                                disabled={readOnly || id}
+                                                clear={true}
+                                                required={true}
+                                            />
+                                        )
+                                    }
                                     <DateInput
                                         name="Inv Date"
                                         value={invDate}
@@ -628,35 +664,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                 <div className="grid grid-cols-1 gap-1">
                                     <h2 className="font-medium text-slate-700 mb-2">Supplier Details</h2>
                                     <div className="grid grid-cols-2 gap-1">
-                                        {
-                                            isAdmin ? (
-                                                <DropdownNew
-                                                    name="Sales DC No"
-                                                    dataList={salesList?.data?.filter((item) => item.salesType === "SHOWROOM")}
-                                                    value={dcNo}
-                                                    setValue={handleAddRow}
-                                                    readOnly={readOnly}
-                                                    placeholder={"Select DC"}
-                                                    otherField={"docId"}
-                                                    otherValue={"docId"}
-                                                    disabled={readOnly || id}
-                                                    clear={true}
-                                                />
-                                            ) : (
-                                                <DropdownNew
-                                                    name="Sales DC No"
-                                                    dataList={hoSalesList?.data}
-                                                    value={dcNo}
-                                                    setValue={handleAddRowHO}
-                                                    readOnly={readOnly}
-                                                    placeholder={"Select DC"}
-                                                    otherField={"docId"}
-                                                    otherValue={"docId"}
-                                                    disabled={readOnly || id}
-                                                    clear={true}
-                                                />
-                                            )
-                                        }
+
 
 
 

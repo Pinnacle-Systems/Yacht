@@ -13,6 +13,7 @@ import StockAdjustmentApi from "../../../redux/uniformService/StockAdjustmentSer
 import OpeningStockApi from "../../../redux/uniformService/OpeningStockService";
 import purchaseInwardEntryApi from "../../../redux/uniformService/PurchaseInwardEntry";
 import purchaseReturnApi from "../../../redux/services/PurchaseReturnService";
+import { useSalesEntryRefetch } from "../../../CustomHooks/salesDelivery";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -34,7 +35,7 @@ export default function Form() {
       branchId,
     },
   });
-
+  useSalesEntryRefetch();
   const handleView = (orderId) => {
     trigger(orderId);
     setId(orderId);

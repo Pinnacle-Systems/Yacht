@@ -437,11 +437,11 @@ async function getOne(id) {
               name: true,
             },
           },
-          Style:{
-            select:{
-              sku:true
-            }
-          }
+          Style: {
+            select: {
+              sku: true,
+            },
+          },
         },
       },
       Customer: {
@@ -586,6 +586,8 @@ async function create(body) {
       deliveryToId,
       roundOffType,
       roundOffValue,
+      salesPersonId,
+      referenceId,
     } = await body;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate
@@ -645,6 +647,8 @@ async function create(body) {
             roundOffValue === "" || roundOffValue == null
               ? null
               : Number(roundOffValue),
+          salesPersonId: salesPersonId ? parseInt(salesPersonId) : undefined,
+          referenceId: referenceId ? parseInt(referenceId) : undefined,
         },
       });
 
@@ -770,6 +774,8 @@ async function update(id, body) {
     deliveryToId,
     roundOffType,
     roundOffValue,
+    salesPersonId,
+    referenceId,
   } = await body;
   let data;
   validateUniqueBarcode(salesBillItems);
@@ -843,6 +849,8 @@ async function update(id, body) {
           roundOffValue === "" || roundOffValue == null
             ? null
             : Number(roundOffValue),
+        salesPersonId: salesPersonId ? parseInt(salesPersonId) : undefined,
+        referenceId: referenceId ? parseInt(referenceId) : undefined,
       },
     });
     await updateSalesBillItems(tx, salesBillItems, data, userId, branchId);
@@ -1246,6 +1254,7 @@ async function getHOSalesDetail(req) {
           barcodeNo: true,
         },
       },
+      docDate: true,
     },
   });
 
@@ -1299,11 +1308,14 @@ async function getHOSalesDetail(req) {
       };
     }),
   );
+  const invValue = barcodeWithRate?.reduce((sum, item) => sum + item.rate, 0);
 
   if (!data) return NoRecordFound("Sales Bill");
   return {
     statusCode: 0,
     data: barcodeWithRate,
+    invValue: invValue,
+    invDate: data?.docDate,
   };
 }
 

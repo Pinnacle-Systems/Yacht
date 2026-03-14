@@ -14,6 +14,7 @@ import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMaste
 import purchaseBillApi from "../../../redux/services/PurchaseBillService"
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
 import SalesReturnApi from "../../../redux/uniformService/SalesReturnService"
+import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterService";
 
 const MODEL = "Purchase Return";
 
@@ -34,6 +35,11 @@ export default function Form() {
   const { data: styleList } = useGetStyleMasterQuery({ params });
 
   const [removeData] = useDeletePurchaseReturnShowroomMutation();
+  const { data: singleDataBranch } = useGetBranchByIdQuery(branchId);
+
+  const isHo =
+    singleDataBranch?.data?.company?.name ===
+    singleDataBranch?.data?.branchName;
   const handleView = (orderId) => {
     setId(orderId);
     setShowForm(true);
@@ -124,6 +130,7 @@ export default function Form() {
             onEdit={handleEdit}
             onDelete={handleDelete}
             itemsPerPage={10}
+            isHo={isHo}
           />
         </div>
       </div>
@@ -144,6 +151,7 @@ export default function Form() {
           colorList={colorList}
           uomList={uomList}
           styleList={styleList}
+          isHo={isHo}
         />
       )}
     </>

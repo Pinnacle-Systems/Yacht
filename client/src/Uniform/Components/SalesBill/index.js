@@ -22,6 +22,8 @@ import {
   useGetBranchByIdQuery,
   useGetBranchQuery,
 } from "../../../redux/services/BranchMasterService";
+import { useGetEmployeeQuery } from "../../../redux/services/EmployeeMasterService";
+import { useGetReferenceMasterQuery } from "../../../redux/uniformService/ReferenceMasterService";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -47,6 +49,15 @@ export default function Form() {
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
   const { data: taxTypeList } = useGetTaxTemplateQuery({ params });
+  const { data: salesPersonList } = useGetEmployeeQuery({
+   params
+  });
+  const { data: referenceList } = useGetReferenceMasterQuery({
+    params: {
+      ...params,
+      active: true,
+    },
+  });
   const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
   const [removeData] = useDeleteSalesBillMutation();
@@ -177,6 +188,8 @@ export default function Form() {
           singleDataBranch={singleDataBranch}
           isHo={isHo}
           branchList={branchList}
+          salesPersonList={salesPersonList}
+          referenceList={referenceList}
         />
       )}
     </>

@@ -23,6 +23,8 @@ export default function SalesBillItems({
   uomList,
   styleList,
   branchId,
+  referenceData,
+  isHo
 }) {
   const [barcodeNo, setbarcodeNo] = useState("");
   const [contextMenu, setContextMenu] = useState(null);
@@ -32,8 +34,26 @@ export default function SalesBillItems({
   const [showColorPopup, setShowColorPopup] = useState(false);
   const [colorId, setColorId] = useState("");
   const [uniqueColorIds, setUniqueColorIds] = useState([]);
+  const [discPerc, setDiscPerc] = useState("");
+
   const [getBarcodeDetails, { data: barcodeData }] =
     useLazyGetSRBarcodeDetailQuery();
+
+  useEffect(() => {
+    setDiscPerc(referenceData?.data?.percentage || "");
+  }, [referenceData]);
+
+  // ✅ Fix 2 — only update rows that have items
+  useEffect(() => {
+    // if (discPerc === "" || discPerc === undefined) return;
+    setSalesBillItems((prev) =>
+      prev.map((row) => ({
+        ...row,
+        discountValue: row.barcodeId ? discPerc : row.discountValue,
+      })),
+    );
+  }, [discPerc]);
+
   const addRow = () => {
     const newRow = {
       barcodeNo: "",
@@ -44,7 +64,7 @@ export default function SalesBillItems({
       rate: "",
       taxPercent: "",
       discountType: "Percentage",
-      discountValue: "",
+      discountValue: discPerc,
       amount: "",
       styleItemId: "",
       colorId: "",
@@ -92,7 +112,7 @@ export default function SalesBillItems({
               rate: "",
               taxPercent: "",
               discountType: "Percentage",
-              discountValue: "",
+              discountValue: discPerc,
               amount: "",
               styleItemId: "",
               colorId: "",
@@ -114,7 +134,7 @@ export default function SalesBillItems({
           rate: "",
           taxPercent: "",
           discountType: "Percentage",
-          discountValue: "",
+          discountValue: discPerc,
           amount: "",
           styleItemId: "",
           colorId: "",
@@ -174,7 +194,7 @@ export default function SalesBillItems({
           rate: "",
           taxPercent: "",
           discountType: "Percentage",
-          discountValue: "",
+          discountValue: discPerc,
           styleItemId: "",
           colorId: "",
           selected: false,
@@ -283,7 +303,7 @@ export default function SalesBillItems({
   const handleBarcodeEnter = async (index, row) => {
     try {
       const response = await getBarcodeDetails({
-        params: { barcodeNo: row.barcodeNo, branchId: branchId },
+        params: { barcodeNo: row.barcodeNo, branchId: branchId, isHo: isHo },
       }).unwrap();
 
       if (response.statusCode !== 0) {
@@ -304,8 +324,8 @@ export default function SalesBillItems({
             qty: "",
             rate: "",
             amount: "",
-            discountType: "",
-            discountValue: "",
+            discountType: "Percentage",
+            discountValue: discPerc,
             taxPercent: "",
             barcodeId: "",
             selected: false,
@@ -336,8 +356,8 @@ export default function SalesBillItems({
             qty: "",
             rate: "",
             amount: "",
-            discountType: "",
-            discountValue: "",
+            discountType: "Percentage",
+            discountValue: discPerc,
             taxPercent: "",
             barcodeId: "",
             selected: false,
@@ -361,6 +381,8 @@ export default function SalesBillItems({
             barcodeId: data.barcodeId,
             styleId: data.styleId,
             taxPercent: data.taxPercent,
+            discountValue: discPerc,
+            discountType: "Percentage",
           };
 
           // Add new row if last
@@ -378,7 +400,7 @@ export default function SalesBillItems({
               rate: "",
               netAmount: 0,
               discountType: "Percentage",
-              discountValue: "",
+              discountValue: discPerc,
             });
           }
 
@@ -674,7 +696,7 @@ export default function SalesBillItems({
                               qty: "",
                               rate: "",
                               amount: "",
-                              discountType: "",
+                              discountType: "Percentage",
                               discountValue: "",
                               taxPercent: "",
                               barcodeId: "",

@@ -11,6 +11,7 @@ import {
 } from "../utils/helper.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 import { prisma } from "../lib/prisma.js";
+import { io } from "../../server.js";
 
 async function getNextDocId(
   branchId,
@@ -491,6 +492,9 @@ async function create(body) {
       salesType,
       companyId,
     );
+  });
+  io.emit("purchaseBill:updated", {
+    message: "Sales Entry Created",
   });
   return { statusCode: 0, data };
 }
@@ -1135,6 +1139,7 @@ async function getSalesDcDetail(req) {
           colorId: true,
         },
       },
+      docDate: true,
     },
   });
 
@@ -1188,11 +1193,14 @@ async function getSalesDcDetail(req) {
       };
     }),
   );
+  const invValue = barcodeWithRate?.reduce((sum, item) => sum + item.rate, 0);
 
   if (!data) return NoRecordFound("Sales Entry");
   return {
     statusCode: 0,
     data: barcodeWithRate,
+    invValue: invValue,
+    invDate: data?.docDate,
   };
 }
 

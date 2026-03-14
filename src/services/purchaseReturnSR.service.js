@@ -140,7 +140,7 @@ async function get(req) {
         },
       },
     },
-     orderBy: {
+    orderBy: {
       createdAt: "desc", // 🔥 Descending Order
     },
   });
@@ -263,7 +263,7 @@ async function create(body) {
         docDate: docDate ? new Date(docDate) : null,
         createdById: parseInt(userId),
         branchId: parseInt(branchId),
-        supplierId: parseInt(supplierId),
+        supplierId: supplierId ? parseInt(supplierId) : undefined,
         invNo,
         contactPerson,
         contactNumber,
@@ -316,6 +316,10 @@ async function createPurchaseReturnItems(
         purchaseBillId: stockDetail?.purchaseBillId
           ? parseInt(stockDetail.purchaseBillId)
           : null,
+        supplierId: stockDetail?.supplierId
+          ? parseInt(stockDetail?.supplierId)
+          : undefined,
+        billNo: stockDetail?.billNo ? stockDetail?.billNo : undefined,
       },
     });
 
@@ -435,7 +439,7 @@ async function update(id, body) {
         docDate: docDate ? new Date(docDate) : null,
         updatedById: parseInt(userId),
         branchId: parseInt(branchId),
-        supplierId: parseInt(supplierId),
+        supplierId: supplierId ? parseInt(supplierId) : undefined,
         invNo,
         contactPerson,
         contactNumber,
@@ -493,6 +497,10 @@ async function updatePurchaseReturnItems(
           purchaseBillId: stockDetail?.purchaseBillId
             ? parseInt(stockDetail.purchaseBillId)
             : null,
+          supplierId: stockDetail?.supplierId
+            ? parseInt(stockDetail?.supplierId)
+            : undefined,
+          billNo: stockDetail?.billNo ? stockDetail?.billNo : undefined,
         },
       });
 
@@ -625,6 +633,10 @@ async function updatePurchaseReturnItems(
           purchaseBillId: stockDetail?.purchaseBillId
             ? parseInt(stockDetail.purchaseBillId)
             : null,
+          supplierId: stockDetail?.supplierId
+            ? parseInt(stockDetail?.supplierId)
+            : undefined,
+          billNo: stockDetail?.billNo ? stockDetail?.billNo : undefined,
         },
       });
 

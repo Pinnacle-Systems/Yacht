@@ -35,6 +35,7 @@ import { Loader } from "../../../Basic/components";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { salesTypes } from "../../../Utils/DropdownData";
 export default function SalesReturnForm({
   onClose,
   id,
@@ -394,34 +395,46 @@ export default function SalesReturnForm({
                 </h2>
                 <div className="grid grid-cols-2 gap-1">
                   <DropdownNew
-                    name="Sales Delivery No"
-                    dataList={salesList?.data}
-                    value={invNo}
-                    setValue={handleAddRow}
+                    name="Sales Type"
+                    dataList={salesTypes}
+                    value={salesType}
+                    setValue={setSalesType}
                     required={true}
                     readOnly={readOnly}
-                    placeholder={"Select Sales"}
-                    otherField={"docId"}
-                    otherValue={"docId"}
+                    autoFocus={true}
                     disabled={id}
+                    placeholder={"Select Type"}
+                    otherField={"value"}
+                    otherValue={"value"}
                   />
-                  <DropdownNew
-                    name="Customer"
-                    dataList={partyList?.data?.filter((item) => item.active)}
-                    value={customerId}
-                    setValue={(value) => {
-                      setCustomerId(value);
-                    }}
-                    required={true}
-                    disabled={true}
-                    placeholder={"Select Customer"}
-                    clear={true}
-                  />
-                  <ReusableInput
-                    label="Sales Type"
-                    readOnly
-                    value={salesType}
-                  />
+                  {salesType !== "SHOWROOM" && (
+                    <DropdownNew
+                      name="Sales Delivery No"
+                      dataList={salesList?.data}
+                      value={invNo}
+                      setValue={handleAddRow}
+                      required={true}
+                      readOnly={readOnly}
+                      placeholder={"Select Sales"}
+                      otherField={"docId"}
+                      otherValue={"docId"}
+                      disabled={id}
+                    />
+                  )}
+                  {salesType !== "SHOWROOM" && (
+                    <DropdownNew
+                      name="Customer"
+                      dataList={partyList?.data?.filter((item) => item.active)}
+                      value={customerId}
+                      setValue={(value) => {
+                        setCustomerId(value);
+                      }}
+                      required={true}
+                      disabled={true}
+                      placeholder={"Select Customer"}
+                      clear={true}
+                    />
+                  )}
                 </div>
               </div>
             </div>

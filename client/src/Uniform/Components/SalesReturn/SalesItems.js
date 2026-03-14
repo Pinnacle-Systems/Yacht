@@ -16,7 +16,6 @@ import {
   useLazyGetSalesInvStyleDetailQuery,
 } from "../../../redux/uniformService/SalesEntryService";
 import Modal from "../../../UiComponents/Modal";
-import { DropdownNew } from "../../../Inputs";
 
 export default function SalesItems({
   salesReturnItems,
@@ -29,6 +28,7 @@ export default function SalesItems({
   customerId,
   invNo,
   salesType,
+  customerList,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [styleNo, setStyleNo] = useState("");
@@ -594,17 +594,31 @@ export default function SalesItems({
                 >
                   S.No
                 </th>
-                <th
-                  className={`w-20 px-2 py-2 text-center font-medium text-[13px] `}
-                >
-                  Style No
-                </th>
-                {salesType === "RETAIL" && (
+                {salesType !== "SHOWROOM" && (
                   <th
-                    className={`w-24 px-2 py-2 text-center font-medium text-[13px] `}
+                    className={`w-20 px-2 py-2 text-center font-medium text-[13px] `}
                   >
-                    Barcode No
+                    Style No
                   </th>
+                )}
+                {salesType === "SHOWROOM" && (
+                  <>
+                    <th
+                      className={`w-24 px-2 py-2 text-center font-medium text-[13px] `}
+                    >
+                      Barcode No
+                    </th>
+                    <th
+                      className={`w-24 px-2 py-2 text-center font-medium text-[13px] `}
+                    >
+                      Bill No
+                    </th>
+                    <th
+                      className={`w-24 px-2 py-2 text-center font-medium text-[13px] `}
+                    >
+                      Customer
+                    </th>
+                  </>
                 )}
                 <th
                   className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
@@ -636,11 +650,13 @@ export default function SalesItems({
                 >
                   Sales Qty
                 </th>
-                <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
-                >
-                  Already Return Qty
-                </th>
+                {salesType !== "SHOWROOM" && (
+                  <th
+                    className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  >
+                    Already Return Qty
+                  </th>
+                )}
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
                 >
@@ -681,48 +697,90 @@ export default function SalesItems({
                   <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
                     {index + 1}
                   </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      onKeyDown={(e) => {
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "styleNo");
-                        }
-                      }}
-                      type="string"
-                      className="text-left rounded py-1 px-1 w-full table-data-input"
-                      onFocus={(e) => e.target.select()}
-                      value={row?.styleNo}
-                      disabled={true}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "styleNo")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "styleNo");
-                      }}
-                    />
-                  </td>
-                  {salesType === "RETAIL" && (
-                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-left">
+                  {salesType !== "SHOWROOM" && (
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
                         onKeyDown={(e) => {
-                          if (e.code === "Minus" || e.code === "NumpadSubtract")
-                            e.preventDefault();
                           if (e.key === "Delete") {
-                            handleInputChange("", index, "barcodeNo");
+                            handleInputChange("", index, "styleNo");
                           }
                         }}
-                        className="text-left rounded py-1 px-1 w-full"
+                        type="string"
+                        className="text-left rounded py-1 px-1 w-full table-data-input"
                         onFocus={(e) => e.target.select()}
-                        value={row?.barcodeNo}
+                        value={row?.styleNo}
+                        disabled={true}
                         onChange={(e) =>
-                          handleInputChange(e.target.value, index, "barcodeNo")
+                          handleInputChange(e.target.value, index, "styleNo")
                         }
                         onBlur={(e) => {
-                          handleInputChange(e.target.value, index, "barcodeNo");
+                          handleInputChange(e.target.value, index, "styleNo");
                         }}
-                        disabled={true}
                       />
                     </td>
+                  )}
+
+                  {salesType === "SHOWROOM" && (
+                    <>
+                      <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-left">
+                        <input
+                          onKeyDown={(e) => {
+                            if (
+                              e.code === "Minus" ||
+                              e.code === "NumpadSubtract"
+                            )
+                              e.preventDefault();
+                            if (e.key === "Delete") {
+                              handleInputChange("", index, "barcodeNo");
+                            }
+                          }}
+                          className="text-left rounded py-1 px-1 w-full"
+                          onFocus={(e) => e.target.select()}
+                          value={row?.barcodeNo}
+                          onChange={(e) =>
+                            handleInputChange(
+                              e.target.value,
+                              index,
+                              "barcodeNo",
+                            )
+                          }
+                          onBlur={(e) => {
+                            handleInputChange(
+                              e.target.value,
+                              index,
+                              "barcodeNo",
+                            );
+                          }}
+                          disabled={true}
+                        />
+                      </td>
+                      <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-left">
+                        <input
+                          className="text-left rounded py-1 px-1 w-full"
+                          onFocus={(e) => e.target.select()}
+                          value={row?.billNo}
+                          disabled={true}
+                        />
+                      </td>
+                      <td className="py-0.5 border border-gray-300 text-[11px] ">
+                        <select
+                          // disabled={readOnly || !!row.barcode}
+                          disabled={true}
+                          className="text-left w-full rounded py-1 table-data-input"
+                          value={row.customerId}
+                        >
+                          <option></option>
+                          {(id
+                            ? customerList?.data
+                            : customerList?.data?.filter((item) => item.active)
+                          )?.map((blend) => (
+                            <option value={blend.id} key={blend.id}>
+                              {blend?.name}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </>
                   )}
 
                   <td className="py-0.5 border border-gray-300 text-[11px] ">
@@ -878,36 +936,38 @@ export default function SalesItems({
                       }}
                     />
                   </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      type="number"
-                      className="text-right rounded py-1 px-1 w-full table-data-input"
-                      value={row?.alreadyReturnQty}
-                      disabled={true}
-                      onKeyDown={(e) => {
-                        if (e.code === "Minus" || e.code === "NumpadSubtract")
-                          e.preventDefault();
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "alreadyReturnQty");
+                  {salesType !== "SHOWROOM" && (
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        type="number"
+                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        value={row?.alreadyReturnQty}
+                        disabled={true}
+                        onKeyDown={(e) => {
+                          if (e.code === "Minus" || e.code === "NumpadSubtract")
+                            e.preventDefault();
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "alreadyReturnQty");
+                          }
+                        }}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) =>
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "alreadyReturnQty",
+                          )
                         }
-                      }}
-                      onFocus={(e) => e.target.select()}
-                      onChange={(e) =>
-                        handleInputChange(
-                          e.target.value,
-                          index,
-                          "alreadyReturnQty",
-                        )
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(
-                          e.target.value,
-                          index,
-                          "alreadyReturnQty",
-                        );
-                      }}
-                    />
-                  </td>
+                        onBlur={(e) => {
+                          handleInputChange(
+                            e.target.value,
+                            index,
+                            "alreadyReturnQty",
+                          );
+                        }}
+                      />
+                    </td>
+                  )}
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                     <input
                       onKeyDown={(e) => {
@@ -992,7 +1052,7 @@ export default function SalesItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={salesType === "RETAIL" ? 11 : 10}
+                  colSpan={salesType === "SHOWROOM" ? 11 : 10}
                 >
                   Total
                 </td>

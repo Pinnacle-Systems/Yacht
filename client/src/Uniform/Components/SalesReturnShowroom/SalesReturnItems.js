@@ -429,6 +429,8 @@ export default function SalesReturnItems({
                               colorId: "",
                               selected: false,
                               netAmount: 0,
+                              billNo:"",
+                              deliveryToId:""
                             };
                             return newBlend;
                           });

@@ -3,13 +3,13 @@ import { prisma } from "../lib/prisma.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 
 async function getSRBarcodeDetail(req) {
-  const { barcodeNo,branchId } = req.query;
-
+  const { barcodeNo, branchId, isHo } = req.query;
+  const isHeadOffice = isHo === "true";
   // 1️⃣ First try fetching by styleNo
   let data = await prisma.stockSummary.findFirst({
     where: {
       barcodeNo: barcodeNo,
-      branchId:parseInt(branchId)
+      branchId: parseInt(branchId),
     },
     select: {
       barcodeNo: true,
@@ -28,9 +28,49 @@ async function getSRBarcodeDetail(req) {
     return ErrorResponse("Barcode Number Not Found");
   }
 
+  const isReturn = await prisma.purchasReturnItemsSR.aggregate({
+    where: {
+      barcodeNo: barcodeNo,
+      PurchaseReturnShowRoom:{
+        is:{
+          branchId: parseInt(branchId),
+        }
+      }
+    },
+    _sum: {
+      returnQty: true,
+    },
+  });
+
+  if (isReturn?._sum?.returnQty > 0) {
+    return ErrorResponse("This Barcode Number Already Return");
+  }
+
   if (data.qty === 0) {
     return ErrorResponse("Barcode Number Does Not Exist");
   }
+
+  const purchaseDetail = await prisma.purchaseBillItems.findFirst({
+    where: {
+      barcodeNo: barcodeNo,
+      PurchaseBill: {
+        is: {
+          branchId: parseInt(branchId),
+        },
+      },
+    },
+    orderBy: {
+      id: "desc",
+    },
+    select: {
+      PurchaseBill: {
+        select: {
+          docId: true,
+          supplierId: true,
+        },
+      },
+    },
+  });
 
   const style = await prisma.style.findUnique({
     where: {
@@ -49,8 +89,10 @@ async function getSRBarcodeDetail(req) {
     statusCode: 0,
     data: {
       ...data,
-      rate: style?.salesPrice ?? null,
+      rate: isHeadOffice ? style?.price : style?.salesPrice,
       taxPercent: style?.Hsn?.taxPerc ?? 5,
+      billNo: purchaseDetail?.PurchaseBill?.docId ?? 0,
+      supplierId: purchaseDetail?.PurchaseBill?.supplierId ?? 0,
     },
   };
 }
