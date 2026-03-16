@@ -12,6 +12,7 @@ import {
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 import { prisma } from "../lib/prisma.js";
 import { io } from "../../server.js";
+import { customer } from "../routes/index.js";
 
 async function getNextDocId(
   branchId,
@@ -1143,12 +1144,9 @@ async function getSalesDcDetail(req) {
     },
   });
 
-  const salesReturn = await prisma.salesReturn.findMany({
+  const salesReturn = await prisma.salesReturnItems.findMany({
     where: {
-      invNo: dcNo,
-    },
-    include: {
-      salesReturnItems: true,
+      billNo: dcNo,
     },
   });
   const salesEntryItemIds = data?.SalesEntryItems.map((item) => item.id) || [];
@@ -1158,8 +1156,8 @@ async function getSalesDcDetail(req) {
       salesEntryItemsId: { in: salesEntryItemIds },
     },
   });
-  const returnItems = salesReturn.flatMap((sr) => sr.salesReturnItems);
-  const returnedBarcodeIds = new Set(returnItems.map((item) => item.barcodeId));
+  // const returnItems = salesReturn.flatMap((sr) => sr.salesReturnItems);
+  const returnedBarcodeIds = new Set(salesReturn.map((item) => item.barcodeId));
   const filteredBarcodes = barcodes.filter(
     (barcode) => !returnedBarcodeIds.has(barcode.id),
   );
@@ -1301,34 +1299,122 @@ async function getSalesInvStyleDetail(req) {
     data: finalData,
   };
 }
+// async function getSalesInvBarcodeDetail(req) {
+//   const { invNo, barcodeNo } = req.query;
+//   if (!invNo || !barcodeNo) {
+//     return {
+//       statusCode: 400,
+//       message: "Please Choose Required Fields",
+//     };
+//   }
+//   const salesEntry = await prisma.salesEntry.findFirst({
+//     where: {
+//       docId: invNo,
+//     },
+//     include: {
+//       SalesEntryItems: {
+//         select: {
+//           barcode: true,
+//           styleNo: true,
+//           styleId: true,
+//           sizeId: true,
+//           colorId: true,
+//           fabricId: true,
+//           styleItemId: true,
+//           qty: true,
+//           id: true,
+//         },
+//       },
+//     },
+//   });
+
+//   const barcodeItem = await prisma.barcode.findUnique({
+//     where: {
+//       barcodeNo: barcodeNo,
+//     },
+//   });
+//   if (!barcodeItem) {
+//     return ErrorResponse("Barcode Number Not found");
+//   }
+//   const StockQty = await prisma.stockSummary.aggregate({
+//     where: {
+//       barcodeId: barcodeItem.id,
+//     },
+//     _sum: {
+//       qty: true,
+//     },
+//   });
+
+//   if (StockQty._sum.qty > 0) {
+//     return ErrorResponse(
+//       "This Barcode Number is Inward in another Branch Stock",
+//     );
+//   } else {
+//     const data = salesEntry.SalesEntryItems.find(
+//       (item) => item.id === barcodeItem.salesEntryItemsId,
+//     );
+//     if (!data) {
+//       return ErrorResponse("Barcode Not Found in This Invoice");
+//     }
+//     const salesReturn = await prisma.salesReturn.findMany({
+//       where: {
+//         invNo: invNo,
+//       },
+//       include: {
+//         salesReturnItems: {
+//           select: {
+//             barcode: true,
+//             styleNo: true,
+//             styleId: true,
+//             sizeId: true,
+//             colorId: true,
+//             fabricId: true,
+//             styleItemId: true,
+//             returnQty: true,
+//             barcodeId: true,
+//             barcodeNo: true,
+//           },
+//         },
+//       },
+//     });
+//     const allReturnItems = salesReturn.flatMap(
+//       (returnEntry) => returnEntry.salesReturnItems,
+//     );
+//     const returnItems =
+//       allReturnItems.filter((item) => item.barcodeNo === barcodeNo) || [];
+
+//     const returnedQty = returnItems
+//       .filter(
+//         (r) =>
+//           r.styleId === data.styleId &&
+//           r.sizeId === data.sizeId &&
+//           r.styleItemId === data.styleItemId &&
+//           r.colorId === data.colorId,
+//       )
+//       .reduce((sum, r) => sum + r.returnQty, 0);
+
+//     const finalData = {
+//       ...data,
+//       alreadyReturnQty: returnedQty,
+//       balanceQty: data.qty - returnedQty,
+//       qty: 1, // since barcode return always 1
+//       returnQty: 1 - returnedQty,
+//       barcodeNo: barcodeItem.barcodeNo,
+//       barcodeId: barcodeItem.id,
+//     };
+
+//     return {
+//       statusCode: 0,
+//       data: finalData,
+//     };
+//   }
+// }
+
 async function getSalesInvBarcodeDetail(req) {
-  const { invNo, barcodeNo } = req.query;
-  if (!invNo || !barcodeNo) {
-    return {
-      statusCode: 400,
-      message: "Please Choose Required Fields",
-    };
+  const { barcodeNo } = req.query;
+  if (!barcodeNo) {
+    return ErrorResponse("Please Enter Barcode No!");
   }
-  const salesEntry = await prisma.salesEntry.findFirst({
-    where: {
-      docId: invNo,
-    },
-    include: {
-      SalesEntryItems: {
-        select: {
-          barcode: true,
-          styleNo: true,
-          styleId: true,
-          sizeId: true,
-          colorId: true,
-          fabricId: true,
-          styleItemId: true,
-          qty: true,
-          id: true,
-        },
-      },
-    },
-  });
 
   const barcodeItem = await prisma.barcode.findUnique({
     where: {
@@ -1348,61 +1434,52 @@ async function getSalesInvBarcodeDetail(req) {
   });
 
   if (StockQty._sum.qty > 0) {
-    return ErrorResponse(
-      "This Barcode Number is Inward in another Branch Stock",
-    );
+    return ErrorResponse("This Barcode Number is Stock in another Branch");
   } else {
-    const data = salesEntry.SalesEntryItems.find(
-      (item) => item.id === barcodeItem.salesEntryItemsId,
-    );
-    if (!data) {
-      return ErrorResponse("Barcode Not Found in This Invoice");
-    }
-    const salesReturn = await prisma.salesReturn.findMany({
+    const isReturn = await prisma.salesReturnItems.aggregate({
       where: {
-        invNo: invNo,
+        barcodeNo: barcodeNo,
       },
-      include: {
-        salesReturnItems: {
+      _sum: {
+        returnQty: true,
+      },
+    });
+    if (isReturn?._sum?.returnQty > 0) {
+      return ErrorResponse("This Barcode Number is Already Return");
+    }
+
+    const data = await prisma.salesEntryItems.findUnique({
+      where: {
+        id: barcodeItem?.salesEntryItemsId,
+      },
+      select: {
+        styleId: true,
+        sizeId: true,
+        styleNo: true,
+        fabricId: true,
+        styleItemId: true,
+        colorId: true,
+        uomId: true,
+        SalesEntry: {
           select: {
-            barcode: true,
-            styleNo: true,
-            styleId: true,
-            sizeId: true,
-            colorId: true,
-            fabricId: true,
-            styleItemId: true,
-            returnQty: true,
-            barcodeId: true,
-            barcodeNo: true,
+            docId: true,
+            customerId: true,
           },
         },
       },
     });
-    const allReturnItems = salesReturn.flatMap(
-      (returnEntry) => returnEntry.salesReturnItems,
-    );
-    const returnItems =
-      allReturnItems.filter((item) => item.barcodeNo === barcodeNo) || [];
-
-    const returnedQty = returnItems
-      .filter(
-        (r) =>
-          r.styleId === data.styleId &&
-          r.sizeId === data.sizeId &&
-          r.styleItemId === data.styleItemId &&
-          r.colorId === data.colorId,
-      )
-      .reduce((sum, r) => sum + r.returnQty, 0);
+    // const data = salesEntry.SalesEntryItems.find(
+    //   (item) => item.id === barcodeItem.salesEntryItemsId,
+    // );
 
     const finalData = {
       ...data,
-      alreadyReturnQty: returnedQty,
-      balanceQty: data.qty - returnedQty,
-      qty: 1, // since barcode return always 1
-      returnQty: 1 - returnedQty,
+      returnQty: 1,
       barcodeNo: barcodeItem.barcodeNo,
       barcodeId: barcodeItem.id,
+      customerId: data?.SalesEntry?.customerId,
+      billNo: data?.SalesEntry?.docId,
+      qty: 1,
     };
 
     return {

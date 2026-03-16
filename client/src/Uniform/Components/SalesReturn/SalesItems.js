@@ -28,7 +28,7 @@ export default function SalesItems({
   customerId,
   invNo,
   salesType,
-  customerList,
+  partyList,
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [styleNo, setStyleNo] = useState("");
@@ -68,6 +68,8 @@ export default function SalesItems({
       alreadyReturnQty: "",
       barcodeId: "",
       barcodeNo: "",
+      billNo: "",
+      customerId: "",
     };
     setSalesReturnItems([...salesReturnItems, newRow]);
   };
@@ -131,6 +133,8 @@ export default function SalesItems({
               alreadyReturnQty: "",
               barcodeId: "",
               barcodeNo: "",
+              billNo: "",
+              customerId: "",
             })),
           ];
         }
@@ -155,6 +159,8 @@ export default function SalesItems({
           alreadyReturnQty: "",
           barcodeId: "",
           barcodeNo: "",
+          billNo: "",
+          customerId: "",
         })),
       );
     }
@@ -290,6 +296,8 @@ export default function SalesItems({
           alreadyReturnQty: "",
           barcodeId: "",
           barcodeNo: "",
+          billNo: "",
+          customerId: "",
         });
       }
 
@@ -361,8 +369,8 @@ export default function SalesItems({
   };
 
   const handleAddRowBarcode = async () => {
-    if (!validateData()) {
-      toast.info("Please Choose Required Fields...!", {
+    if (!storeId) {
+      toast.info("Please Choose Location...!", {
         position: "top-center",
         autoClose: 2000,
       });
@@ -392,7 +400,6 @@ export default function SalesItems({
         const { data: barcodeData } = await getBarcodeDetail({
           params: {
             barcodeNo: barcodeNo,
-            invNo: invNo,
           },
         });
         if (barcodeData.statusCode === 1) {
@@ -407,7 +414,18 @@ export default function SalesItems({
           : [barcodeData.data];
 
         if (!styleRows) return;
-        fillRows(styleRows);
+        const duplicate = salesReturnItems?.filter(
+          (item) => item.barcodeNo === barcodeNo,
+        );
+        if (duplicate.length > 0) {
+          Swal.fire({
+            icon: "warning",
+            title: "Duplicate",
+            text: "The Barcode Number is Already Exist,Cannot add!.",
+          });
+        } else {
+          fillRows(styleRows);
+        }
       } catch (error) {
         console.error("Error adding row:", error);
       }
@@ -565,7 +583,7 @@ export default function SalesItems({
           <table className="w-full border-collapse table-fixed">
             <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
               <tr>
-                <th className="w-12 px-1 py-1 justify-center font-medium text-[13px]">
+                <th className="w-10 px-1 py-1 justify-center font-medium text-[13px]">
                   <tr className="flex items-center justify-center gap-2">
                     <input
                       type="checkbox"
@@ -590,7 +608,7 @@ export default function SalesItems({
                   </tr>
                 </th>
                 <th
-                  className={`w-12 px-2 py-2 text-center font-medium text-[13px]`}
+                  className={`w-10 px-2 py-2 text-center font-medium text-[13px]`}
                 >
                   S.No
                 </th>
@@ -604,24 +622,24 @@ export default function SalesItems({
                 {salesType === "SHOWROOM" && (
                   <>
                     <th
-                      className={`w-24 px-2 py-2 text-center font-medium text-[13px] `}
+                      className={`w-28 px-2 py-2 text-center font-medium text-[13px] `}
                     >
                       Barcode No
                     </th>
                     <th
-                      className={`w-24 px-2 py-2 text-center font-medium text-[13px] `}
+                      className={`w-28 px-2 py-2 text-center font-medium text-[13px] `}
                     >
                       Bill No
                     </th>
                     <th
-                      className={`w-24 px-2 py-2 text-center font-medium text-[13px] `}
+                      className={`w-28 px-2 py-2 text-center font-medium text-[13px] `}
                     >
                       Customer
                     </th>
                   </>
                 )}
                 <th
-                  className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-48 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Style
                 </th>
@@ -636,20 +654,22 @@ export default function SalesItems({
                   Fabric
                 </th>
                 <th
-                  className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Size
                 </th>
                 <th
-                  className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Color
                 </th>
-                <th
-                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
-                >
-                  Sales Qty
-                </th>
+                {salesType !== "SHOWROOM" && (
+                  <th
+                    className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
+                  >
+                    Sales Qty
+                  </th>
+                )}
                 {salesType !== "SHOWROOM" && (
                   <th
                     className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
@@ -658,7 +678,7 @@ export default function SalesItems({
                   </th>
                 )}
                 <th
-                  className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
                   Return Qty
                 </th>
@@ -668,7 +688,7 @@ export default function SalesItems({
                   Remarks
                 </th>
                 <th
-                  className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                  className={`w-10 px-3 py-2 text-center font-medium text-[13px] `}
                 ></th>
               </tr>
             </thead>
@@ -771,8 +791,8 @@ export default function SalesItems({
                         >
                           <option></option>
                           {(id
-                            ? customerList?.data
-                            : customerList?.data?.filter((item) => item.active)
+                            ? partyList?.data
+                            : partyList?.data?.filter((item) => item.active)
                           )?.map((blend) => (
                             <option value={blend.id} key={blend.id}>
                               {blend?.name}
@@ -914,28 +934,31 @@ export default function SalesItems({
                       ))}
                     </select>
                   </td>
-                  <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                    <input
-                      type="number"
-                      className="text-right rounded py-1 px-1 w-full table-data-input"
-                      value={row?.qty}
-                      disabled={true}
-                      onKeyDown={(e) => {
-                        if (e.code === "Minus" || e.code === "NumpadSubtract")
-                          e.preventDefault();
-                        if (e.key === "Delete") {
-                          handleInputChange("", index, "qty");
+                  {salesType !== "SHOWROOM" && (
+                    <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                      <input
+                        type="number"
+                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        value={row?.qty}
+                        disabled={true}
+                        onKeyDown={(e) => {
+                          if (e.code === "Minus" || e.code === "NumpadSubtract")
+                            e.preventDefault();
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "qty");
+                          }
+                        }}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "qty")
                         }
-                      }}
-                      onFocus={(e) => e.target.select()}
-                      onChange={(e) =>
-                        handleInputChange(e.target.value, index, "qty")
-                      }
-                      onBlur={(e) => {
-                        handleInputChange(e.target.value, index, "qty");
-                      }}
-                    />
-                  </td>
+                        onBlur={(e) => {
+                          handleInputChange(e.target.value, index, "qty");
+                        }}
+                      />
+                    </td>
+                  )}
+
                   {salesType !== "SHOWROOM" && (
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
@@ -988,7 +1011,7 @@ export default function SalesItems({
                       onBlur={(e) => {
                         handleInputChange(e.target.value, index, "returnQty");
                       }}
-                      disabled={readOnly || salesType === "RETAIL"}
+                      disabled={readOnly || salesType === "SHOWROOM"}
                       id={`qty-${index}`}
                     />
                   </td>
@@ -1052,7 +1075,7 @@ export default function SalesItems({
               <tr className="bg-gray-50 h-7 font-medium text-gray-800">
                 <td
                   className="text-right px-4 border border-gray-300 font-medium text-[13px] py-0.5"
-                  colSpan={salesType === "SHOWROOM" ? 11 : 10}
+                  colSpan={10}
                 >
                   Total
                 </td>

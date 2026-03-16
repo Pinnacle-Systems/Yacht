@@ -136,23 +136,41 @@ export default function SalesReturnForm({
       });
       return false;
     }
-
-    if (
-      !(
-        data?.storeId &&
-        data?.customerId &&
-        data?.salesReturnItems.length > 0 &&
-        isGridDatasValid(
-          data?.salesReturnItems.filter((item) => item?.styleId),
-          false,
-          ["returnQty"],
+    if (salesType === "SHOWROOM") {
+      if (
+        !(
+          data?.storeId &&
+          data?.salesReturnItems.length > 0 &&
+          isGridDatasValid(
+            data?.salesReturnItems.filter((item) => item?.styleId),
+            false,
+            ["returnQty"],
+          )
         )
-      )
-    ) {
-      toast.info("Please fill all required fields...!", {
-        position: "top-center",
-      });
-      return false;
+      ) {
+        toast.info("Please fill all required fields...!", {
+          position: "top-center",
+        });
+        return false;
+      }
+    } else {
+      if (
+        !(
+          data?.storeId &&
+          data?.customerId &&
+          data?.salesReturnItems.length > 0 &&
+          isGridDatasValid(
+            data?.salesReturnItems.filter((item) => item?.styleId),
+            false,
+            ["returnQty"],
+          )
+        )
+      ) {
+        toast.info("Please fill all required fields...!", {
+          position: "top-center",
+        });
+        return false;
+      }
     }
 
     return true;
@@ -448,6 +466,7 @@ export default function SalesReturnForm({
                 customerId={customerId}
                 invNo={invNo}
                 salesType={salesType}
+                partyList={partyList}
               />
             </fieldset>
             <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">

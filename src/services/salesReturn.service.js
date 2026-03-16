@@ -197,6 +197,8 @@ async function getOne(id) {
           colorId: true,
           barcodeNo: true,
           barcodeId: true,
+          billNo: true,
+          customerId: true,
         },
       },
       Branch: true,
@@ -291,7 +293,7 @@ async function create(body) {
         createdById: parseInt(userId),
         docDate: docDate ? new Date(docDate) : null,
         locationId: parseInt(locationId),
-        customerId: parseInt(customerId),
+        customerId: customerId ? parseInt(customerId) : undefined,
         invNo,
         salesType,
       },
@@ -342,6 +344,10 @@ async function createSalesReturnItems(
           ? parseInt(stockDetail.barcodeId)
           : null,
         barcodeNo: stockDetail?.barcodeNo ?? undefined,
+        customerId: stockDetail?.customerId
+          ? parseInt(stockDetail?.customerId)
+          : undefined,
+        billNo: stockDetail?.billNo ? stockDetail?.billNo : undefined,
       },
     });
     await tx.stock.create({
@@ -417,7 +423,7 @@ async function update(id, body) {
         branchId: parseInt(branchId),
         docDate: docDate ? new Date(docDate) : null,
         locationId: parseInt(locationId),
-        customerId: parseInt(customerId),
+        customerId: customerId ? parseInt(customerId) : undefined,
         invNo,
         salesType,
       },
@@ -473,6 +479,10 @@ async function updateSalesReturnItems(
             ? parseInt(stockDetail.barcodeId)
             : null,
           barcodeNo: stockDetail?.barcodeNo ?? undefined,
+          customerId: stockDetail?.customerId
+            ? parseInt(stockDetail?.customerId)
+            : undefined,
+          billNo: stockDetail?.billNo ? stockDetail?.billNo : undefined,
         },
       });
       await tx.stock.updateMany({
@@ -528,6 +538,10 @@ async function updateSalesReturnItems(
             ? parseInt(stockDetail.barcodeId)
             : null,
           barcodeNo: stockDetail?.barcodeNo ?? undefined,
+          customerId: stockDetail?.customerId
+            ? parseInt(stockDetail?.customerId)
+            : undefined,
+          billNo: stockDetail?.billNo ? stockDetail?.billNo : undefined,
         },
       });
       await tx.stock.create({
