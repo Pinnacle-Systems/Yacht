@@ -83,7 +83,7 @@ export default function SalesReturnForm({
 
     items.forEach((row, index) => {
       let key;
-      if (salesType === "RETAIL") {
+      if (salesType === "SHOWROOM") {
         key = [
           row.styleId || "",
           row.sizeId || "",

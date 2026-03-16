@@ -584,7 +584,7 @@ async function update(id, body) {
         mobileNo: mobileNo ? mobileNo : undefined,
         termsAndCondition,
         remarks,
-        taxTemplateId: parseInt(taxTemplateId),
+        taxTemplateId: taxTemplateId ? parseInt(taxTemplateId) : undefined,
         returnType,
         isCash: Boolean(isCash),
         isCard: Boolean(isCard),

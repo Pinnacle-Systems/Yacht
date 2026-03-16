@@ -28,16 +28,25 @@ import { CommaInput, DropdownInput, DropdownNew } from "../../../Inputs";
 import salesBillApi from "../../../redux/services/SalesBillService";
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
 import purchaseBillApi from "../../../redux/services/PurchaseBillService";
-import { ReturnTypeDatas } from "../../../Utils/DropdownData";
+import { adjTypeData, ReturnTypeDatas } from "../../../Utils/DropdownData";
 import SalesExchangeItems from "./SalesExchangeItems";
 import { groupBy } from "lodash";
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  Button,
   Typography,
 } from "@mui/material";
 import { ExpandMore } from "@mui/icons-material";
+import { PDFViewer } from "@react-pdf/renderer";
+import PDF from "./PrintFormat/PDF";
+import { useReactToPrint } from "react-to-print";
+import tw from "../../../Utils/tailwind-react-pdf";
+import Modal from "../../../UiComponents/Modal";
+import PosReceipt from "./PrintFormat/PosReceipt";
+import EditIcon from "@mui/icons-material/Edit";
+
 export function SalesReturnForm({
   onClose,
   id,
@@ -51,12 +60,13 @@ export function SalesReturnForm({
   styleList,
   isHo,
   branchList,
+  singleDataBranch,
 }) {
   const [docId, setDocId] = useState("New");
   const [docDate, setDocDate] = useState("");
   const [salesReturnItems, setSalesReturnItems] = useState([]);
   const [tempItems, setTempItems] = useState([]);
-
+  const [pdfOpen, setPdfOpen] = useState(false);
   const [customerId, setCustomerId] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [mobileNo, setMobileNo] = useState("");
@@ -74,7 +84,16 @@ export function SalesReturnForm({
   const [upiAmount, setUpiAmount] = useState("");
   const [cashAmount, setCashAmount] = useState("");
   const [deliveryToId, setDeliveryToId] = useState("");
+  const [savedData, setSavedData] = useState("");
+  const [roundOffType, setRoundOffType] = useState("PLUS");
+  const [roundOffValue, setRoundOffValue] = useState("");
+  const [roundOffOpen, setRoundOffOpen] = useState("");
 
+  const receiptRef = useRef();
+
+  const handlePrint = useReactToPrint({
+    contentRef: receiptRef,
+  });
   const paidAmount =
     Number(cashAmount || 0) + Number(cardAmount || 0) + Number(upiAmount || 0);
 
@@ -103,9 +122,12 @@ export function SalesReturnForm({
     (sum, row) => sum + (Number(row.netAmount) || 0),
     0,
   );
-  const roundedBill = Math.round(netAmountBill);
-  const roundOffBill = roundedBill - netAmountBill;
-  const totalAmountBill = netAmountBill + Number(roundOffBill || 0);
+
+  const totalAmountBill =
+    netAmountBill +
+    (roundOffType === "PLUS"
+      ? Number(roundOffValue || 0)
+      : -Number(roundOffValue || 0));
 
   const grossAmount = salesExchangeItems.reduce(
     (sum, row) =>
@@ -301,6 +323,8 @@ export function SalesReturnForm({
     upiAmount,
     cashAmount,
     deliveryToId,
+    roundOffType,
+    roundOffValue,
   };
 
   const syncFormWithDb = useCallback(
@@ -339,6 +363,8 @@ export function SalesReturnForm({
       setUpiAmount(data?.upiAmount || "");
       setCashAmount(data?.cashAmount || "");
       setDeliveryToId(data?.deliveryToId ? data?.deliveryToId : "");
+      setRoundOffType(data?.roundOffType ? data?.roundOffType : "PLUS");
+      setRoundOffValue(data?.roundOffValue ? data?.roundOffValue : "");
     },
     [id],
   );
@@ -363,13 +389,22 @@ export function SalesReturnForm({
         returnData = await callback(data).unwrap();
       }
       if (returnData.statusCode === 0) {
-        if (nextProcess == "new") {
-          setId(0);
-          setDocId("New");
-          syncFormWithDb(undefined);
-        } else {
-          onClose();
-        }
+        setSavedData(returnData?.data);
+        setTimeout(() => {
+          if (nextProcess == "new") {
+            if (!isHo) {
+              handlePrint();
+            }
+            setId(0);
+            setDocId("New");
+            syncFormWithDb(undefined);
+          } else {
+            if (!isHo) {
+              handlePrint();
+            }
+            onClose();
+          }
+        }, 100);
         Swal.fire({
           title: text + "  " + "Successfully",
           icon: "success",
@@ -481,12 +516,82 @@ export function SalesReturnForm({
     }
   };
 
+  const handlePrintClick = () => {
+    if (isHo) {
+      setPdfOpen(true);
+    } else {
+      handlePrint();
+    }
+  };
+
   return (
     <>
       {isLoadingIndicator ? (
         <Loader />
       ) : (
         <div className="" onKeyDown={handleKeyDown}>
+          <Modal
+            isOpen={pdfOpen}
+            onClose={() => setPdfOpen(false)}
+            widthClass={"w-[90%] h-[90%]"}
+          >
+            <PDFViewer style={tw("w-full h-full")}>
+              <PDF
+                singleData={singleData?.data}
+                styleList={styleList}
+                styleItemList={styleItemList}
+                colorList={colorList}
+                sizeList={sizeList}
+                uomList={uomList}
+                singleDataBranch={singleDataBranch}
+                salesReturnItems={salesReturnItems}
+                branchList={branchList}
+              />
+            </PDFViewer>
+          </Modal>
+          <Modal
+            isOpen={roundOffOpen}
+            onClose={() => setRoundOffOpen(false)}
+            widthClass={"w-[16%] h-[36%]"}
+          >
+            <h1 className="text-center font-medium text-lg mb-2">Round Off</h1>
+            <div className="flex flex-col gap-1.5">
+              <DropdownNew
+                name="Type"
+                dataList={adjTypeData}
+                value={roundOffType}
+                setValue={(value) => {
+                  setRoundOffType(value);
+                }}
+                placeholder={"Select Type"}
+                otherValue={"show"}
+                otherField={"show"}
+                autoFocus={true}
+              />
+              <ReusableInput
+                label="Value"
+                value={roundOffValue}
+                setValue={setRoundOffValue}
+                type={"number"}
+              />
+              <div className="flex justify-end mt-2">
+                <Button
+                  variant="contained"
+                  color="success"
+                  size="small"
+                  onClick={() => setRoundOffOpen(false)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      setRoundOffOpen(false);
+                    }
+                  }}
+                >
+                  Ok
+                </Button>
+              </div>
+            </div>
+          </Modal>
           <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
             <div className="flex justify-between items-center mb-1">
               <h1 className="text-xl font-bold text-gray-800">Sales Return</h1>
@@ -864,8 +969,20 @@ export function SalesReturnForm({
 
                             {/* Roundoff */}
                             <div className="flex justify-between items-center">
-                              <span>Roundoff</span>
-                              <span>{roundOff.toFixed(2)}</span>
+                              <div
+                                className="flex gap-1.5 items-center cursor-pointer "
+                                onClick={() => setRoundOffOpen(true)}
+                              >
+                                <span>Roundoff</span>
+                                <EditIcon
+                                  sx={{ fontSize: 16 }}
+                                  className="text-slate-500 "
+                                />
+                              </div>
+                              <span>
+                                {roundOffType === "PLUS" ? "+" : "-"}{" "}
+                                {Number(roundOffValue || 0).toFixed(2)}
+                              </span>
                             </div>
 
                             {/* Total */}
@@ -921,8 +1038,34 @@ export function SalesReturnForm({
                   <FaWhatsapp className="w-4 h-4 mr-2" />
                   WhatsApp
                 </button>
+                <button
+                  className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
+                  disabled={!id}
+                  onClick={handlePrintClick}
+                >
+                  <FiPrinter className="w-4 h-4 mr-2" />
+                  Print
+                </button>
               </div>
             </div>
+          </div>
+          <div className="bg-white" style={{ display: "none" }}>
+            <PosReceipt
+              ref={receiptRef}
+              singleData={singleData?.data}
+              branchData={singleDataBranch?.data}
+              taxRows={taxRows}
+              grossAmount={grossAmount}
+              roundOffValue={roundOffValue}
+              roundOffType={roundOffType}
+              totalNetAmt={totalAmount}
+              salesExchangeItems={salesExchangeItems?.filter(
+                (item) => item?.styleItemId,
+              )}
+              savedData={savedData}
+              sizeList={sizeList}
+              styleItemList={styleItemList}
+            />
           </div>
         </div>
       )}

@@ -149,6 +149,7 @@ export default function Form() {
           styleList={styleList}
           isHo={isHo}
           branchList={branchList}
+          singleDataBranch={singleDataBranch}
         />
       )}
     </>
