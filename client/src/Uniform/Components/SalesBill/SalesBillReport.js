@@ -9,6 +9,7 @@ import { Loader } from "../../../Basic/components";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useGetSalesBillQuery } from "../../../redux/services/SalesBillService";
 import FxSelect from "../../../Inputs";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 const SalesBillReport = ({
   onClick,
@@ -37,6 +38,7 @@ const SalesBillReport = ({
   const handleOnclick = (e) => {
     setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
   };
+  const { hasPermission } = UserPermissions();
 
   const searchFields = {
     serachDocNo,
@@ -366,7 +368,12 @@ const SalesBillReport = ({
                               {onView && (
                                 <button
                                   className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
-                                  onClick={() => onView(dataObj.id)}
+                                  onClick={() =>
+                                    hasPermission(
+                                      () => onView(dataObj.id),
+                                      "read",
+                                    )
+                                  }
                                 >
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -386,7 +393,12 @@ const SalesBillReport = ({
                               {onEdit && (
                                 <button
                                   className="text-green-600 gap-1 px-1   bg-green-50 rounded"
-                                  onClick={() => onEdit(dataObj.id)}
+                                  onClick={() =>
+                                    hasPermission(
+                                      () => onEdit(dataObj.id),
+                                      "edit",
+                                    )
+                                  }
                                 >
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -401,7 +413,12 @@ const SalesBillReport = ({
                               {onDelete && (
                                 <button
                                   className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
-                                  onClick={() => onDelete(dataObj.id)}
+                                  onClick={() =>
+                                    hasPermission(
+                                      () => onDelete(dataObj.id),
+                                      "delete",
+                                    )
+                                  }
                                 >
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"

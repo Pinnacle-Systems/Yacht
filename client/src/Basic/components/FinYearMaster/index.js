@@ -30,6 +30,7 @@ import { Check, Power } from "lucide-react";
 import Modal from "../../../UiComponents/Modal";
 import { ReusableInput } from "../../../Uniform/Components/styleesheet/CommonInput";
 import Swal from "sweetalert2";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 const MODEL = "Fin Year Master";
 
@@ -47,9 +48,11 @@ export default function Form() {
   const designationRef = useRef(null);
   const params = {
     companyId: secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "userCompanyId"
+      sessionStorage.getItem("sessionId") + "userCompanyId",
     ),
   };
+  const { hasPermission } = UserPermissions();
+
   const {
     data: allData,
     isLoading,
@@ -76,7 +79,7 @@ export default function Form() {
         childRecord.current = data?.childRecord ? data?.childRecord : 0;
       }
     },
-    [id]
+    [id],
   );
 
   useEffect(() => {
@@ -88,7 +91,7 @@ export default function Form() {
     to,
     active,
     companyId: secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "userCompanyId"
+      sessionStorage.getItem("sessionId") + "userCompanyId",
     ),
     id,
     code,
@@ -108,7 +111,7 @@ export default function Form() {
   const validateOneActiveFinYear = (active) => {
     if (Boolean(active)) {
       return !allData.data.some((finYear) =>
-        id === finYear.id ? false : Boolean(finYear.active)
+        id === finYear.id ? false : Boolean(finYear.active),
       );
     }
     return true;
@@ -316,10 +319,15 @@ export default function Form() {
         <h1 className="text-xl font-bold text-gray-800">Fin Year Master</h1>
         <div className="flex items-center gap-4">
           <button
-            onClick={() => {
-              setForm(true);
-              onNew();
-              setId("");
+             onClick={() => {
+              if (
+                !hasPermission(() => {
+                  setForm(true);
+                  onNew();
+                  setId("");
+                }, "create")
+              )
+                return;
             }}
             className="bg-white border  border-green-600 text-green-600 hover:bg-green-700 hover:text-white text-sm px-2  rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >
@@ -374,9 +382,14 @@ export default function Form() {
                   {readOnly && (
                     <button
                       type="button"
-                      onClick={() => {
-                        setReadOnly(false);
-                      }}
+                       onClick={() => {
+                          if (
+                            !hasPermission(() => {
+                              setReadOnly(false);
+                            }, "edit")
+                          )
+                            return;
+                        }}
                       className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                     >
                       Edit

@@ -30,6 +30,7 @@ import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterServices";
 import Modal from "../../../UiComponents/Modal";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 const MODEL = "Party Master";
 
@@ -96,6 +97,7 @@ export default function Form({ partyId, onCloseForm }) {
   );
 
   let accessoryItemsMasterList;
+  const { hasPermission } = UserPermissions();
 
   const userId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userId",
@@ -595,9 +597,14 @@ export default function Form({ partyId, onCloseForm }) {
           <div className="flex items-center gap-4 text-md">
             <button
               onClick={() => {
-                setForm(true);
-                onNew();
-              }}
+              if (
+                !hasPermission(() => {
+                  setForm(true);
+                  onNew();
+                }, "create")
+              )
+                return;
+            }}
               className="bg-white border text-xs border-green-600 text-green-600 hover:bg-green-700 hover:text-white px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
             >
               <Plus size={12} />

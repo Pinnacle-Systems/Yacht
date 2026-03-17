@@ -23,6 +23,7 @@ import DynamicRenderer from "../Uniform/Components/common/DynamicComponent";
 import secureLocalStorage from "react-secure-storage";
 import useOutsideClick from "../CustomHooks/handleOutsideClick";
 import Swal from "sweetalert2";
+import { UserPermissions } from "../Utils/UserPermissions";
 
 export const handleOnChange = (event, setValue, type) => {
   const inputValue = event.target.value;
@@ -1176,6 +1177,8 @@ export const ReusableTable = ({
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = data?.slice(indexOfFirstItem, indexOfLastItem);
 
+  const { hasPermission } = UserPermissions();
+
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
@@ -1323,7 +1326,9 @@ export const ReusableTable = ({
                         {onView && (
                           <button
                             className="text-blue-600  flex items-center   px-2 mr-2  bg-blue-50 rounded"
-                            onClick={() => onView(item.id)}
+                            onClick={() =>
+                              hasPermission(() => onView(item.id), "read")
+                            }
                             title="View"
                           >
                             <svg
@@ -1344,7 +1349,9 @@ export const ReusableTable = ({
                         {onEdit && (
                           <button
                             className="text-green-600 gap-1 px-1 mr-2   bg-green-50 rounded"
-                            onClick={() => onEdit(item.id)}
+                            onClick={() =>
+                              hasPermission(() => onEdit(item.id), "edit")
+                            }
                             title="Edit"
                           >
                             <svg
@@ -1360,7 +1367,13 @@ export const ReusableTable = ({
                         {onDelete && (
                           <button
                             className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
-                            onClick={() => onDelete(item.id)}
+                            onClick={() =>
+                              hasPermission(
+                                () => onDelete(item.id, item?._count),
+                                "delete",
+                                item?._count,
+                              )
+                            }
                             title="Delete"
                           >
                             <svg
@@ -2076,7 +2089,7 @@ export const CommaInput = forwardRef(
       autoFocus,
       onKeyDown,
     },
-    ref
+    ref,
   ) => {
     const inputRef = useRef(null);
     const [isFocused, setIsFocused] = useState(false);
@@ -2147,5 +2160,9 @@ export const CommaInput = forwardRef(
         />
       </div>
     );
-  }
+  },
 );
+
+export function childRecordCount(count) {
+  return Object.values(count).some((v) => v > 0);
+}

@@ -32,6 +32,7 @@ import salesBillApi from "../../../redux/services/SalesBillService";
 import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterService";
 import { useGetHOSalesListQuery, useGetSalesBillQuery, useLazyGetHOSalesDetailQuery } from "../../../redux/services/SalesBillService";
 import { useSalesEntryRefetch } from "../../../CustomHooks/salesDelivery";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     sizeList,
     styleItemList,
@@ -97,6 +98,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     const { data: branchData } = useGetBranchByIdQuery(branchId, {
         skip: !branchId,
     });
+    const { hasPermission } = UserPermissions();
 
     const isAdmin = branchData?.data?.company?.name === branchData?.data?.branchName;
 
@@ -774,6 +776,8 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                             <div className="flex gap-2 flex-wrap">
                                 <button
                                     onClick={() => saveData("new")}
+                                    disabled={readOnly}
+
                                     className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                                 >
                                     <FiSave className="w-4 h-4 mr-2" />
@@ -781,6 +785,8 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                 </button>
                                 <button
                                     onClick={() => saveData("close")}
+                                    disabled={readOnly}
+
                                     className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                                 >
                                     <HiOutlineRefresh className="w-4 h-4 mr-2" />
@@ -793,7 +799,14 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                     readOnly && (
                                         <button
                                             className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                                            onClick={() => setReadOnly(false)}
+                                            onClick={() => {
+                                                if (
+                                                    !hasPermission(() => {
+                                                        setReadOnly(false);
+                                                    }, "edit")
+                                                )
+                                                    return;
+                                            }}
                                         >
                                             <FiEdit2 className="w-4 h-4 mr-2" />
                                             Edit

@@ -7,6 +7,7 @@ import {
 import { Loader } from "../../../Basic/components";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useGetPurchaseReturnQuery } from "../../../redux/services/PurchaseReturnService";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 const PurchaseReturnReport = ({
   onClick,
@@ -17,7 +18,7 @@ const PurchaseReturnReport = ({
   rowActions = true,
 }) => {
   const branchId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "currentBranchId"
+    sessionStorage.getItem("sessionId") + "currentBranchId",
   );
 
   const [dataPerPage, setDataPerPage] = useState("10");
@@ -53,12 +54,13 @@ const PurchaseReturnReport = ({
     searchSupplier,
     searchInvNo,
   ]);
+  const { hasPermission } = UserPermissions();
 
   const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
+    sessionStorage.getItem("sessionId") + "userCompanyId",
   );
   const finyearId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "currentFinYear"
+    sessionStorage.getItem("sessionId") + "currentFinYear",
   );
   const params = {
     branchId,
@@ -342,7 +344,12 @@ const PurchaseReturnReport = ({
                               {onView && (
                                 <button
                                   className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
-                                  onClick={() => onView(dataObj.id)}
+                                  onClick={() =>
+                                    hasPermission(
+                                      () => onView(dataObj.id),
+                                      "read",
+                                    )
+                                  }
                                 >
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -362,7 +369,12 @@ const PurchaseReturnReport = ({
                               {onEdit && (
                                 <button
                                   className="text-green-600 gap-1 px-1   bg-green-50 rounded"
-                                  onClick={() => onEdit(dataObj.id)}
+                                   onClick={() =>
+                                    hasPermission(
+                                      () => onEdit(dataObj.id),
+                                      "edit",
+                                    )
+                                  }
                                 >
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -377,7 +389,12 @@ const PurchaseReturnReport = ({
                               {onDelete && (
                                 <button
                                   className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
-                                  onClick={() => onDelete(dataObj.id)}
+                                  onClick={() =>
+                                    hasPermission(
+                                      () => onDelete(dataObj.id),
+                                      "delete",
+                                    )
+                                  }
                                 >
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -397,7 +414,7 @@ const PurchaseReturnReport = ({
                           </td>
                         )}
                       </tr>
-                    )
+                    ),
                   )}
                 </tbody>
               )}

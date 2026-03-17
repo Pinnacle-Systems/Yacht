@@ -22,6 +22,7 @@ import {
 import { statusDropdown } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import Modal from "../../../UiComponents/Modal";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 const MODEL = "Location Master";
 
@@ -41,6 +42,7 @@ export default function Form() {
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
   // const dispatch = useDispatch();
+  const { hasPermission } = UserPermissions();
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -303,8 +305,13 @@ export default function Form() {
         <div className="flex items-center">
           <button
             onClick={() => {
-              setForm(true);
-              onNew();
+              if (
+                !hasPermission(() => {
+                  setForm(true);
+                  onNew();
+                }, "create")
+              )
+                return;
             }}
             className="bg-white border font-segoe border-green-600 text-green-600 hover:bg-green-700 hover:text-white text-sm px-2  rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >
@@ -348,9 +355,14 @@ export default function Form() {
                   {readOnly && (
                     <button
                       type="button"
-                      onClick={() => {
-                        setReadOnly(false);
-                      }}
+                     onClick={() => {
+                          if (
+                            !hasPermission(() => {
+                              setReadOnly(false);
+                            }, "edit")
+                          )
+                            return;
+                        }}
                       className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                     >
                       Edit

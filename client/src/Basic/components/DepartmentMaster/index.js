@@ -6,7 +6,7 @@ import {
   useAddDepartmentMutation,
   useUpdateDepartmentMutation,
   useDeleteDepartmentMutation,
-  useLazyGetDepartmentByIdQuery
+  useLazyGetDepartmentByIdQuery,
 } from "../../../redux/services/DepartmentMasterService";
 import FormHeader from "../FormHeader";
 import FormReport from "../FormReportTemplate";
@@ -25,6 +25,7 @@ import { useGetdesignationByIdQuery } from "../../../redux/services/DesignationM
 import { Check, Power } from "lucide-react";
 import Modal from "../../../UiComponents/Modal";
 import Swal from "sweetalert2";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 const MODEL = "Department Master";
 
 export default function Form() {
@@ -40,9 +41,11 @@ export default function Form() {
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
   const departmentNameref = useRef(null);
+  const { hasPermission } = UserPermissions();
+
   const params = {
     companyId: secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "userCompanyId"
+      sessionStorage.getItem("sessionId") + "userCompanyId",
     ),
   };
   const { data: allData } = useGetDepartmentQuery({
@@ -66,10 +69,10 @@ export default function Form() {
       // setReadOnly(true);
       setName(data?.name || "");
       setCode(data?.code || "");
-      setActive(id ? data?.active ?? false : true);
+      setActive(id ? (data?.active ?? false) : true);
       childRecord.current = data?.childRecord ? data?.childRecord : 0;
     },
-    [id]
+    [id],
   );
 
   useEffect(() => {
@@ -83,7 +86,7 @@ export default function Form() {
     code,
     active,
     companyId: secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "userCompanyId"
+      sessionStorage.getItem("sessionId") + "userCompanyId",
     ),
     id,
   };
@@ -130,11 +133,12 @@ export default function Form() {
         ?.filter((i) => i.id !== id)
         ?.some(
           (item) =>
-            item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+            item.name?.trim().toLowerCase() === name?.trim().toLowerCase(),
         );
     } else {
       foundItem = allData?.data?.some(
-        (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+        (item) =>
+          item.name?.trim().toLowerCase() === name?.trim().toLowerCase(),
       );
     }
 
@@ -309,8 +313,13 @@ export default function Form() {
         <div className="flex items-center">
           <button
             onClick={() => {
-              setForm(true);
-              onNew();
+              if (
+                !hasPermission(() => {
+                  setForm(true);
+                  onNew();
+                }, "create")
+              )
+                return;
             }}
             className="bg-white border  border-green-600 text-green-600 hover:bg-green-700 hover:text-white text-sm px-2  rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >
@@ -352,8 +361,13 @@ export default function Form() {
                     <button
                       type="button"
                       onClick={() => {
-                        setReadOnly(false);
-                      }}
+                          if (
+                            !hasPermission(() => {
+                              setReadOnly(false);
+                            }, "edit")
+                          )
+                            return;
+                        }}
                       className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                     >
                       Edit

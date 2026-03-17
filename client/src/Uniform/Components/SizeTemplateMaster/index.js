@@ -22,6 +22,7 @@ import {
 import Modal from "../../../UiComponents/Modal";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { Check, Power } from "lucide-react";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 const MODEL = "Size Template Master";
 export default function Form() {
@@ -37,6 +38,7 @@ export default function Form() {
   const childRecord = useRef(0);
   const [errors, setErrors] = useState({});
   const sizeNameRef = useRef(null);
+  const { hasPermission } = UserPermissions();
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -309,9 +311,14 @@ export default function Form() {
         </h5>
         <div className="flex items-center">
           <button
-            onClick={() => {
-              setForm(true);
-              onNew();
+             onClick={() => {
+              if (
+                !hasPermission(() => {
+                  setForm(true);
+                  onNew();
+                }, "create")
+              )
+                return;
             }}
             className="bg-white border font-segoe  text-sm border-green-600 text-green-600 hover:bg-green-700 hover:text-white px-2  rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >
@@ -356,9 +363,14 @@ export default function Form() {
                   {readOnly && (
                     <button
                       type="button"
-                      onClick={() => {
-                        setReadOnly(false);
-                      }}
+                     onClick={() => {
+                          if (
+                            !hasPermission(() => {
+                              setReadOnly(false);
+                            }, "edit")
+                          )
+                            return;
+                        }}
                       className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                     >
                       Edit

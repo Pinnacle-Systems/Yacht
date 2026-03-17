@@ -234,6 +234,10 @@ async function create(body) {
       upiAmount,
       cashAmount,
       taxTemplateId,
+      roundOffType,
+      roundOffValue,
+      referenceId,
+      salesPersonId,
       deliveryToId,
     } = await body;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -274,6 +278,13 @@ async function create(body) {
           upiAmount: upiAmount ? parseFloat(upiAmount) : null,
           cashAmount: cashAmount ? parseFloat(cashAmount) : null,
           // deliveryToId: deliveryToId ? parseInt(deliveryToId) : undefined,
+          roundOffType,
+          roundOffValue:
+            roundOffValue === "" || roundOffValue == null
+              ? null
+              : Number(roundOffValue),
+          salesPersonId: salesPersonId ? parseInt(salesPersonId) : undefined,
+          referenceId: referenceId ? parseInt(referenceId) : undefined,
         },
       });
       await createSalesReturnItems(
@@ -494,6 +505,10 @@ async function update(id, body) {
     upiAmount,
     cashAmount,
     deliveryToId,
+    roundOffType,
+    roundOffValue,
+    referenceId,
+    salesPersonId,
   } = await body;
   let data;
   validateUniqueBarcode(salesReturnItems);
@@ -593,6 +608,13 @@ async function update(id, body) {
         upiAmount: upiAmount ? parseFloat(upiAmount) : null,
         cashAmount: cashAmount ? parseFloat(cashAmount) : null,
         deliveryToId: deliveryToId ? parseInt(deliveryToId) : undefined,
+        roundOffType,
+        roundOffValue:
+          roundOffValue === "" || roundOffValue == null
+            ? null
+            : Number(roundOffValue),
+        salesPersonId: salesPersonId ? parseInt(salesPersonId) : undefined,
+        referenceId: referenceId ? parseInt(referenceId) : undefined,
       },
     });
     await updateSalesReturnItems(

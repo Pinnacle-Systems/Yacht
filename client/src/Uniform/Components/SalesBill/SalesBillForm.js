@@ -35,6 +35,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import { adjTypeData } from "../../../Utils/DropdownData";
 import { Button } from "@mui/material";
 import { useGetReferenceMasterByIdQuery } from "../../../redux/uniformService/ReferenceMasterService";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 export function SalesBillForm({
   onClose,
@@ -103,6 +104,7 @@ export function SalesBillForm({
   const { data: referenceData } = useGetReferenceMasterByIdQuery(referenceId);
 
   const isLoadingIndicator = isSingleFetching || isSingleLoading;
+  const { hasPermission } = UserPermissions();
 
   const findDuplicateGoodss = (items) => {
     const seen = new Map(); // key -> first index
@@ -875,6 +877,8 @@ export function SalesBillForm({
               <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => saveData("new")}
+                                    disabled={readOnly}
+
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
                   <FiSave className="w-4 h-4 mr-2" />
@@ -882,6 +886,8 @@ export function SalesBillForm({
                 </button>
                 <button
                   onClick={() => saveData("close")}
+                                    disabled={readOnly}
+
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
                   <HiOutlineRefresh className="w-4 h-4 mr-2" />
@@ -892,7 +898,14 @@ export function SalesBillForm({
                 {readOnly && (
                   <button
                     className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                    onClick={() => setReadOnly(false)}
+                    onClick={() => {
+                      if (
+                        !hasPermission(() => {
+                          setReadOnly(false);
+                        }, "edit")
+                      )
+                        return;
+                    }}
                   >
                     <FiEdit2 className="w-4 h-4 mr-2" />
                     Edit

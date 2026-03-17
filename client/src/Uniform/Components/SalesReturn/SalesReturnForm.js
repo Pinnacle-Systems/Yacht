@@ -36,6 +36,7 @@ import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMaste
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { salesTypes } from "../../../Utils/DropdownData";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 export default function SalesReturnForm({
   onClose,
   id,
@@ -56,6 +57,7 @@ export default function SalesReturnForm({
   const [getSalesInvDetail] = useLazyGetSalesInvDetailQuery();
   const dispatch = useDispatch();
   const { companyId, userId, finYearId, branchId } = getCommonParams();
+  const { hasPermission } = UserPermissions();
 
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
 
@@ -473,6 +475,7 @@ export default function SalesReturnForm({
               <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => saveData("new")}
+                  disabled={readOnly}
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
                   <FiSave className="w-4 h-4 mr-2" />
@@ -480,6 +483,7 @@ export default function SalesReturnForm({
                 </button>
                 <button
                   onClick={() => saveData("close")}
+                  disabled={readOnly}
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
                   <HiOutlineRefresh className="w-4 h-4 mr-2" />
@@ -490,7 +494,14 @@ export default function SalesReturnForm({
                 {readOnly && (
                   <button
                     className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                    onClick={() => setReadOnly(false)}
+                    onClick={() => {
+                      if (
+                        !hasPermission(() => {
+                          setReadOnly(false);
+                        }, "edit")
+                      )
+                        return;
+                    }}
                   >
                     <FiEdit2 className="w-4 h-4 mr-2" />
                     Edit

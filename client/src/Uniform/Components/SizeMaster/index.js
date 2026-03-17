@@ -12,6 +12,7 @@ import FormReport from "../../../Basic/components/FormReportTemplate";
 import { toast } from "react-toastify";
 import { TextInput, CheckBox } from "../../../Inputs";
 import ReportTemplate from "../../../Basic/components/ReportTemplate";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 const MODEL = "Size Master";
 
@@ -27,6 +28,7 @@ export default function Form() {
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
   const sizeNameRef = useRef(null);
+  const { hasPermission } = UserPermissions();
 
   const params = {
     companyId: secureLocalStorage.getItem(

@@ -11,6 +11,7 @@ import { useDispatch } from "react-redux";
 import StyleMasterApi from "../../../redux/uniformService/StyleMasterService.js";
 import { getCommonParams } from "../../../Utils/helper.js";
 import stockApi from "../../../redux/services/StockService.js";
+import { UserPermissions } from "../../../Utils/UserPermissions.js";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -19,6 +20,8 @@ export default function Form() {
   const dispatch = useDispatch();
   const { branchId } = getCommonParams();
   const [removeData] = useDeleteOpeningStockMutation();
+  const { hasPermission } = UserPermissions();
+
   const [
     trigger,
     {
@@ -114,8 +117,13 @@ export default function Form() {
           <button
             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
             onClick={() => {
-              setShowForm(true);
-              onNew();
+              if (
+                !hasPermission(() => {
+                  setShowForm(true);
+                  onNew();
+                }, "create")
+              )
+                return;
             }}
           >
             <FaPlus /> Create New

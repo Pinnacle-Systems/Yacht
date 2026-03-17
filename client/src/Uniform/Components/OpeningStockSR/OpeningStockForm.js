@@ -27,6 +27,7 @@ import {
 import BarCodePrintFormat from "../SalesDelivery/Barcode/BarcodePrintFormat.jsx";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices.js";
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
+import { UserPermissions } from "../../../Utils/UserPermissions.js";
 
 export default function OpeningStockForm({
   onClose,
@@ -41,6 +42,7 @@ export default function OpeningStockForm({
   const [openingStockItems, setOpeningStockItems] = useState([]);
   const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
   const [barcodeItems, setBarcodeItems] = useState([]);
+  const { hasPermission } = UserPermissions();
 
   const dispatch = useDispatch();
 
@@ -377,6 +379,7 @@ export default function OpeningStockForm({
             <div className="flex flex-col md:flex-row gap-2 justify-between pt-1">
               <div className="flex gap-2 flex-wrap">
                 <button
+                  disabled={readOnly}
                   onClick={() => saveData("new")}
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
@@ -385,6 +388,7 @@ export default function OpeningStockForm({
                 </button>
                 <button
                   onClick={() => saveData("close")}
+                  disabled={readOnly}
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
                   <HiOutlineRefresh className="w-4 h-4 mr-2" />
@@ -395,7 +399,14 @@ export default function OpeningStockForm({
                 {readOnly && (
                   <button
                     className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                    onClick={() => setReadOnly(false)}
+                    onClick={() => {
+                      if (
+                        !hasPermission(() => {
+                          setReadOnly(false);
+                        }, "edit")
+                      )
+                        return;
+                    }}
                   >
                     <FiEdit2 className="w-4 h-4 mr-2" />
                     Edit

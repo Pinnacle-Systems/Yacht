@@ -7,6 +7,7 @@ import {
 import { Loader } from "../../../Basic/components";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useGetOpeningStockSRQuery } from "../../../redux/uniformService/OpeningStockSRServices";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 const OpeningStockFormReport = ({
   onClick,
@@ -22,6 +23,7 @@ const OpeningStockFormReport = ({
   const finyearId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "currentFinYear"
   );
+  const { hasPermission } = UserPermissions();
 
   const [dataPerPage, setDataPerPage] = useState("10");
   const [serachDocNo, setSerachDocNo] = useState("");
@@ -253,7 +255,12 @@ const OpeningStockFormReport = ({
                               {onView && (
                                 <button
                                   className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
-                                  onClick={() => onView(dataObj.id)}
+                                  onClick={() =>
+                                    hasPermission(
+                                      () => onView(dataObj.id),
+                                      "read",
+                                    )
+                                  }
                                 >
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -273,7 +280,12 @@ const OpeningStockFormReport = ({
                               {onEdit && (
                                 <button
                                   className="text-green-600 gap-1 px-1   bg-green-50 rounded"
-                                  onClick={() => onEdit(dataObj.id)}
+                                   onClick={() =>
+                                    hasPermission(
+                                      () => onEdit(dataObj.id),
+                                      "edit",
+                                    )
+                                  }
                                 >
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -288,7 +300,12 @@ const OpeningStockFormReport = ({
                               {onDelete && (
                                 <button
                                   className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
-                                  onClick={() => onDelete(dataObj.id)}
+                                 onClick={() =>
+                                    hasPermission(
+                                      () => onDelete(dataObj.id),
+                                      "delete",
+                                    )
+                                  }
                                 >
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"

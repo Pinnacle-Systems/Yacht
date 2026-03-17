@@ -32,6 +32,7 @@ import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterS
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import purchaseInwardEntryApi from "../../../redux/uniformService/PurchaseInwardEntry";
 import purchaseReturnApi from "../../../redux/services/PurchaseReturnService";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 export default function StockAdjustmentForm({
   onClose,
@@ -53,6 +54,7 @@ export default function StockAdjustmentForm({
   const [barcodeItems, setBarcodeItems] = useState([]);
   const dispatch = useDispatch();
   const { companyId, userId, finYearId, branchId } = getCommonParams();
+  const { hasPermission } = UserPermissions();
 
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
 
@@ -371,6 +373,8 @@ export default function StockAdjustmentForm({
             <div className="flex flex-col md:flex-row gap-2 justify-between pt-2">
               <div className="flex gap-2 flex-wrap">
                 <button
+                                  disabled={readOnly}
+
                   onClick={() => saveData("new")}
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
@@ -379,6 +383,8 @@ export default function StockAdjustmentForm({
                 </button>
                 <button
                   onClick={() => saveData("close")}
+                                    disabled={readOnly}
+
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
                   <HiOutlineRefresh className="w-4 h-4 mr-2" />
@@ -397,7 +403,14 @@ export default function StockAdjustmentForm({
                                     readOnly && (
                 <button
                   className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                  onClick={() => setReadOnly(false)}
+                   onClick={() => {
+                      if (
+                        !hasPermission(() => {
+                          setReadOnly(false);
+                        }, "edit")
+                      )
+                        return;
+                    }}
                 >
                   <FiEdit2 className="w-4 h-4 mr-2" />
                   Edit

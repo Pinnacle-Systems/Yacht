@@ -15,6 +15,7 @@ import {
   useUpdateUnitOfMeasurementMasterMutation,
   useLazyGetUnitOfMeasurementMasterByIdQuery
 } from "../../../redux/uniformService/UnitOfMeasurementServices";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 const MODEL = "UOM Master";
 export default function Form() {
@@ -36,7 +37,8 @@ export default function Form() {
     ),
   };
 
-  console.log(params, "params");
+  const { hasPermission } = UserPermissions();
+
 
   const {
     data: allData,
@@ -276,8 +278,13 @@ export default function Form() {
         <div className="flex items-center">
           <button
             onClick={() => {
-              setForm(true);
-              onNew();
+              if (
+                !hasPermission(() => {
+                  setForm(true);
+                  onNew();
+                }, "create")
+              )
+                return;
             }}
             className="bg-white border font-segoe border-green-600 text-green-600 hover:bg-green-700 hover:text-white text-sm px-2  rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >

@@ -18,6 +18,9 @@ import {
   useGetBranchByIdQuery,
   useGetBranchQuery,
 } from "../../../redux/services/BranchMasterService";
+import { useGetEmployeeQuery } from "../../../redux/services/EmployeeMasterService";
+import { useGetReferenceMasterQuery } from "../../../redux/uniformService/ReferenceMasterService";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -37,6 +40,16 @@ export default function Form() {
   const { data: taxTypeList } = useGetTaxTemplateQuery({ params });
   const { data: styleList } = useGetStyleMasterQuery({ params });
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
+  const { data: salesPersonList } = useGetEmployeeQuery({
+    params,
+  });
+  const { data: referenceList } = useGetReferenceMasterQuery({
+    params: {
+      ...params,
+      active: true,
+    },
+  });
+  const { hasPermission } = UserPermissions();
 
   const [removeData] = useDeleteSalesReturnSRMutation();
   const isHo =
@@ -111,8 +124,13 @@ export default function Form() {
           <button
             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
             onClick={() => {
-              setShowForm(true);
-              onNew();
+              if (
+                !hasPermission(() => {
+                  setShowForm(true);
+                  onNew();
+                }, "create")
+              )
+                return;
             }}
           >
             <FaPlus /> Create New
@@ -150,6 +168,8 @@ export default function Form() {
           isHo={isHo}
           branchList={branchList}
           singleDataBranch={singleDataBranch}
+          salesPersonList={salesPersonList}
+          referenceList={referenceList}
         />
       )}
     </>

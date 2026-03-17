@@ -9,6 +9,7 @@ import StyleMasterApi, { useGetStyleMasterQuery } from "../../../redux/uniformSe
 import { DropdownNew } from "../../../Inputs";
 import { getCommonParams } from "../../../Utils/helper";
 import { remove } from "../../../redux/features/opentabs";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 const MODEL = "Purchase Inward / Direct Inward";
 
 export default function Form() {
@@ -18,6 +19,7 @@ export default function Form() {
   const dispatch = useDispatch();
   const [searchStyleId, setSearchStyleId] = useState("")
   const { companyId, branchId } = getCommonParams();
+  const { hasPermission } = UserPermissions();
 
   const [trigger, { data: singleData,
     isFetching: isSingleFetching,
@@ -138,8 +140,13 @@ export default function Form() {
             <button
               className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
               onClick={() => {
-                setShowForm(true);
-                onNew();
+                if (
+                  !hasPermission(() => {
+                    setShowForm(true);
+                    onNew();
+                  }, "create")
+                )
+                  return;
               }}
             >
               <FaPlus /> Create New

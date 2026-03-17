@@ -35,6 +35,7 @@ import { Loader } from "../../../Basic/components/index.js";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService.js";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService.js";
 import stockApi from "../../../redux/services/StockService.js";
+import { UserPermissions } from "../../../Utils/UserPermissions.js";
 
 export default function OpeningStockForm({
   onClose,
@@ -58,6 +59,7 @@ export default function OpeningStockForm({
   const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
   const [barCodePerPage, setBarCodePerPage] = useState(18);
   const [barcodeItems, setBarcodeItems] = useState([]);
+  const { hasPermission } = UserPermissions();
 
   const dispatch = useDispatch();
 
@@ -93,10 +95,10 @@ export default function OpeningStockForm({
       setDocDate(
         data?.docDate
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
-          : moment.utc(today).format("YYYY-MM-DD")
+          : moment.utc(today).format("YYYY-MM-DD"),
       );
       setOpeningStockItems(
-        data?.OpeningStockItems ? data.OpeningStockItems : []
+        data?.OpeningStockItems ? data.OpeningStockItems : [],
       );
       if (data?.docId) {
         setDocId(data?.docId);
@@ -106,7 +108,7 @@ export default function OpeningStockForm({
       setNotes(data?.notes ? data?.notes : "");
       setTerm(data?.term ? data?.term : "");
     },
-    [id]
+    [id],
   );
 
   useEffect(() => {
@@ -122,7 +124,7 @@ export default function OpeningStockForm({
 
   const storeOptions = locationData
     ? locationData.data.filter(
-        (item) => parseInt(item.locationId) === parseInt(locationId)
+        (item) => parseInt(item.locationId) === parseInt(locationId),
       )
     : [];
 
@@ -172,7 +174,7 @@ export default function OpeningStockForm({
 
     items.forEach((row, index) => {
       const key = [row.styleId || "", row.sizeId || "", row.colorId || ""].join(
-        "-"
+        "-",
       );
 
       if (seen.has(key)) {
@@ -198,7 +200,7 @@ export default function OpeningStockForm({
 
     // remove blank rows
     const filledItems = items.filter(
-      (item) => item.styleId || item.styleItemId || item.fabricId
+      (item) => item.styleId || item.styleItemId || item.fabricId,
     );
     const duplicates = findDuplicates(filledItems);
     // duplicate check
@@ -225,7 +227,7 @@ export default function OpeningStockForm({
         isGridDatasValid(
           data?.openingStockItems.filter((item) => item.styleId),
           false,
-          ["qty"]
+          ["qty"],
         )
       )
     ) {
@@ -245,7 +247,7 @@ export default function OpeningStockForm({
         (ex) =>
           ex.styleNo === newItem.styleNo &&
           ex.sizeId === newItem.sizeId &&
-          ex.colorId === newItem.colorId
+          ex.colorId === newItem.colorId,
       );
 
       if (existing) {
@@ -291,14 +293,14 @@ export default function OpeningStockForm({
         addData,
         { ...data, draftSave: true },
         "Added",
-        nextProcess
+        nextProcess,
       );
     } else if (id && nextProcess == "draft") {
       handleSubmitCustom(
         updateData,
         { ...data, draftSave: true },
         "Updated",
-        nextProcess
+        nextProcess,
       );
     } else if (id) {
       handleSubmitCustom(updateData, data, "Updated", nextProcess);
@@ -409,7 +411,7 @@ export default function OpeningStockForm({
                               ? branchList?.data
                               : branchList?.data?.filter((item) => item.active),
                             "branchName",
-                            "id"
+                            "id",
                           )
                         : []
                     }
@@ -428,7 +430,7 @@ export default function OpeningStockForm({
                         ? storeOptions
                         : storeOptions?.filter((item) => item.active),
                       "storeName",
-                      "id"
+                      "id",
                     )}
                     value={storeId}
                     setValue={setStoreId}
@@ -455,6 +457,7 @@ export default function OpeningStockForm({
               <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => saveData("new")}
+                  disabled={readOnly}
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
                   <FiSave className="w-4 h-4 mr-2" />
@@ -462,6 +465,7 @@ export default function OpeningStockForm({
                 </button>
                 <button
                   onClick={() => saveData("close")}
+                  disabled={readOnly}
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
                   <HiOutlineRefresh className="w-4 h-4 mr-2" />
@@ -469,6 +473,7 @@ export default function OpeningStockForm({
                 </button>
                 {!id && (
                   <button
+                    disabled={readOnly}
                     onClick={() => saveData("draft")}
                     className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                   >
@@ -478,15 +483,22 @@ export default function OpeningStockForm({
                 )}
               </div>
               <div className="flex gap-2 flex-wrap">
-                 {
-                                    readOnly && (
-                <button
-                  className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                  onClick={() => setReadOnly(false)}
-                >
-                  <FiEdit2 className="w-4 h-4 mr-2" />
-                  Edit
-                </button>)}
+                {readOnly && (
+                  <button
+                    className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                    onClick={() => {
+                      if (
+                        !hasPermission(() => {
+                          setReadOnly(false);
+                        }, "edit")
+                      )
+                        return;
+                    }}
+                  >
+                    <FiEdit2 className="w-4 h-4 mr-2" />
+                    Edit
+                  </button>
+                )}
                 <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
                   <FaWhatsapp className="w-4 h-4 mr-2" />
                   WhatsApp
@@ -495,7 +507,7 @@ export default function OpeningStockForm({
                   className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
                   onClick={() => {
                     const allStockRows = openingStockItems.flatMap(
-                      (item) => item.Stock
+                      (item) => item.Stock,
                     );
                     setBarcodeItems(allStockRows);
                     setBarcodePrintOpen(true);

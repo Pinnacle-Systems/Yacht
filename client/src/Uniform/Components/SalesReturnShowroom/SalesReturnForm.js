@@ -46,6 +46,8 @@ import tw from "../../../Utils/tailwind-react-pdf";
 import Modal from "../../../UiComponents/Modal";
 import PosReceipt from "./PrintFormat/PosReceipt";
 import EditIcon from "@mui/icons-material/Edit";
+import { dropDownListObject } from "../../../Utils/contructObject";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 export function SalesReturnForm({
   onClose,
@@ -61,6 +63,8 @@ export function SalesReturnForm({
   isHo,
   branchList,
   singleDataBranch,
+  salesPersonList,
+  referenceList,
 }) {
   const [docId, setDocId] = useState("New");
   const [docDate, setDocDate] = useState("");
@@ -88,6 +92,9 @@ export function SalesReturnForm({
   const [roundOffType, setRoundOffType] = useState("PLUS");
   const [roundOffValue, setRoundOffValue] = useState("");
   const [roundOffOpen, setRoundOffOpen] = useState("");
+  const [salesPersonId, setSalesPersonId] = useState("");
+  const [referenceId, setReferenceId] = useState("");
+  const { hasPermission } = UserPermissions();
 
   const receiptRef = useRef();
 
@@ -129,9 +136,29 @@ export function SalesReturnForm({
       ? Number(roundOffValue || 0)
       : -Number(roundOffValue || 0));
 
+  const calculateTaxableAmt = (item) => {
+    const qty = parseFloat(item.exchangeQty) || 0;
+    const rate = parseFloat(item.rate) || 0;
+    const discountValue = parseFloat(item.discountValue) || 0;
+    const discountType = item.discountType || "";
+    const taxPercent = item.taxPercent || 0;
+    // Gross amount
+    const grossAmount = qty * rate;
+    let discountAmount = 0;
+    if (discountType) {
+      if (discountType === "Flat") {
+        discountAmount = discountValue;
+      } else {
+        discountAmount = (grossAmount * discountValue) / 100;
+      }
+    }
+    const netAmount = grossAmount - discountAmount;
+    const taxable = netAmount / (1 + taxPercent / 100);
+    return taxable;
+  };
+
   const grossAmount = salesExchangeItems.reduce(
-    (sum, row) =>
-      sum + (Number(row.exchangeQty) || 0) * (Number(row.rate) || 0),
+    (sum, row) => sum + (calculateTaxableAmt(row) || 0),
     0,
   );
 
@@ -139,9 +166,13 @@ export function SalesReturnForm({
     (sum, row) => sum + (Number(row.netAmount) || 0),
     0,
   );
-  const rounded = Math.round(netAmount);
-  const roundOff = rounded - netAmount;
-  const totalAmount = netAmount + Number(roundOff || 0) - totalAmountBill;
+
+  const totalAmount =
+    netAmount -
+    netAmountBill +
+    (roundOffType === "PLUS"
+      ? Number(roundOffValue || 0)
+      : -Number(roundOffValue || 0));
 
   const taxGroupWise = groupBy(salesExchangeItems, "taxPercent");
 
@@ -149,7 +180,7 @@ export function SalesReturnForm({
     .filter(([taxPercent]) => Number(taxPercent) > 0)
     .map(([taxPercent, items]) => {
       const taxable = items.reduce(
-        (sum, item) => sum + (Number(item.taxable) || 0),
+        (sum, item) => sum + (calculateTaxableAmt(item) || 0),
         0,
       );
 
@@ -190,7 +221,7 @@ export function SalesReturnForm({
 
   const validateData = (data) => {
     if (!isHo) {
-      if (!data?.customerName || !data?.billNo) {
+      if (!data?.customerName || !data?.billNo || !salesPersonId) {
         toast.info("Please fill all required fields...!", {
           position: "top-center",
           autoClose: 2000,
@@ -325,6 +356,8 @@ export function SalesReturnForm({
     deliveryToId,
     roundOffType,
     roundOffValue,
+    salesPersonId,
+    referenceId,
   };
 
   const syncFormWithDb = useCallback(
@@ -365,6 +398,8 @@ export function SalesReturnForm({
       setDeliveryToId(data?.deliveryToId ? data?.deliveryToId : "");
       setRoundOffType(data?.roundOffType ? data?.roundOffType : "PLUS");
       setRoundOffValue(data?.roundOffValue ? data?.roundOffValue : "");
+      setSalesPersonId(data?.salesPersonId ? data?.salesPersonId : "");
+      setReferenceId(data?.referenceId ? data?.referenceId : "");
     },
     [id],
   );
@@ -404,7 +439,7 @@ export function SalesReturnForm({
             }
             onClose();
           }
-        }, 100);
+        }, 500);
         Swal.fire({
           title: text + "  " + "Successfully",
           icon: "success",
@@ -624,6 +659,21 @@ export function SalesReturnForm({
                     readOnly={true}
                     disabled
                   />
+                  {!isHo && (
+                    <DropdownInput
+                      name="Sales Person"
+                      options={dropDownListObject(
+                        salesPersonList ? salesPersonList?.data : [],
+                        "firstName",
+                        "id",
+                      )}
+                      value={salesPersonId}
+                      setValue={setSalesPersonId}
+                      required={true}
+                      readOnly={readOnly}
+                      autoFocus={!isHo ? true : false}
+                    />
+                  )}
                 </div>
               </div>
               <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
@@ -648,7 +698,7 @@ export function SalesReturnForm({
                       setsalesExchangeItems([]);
                       setSalesReturnItems([]);
                     }}
-                    autoFocus={true}
+                    autoFocus={isHo ? true : false}
                   />
                   {!isHo && (
                     <DropdownNew
@@ -662,6 +712,17 @@ export function SalesReturnForm({
                       otherField={"docId"}
                       otherValue={"docId"}
                       disabled={id}
+                    />
+                  )}
+                  {!isHo && (
+                    <DropdownNew
+                      name="Reference"
+                      dataList={referenceList?.data}
+                      value={referenceId}
+                      setValue={(value) => setReferenceId(value)}
+                      disabled={readOnly}
+                      placeholder={"Select Reference"}
+                      clear={true}
                     />
                   )}
                 </div>
@@ -1011,6 +1072,8 @@ export function SalesReturnForm({
               <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => saveData("new")}
+                                    disabled={readOnly}
+
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
                   <FiSave className="w-4 h-4 mr-2" />
@@ -1018,6 +1081,8 @@ export function SalesReturnForm({
                 </button>
                 <button
                   onClick={() => saveData("close")}
+                                    disabled={readOnly}
+
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
                   <HiOutlineRefresh className="w-4 h-4 mr-2" />
@@ -1028,7 +1093,14 @@ export function SalesReturnForm({
                 {readOnly && (
                   <button
                     className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                    onClick={() => setReadOnly(false)}
+                   onClick={() => {
+                      if (
+                        !hasPermission(() => {
+                          setReadOnly(false);
+                        }, "edit")
+                      )
+                        return;
+                    }}
                   >
                     <FiEdit2 className="w-4 h-4 mr-2" />
                     Edit
@@ -1060,6 +1132,9 @@ export function SalesReturnForm({
               roundOffType={roundOffType}
               totalNetAmt={totalAmount}
               salesExchangeItems={salesExchangeItems?.filter(
+                (item) => item?.styleItemId,
+              )}
+              salesReturnItems={salesReturnItems?.filter(
                 (item) => item?.styleItemId,
               )}
               savedData={savedData}

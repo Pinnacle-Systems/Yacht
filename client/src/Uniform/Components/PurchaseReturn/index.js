@@ -12,12 +12,14 @@ import { getCommonParams } from "../../../Utils/helper";
 import CuttingDeliveryApi from "../../../redux/uniformService/CuttingDeliveryServices";
 import CuttingOrderApi from "../../../redux/uniformService/CuttingOrderService";
 import purchaseInwardEntryApi from "../../../redux/uniformService/PurchaseInwardEntry";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 const MODEL = "Purchase Return";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
   const [id, setId] = useState("");
   const [readOnly, setReadOnly] = useState(false);
+  const { hasPermission } = UserPermissions();
 
   const dispatch = useDispatch();
 
@@ -106,9 +108,14 @@ export default function Form() {
 
           <button
             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
-            onClick={() => {
-              setShowForm(true);
-              onNew();
+           onClick={() => {
+              if (
+                !hasPermission(() => {
+                  setShowForm(true);
+                  onNew();
+                }, "create")
+              )
+                return;
             }}
           >
             <FaPlus /> Create New

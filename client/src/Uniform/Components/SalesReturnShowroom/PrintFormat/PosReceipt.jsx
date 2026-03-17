@@ -2,7 +2,7 @@ import React from "react";
 import { findFromList, getTimeFromDateTime } from "../../../../Utils/helper";
 import { toWords } from "number-to-words";
 
-const PosReceipt = React.forwardRef(({ singleData, branchData, taxRows, grossAmount, roundOffValue, roundOffType, totalNetAmt, salesExchangeItems, savedData,sizeList,styleItemList }, ref) => {
+const PosReceipt = React.forwardRef(({ singleData, branchData, taxRows, grossAmount, roundOffValue, roundOffType, totalNetAmt, salesExchangeItems, savedData, sizeList, styleItemList, salesReturnItems }, ref) => {
     const receiptData = savedData || singleData || {};
     const uniqueStyleIds = [...new Set(salesExchangeItems.map(i => i.styleItemId))];
     const totalItems = uniqueStyleIds?.length;
@@ -31,11 +31,23 @@ const PosReceipt = React.forwardRef(({ singleData, branchData, taxRows, grossAmo
     };
 
     const totalDiscAmt = salesExchangeItems?.reduce((sum, item) => sum + calculateDiscAmt(item), 0)
-    const words =
-        "Rupees " +
-        toWords(totalNetAmt)
-            .replace(/\b\w/g, (c) => c.toUpperCase()) +
-        " Only";
+    const totalAmount =
+        (salesExchangeItems || []).reduce((sum, row) => {
+            const qty = Number(row.exchangeQty) || 0;
+            const rate = Number(row.rate) || 0;
+            return sum + qty * rate;
+        }, 0) -
+        (salesReturnItems || []).reduce(
+            (sum, row) => sum + (Number(row.netAmount) || 0),
+            0
+        );
+
+    const discountAmount = Number(totalDiscAmt) || 0;
+
+    const roundOff = Number(roundOffValue) || 0;
+
+    const totalNetAmount =
+        totalAmount - discountAmount + (roundOffType === "PLUS" ? roundOff : -roundOff);
 
     return (
         <div ref={ref} className="pos-receipt py-1 bg-white">
@@ -101,6 +113,18 @@ const PosReceipt = React.forwardRef(({ singleData, branchData, taxRows, grossAmo
                 </thead>
 
                 <tbody>
+                    {salesReturnItems?.map((item, i) => (
+                        <tr key={i}>
+                            <td className="pos-left">{findFromList(item?.styleItemId, styleItemList?.data, "name") || ""}-{findFromList(item?.sizeId, sizeList?.data, "name") || ""}</td>
+                            <td> -{item.returnQty || ""} {item?.Uom?.name}</td>
+                            <td className="pos-right">
+                                {Number(item.netAmount).toFixed(2) || ""}
+                            </td>
+                            <td className="pos-right">
+                                {Number(item.netAmount).toFixed(2) || ""}
+                            </td>
+                        </tr>
+                    ))}
                     {salesExchangeItems?.map((item, i) => (
                         <tr key={i}>
                             <td className="pos-left">{findFromList(item?.styleItemId, styleItemList?.data, "name") || ""}-{findFromList(item?.sizeId, sizeList?.data, "name") || ""}</td>
@@ -126,25 +150,28 @@ const PosReceipt = React.forwardRef(({ singleData, branchData, taxRows, grossAmo
 
             <div className="pos-row font-medium">
                 <span>Total Amount</span>
-                <span> {(Array.isArray(salesExchangeItems) ? salesExchangeItems : [])
+                <span> {(((Array.isArray(salesExchangeItems) ? salesExchangeItems : [])
                     .reduce((sum, row) => {
                         const qty = parseFloat(row.exchangeQty) || 0;
                         const rate = parseFloat(row.rate) || 0;
                         return sum + qty * rate;
-                    }, 0)
-                    .toFixed(2)}</span>
+                    }, 0)) - ((Array.isArray(salesReturnItems) ? salesReturnItems : [])
+                        .reduce((sum, row) =>
+                            sum + row.netAmount
+                            , 0))).toFixed(2)
+                }</span>
             </div>
             <div className="pos-row font-medium">
                 <span>Discount</span>
                 <span>-{totalDiscAmt.toFixed(2)}</span>
             </div>
-            {/* {
+            {
                 taxRows?.map((item) => (
                     <div>
                         <span>{item?.taxPercent} % GST on ({(grossAmount).toFixed(2)}) = {(item?.cgstAmount + item?.sgstAmount).toFixed(2)}</span>
                     </div>
                 ))
-            } */}
+            }
 
             <div className="pos-row font-medium">
                 <span>Rounded Off</span>
@@ -155,7 +182,7 @@ const PosReceipt = React.forwardRef(({ singleData, branchData, taxRows, grossAmo
                     <span>NET AMOUNT</span>
                 </div>
                 <div className="pos-dividerY w-1/2 py-1 text-right text-[16px]">
-                    <span>{totalNetAmt.toFixed(2)}</span>
+                    <span>{totalNetAmount.toFixed(2)}</span>
                 </div>
             </div>
             {/* <div className="my-1">

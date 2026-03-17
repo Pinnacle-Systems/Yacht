@@ -376,6 +376,7 @@ model Employee {
   emailNew                 String?
   cuttingDeliveries        CuttingDelivery[]
   salesBills               SalesBill[]
+  salesReturnSRs           SalesReturnSR[]
 }
 
 model EmployeeBankDetails {
@@ -2964,6 +2965,12 @@ model SalesReturnSR {
 
   salesReturnSRItems SalesReturnSRItems[]
   salesExchangeItems SalesExchangeItems[]
+  SalesPerson        Employee?            @relation(fields: [salesPersonId], references: [id])
+  salesPersonId      Int?
+  Reference          Reference?           @relation(fields: [referenceId], references: [id])
+  referenceId        Int?
+  roundOffType       String?
+  roundOffValue      Float?
 }
 
 model SalesReturnSRItems {
@@ -3099,11 +3106,12 @@ model OpeningStockItemsSR {
 }
 
 model Reference {
-  id         Int         @id @default(autoincrement())
-  name       String?
-  active     Boolean?    @default(true)
-  Company    Company?    @relation(fields: [companyId], references: [id])
-  companyId  Int?
-  percentage Float?
-  salesBills SalesBill[]
+  id             Int             @id @default(autoincrement())
+  name           String?
+  active         Boolean?        @default(true)
+  Company        Company?        @relation(fields: [companyId], references: [id])
+  companyId      Int?
+  percentage     Float?
+  salesBills     SalesBill[]
+  salesReturnSRs SalesReturnSR[]
 }

@@ -28,6 +28,7 @@ import StyleReport from "./StyleReport";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { Button } from "@mui/material";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 const StyleMaster = () => {
   const [form, setForm] = useState(false);
@@ -51,6 +52,7 @@ const StyleMaster = () => {
   const [addData] = useAddStyleMasterMutation();
   const [updateData] = useUpdateStyleMasterMutation();
   const [removeData] = useDeleteStyleMasterMutation();
+  const { hasPermission } = UserPermissions();
 
   const styleNameRef = useRef(null);
   const childRecord = useRef(0);
@@ -368,8 +370,13 @@ const StyleMaster = () => {
         <div className="flex items-center">
           <button
             onClick={() => {
-              setForm(true);
-              onNew();
+              if (
+                !hasPermission(() => {
+                  setForm(true);
+                  onNew();
+                }, "create")
+              )
+                return;
             }}
             className="bg-white border font-segoe border-green-600 text-green-600 hover:bg-green-700 hover:text-white text-sm px-2  rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >
@@ -418,9 +425,14 @@ const StyleMaster = () => {
                   {readOnly && (
                     <button
                       type="button"
-                      onClick={() => {
-                        setReadOnly(false);
-                      }}
+                     onClick={() => {
+                          if (
+                            !hasPermission(() => {
+                              setReadOnly(false);
+                            }, "edit")
+                          )
+                            return;
+                        }}
                       className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                     >
                       Edit

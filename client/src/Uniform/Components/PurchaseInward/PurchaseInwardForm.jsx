@@ -41,6 +41,7 @@ import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/Access
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import BarCodePrintFormat from "../OpeningStock/BarcodePrintFormat";
 import secureLocalStorage from "react-secure-storage";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
   , isSingleFetching,
@@ -70,6 +71,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
     branchId,
     companyId,
   };
+  const { hasPermission } = UserPermissions();
 
   const { data: partyList } = useGetPartyQuery({ params: { ...params } });
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
@@ -722,12 +724,14 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
               <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => saveData("new")}
+                  disabled={readOnly}
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
                   <FiSave className="w-4 h-4 mr-2" />
                   Save & New
                 </button>
                 <button
+                  disabled={readOnly}
                   onClick={() => saveData("close")}
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
@@ -737,6 +741,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
                 {
                   !id && (
                     <button
+                      disabled={readOnly}
                       onClick={() => saveData("draft")}
                       className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                     >
@@ -753,7 +758,14 @@ const PurchaseInwardForm = ({ onClose, id, setId, readOnly, setReadOnly
                   readOnly && (
                     <button
                       className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                      onClick={() => setReadOnly(false)}
+                      onClick={() => {
+                        if (
+                          !hasPermission(() => {
+                            setReadOnly(false);
+                          }, "edit")
+                        )
+                          return;
+                      }}
                     >
                       <FiEdit2 className="w-4 h-4 mr-2" />
                       Edit

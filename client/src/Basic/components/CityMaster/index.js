@@ -27,6 +27,7 @@ import { push } from "../../../redux/features/opentabs";
 import Modal from "../../../UiComponents/Modal";
 import { Check, Power } from "lucide-react";
 import Swal from "sweetalert2";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 const MODEL = "City Master";
 
 export default function Form() {
@@ -45,6 +46,7 @@ export default function Form() {
   const dispatch = useDispatch();
   const childRecord = useRef(0);
   const cityNameRef = useRef(null);
+  const { hasPermission } = UserPermissions();
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -329,10 +331,15 @@ export default function Form() {
           <h5 className="text-xl font-bold text-gray-800">City Master</h5>
           <div className="flex items-center gap-4">
             <button
-              onClick={() => {
-                setForm(true);
-                onNew();
-              }}
+             onClick={() => {
+              if (
+                !hasPermission(() => {
+                  setForm(true);
+                  onNew();
+                }, "create")
+              )
+                return;
+            }}
               className="bg-white border  border-green-600 text-green-600 hover:bg-green-700 hover:text-white text-sm px-2  rounded-md shadow transition-colors duration-200 flex items-center gap-2"
             >
               + Add New City
@@ -375,8 +382,13 @@ export default function Form() {
                         <button
                           type="button"
                           onClick={() => {
-                            setReadOnly(false);
-                          }}
+                          if (
+                            !hasPermission(() => {
+                              setReadOnly(false);
+                            }, "edit")
+                          )
+                            return;
+                        }}
                           className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                         >
                           Edit

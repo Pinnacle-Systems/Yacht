@@ -38,6 +38,7 @@ import { useGetProcessGroupMasterQuery } from "../../../redux/uniformService/Pro
 import CuttingDeliveryApi from "../../../redux/uniformService/CuttingDeliveryServices.js";
 import { Loader } from "../../../Basic/components/index.js";
 import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionMasterService.js";
+import { UserPermissions } from "../../../Utils/UserPermissions.js";
 export default function CuttingOrderForm({
   onClose,
   id,
@@ -62,6 +63,7 @@ export default function CuttingOrderForm({
   const dispatch = useDispatch();
   const [processGroupId, setProcessGroupId] = useState("");
   const isLoadingIndicator = isSingleFetching || isSingleLoading;
+  const { hasPermission } = UserPermissions();
 
   const { companyId, userId, finYearId, branchId } = getCommonParams();
   const params = {
@@ -107,10 +109,10 @@ export default function CuttingOrderForm({
       setDocDate(
         data?.docDate
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
-          : moment.utc(today).format("YYYY-MM-DD")
+          : moment.utc(today).format("YYYY-MM-DD"),
       );
       setCuttingOrderItems(
-        data?.cuttingOrderItems ? data.cuttingOrderItems : []
+        data?.cuttingOrderItems ? data.cuttingOrderItems : [],
       );
       if (data?.docId) {
         setDocId(data?.docId);
@@ -121,7 +123,7 @@ export default function CuttingOrderForm({
       setSizeTemplateId(data?.sizeTemplateId ? data?.sizeTemplateId : "");
       setProcessGroupId(data?.processGroupId ? data?.processGroupId : "");
     },
-    [id]
+    [id],
   );
 
   useEffect(() => {
@@ -138,7 +140,7 @@ export default function CuttingOrderForm({
 
   const storeOptions = locationData
     ? locationData.data.filter(
-        (item) => parseInt(item.locationId) === parseInt(locationId)
+        (item) => parseInt(item.locationId) === parseInt(locationId),
       )
     : [];
 
@@ -206,7 +208,7 @@ export default function CuttingOrderForm({
   const validateData = (data) => {
     const items = data?.cuttingOrderItems || [];
     const filledItems = items.filter(
-      (item) => item.styleId || item.fabricId || item.portionId
+      (item) => item.styleId || item.fabricId || item.portionId,
     );
     const duplicates = findDuplicates(filledItems);
     // duplicate check
@@ -229,7 +231,7 @@ export default function CuttingOrderForm({
         isGridDatasValid(
           data?.cuttingOrderItems?.filter((item) => item.styleId),
           false,
-          ["orderQty", "fabricId", "styleItemId"]
+          ["orderQty", "fabricId", "styleItemId"],
         ) &&
         data?.cuttingOrderItems.length > 0
       )
@@ -257,14 +259,14 @@ export default function CuttingOrderForm({
         addData,
         { ...data, draftSave: true },
         "Added",
-        nextProcess
+        nextProcess,
       );
     } else if (id && nextProcess == "draft") {
       handleSubmitCustom(
         updateData,
         { ...data, draftSave: true },
         "Updated",
-        nextProcess
+        nextProcess,
       );
     } else if (id) {
       handleSubmitCustom(updateData, data, "Updated", nextProcess);
@@ -348,7 +350,7 @@ export default function CuttingOrderForm({
             !row.portionId &&
             !row.sizeId &&
             !row.orderQty &&
-            !row.remarks
+            !row.remarks,
         );
         if (startIndex === -1) startIndex = updated.length;
 
@@ -452,10 +454,10 @@ export default function CuttingOrderForm({
                               id
                                 ? branchList?.data
                                 : branchList?.data?.filter(
-                                    (item) => item.active
+                                    (item) => item.active,
                                   ),
                               "branchName",
-                              "id"
+                              "id",
                             )
                           : []
                       }
@@ -474,7 +476,7 @@ export default function CuttingOrderForm({
                           ? storeOptions
                           : storeOptions?.filter((item) => item.active),
                         "storeName",
-                        "id"
+                        "id",
                       )}
                       value={storeId}
                       setValue={setStoreId}
@@ -558,6 +560,7 @@ export default function CuttingOrderForm({
               <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => saveData("new")}
+                  disabled={readOnly}
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
                   <FiSave className="w-4 h-4 mr-2" />
@@ -565,6 +568,7 @@ export default function CuttingOrderForm({
                 </button>
                 <button
                   onClick={() => saveData("close")}
+                  disabled={readOnly}
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
                   <HiOutlineRefresh className="w-4 h-4 mr-2" />
@@ -579,15 +583,22 @@ export default function CuttingOrderForm({
                 </button> */}
               </div>
               <div className="flex gap-2 flex-wrap">
-                 {
-                                    readOnly && (
-                <button
-                  className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                  onClick={() => setReadOnly(false)}
-                >
-                  <FiEdit2 className="w-4 h-4 mr-2" />
-                  Edit
-                </button>)}
+                {readOnly && (
+                  <button
+                    className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                    onClick={() => {
+                      if (
+                        !hasPermission(() => {
+                          setReadOnly(false);
+                        }, "edit")
+                      )
+                        return;
+                    }}
+                  >
+                    <FiEdit2 className="w-4 h-4 mr-2" />
+                    Edit
+                  </button>
+                )}
                 <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
                   <FaWhatsapp className="w-4 h-4 mr-2" />
                   WhatsApp

@@ -9,6 +9,7 @@ import Modal from "../../../UiComponents/Modal";
 import { statusDropdown } from "../../../Utils/DropdownData";
 import Swal from "sweetalert2";
 import { useAddHsnMasterMutation, useDeleteHsnMasterMutation, useGetHsnMasterByIdQuery, useGetHsnMasterQuery, useUpdateHsnMasterMutation } from "../../../redux/services/HsnMasterService";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 
 export default function Form() {
@@ -24,6 +25,7 @@ export default function Form() {
     const [searchValue, setSearchValue] = useState("");
     const childRecord = useRef(0);
 
+  const { hasPermission } = UserPermissions();
 
     const params = {
         companyId: secureLocalStorage.getItem(
@@ -238,10 +240,15 @@ export default function Form() {
                 <h5 className="text-2xl font-bold text-gray-800">Hsn Master</h5>
                 <div className="flex items-center">
                     <button
-                        onClick={() => {
-                            setForm(true);
-                            onNew();
-                        }}
+                         onClick={() => {
+              if (
+                !hasPermission(() => {
+                  setForm(true);
+                  onNew();
+                }, "create")
+              )
+                return;
+            }}
                         className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
                     >
                         + Add New Hsn

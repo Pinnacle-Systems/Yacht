@@ -14,12 +14,14 @@ import OpeningStockApi from "../../../redux/uniformService/OpeningStockService";
 import purchaseInwardEntryApi from "../../../redux/uniformService/PurchaseInwardEntry";
 import purchaseReturnApi from "../../../redux/services/PurchaseReturnService";
 import { useSalesEntryRefetch } from "../../../CustomHooks/salesDelivery";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
   const [id, setId] = useState("");
   const [readOnly, setReadOnly] = useState(false);
   const dispatch = useDispatch();
+  const { hasPermission } = UserPermissions();
 
   const [removeData] = useDeleteSalesEntryMutation();
   const { branchId } = getCommonParams();
@@ -125,8 +127,13 @@ export default function Form() {
           <button
             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
             onClick={() => {
-              setShowForm(true);
-              onNew();
+              if (
+                !hasPermission(() => {
+                  setShowForm(true);
+                  onNew();
+                }, "create")
+              )
+                return;
             }}
           >
             <FaPlus /> Create New

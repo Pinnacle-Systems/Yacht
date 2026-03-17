@@ -29,6 +29,7 @@ import Modal from "../../../UiComponents/Modal";
 import { Check, Power } from "lucide-react";
 import Swal from "sweetalert2";
 import Select from "react-dropdown-select";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 const MODEL = "State Master";
 
@@ -51,6 +52,7 @@ export default function Form() {
   const childRecord = useRef(0);
   const dispatch = useDispatch();
   const [states, setStates] = useState([]);
+  const { hasPermission } = UserPermissions();
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -387,8 +389,13 @@ export default function Form() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => {
-              setForm(true);
-              onNew();
+              if (
+                !hasPermission(() => {
+                  setForm(true);
+                  onNew();
+                }, "create")
+              )
+                return;
             }}
             className="bg-white border  border-green-600 text-green-600 hover:bg-green-700 hover:text-white text-sm px-2  rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >
@@ -432,8 +439,13 @@ export default function Form() {
                     {readOnly && (
                       <button
                         type="button"
-                        onClick={() => {
-                          setReadOnly(false);
+                       onClick={() => {
+                          if (
+                            !hasPermission(() => {
+                              setReadOnly(false);
+                            }, "edit")
+                          )
+                            return;
                         }}
                         className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                       >

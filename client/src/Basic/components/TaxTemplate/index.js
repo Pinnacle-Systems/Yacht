@@ -19,6 +19,7 @@ import Modal from "../../../UiComponents/Modal";
 import { Check, Power } from "lucide-react";
 import Swal from "sweetalert2";
 import { statusDropdown } from "../../../Utils/DropdownData";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 const MODEL = "Tax Template Master";
 
@@ -32,6 +33,7 @@ export default function Form() {
   const [taxTemplateDetails, setTaxTemplateDetails] = useState([]);
 
   const [searchValue, setSearchValue] = useState("");
+  const { hasPermission } = UserPermissions();
 
   const childRecord = useRef(0);
   const dispatch = useDispatch();
@@ -296,9 +298,14 @@ export default function Form() {
         </h5>
         <div className="flex items-center">
           <button
-            onClick={() => {
-              setForm(true);
-              onNew();
+             onClick={() => {
+              if (
+                !hasPermission(() => {
+                  setForm(true);
+                  onNew();
+                }, "create")
+              )
+                return;
             }}
             className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >

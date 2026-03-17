@@ -15,6 +15,7 @@ import purchaseBillApi from "../../../redux/services/PurchaseBillService"
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
 import SalesReturnApi from "../../../redux/uniformService/SalesReturnService"
 import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterService";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 const MODEL = "Purchase Return";
 
@@ -33,6 +34,7 @@ export default function Form() {
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
   const { data: styleList } = useGetStyleMasterQuery({ params });
+  const { hasPermission } = UserPermissions();
 
   const [removeData] = useDeletePurchaseReturnShowroomMutation();
   const { data: singleDataBranch } = useGetBranchByIdQuery(branchId);
@@ -115,9 +117,14 @@ export default function Form() {
             <button
               className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
               onClick={() => {
-                setShowForm(true);
-                onNew();
-              }}
+              if (
+                !hasPermission(() => {
+                  setShowForm(true);
+                  onNew();
+                }, "create")
+              )
+                return;
+            }}
             >
               <FaPlus /> Create New
             </button>

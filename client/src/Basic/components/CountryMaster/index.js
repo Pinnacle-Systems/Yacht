@@ -28,6 +28,7 @@ import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { text } from "@fortawesome/fontawesome-svg-core";
 import { capitalize } from "@mui/material";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 export default function Form() {
   const openTabs = useSelector((state) => state.openTabs);
@@ -47,10 +48,11 @@ export default function Form() {
   const [countryCode, setCountryCode] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
   const childRecord = useRef(0);
+  const { hasPermission } = UserPermissions();
 
   const params = {
     companyId: secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "userCompanyId"
+      sessionStorage.getItem("sessionId") + "userCompanyId",
     ),
   };
   const {
@@ -90,11 +92,11 @@ export default function Form() {
 
       setSelectedCountry(matchedCountry || null);
       setCountryCode(data?.code);
-      setActive(id ? data?.active ?? false : true);
+      setActive(id ? (data?.active ?? false) : true);
       // setChildRecord(data?.childRecord ? data?.childRecord : 0);
       childRecord.current = data?.childRecord ? data?.childRecord : 0;
     },
-    [id, countries]
+    [id, countries],
   );
 
   useEffect(() => {
@@ -105,7 +107,7 @@ export default function Form() {
     name: selectedCountry,
     code: countryCode,
     companyId: secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "userCompanyId"
+      sessionStorage.getItem("sessionId") + "userCompanyId",
     ),
     active,
     id,
@@ -149,11 +151,12 @@ export default function Form() {
         ?.filter((i) => i.id !== id)
         ?.some(
           (item) =>
-            item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+            item.name?.trim().toLowerCase() === name?.trim().toLowerCase(),
         );
     } else {
       foundItem = allData?.data?.some(
-        (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+        (item) =>
+          item.name?.trim().toLowerCase() === name?.trim().toLowerCase(),
       );
     }
 
@@ -378,8 +381,13 @@ export default function Form() {
         <div className="flex items-center">
           <button
             onClick={() => {
-              setForm(true);
-              onNew();
+              if (
+                !hasPermission(() => {
+                  setForm(true);
+                  onNew();
+                }, "create")
+              )
+                return;
             }}
             className="bg-white border font-segoe border-green-600 text-green-600 hover:bg-green-700 hover:text-white text-sm px-2  rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >
@@ -425,7 +433,12 @@ export default function Form() {
                       <button
                         type="button"
                         onClick={() => {
-                          setReadOnly(false);
+                          if (
+                            !hasPermission(() => {
+                              setReadOnly(false);
+                            }, "edit")
+                          )
+                            return;
                         }}
                         className="px-3 py-1 font-segoe text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                       >

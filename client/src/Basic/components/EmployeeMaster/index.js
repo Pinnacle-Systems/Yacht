@@ -62,6 +62,7 @@ import { useGetStateQuery } from "../../../redux/services/StateMasterService";
 import { useGetCountriesQuery } from "../../../redux/services/CountryMasterService";
 import { log } from "util";
 import Swal from "sweetalert2";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 const MODEL = "Employee Master";
 export default function Form() {
@@ -159,12 +160,13 @@ export default function Form() {
   });
   const [sameAsPresent, setSameAsPresent] = useState(false);
   // const [esi, setEsi] = useState("")
+  const { hasPermission } = UserPermissions();
 
   const childRecord = useRef(0);
   const dispatch = useDispatch();
   const params = {
     companyId: secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "userCompanyId"
+      sessionStorage.getItem("sessionId") + "userCompanyId",
     ),
     // finYearId: secureLocalStorage.getItem(
     //   sessionStorage.getItem("sessionId") + "currentFinYear"
@@ -173,11 +175,11 @@ export default function Form() {
     //   sessionStorage.getItem("sessionId") + "userId"
     // ),
     branchId: secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "currentBranchId"
+      sessionStorage.getItem("sessionId") + "currentBranchId",
     ),
   };
   const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
+    sessionStorage.getItem("sessionId") + "userCompanyId",
   );
   const { data: cityList } = useGetCityQuery({ params });
 
@@ -264,13 +266,13 @@ export default function Form() {
       setJoiningDate(
         data?.joiningDate
           ? moment.utc(data?.joiningDate).format("YYYY-MM-DD")
-          : ""
+          : "",
       );
       // setDesignationId(data?.designationId);
       setLeavingDate(
         data?.leavingDate
           ? moment.utc(data?.leavingDate).format("YYYY-MM-DD")
-          : ""
+          : "",
       );
       setPf(data?.pf);
       setEsi(data?.esi);
@@ -318,7 +320,7 @@ export default function Form() {
           branchName: b.branchName || "",
           accountNumber: b.accountNumber || "",
           ifscCode: b.ifscCode || "",
-        }))
+        })),
       );
 
       setEducationDetails(
@@ -328,7 +330,7 @@ export default function Form() {
           universityName: e.universityName || "",
           institutionName: e.institutionName || "",
           yearOfPass: e.yearOfPass || "",
-        }))
+        })),
       );
 
       setFamilyDetails(
@@ -340,16 +342,16 @@ export default function Form() {
           relationShip: f.relationShip || "",
           occupation: f.occupation || "",
           nominee: f.nominee || "",
-        }))
+        })),
       );
 
       // Save selected employee ID
       secureLocalStorage.setItem(
         sessionStorage.getItem("sessionId") + "currentEmployeeSelected",
-        data?.id
+        data?.id,
       );
     },
-    [id]
+    [id],
   );
 
   const cleanData = (obj) => {
@@ -369,7 +371,7 @@ export default function Form() {
           return [key, cleanData(value)]; // recurse
         }
         return [key, value];
-      })
+      }),
     );
   };
 
@@ -381,10 +383,9 @@ export default function Form() {
     }
   }, [singleData, syncFormWithDb]);
 
-
   const data = {
     branchId: secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "currentBranchId"
+      sessionStorage.getItem("sessionId") + "currentBranchId",
     ),
     employeeType,
     firstName,
@@ -466,7 +467,7 @@ export default function Form() {
           key,
           typeof data[key] === "object" && data[key] !== null
             ? JSON.stringify(data[key])
-            : data[key]
+            : data[key],
         );
       }
 
@@ -525,11 +526,14 @@ export default function Form() {
         ?.filter((i) => i.id !== id)
         ?.some(
           (item) =>
-            item.firstName?.trim().toLowerCase() === firstName?.trim().toLowerCase()
+            item.firstName?.trim().toLowerCase() ===
+            firstName?.trim().toLowerCase(),
         );
     } else {
       foundItem = allData?.data?.some(
-        (item) => item.firstName?.trim().toLowerCase() === firstName?.trim().toLowerCase()
+        (item) =>
+          item.firstName?.trim().toLowerCase() ===
+          firstName?.trim().toLowerCase(),
       );
     }
 
@@ -913,7 +917,6 @@ export default function Form() {
       updated.splice(rowIndex, 1);
       return updated;
     });
-
   }
   function deleteEducationRow(rowIndex) {
     if (readOnly) return toast.error("Turn on Edit Mode...");
@@ -923,7 +926,6 @@ export default function Form() {
       updated.splice(rowIndex, 1);
       return updated;
     });
-
   }
   function deleteFamilyRow(rowIndex) {
     if (readOnly) return toast.error("Turn on Edit Mode...");
@@ -933,7 +935,6 @@ export default function Form() {
       updated.splice(rowIndex, 1);
       return updated;
     });
-
   }
   const handleView = (id) => {
     setId(id);
@@ -1036,9 +1037,14 @@ export default function Form() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => {
-              setForm(true);
-              onNew();
-              setNewForm(true);
+              if (
+                !hasPermission(() => {
+                  setForm(true);
+                  onNew();
+                  setNewForm(true);
+                }, "create")
+              )
+                return;
             }}
             className="bg-white border  border-green-600 text-green-600 hover:bg-green-700 hover:text-white text-sm px-2  rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >
@@ -1119,8 +1125,13 @@ export default function Form() {
                     <button
                       type="button"
                       onClick={() => {
-                        setReadOnly(false);
-                      }}
+                          if (
+                            !hasPermission(() => {
+                              setReadOnly(false);
+                            }, "edit")
+                          )
+                            return;
+                        }}
                       className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                     >
                       Edit
@@ -1475,7 +1486,7 @@ export default function Form() {
                             options={dropDownListObject(
                               department?.data,
                               "name",
-                              "id"
+                              "id",
                             )}
                             required={true}
                             readOnly={readOnly}
@@ -1498,7 +1509,7 @@ export default function Form() {
                             options={dropDownListObject(
                               employeeCategoryList?.data,
                               "name",
-                              "id"
+                              "id",
                             )}
                             // required={true}
                             readOnly={readOnly}
@@ -1816,7 +1827,7 @@ export default function Form() {
                               options={dropDownListObject(
                                 cityList?.data,
                                 "name",
-                                "id"
+                                "id",
                               )}
                               // required={true}
                               readOnly={readOnly}
@@ -1843,7 +1854,7 @@ export default function Form() {
                               options={dropDownListObject(
                                 stateList?.data,
                                 "name",
-                                "id"
+                                "id",
                               )}
                               // required={true}
                               readOnly={readOnly}
@@ -1867,7 +1878,7 @@ export default function Form() {
                               options={dropDownListObject(
                                 countryList?.data,
                                 "name",
-                                "id"
+                                "id",
                               )}
                               // required={true}
                               readOnly={readOnly}
@@ -1958,7 +1969,7 @@ export default function Form() {
                               options={dropDownListObject(
                                 cityList?.data,
                                 "name",
-                                "id"
+                                "id",
                               )}
                               readOnly={readOnly}
                               disabled={
@@ -1977,7 +1988,7 @@ export default function Form() {
                               options={dropDownListObject(
                                 stateList?.data,
                                 "name",
-                                "id"
+                                "id",
                               )}
                               readOnly={readOnly}
                               disabled={
@@ -1995,7 +2006,7 @@ export default function Form() {
                               options={dropDownListObject(
                                 countryList?.data,
                                 "name",
-                                "id"
+                                "id",
                               )}
                               readOnly={readOnly}
                               disabled={
@@ -2102,7 +2113,7 @@ export default function Form() {
                                     handleBankDetailsChange(
                                       index,
                                       "bankName",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   readOnly={readOnly}
@@ -2119,7 +2130,7 @@ export default function Form() {
                                     handleBankDetailsChange(
                                       index,
                                       "branchName",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   className="w-full focus:outline-none uppercase focus:border-none pl-3"
@@ -2136,7 +2147,7 @@ export default function Form() {
                                     handleBankDetailsChange(
                                       index,
                                       "accountNumber",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   className="w-full focus:outline-none uppercase focus:border-none text-right pr-3"
@@ -2153,7 +2164,7 @@ export default function Form() {
                                     handleBankDetailsChange(
                                       index,
                                       "ifscCode",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   className="w-full focus:outline-none uppercase focus:border-none text-left pl-2"
@@ -2257,7 +2268,7 @@ export default function Form() {
                                     handleEDucationDetailsChange(
                                       index,
                                       "courseName",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   readOnly={readOnly}
@@ -2274,7 +2285,7 @@ export default function Form() {
                                     handleEDucationDetailsChange(
                                       index,
                                       "universityName",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   className="w-full pl-2 focus:outline-none  uppercase focus:border-none"
@@ -2291,7 +2302,7 @@ export default function Form() {
                                     handleEDucationDetailsChange(
                                       index,
                                       "institutionName",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   className="w-full pl-2 focus:outline-none uppercase focus:border-none"
@@ -2308,7 +2319,7 @@ export default function Form() {
                                     handleEDucationDetailsChange(
                                       index,
                                       "yearOfPass",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   className="w-full pl-2 focus:outline-none uppercase focus:border-none"
@@ -2422,7 +2433,7 @@ export default function Form() {
                                     handleFamilyDetailsChange(
                                       index,
                                       "name",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   readOnly={readOnly}
@@ -2439,7 +2450,7 @@ export default function Form() {
                                     handleFamilyDetailsChange(
                                       index,
                                       "dob",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   className="w-full pl-1 focus:outline-none uppercase  focus:border-none"
@@ -2456,7 +2467,7 @@ export default function Form() {
                                     handleFamilyDetailsChange(
                                       index,
                                       "age",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   className="w-full pr-2 text-right focus:outline-none uppercase  focus:border-none"
@@ -2473,7 +2484,7 @@ export default function Form() {
                                     handleFamilyDetailsChange(
                                       index,
                                       "relationShip",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   className="w-full pl-2 focus:outline-none uppercase  focus:border-none"
@@ -2490,7 +2501,7 @@ export default function Form() {
                                     handleFamilyDetailsChange(
                                       index,
                                       "occupation",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   className="w-full pl-2 focus:outline-none uppercase  focus:border-none"
@@ -2507,7 +2518,7 @@ export default function Form() {
                                     handleFamilyDetailsChange(
                                       index,
                                       "nominee",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   className="w-full pl-2 focus:outline-none uppercase  focus:border-none"

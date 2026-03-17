@@ -31,12 +31,13 @@ async function getPageId(pageId) {
         }
     });
 
-    return pageDatas?.find(val => val?.name == pageId)
+    return pageDatas?.find(val => val?.id == parseInt(pageId))
 }
 
 async function getPermissions(req) {
 
     const { roleId, pageId } = req.params    
+    console.log(req.params,"req.params")
 
     let pageData = await getPageId(pageId);
 

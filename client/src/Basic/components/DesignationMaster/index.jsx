@@ -32,6 +32,7 @@ import { useGetCompanyQuery } from "../../../redux/services/CompanyMasterService
 import Modal from "../../../UiComponents/Modal";
 import { Check, Power } from "lucide-react";
 import Swal from "sweetalert2";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 const Designation = () => {
   const [readOnly, setReadOnly] = useState(false);
   const [id, setId] = useState("");
@@ -46,7 +47,8 @@ const Designation = () => {
   const [companyName, setCompanyName] = useState("");
   const [companyCode, setCompanyCode] = useState("");
   const MODEL = "DESIGNATION";
-  console.log(form, "form");
+  const { hasPermission } = UserPermissions();
+
   const params = {
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -64,7 +66,7 @@ const Designation = () => {
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetdesignationByIdQuery(id, { skip: !id });
-const [trigger, { data: singleDataLazy, isFetchingLazy }] =
+  const [trigger, { data: singleDataLazy, isFetchingLazy }] =
     useLazyGetdesignationByIdQuery();
   useEffect(() => {
     if (company?.data?.length > 0) {
@@ -183,37 +185,38 @@ const [trigger, { data: singleDataLazy, isFetchingLazy }] =
         return;
       }
       if (data?.data?.childRecord > 0) {
-              Swal.fire({
-                icon: "error",
-                title: "Child record in Employee Master",
-                text: "Data cannot be deleted!",
-              });
-            } else {
-      try {
-        const deldata = await removeData(id).unwrap();
-        if (deldata?.statusCode == 1) {
+        Swal.fire({
+          icon: "error",
+          title: "Child record in Employee Master",
+          text: "Data cannot be deleted!",
+        });
+      } else {
+        try {
+          const deldata = await removeData(id).unwrap();
+          if (deldata?.statusCode == 1) {
+            Swal.fire({
+              icon: "error",
+              title: "Submission error",
+              text: deldata.data?.message || "Something went wrong!",
+            });
+            setForm(false);
+            return;
+          }
+          setId("");
+          Swal.fire({
+            title: "Deleted Successfully",
+            icon: "success",
+            timer: 1000,
+          });
+          setForm(false);
+        } catch (error) {
           Swal.fire({
             icon: "error",
             title: "Submission error",
-            text: deldata.data?.message || "Something went wrong!",
+            text: error.data?.message || "Something went wrong!",
           });
-          setForm(false);
-          return;
         }
-        setId("");
-        Swal.fire({
-          title: "Deleted Successfully",
-          icon: "success",
-          timer: 1000,
-        });
-        setForm(false);
-      } catch (error) {
-        Swal.fire({
-          icon: "error",
-          title: "Submission error",
-          text: error.data?.message || "Something went wrong!",
-        });
-      }}
+      }
     }
   };
 
@@ -325,10 +328,15 @@ const [trigger, { data: singleDataLazy, isFetchingLazy }] =
           </h1>
           <div className="flex items-center gap-4">
             <button
-              onClick={() => {
-                setForm(true);
-                onNew();
-              }}
+               onClick={() => {
+              if (
+                !hasPermission(() => {
+                  setForm(true);
+                  onNew();
+                }, "create")
+              )
+                return;
+            }}
               className="bg-white border  border-green-600 text-green-600 hover:bg-green-700 hover:text-white text-sm px-2  rounded-md shadow transition-colors duration-200 flex items-center gap-2"
             >
               + Add New Designation
@@ -382,8 +390,13 @@ const [trigger, { data: singleDataLazy, isFetchingLazy }] =
                     {readOnly && (
                       <button
                         type="button"
-                        onClick={() => {
-                          setReadOnly(false);
+                       onClick={() => {
+                          if (
+                            !hasPermission(() => {
+                              setReadOnly(false);
+                            }, "edit")
+                          )
+                            return;
                         }}
                         className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                       >

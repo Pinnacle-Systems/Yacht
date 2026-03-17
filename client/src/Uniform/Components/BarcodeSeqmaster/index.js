@@ -13,6 +13,7 @@ import {
   useLazyGetBarcodeSeqByIdQuery,
   useUpdateBarcodeSeqMutation,
 } from "../../../redux/uniformService/BarcodeSeqMasterServices";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 const MODEL = "Barcode Seq Master";
 
@@ -45,6 +46,7 @@ export default function Form() {
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetBarcodeSeqByIdQuery(id, { skip: !id });
+  const { hasPermission } = UserPermissions();
 
   const [addData] = useAddBarcodeSeqMutation();
   const [updateData] = useUpdateBarcodeSeqMutation();
@@ -323,9 +325,14 @@ export default function Form() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => {
-              setForm(true);
-              onNew();
-              setId("");
+              if (
+                !hasPermission(() => {
+                  setForm(true);
+                  onNew();
+                  setId("")
+                }, "create")
+              )
+                return;
             }}
             className="bg-white border  border-green-600 text-green-600 hover:bg-green-700 hover:text-white text-sm px-2  rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >
@@ -365,9 +372,14 @@ export default function Form() {
                   {readOnly && (
                     <button
                       type="button"
-                      onClick={() => {
-                        setReadOnly(false);
-                      }}
+                     onClick={() => {
+                          if (
+                            !hasPermission(() => {
+                              setReadOnly(false);
+                            }, "edit")
+                          )
+                            return;
+                        }}
                       className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                     >
                       Edit

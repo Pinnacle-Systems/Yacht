@@ -38,6 +38,7 @@ import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionM
 import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/AccessoryMasterServices";
 import ReturnGoods from "./ReturnGoods";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 
 const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
     isSingleFetching,
@@ -65,6 +66,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
     const { data: partyList } = useGetPartyQuery({ params: { ...params } });
     const { data: branchList } = useGetBranchQuery({ params: { companyId } });
     const { data: invList } = useGetPurchaseInwardEntryQuery({ params: { branchId: branchId, searchInwardType: returnType } });
+    const { hasPermission } = UserPermissions();
 
     const { data: locationData } = useGetLocationMasterQuery({
         params: { branchId },
@@ -691,6 +693,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                 <div className="flex gap-2 flex-wrap">
                                     <button
                                         onClick={() => saveData("new")}
+                                        disabled={readOnly}
                                         className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                                     >
                                         <FiSave className="w-4 h-4 mr-2" />
@@ -698,6 +701,7 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                     </button>
                                     <button
                                         onClick={() => saveData("close")}
+                                        disabled={readOnly}
                                         className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                                     >
                                         <HiOutlineRefresh className="w-4 h-4 mr-2" />
@@ -721,7 +725,14 @@ const PurchaseReturnForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                         readOnly && (
                                             <button
                                                 className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                                                onClick={() => setReadOnly(false)}
+                                                onClick={() => {
+                                                    if (
+                                                        !hasPermission(() => {
+                                                            setReadOnly(false);
+                                                        }, "edit")
+                                                    )
+                                                        return;
+                                                }}
                                             >
                                                 <FiEdit2 className="w-4 h-4 mr-2" />
                                                 Edit

@@ -11,12 +11,14 @@ import ProductionDeliveryForm from "./ProductionDeliveryForm.js";
 import ProductionDeliveryFormReport from "./ProductionDeliveryFormReport.js";
 import { getCommonParams } from "../../../Utils/helper.js";
 import CuttingDeliveryApi from "../../../redux/uniformService/CuttingDeliveryServices.js";
+import { UserPermissions } from "../../../Utils/UserPermissions.js";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
   const [id, setId] = useState("");
   const [readOnly, setReadOnly] = useState(false);
   const dispatch = useDispatch();
+  const { hasPermission } = UserPermissions();
 
   const [removeData] = useDeleteProductionDeliveryMutation();
   const { branchId } = getCommonParams();
@@ -111,8 +113,13 @@ export default function Form() {
           <button
             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
             onClick={() => {
-              setShowForm(true);
-              onNew();
+              if (
+                !hasPermission(() => {
+                  setShowForm(true);
+                  onNew();
+                }, "create")
+              )
+                return;
             }}
           >
             <FaPlus /> Create New

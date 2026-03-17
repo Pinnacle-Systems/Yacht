@@ -19,6 +19,7 @@ import {
   useLazyGetProcessGroupSeqMasterByIdQuery,
   useUpdateProcessGroupSeqMasterMutation,
 } from "../../../redux/uniformService/ProcessGroupSeqMasterServices";
+import { UserPermissions } from "../../../Utils/UserPermissions";
 const MODEL = "Process Group Seq Master";
 
 export default function Form() {
@@ -29,6 +30,7 @@ export default function Form() {
   const [name, setName] = useState("");
   const [active, setActive] = useState(true);
   const [sequence, setSequence] = useState("");
+  const { hasPermission } = UserPermissions();
 
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
@@ -283,9 +285,14 @@ export default function Form() {
         </h5>
         <div className="flex items-center">
           <button
-            onClick={() => {
-              setForm(true);
-              onNew();
+             onClick={() => {
+              if (
+                !hasPermission(() => {
+                  setForm(true);
+                  onNew();
+                }, "create")
+              )
+                return;
             }}
             className="bg-white border font-segoe border-green-600 text-green-600 hover:bg-green-700 hover:text-white text-sm px-2  rounded-md shadow transition-Portions duration-200 flex items-center gap-2"
           >
@@ -328,9 +335,14 @@ export default function Form() {
                   {readOnly && (
                     <button
                       type="button"
-                      onClick={() => {
-                        setReadOnly(false);
-                      }}
+                     onClick={() => {
+                          if (
+                            !hasPermission(() => {
+                              setReadOnly(false);
+                            }, "edit")
+                          )
+                            return;
+                        }}
                       className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                     >
                       Edit

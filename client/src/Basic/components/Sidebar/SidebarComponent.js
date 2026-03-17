@@ -261,7 +261,7 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
                                                         <li
                                                             key={page.id}
                                                             onClick={() => {
-                                                                dispatch(push({ name: page.name }));
+                                                                dispatch(push(page));
                                                                 secureLocalStorage.setItem(
                                                                     sessionStorage.getItem("sessionId") + "currentPage",
                                                                     page?.id
