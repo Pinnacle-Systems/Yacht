@@ -72,7 +72,7 @@ const salesBillApi = createApi({
       },
       providesTags: ["SalesBill"],
     }),
-     getSalesBarcodeDetail: builder.query({
+    getSalesBarcodeDetail: builder.query({
       query: ({ params }) => {
         return {
           url: `${SALES_BILL_API}/salesBarcodeDetail`,
@@ -121,6 +121,17 @@ const salesBillApi = createApi({
       }),
       invalidatesTags: ["SalesBill"],
     }),
+    sendSalesBillMsg: builder.mutation({
+      query: (payload) => ({
+        url: `${SALES_BILL_API}/sales-bill/send-sms`,
+        method: "POST",
+        body: payload,
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+      }),
+      invalidatesTags: ["SalesBill"],
+    }),
     updateSalesBill: builder.mutation({
       query: (payload) => {
         const { id, ...body } = payload;
@@ -151,6 +162,7 @@ export const {
   useGetSalesBillByIdQuery,
   useLazyGetSalesBillByIdQuery,
   useLazyGetSalesBillDetailQuery,
+  useSendSalesBillMsgMutation,
   useAddSalesBillMutation,
   useUpdateSalesBillMutation,
   useDeleteSalesBillMutation,

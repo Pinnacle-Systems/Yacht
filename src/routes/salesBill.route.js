@@ -10,7 +10,8 @@ import {
   getSalesReport,
   getHOSalesDetail,
   getHOSalesList,
-  getSalesBarcodeDetail
+  getSalesBarcodeDetail,
+  sendSalesBillSMS
 } from "../controllers/salesBill.controller.js";
 
 router.post("/", create);
@@ -20,6 +21,7 @@ router.get("/salesReport", getSalesReport);
 router.get("/salesBillDetail", getSaleBillDetail);
 router.get("/hoSalesDetail", getHOSalesDetail);
 router.get("/salesBarcodeDetail", getSalesBarcodeDetail);
+router.post("/sales-bill/send-sms",sendSalesBillSMS)
 router.get("/:id", getOne);
 router.put("/:id", update);
 router.delete("/:id", remove);

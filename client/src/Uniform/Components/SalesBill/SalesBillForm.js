@@ -18,6 +18,7 @@ import { Loader } from "../../../Basic/components";
 import {
   useAddSalesBillMutation,
   useGetSalesBillByIdQuery,
+  useSendSalesBillMsgMutation,
   useUpdateSalesBillMutation,
 } from "../../../redux/services/SalesBillService";
 import SalesBillItems from "./SalesBillItems";
@@ -36,6 +37,7 @@ import { adjTypeData } from "../../../Utils/DropdownData";
 import { Button } from "@mui/material";
 import { useGetReferenceMasterByIdQuery } from "../../../redux/uniformService/ReferenceMasterService";
 import { UserPermissions } from "../../../Utils/UserPermissions";
+import { useGetUserByIdQuery } from "../../../redux/services/UsersMasterService";
 
 export function SalesBillForm({
   onClose,
@@ -82,6 +84,8 @@ export function SalesBillForm({
   const [savedData, setSavedData] = useState("");
   const [salesPersonId, setSalesPersonId] = useState("");
   const [referenceId, setReferenceId] = useState("");
+  const [sendSalesBillSMS] = useSendSalesBillMsgMutation();
+  const [smsSending, setSmsSending] = useState(false);
 
   const receiptRef = useRef();
   const handlePrint = useReactToPrint({
@@ -102,9 +106,12 @@ export function SalesBillForm({
   } = useGetCustomerByIdQuery(customerId, { skip: !customerId });
 
   const { data: referenceData } = useGetReferenceMasterByIdQuery(referenceId);
-
+  const { data: userData } = useGetUserByIdQuery(userId, {
+    skip: !userId,
+  });
   const isLoadingIndicator = isSingleFetching || isSingleLoading;
   const { hasPermission } = UserPermissions();
+  const isUserAdmin = userData?.data.isAdmin;
 
   const findDuplicateGoodss = (items) => {
     const seen = new Map(); // key -> first index
@@ -463,6 +470,50 @@ export function SalesBillForm({
     }
   };
 
+  const handleSendWhatsApp = async () => {
+    if (!id) {
+      toast.info("Please save the bill first!", { position: "top-center" });
+      return;
+    }
+
+    const mobileNo = singleCustomerData?.data?.mobileNo;
+    if (!mobileNo) {
+      toast.info("Customer mobile number not found!", {
+        position: "top-center",
+      });
+      return;
+    }
+
+    setSmsSending(true);
+    try {
+      const result = await sendSalesBillSMS({
+        messageData: {
+          customerName,
+          docId,
+          docDate,
+          totalAmount,
+          paymentType: isCash ? "Cash" : isCard ? "Card" : "UPI",
+          branchName: singleDataBranch?.data?.branchName,
+          branchPhone: singleDataBranch?.data?.company?.contactMobile,
+          items: salesBillItems?.filter((i) => i?.styleItemId),
+          mobileNo,
+        },
+      }).unwrap();
+
+      if (result.success === true) {
+        toast.success("SMS sent successfully to customer!", {
+          position: "top-center",
+        });
+      } else {
+        toast.error(result.message || "Failed to send SMS");
+      }
+    } catch (error) {
+      toast.error("Failed to send SMS");
+    } finally {
+      setSmsSending(false);
+    }
+  };
+
   return (
     <>
       {isLoadingIndicator ? (
@@ -702,6 +753,7 @@ export function SalesBillForm({
                 referenceId={referenceId}
                 referenceData={referenceData}
                 isHo={isHo}
+                isUserAdmin={isUserAdmin}
               />
             </fieldset>
             <div className="grid grid-cols-3 gap-2">
@@ -877,8 +929,7 @@ export function SalesBillForm({
               <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => saveData("new")}
-                                    disabled={readOnly}
-
+                  disabled={readOnly}
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
                   <FiSave className="w-4 h-4 mr-2" />
@@ -886,8 +937,7 @@ export function SalesBillForm({
                 </button>
                 <button
                   onClick={() => saveData("close")}
-                                    disabled={readOnly}
-
+                  disabled={readOnly}
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
                   <HiOutlineRefresh className="w-4 h-4 mr-2" />
@@ -911,9 +961,42 @@ export function SalesBillForm({
                     Edit
                   </button>
                 )}
-                <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
-                  <FaWhatsapp className="w-4 h-4 mr-2" />
-                  WhatsApp
+                {/* Replace your existing WhatsApp button */}
+                <button
+                  className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 
+             flex items-center text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleSendWhatsApp}
+                  disabled={!id || smsSending}
+                >
+                  {smsSending ? (
+                    <>
+                      <svg
+                        className="animate-spin w-4 h-4 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8z"
+                        />
+                      </svg>
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <FaWhatsapp className="w-4 h-4 mr-2" />
+                      WhatsApp
+                    </>
+                  )}
                 </button>
                 <button
                   className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"

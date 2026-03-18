@@ -44,7 +44,7 @@ export default function StockInwardItems({
   const { data: portionList } = useGetPortionMasterQuery({ params });
 
   const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
+    sessionStorage.getItem("sessionId") + "userCompanyId",
   );
 
   const addRow = () => {
@@ -98,7 +98,7 @@ export default function StockInwardItems({
 
   const deleteSelectedRows = () => {
     setStockInwardItems((rows) =>
-      rows.filter((r) => !(r.selected && (r.usedQty ?? 0) === 0))
+      rows.filter((r) => !(r.selected && (r.usedQty ?? 0) === 0)),
     );
     setContextMenu(null);
   };
@@ -163,7 +163,7 @@ export default function StockInwardItems({
           colorId: "",
           selected: false,
           stkQty: "",
-        }))
+        })),
       );
     }
   }, [stockInwardItems, setStockInwardItems]);
@@ -176,10 +176,10 @@ export default function StockInwardItems({
 
   function imageFormatter(styleId, portionId) {
     const fabricItems = allData?.data?.flatMap(
-      (item) => item.fabricInwardItems || []
+      (item) => item.fabricInwardItems || [],
     );
     const item = fabricItems.find(
-      (f) => f.styleId === styleId && f.portionId === portionId
+      (f) => f.styleId === styleId && f.portionId === portionId,
     );
     const fileName = item?.filePath;
     if (!fileName) return "/no-image.png"; // fallback image if missing
@@ -214,8 +214,8 @@ export default function StockInwardItems({
                           prev.map((row) =>
                             (row.usedQty ?? 0) > 0
                               ? row
-                              : { ...row, selected: checked }
-                          )
+                              : { ...row, selected: checked },
+                          ),
                         );
                       }}
                       onContextMenu={(e) => {
@@ -407,7 +407,7 @@ export default function StockInwardItems({
                         className="text-xs"
                         onClick={() => {
                           setPreviewImage(
-                            imageFormatter(row?.styleId, row.portionId)
+                            imageFormatter(row?.styleId, row.portionId),
                           );
                         }}
                       >
@@ -537,6 +537,16 @@ export default function StockInwardItems({
                         if (e.key === "Delete") {
                           handleInputChange("", index, "qty");
                         }
+                        if (e.key === "Enter") {
+                          e.preventDefault(); // prevent form submit or line break
+                          e.stopPropagation();
+                          const nextQtyInput = document.querySelector(
+                            `#qty-input-${index + 1}`,
+                          );
+                          if (nextQtyInput) {
+                            nextQtyInput.focus();
+                          }
+                        }
                       }}
                       min={"0"}
                       type="number"
@@ -570,7 +580,7 @@ export default function StockInwardItems({
                           e.preventDefault(); // prevent form submit or line break
                           e.stopPropagation();
                           const nextQtyInput = document.querySelector(
-                            `#qty-input-${index + 1}`
+                            `#qty-input-${index + 1}`,
                           );
                           if (nextQtyInput) {
                             nextQtyInput.focus();
@@ -625,7 +635,7 @@ export default function StockInwardItems({
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
                   {stockInwardItems.reduce(
                     (sum, row) => sum + (Number(row.qty) || 0),
-                    0
+                    0,
                   )}
                 </td>
                 <td className="border border-gray-300" colSpan={2}></td>

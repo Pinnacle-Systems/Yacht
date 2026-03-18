@@ -22,6 +22,7 @@ export default function PurchaseBillItems({
   taxTemplateId,
   dcNo,
   isAdmin,
+  isUserAdmin
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [currentSelectedIndex, setCurrentSelectedIndex] = useState(null);
@@ -346,7 +347,7 @@ export default function PurchaseBillItems({
                           handleRightClick(e, "notes");
                         }
                       }}
-                      disabled={readOnly}
+                      disabled={readOnly || (!isUserAdmin && !isAdmin)}
                       tabIndex={-1}
                     />
                   </div>
@@ -441,7 +442,7 @@ export default function PurchaseBillItems({
                       <input
                         type="checkbox"
                         checked={row.selected || false}
-                        disabled={readOnly || (row.usedQty ?? 0) > 0}
+                        disabled={readOnly || (row.usedQty ?? 0) > 0 || (!isUserAdmin && !isAdmin)}
                         onChange={(e) =>
                           handleInputChange(e.target.checked, index, "selected")
                         }

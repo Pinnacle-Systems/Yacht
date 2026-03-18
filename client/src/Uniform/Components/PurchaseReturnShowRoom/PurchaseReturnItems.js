@@ -4,6 +4,8 @@ import Modal from "../../../UiComponents/Modal";
 import PurchaseBillItemsSelection from "./PurchaseBillItemsSelection";
 import { findFromList } from "../../../Utils/helper";
 import { useLazyGetSRBarcodeDetailQuery } from "../../../redux/uniformService/ShowroomStockService";
+import { flushSync } from "react-dom";
+
 export default function PurchaseReturnItems({
   purchaseReturnItems,
   setPurchaseReturnItems,
@@ -155,53 +157,64 @@ export default function PurchaseReturnItems({
           title: "Not Found",
           text: response?.message || "Failed to fetch barcode details",
         });
-        setPurchaseReturnItems((prev) => {
-          const updated = [...prev];
-          updated[index] = {
-            barcodeNo: "",
-            styleItemId: null,
-            styleId: "",
-            sizeId: null,
-            colorId: null,
-            uomId: null,
-            barcodeId: "",
-            selected: false,
-            billNo: "",
-            supplierId: "",
-            returnQty: "",
-          };
-          return updated;
+        flushSync(() => {
+          setPurchaseReturnItems((prev) => {
+            const updated = [...prev];
+            updated[index] = {
+              barcodeNo: "",
+              styleItemId: null,
+              styleId: "",
+              sizeId: null,
+              colorId: null,
+              uomId: null,
+              barcodeId: "",
+              selected: false,
+              billNo: "",
+              supplierId: "",
+              returnQty: "",
+            };
+            return updated;
+          });
         });
+        return; // ✅ stop execution after error
       }
 
       const data = response.data;
       const duplicate = purchaseReturnItems?.filter(
         (item) => item.barcodeId === data.barcodeId,
       );
+
       if (duplicate.length > 0) {
         Swal.fire({
           icon: "warning",
           title: "Duplicate",
-          text: "The Barcode Number is Already Exist,Cannot add!.",
+          text: "The Barcode Number is Already Exist, Cannot add!.",
         });
-        purchaseReturnItems((prev) => {
-          const updated = [...prev];
-          updated[index] = {
-            barcodeNo: "",
-            styleItemId: null,
-            styleId: "",
-            sizeId: null,
-            colorId: null,
-            uomId: null,
-            barcodeId: "",
-            selected: false,
-            billNo: "",
-            supplierId: "",
-            returnQty: "",
-          };
-          return updated;
+        flushSync(() => {
+          setPurchaseReturnItems((prev) => {
+            // ✅ fixed: was purchaseReturnItems() instead of setPurchaseReturnItems()
+            const updated = [...prev];
+            updated[index] = {
+              barcodeNo: "",
+              styleItemId: null,
+              styleId: "",
+              sizeId: null,
+              colorId: null,
+              uomId: null,
+              barcodeId: "",
+              selected: false,
+              billNo: "",
+              supplierId: "",
+              returnQty: "",
+            };
+            return updated;
+          });
         });
-      } else {
+        return; // ✅ stop execution after duplicate
+      }
+
+      // ✅ flushSync forces DOM update BEFORE focus
+      flushSync(() => {
         setPurchaseReturnItems((prev) => {
           const updated = [...prev];
           const isLastRow = index === prev.length - 1;
@@ -221,7 +234,6 @@ export default function PurchaseReturnItems({
             supplierId: data?.supplierId,
           };
 
-          // Add new row if last
           if (isLastRow) {
             updated.push({
               styleId: "",
@@ -241,14 +253,11 @@ export default function PurchaseReturnItems({
 
           return updated;
         });
-        // Focus next row
-        setTimeout(() => {
-          const nextInput = document.querySelector(
-            `#barcodeNo-input-${index + 1}`,
-          );
-          nextInput?.focus();
-        }, 0);
-      }
+      });
+
+      // ✅ DOM is guaranteed updated — no setTimeout needed
+      const nextInput = document.querySelector(`#barcodeNo-input-${index + 1}`);
+      nextInput?.focus();
     } catch (error) {
       console.error("Barcode fetch failed:", error);
     }

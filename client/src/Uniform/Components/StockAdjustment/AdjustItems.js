@@ -82,7 +82,7 @@ export default function AdjustItems({
 
   const deleteSelectedRows = () => {
     setStockAdjustmentItems((rows) =>
-      rows.filter((r) => !(r.selected && (r.salesQty ?? 0) === 0))
+      rows.filter((r) => !(r.selected && (r.salesQty ?? 0) === 0)),
     );
     setContextMenu(null);
   };
@@ -143,7 +143,7 @@ export default function AdjustItems({
           styleItemId: "",
           colorId: "",
           selected: false,
-        }))
+        })),
       );
     }
   }, [stockAdjustmentItems, setStockAdjustmentItems]);
@@ -157,7 +157,7 @@ export default function AdjustItems({
             {
               position: "top-center",
               autoClose: 2000,
-            }
+            },
           );
           return;
         }
@@ -197,8 +197,8 @@ export default function AdjustItems({
                       styleNo: item.styleNo,
                       fabricId: item.fabricId,
                     }
-                  : r
-              )
+                  : r,
+              ),
             );
           } else {
             setStockAdjustmentItems((prev) =>
@@ -217,8 +217,8 @@ export default function AdjustItems({
                       colorId: "",
                       selected: false,
                     }
-                  : r
-              )
+                  : r,
+              ),
             );
           }
         } catch (err) {
@@ -238,7 +238,7 @@ export default function AdjustItems({
           !row.sizeId &&
           !row.styleNo &&
           !row.fabricId &&
-          !row.barcode
+          !row.barcode,
       );
       if (startIndex === -1) startIndex = updated.length;
 
@@ -277,7 +277,7 @@ export default function AdjustItems({
       });
     } else {
       const isFirstTime = stockAdjustmentItems.every(
-        (row) => !row.adjType && !row.adjQty && !row.styleNo
+        (row) => !row.adjType && !row.adjQty && !row.styleNo,
       );
 
       if (!isFirstTime) {
@@ -360,7 +360,7 @@ export default function AdjustItems({
               colorList?.data?.filter(
                 (item) =>
                   Array.isArray(uniqueColorIds) &&
-                  uniqueColorIds.includes(item.id)
+                  uniqueColorIds.includes(item.id),
               ) || []
             }
             value={colorId}
@@ -377,7 +377,7 @@ export default function AdjustItems({
             className="bg-green-700 text-white px-2 text-md rounded hover:bg-green-800"
             onClick={() => {
               const filtered = pendingStyleRows.filter(
-                (row) => row.colorId === colorId
+                (row) => row.colorId === colorId,
               );
               fillRows(filtered);
               setShowColorPopup(false);
@@ -387,7 +387,7 @@ export default function AdjustItems({
               if (e.key === "Enter") {
                 e.preventDefault();
                 const filtered = pendingStyleRows.filter(
-                  (row) => row.colorId === colorId
+                  (row) => row.colorId === colorId,
                 );
                 fillRows(filtered);
                 setShowColorPopup(false);
@@ -439,8 +439,8 @@ export default function AdjustItems({
                           prev.map((row) =>
                             (row.salesQty ?? 0) > 0
                               ? row
-                              : { ...row, selected: checked }
-                          )
+                              : { ...row, selected: checked },
+                          ),
                         );
                       }}
                       onContextMenu={(e) => {
@@ -574,14 +574,14 @@ export default function AdjustItems({
                           handleInputChange(
                             e.target.value,
                             index,
-                            "styleItemId"
+                            "styleItemId",
                           )
                         }
                         onBlur={(e) => {
                           handleInputChange(
                             e.target.value,
                             index,
-                            "styleItemId"
+                            "styleItemId",
                           );
                         }}
                       >
@@ -759,6 +759,21 @@ export default function AdjustItems({
                           if (e.key === "Delete") {
                             handleInputChange("", index, "adjQty");
                           }
+                          if (e.key === "Enter") {
+                            e.preventDefault(); // prevent form submit or line break
+                            e.stopPropagation();
+                            const nextSelect = document.querySelector(
+                              `#adjType-${index + 1}`,
+                            );
+                            if (nextSelect) {
+                              nextSelect.focus();
+                              // Optional: visually show focus (since select.open() is not allowed)
+                              setTimeout(
+                                () => (nextSelect.style.outline = ""),
+                                800,
+                              );
+                            }
+                          }
                         }}
                         min={"0"}
                         type="number"
@@ -796,14 +811,14 @@ export default function AdjustItems({
                             e.preventDefault(); // prevent form submit or line break
                             e.stopPropagation();
                             const nextSelect = document.querySelector(
-                              `#adjType-${index + 1}`
+                              `#adjType-${index + 1}`,
                             );
                             if (nextSelect) {
                               nextSelect.focus();
                               // Optional: visually show focus (since select.open() is not allowed)
                               setTimeout(
                                 () => (nextSelect.style.outline = ""),
-                                800
+                                800,
                               );
                             }
                           }
@@ -840,7 +855,7 @@ export default function AdjustItems({
                       />
                     </td>
                   </tr>
-                )
+                ),
               )}
             </tbody>
             <tfoot>

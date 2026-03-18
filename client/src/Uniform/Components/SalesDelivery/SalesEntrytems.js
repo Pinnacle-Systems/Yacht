@@ -40,6 +40,10 @@ export default function BillItems({
   const { data: colorList } = useGetColorMasterQuery({ params });
   const [colorId, setColorId] = useState("");
   const [uniqueColorIds, setUniqueColorIds] = useState([]);
+  const [showColorSizePopup, setShowColorSizePopup] = useState(false);
+  const [selectedColorIds, setSelectedColorIds] = useState([]);
+  const [selectedSizeIds, setSelectedSizeIds] = useState([]);
+
   const addRow = () => {
     const newRow = {
       barcode: "",
@@ -80,7 +84,7 @@ export default function BillItems({
 
   const deleteSelectedRows = () => {
     setSalesEntryItems((rows) =>
-      rows.filter((r) => !(r.selected && (r.returnQty ?? 0) === 0))
+      rows.filter((r) => !(r.selected && (r.returnQty ?? 0) === 0)),
     );
     setContextMenu(null);
   };
@@ -149,7 +153,7 @@ export default function BillItems({
           styleItemId: "",
           colorId: "",
           selected: false,
-        }))
+        })),
       );
     }
   }, [salesEntryItems, setSalesEntryItems]);
@@ -233,7 +237,7 @@ export default function BillItems({
           !row.sizeId &&
           !row.styleNo &&
           !row.fabricId &&
-          !row.barcode
+          !row.barcode,
       );
 
       if (startIndex === -1) startIndex = updated.length;
@@ -275,106 +279,69 @@ export default function BillItems({
       toast.info("Please Choose Location...!", {
         position: "top-center",
       });
-    } else {
-      const isFirstTime = salesEntryItems.every(
-        (row) => !row.qty && !row.price && !row.styleId
-      );
+      return;
+    }
 
-      if (!isFirstTime) {
-        const hasEmpty = salesEntryItems.some((row) => {
-          const hasStyle =
-            row.styleNo !== "" &&
-            row.styleNo !== null &&
-            row.styleNo !== undefined;
+    const isFirstTime = salesEntryItems.every(
+      (row) => !row.qty && !row.price && !row.styleId,
+    );
 
-          return hasStyle && !row.qty;
+    if (!isFirstTime) {
+      const hasEmpty = salesEntryItems.some((row) => {
+        const hasStyle =
+          row.styleNo !== "" &&
+          row.styleNo !== null &&
+          row.styleNo !== undefined;
+        return hasStyle && !row.qty;
+      });
+
+      if (hasEmpty) {
+        toast.info("Please fill all required fields...!", {
+          position: "top-center",
         });
-
-        if (hasEmpty) {
-          toast.info("Please fill all required fields...!", {
-            position: "top-center",
-          });
-          return;
-        }
+        return;
       }
-      try {
-        const { data: styleData } = await getStyleDetail({
-          params: {
-            styleNo: styleNo,
-            storeId,
-            branchId,
-          },
+    }
+
+    try {
+      const { data: styleData } = await getStyleDetail({
+        params: {
+          styleNo: styleNo,
+          storeId,
+          branchId,
+        },
+      });
+
+      if (styleData?.statusCode === 1) {
+        toast.info(styleData.message, {
+          position: "top-center",
+          autoClose: 2000,
         });
-        if (styleData?.statusCode === 1) {
-          toast.info(styleData.message, {
-            position: "top-center",
-            autoClose: 2000,
-          });
-        }
-        const styleRows = styleData?.data;
-        if (!styleRows) return;
-        const colorIds = [
-          ...new Set(styleRows.map((row) => row.colorId).filter(Boolean)),
-        ];
-        setUniqueColorIds(colorIds);
-        if (
-          colorIds.length < 1 ||
-          colorIds.length === 1 ||
-          colorIds.length === null
-        ) {
-          fillRows(styleRows);
-        } else if (colorIds.length > 1) {
-          setPendingStyleRows(styleRows);
-          setShowColorPopup(true);
-        }
-        // setSalesEntryItems((prev) => {
-        //   const updated = [...prev];
-        //   // Find first empty slot index
-        //   let startIndex = updated.findIndex(
-        //     (row) =>
-        //       !row.styleId &&
-        //       !row.sizeId &&
-        //       !row.styleNo &&
-        //       !row.fabricId &&
-        //       !row.barcode
-        //   );
-        //   if (startIndex === -1) startIndex = updated.length;
-
-        //   // Fill in sizeRows starting at first empty slot
-        //   styleRows.forEach((row, i) => {
-        //     if (startIndex + i < updated.length) {
-        //       updated[startIndex + i] = row;
-        //     } else {
-        //       updated.push(row); // append if no empty slot
-        //     }
-        //   });
-
-        //   // Ensure at least 6 rows
-        //   while (updated.length < 6) {
-        //     updated.push({
-        //       styleNo: "",
-        //       fabricId: "",
-        //       styleId: "",
-        //       sizeId: "",
-        //       qty: "",
-        //       remarks: "",
-        //       stkQty: "",
-        //       barcode: "",
-        //       price: "",
-        //       taxPercent: "",
-        //       discountType: "",
-        //       discountValue: "",
-        //       styleItemId: "",
-        //       colorId: "",
-        //       selected: false,
-        //     });
-        //   }
-
-        //   return updated;
-        // });
-      } catch (error) {
-        console.error("Error adding row:", error);
+        return; // ✅ stop if error status
       }
+
+      const styleRows = styleData?.data;
+      if (!styleRows) return;
+
+      const uniqueColorIds = [
+        ...new Set(styleRows.map((row) => row.colorId).filter(Boolean)),
+      ];
+      const uniqueSizeIds = [
+        ...new Set(styleRows.map((row) => row.sizeId).filter(Boolean)),
+      ];
+
+      // ✅ No popup needed — single color and single size
+      if (uniqueColorIds.length <= 1 && uniqueSizeIds.length <= 1) {
+        fillRows(styleRows);
+      } else {
+        // ✅ Open color+size popup with all pre-selected
+        setPendingStyleRows(styleRows);
+        setSelectedColorIds(uniqueColorIds); // all selected by default
+        setSelectedSizeIds(uniqueSizeIds); // all selected by default
+        setShowColorSizePopup(true);
+      }
+    } catch (error) {
+      console.error("Error adding row:", error);
     }
   };
 
@@ -389,6 +356,29 @@ export default function BillItems({
       .reduce((sum, row) => sum + (parseFloat(calculateNetAmount(row)) || 0), 0)
       .toFixed(2);
   }, [salesEntryItems]);
+
+  const handleColorSizeConfirm = () => {
+    if (selectedColorIds.length === 0 && selectedSizeIds.length === 0) {
+      toast.info("Please select at least one Color or Size!", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      return;
+    }
+
+    const filtered = pendingStyleRows.filter((row) => {
+      const colorMatch =
+        selectedColorIds.length === 0 || selectedColorIds.includes(row.colorId);
+      const sizeMatch =
+        selectedSizeIds.length === 0 || selectedSizeIds.includes(row.sizeId);
+      return colorMatch && sizeMatch;
+    });
+
+    fillRows(filtered);
+    setShowColorSizePopup(false);
+    setSelectedColorIds([]);
+    setSelectedSizeIds([]);
+  };
 
   return (
     <>
@@ -406,50 +396,150 @@ export default function BillItems({
         />
       </Modal>
       <Modal
-        isOpen={showColorPopup}
-        onClose={() => setShowColorPopup(false)}
-        widthClass={"w-[220px]"}
+        isOpen={showColorSizePopup}
+        onClose={() => setShowColorSizePopup(false)}
+        widthClass={"w-[480px]"}
       >
-        <p className="text-md font-medium">Select Color</p>
-        <div className="w-40 my-4">
-          <DropdownNew
-            name="Color"
-            dataList={
-              colorList?.data?.filter(
-                (item) =>
-                  Array.isArray(uniqueColorIds) &&
-                  uniqueColorIds.includes(item.id)
-              ) || []
-            }
-            value={colorId}
-            setValue={(value) => {
-              setColorId(value);
-            }}
-            required={false}
-            clear={true}
-            autoFocus={true}
-          />
+        <p className="text-md font-medium mb-3">Select Color & Size</p>
+
+        <div className="flex gap-4">
+          {/* ── LEFT: COLOR ── */}
+          <div className="flex-1 border border-gray-200 rounded p-2">
+            <p className="font-medium text-[13px] mb-2">Color</p>
+
+            {/* Select All Colors */}
+            <label className="flex items-center gap-2 mb-2 cursor-pointer font-medium text-[12px]">
+              <input
+                type="checkbox"
+                className="w-4 h-4"
+                checked={
+                  selectedColorIds.length ===
+                  [
+                    ...new Set(
+                      pendingStyleRows.map((r) => r.colorId).filter(Boolean),
+                    ),
+                  ].length
+                }
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedColorIds([
+                      ...new Set(
+                        pendingStyleRows.map((r) => r.colorId).filter(Boolean),
+                      ),
+                    ]);
+                  } else {
+                    setSelectedColorIds([]);
+                  }
+                }}
+              />
+              All
+            </label>
+            <hr className="mb-2" />
+
+            {/* Individual Color Checkboxes */}
+            <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
+              {[
+                ...new Set(
+                  pendingStyleRows.map((r) => r.colorId).filter(Boolean),
+                ),
+              ].map((cId) => (
+                <label
+                  key={cId}
+                  className="flex items-center gap-2 cursor-pointer text-[12px]"
+                >
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4"
+                    checked={selectedColorIds.includes(cId)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedColorIds((prev) => [...prev, cId]);
+                      } else {
+                        setSelectedColorIds((prev) =>
+                          prev.filter((id) => id !== cId),
+                        );
+                      }
+                    }}
+                  />
+                  {findFromList(cId, colorList?.data, "name") || cId}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* ── RIGHT: SIZE ── */}
+          <div className="flex-1 border border-gray-200 rounded p-2">
+            <p className="font-medium text-[13px] mb-2">Size</p>
+
+            {/* Select All Sizes */}
+            <label className="flex items-center gap-2 mb-2 cursor-pointer font-medium text-[12px]">
+              <input
+                type="checkbox"
+                className="w-4 h-4"
+                checked={
+                  selectedSizeIds.length ===
+                  [
+                    ...new Set(
+                      pendingStyleRows.map((r) => r.sizeId).filter(Boolean),
+                    ),
+                  ].length
+                }
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedSizeIds([
+                      ...new Set(
+                        pendingStyleRows.map((r) => r.sizeId).filter(Boolean),
+                      ),
+                    ]);
+                  } else {
+                    setSelectedSizeIds([]);
+                  }
+                }}
+              />
+              All
+            </label>
+            <hr className="mb-2" />
+
+            {/* Individual Size Checkboxes */}
+            <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
+              {[
+                ...new Set(
+                  pendingStyleRows.map((r) => r.sizeId).filter(Boolean),
+                ),
+              ].map((sId) => (
+                <label
+                  key={sId}
+                  className="flex items-center gap-2 cursor-pointer text-[12px]"
+                >
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4"
+                    checked={selectedSizeIds.includes(sId)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedSizeIds((prev) => [...prev, sId]);
+                      } else {
+                        setSelectedSizeIds((prev) =>
+                          prev.filter((id) => id !== sId),
+                        );
+                      }
+                    }}
+                  />
+                  {findFromList(sId, sizeList?.data, "name") || sId}
+                </label>
+              ))}
+            </div>
+          </div>
         </div>
-        <div className="flex justify-end mt-6">
+
+        <div className="flex justify-end mt-4">
           <button
-            className="bg-green-700 text-white px-2 text-md rounded hover:bg-green-800"
-            onClick={() => {
-              const filtered = pendingStyleRows.filter(
-                (row) => row.colorId === colorId
-              );
-              fillRows(filtered);
-              setShowColorPopup(false);
-              setColorId("");
-            }}
+            className="bg-green-700 text-white px-3 py-1 text-md rounded hover:bg-green-800"
+            onClick={handleColorSizeConfirm}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                const filtered = pendingStyleRows.filter(
-                  (row) => row.colorId === colorId
-                );
-                fillRows(filtered);
-                setShowColorPopup(false);
-                setColorId("");
+                handleColorSizeConfirm();
               }
             }}
           >
@@ -497,8 +587,8 @@ export default function BillItems({
                           prev.map((row) =>
                             (row.returnQty ?? 0) > 0
                               ? row
-                              : { ...row, selected: checked }
-                          )
+                              : { ...row, selected: checked },
+                          ),
                         );
                       }}
                       onContextMenu={(e) => {
@@ -657,14 +747,14 @@ export default function BillItems({
                           handleInputChange(
                             e.target.value,
                             index,
-                            "styleItemId"
+                            "styleItemId",
                           )
                         }
                         onBlur={(e) => {
                           handleInputChange(
                             e.target.value,
                             index,
-                            "styleItemId"
+                            "styleItemId",
                           );
                         }}
                       >
@@ -815,6 +905,16 @@ export default function BillItems({
                           if (e.key === "Delete") {
                             handleInputChange("", index, "qty");
                           }
+                          if (e.key === "Enter") {
+                            e.preventDefault(); // prevent form submit or line break
+                            e.stopPropagation();
+                            const nextQtyInput = document.querySelector(
+                              `#salesqty-input-${index + 1}`,
+                            );
+                            if (nextQtyInput) {
+                              nextQtyInput.focus();
+                            }
+                          }
                         }}
                         onFocus={(e) => e.target.focus()}
                         onChange={(e) =>
@@ -852,10 +952,10 @@ export default function BillItems({
                         className="text-right rounded py-1 px-1 w-full table-data-input"
                         value={
                           focusedRowIndex === index
-                            ? row?.price ?? "" // show raw value while editing
+                            ? (row?.price ?? "") // show raw value while editing
                             : row?.price
-                            ? Number(row.price).toFixed(2) // format nicely otherwise
-                            : ""
+                              ? Number(row.price).toFixed(2) // format nicely otherwise
+                              : ""
                         }
                         disabled={readOnly}
                         onKeyDown={(e) => {
@@ -903,7 +1003,7 @@ export default function BillItems({
                           handleInputChange(
                             e.target.value,
                             index,
-                            "taxPercent"
+                            "taxPercent",
                           );
                           setFocusedRowIndex(null);
                         }}
@@ -920,7 +1020,7 @@ export default function BillItems({
                           handleInputChange(
                             e.target.value,
                             index,
-                            "discountType"
+                            "discountType",
                           )
                         }
                       >
@@ -950,14 +1050,14 @@ export default function BillItems({
                           handleInputChange(
                             e.target.value,
                             index,
-                            "discountValue"
+                            "discountValue",
                           )
                         }
                         onBlur={(e) => {
                           handleInputChange(
                             e.target.value,
                             index,
-                            "discountValue"
+                            "discountValue",
                           );
                           setFocusedRowIndex(null);
                         }}
@@ -994,7 +1094,7 @@ export default function BillItems({
                             e.preventDefault(); // prevent form submit or line break
                             e.stopPropagation();
                             const nextQtyInput = document.querySelector(
-                              `#salesqty-input-${index + 1}`
+                              `#salesqty-input-${index + 1}`,
                             );
                             if (nextQtyInput) {
                               nextQtyInput.focus();
@@ -1047,7 +1147,7 @@ export default function BillItems({
                 <td className="text-right border border-gray-300 px-1 font-medium text-[12px] py-0.5">
                   {salesEntryItems.reduce(
                     (sum, row) => sum + (Number(row.qty) || 0),
-                    0
+                    0,
                   )}
                 </td>
                 <td

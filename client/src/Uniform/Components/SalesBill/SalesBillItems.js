@@ -9,7 +9,7 @@ import FxSelect, { DropdownNew } from "../../../Inputs";
 import TaxDetailsFullTemplate from "./TaxDetailsFullTemplate";
 import { useLazyGetSRBarcodeDetailQuery } from "../../../redux/uniformService/ShowroomStockService";
 import { findFromList } from "../../../Utils/helper";
-
+import { flushSync } from "react-dom";
 export default function SalesBillItems({
   salesBillItems,
   setSalesBillItems,
@@ -24,7 +24,8 @@ export default function SalesBillItems({
   styleList,
   branchId,
   referenceData,
-  isHo
+  isHo,
+  isUserAdmin,
 }) {
   const [barcodeNo, setbarcodeNo] = useState("");
   const [contextMenu, setContextMenu] = useState(null);
@@ -312,59 +313,70 @@ export default function SalesBillItems({
           title: "Not Found",
           text: response?.message || "Failed to fetch barcode details",
         });
-        setSalesBillItems((prev) => {
-          const updated = [...prev];
-          updated[index] = {
-            barcodeNo: "",
-            styleItemId: null,
-            styleId: "",
-            sizeId: null,
-            colorId: null,
-            uomId: null,
-            qty: "",
-            rate: "",
-            amount: "",
-            discountType: "Percentage",
-            discountValue: discPerc,
-            taxPercent: "",
-            barcodeId: "",
-            selected: false,
-          };
-          return updated;
+        // ✅ flushSync here too
+        flushSync(() => {
+          setSalesBillItems((prev) => {
+            const updated = [...prev];
+            updated[index] = {
+              barcodeNo: "",
+              styleItemId: null,
+              styleId: "",
+              sizeId: null,
+              colorId: null,
+              uomId: null,
+              qty: "",
+              rate: "",
+              amount: "",
+              discountType: "Percentage",
+              discountValue: discPerc,
+              taxPercent: "",
+              barcodeId: "",
+              selected: false,
+            };
+            return updated;
+          });
         });
+        return; // ✅ important: stop execution after error
       }
 
       const data = response.data;
       const duplicate = salesBillItems?.filter(
         (item) => item.barcodeId === data.barcodeId,
       );
+
       if (duplicate.length > 0) {
         Swal.fire({
           icon: "warning",
           title: "Duplicate",
-          text: "The Barcode Number is Already Exist,Cannot add!.",
+          text: "The Barcode Number is Already Exist, Cannot add!.",
         });
-        setSalesBillItems((prev) => {
-          const updated = [...prev];
-          updated[index] = {
-            barcodeNo: "",
-            styleItemId: null,
-            styleId: "",
-            sizeId: null,
-            colorId: null,
-            uomId: null,
-            qty: "",
-            rate: "",
-            amount: "",
-            discountType: "Percentage",
-            discountValue: discPerc,
-            taxPercent: "",
-            barcodeId: "",
-            selected: false,
-          };
-          return updated;
+        flushSync(() => {
+          setSalesBillItems((prev) => {
+            const updated = [...prev];
+            updated[index] = {
+              barcodeNo: "",
+              styleItemId: null,
+              styleId: "",
+              sizeId: null,
+              colorId: null,
+              uomId: null,
+              qty: "",
+              rate: "",
+              amount: "",
+              discountType: "Percentage",
+              discountValue: discPerc,
+              taxPercent: "",
+              barcodeId: "",
+              selected: false,
+            };
+            return updated;
+          });
         });
-      } else {
+        return;
+      }
+
+      // ✅ flushSync forces DOM update BEFORE focus
+      flushSync(() => {
         setSalesBillItems((prev) => {
           const updated = [...prev];
           const isLastRow = index === prev.length - 1;
@@ -385,7 +397,6 @@ export default function SalesBillItems({
             discountType: "Percentage",
           };
 
-          // Add new row if last
           if (isLastRow) {
             updated.push({
               styleId: "",
@@ -406,15 +417,11 @@ export default function SalesBillItems({
 
           return updated;
         });
+      });
 
-        // Focus next row
-        setTimeout(() => {
-          const nextInput = document.querySelector(
-            `#barcodeNo-input-${index + 1}`,
-          );
-          nextInput?.focus();
-        }, 0);
-      }
+      // ✅ DOM is guaranteed to be updated now — no setTimeout needed
+      const nextInput = document.querySelector(`#barcodeNo-input-${index + 1}`);
+      nextInput?.focus();
     } catch (error) {
       console.error("Barcode fetch failed:", error);
     }
@@ -818,7 +825,7 @@ export default function SalesBillItems({
                     <select
                       className="text-left rounded py-1 px-1 w-full table-data-input"
                       value={row?.discountType || ""}
-                      disabled={readOnly}
+                      disabled={readOnly || (!isUserAdmin && !isHo)}
                       onChange={(e) => {
                         if (e.target.value === "") {
                           handleInputChange("", index, "discountValue");
@@ -841,7 +848,11 @@ export default function SalesBillItems({
                       type="number"
                       className="text-right rounded py-1 px-1 w-full table-data-input"
                       value={row?.discountValue}
-                      disabled={readOnly || row.discountType === ""}
+                      disabled={
+                        readOnly ||
+                        row.discountType === "" ||
+                        (!isUserAdmin && !isHo)
+                      }
                       onKeyDown={(e) => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract")
                           e.preventDefault();

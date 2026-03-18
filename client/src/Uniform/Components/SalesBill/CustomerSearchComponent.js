@@ -39,6 +39,7 @@ const CustomerSearchComponent = ({
     isFetching: isCustomerFetching,
   } = useGetCustomerQuery({ params: { companyId } });
 
+
   const [addData] = useAddCustomerMutation();
 
   useEffect(() => {

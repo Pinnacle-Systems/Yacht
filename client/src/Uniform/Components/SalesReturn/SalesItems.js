@@ -999,6 +999,21 @@ export default function SalesItems({
                         if (e.key === "Delete") {
                           handleInputChange("", index, "returnQty");
                         }
+                        if (e.key === "Enter") {
+                          e.preventDefault(); // prevent form submit or line break
+                          e.stopPropagation();
+                          const nextSelect = document.querySelector(
+                            `#qty-${index + 1}`,
+                          );
+                          if (nextSelect) {
+                            nextSelect.focus();
+                            // Optional: visually show focus (since select.open() is not allowed)
+                            setTimeout(
+                              () => (nextSelect.style.outline = ""),
+                              800,
+                            );
+                          }
+                        }
                       }}
                       min={"0"}
                       type="number"

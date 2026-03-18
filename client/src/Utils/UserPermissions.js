@@ -25,7 +25,6 @@ export function UserPermissions() {
     isLoading,
     isFetching,
   } = useGetPagePermissionsByIdQuery({ currentPageId, userRoleId }, { skip: !(currentPageId && userRoleId) });
- console.log(currentPagePermissions,"currentPagePermissions")
   const IsSuperAdmin = () => {
     return JSON.parse(
       secureLocalStorage.getItem(
@@ -62,7 +61,6 @@ export function UserPermissions() {
     //   });
     //   return;
     // }
-    console.log(currentPagePermissions?.data,"currentPagePermissions?.data[type]")
     if (IsSuperAdmin()) {
       callback();
     } else {

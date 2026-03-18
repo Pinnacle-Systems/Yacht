@@ -48,6 +48,8 @@ import PosReceipt from "./PrintFormat/PosReceipt";
 import EditIcon from "@mui/icons-material/Edit";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { UserPermissions } from "../../../Utils/UserPermissions";
+import { useGetUserByIdQuery } from "../../../redux/services/UsersMasterService";
+import { useGetReferenceMasterByIdQuery } from "../../../redux/uniformService/ReferenceMasterService";
 
 export function SalesReturnForm({
   onClose,
@@ -97,6 +99,7 @@ export function SalesReturnForm({
   const { hasPermission } = UserPermissions();
 
   const receiptRef = useRef();
+  const { data: referenceData } = useGetReferenceMasterByIdQuery(referenceId);
 
   const handlePrint = useReactToPrint({
     contentRef: receiptRef,
@@ -120,6 +123,10 @@ export function SalesReturnForm({
       finYearId,
     },
   });
+  const { data: userData } = useGetUserByIdQuery(userId, {
+    skip: !userId,
+  });
+  const isUserAdmin = userData?.data.isAdmin;
 
   const { data: salesList } = useGetSalesBillQuery({
     params: { branchId },
@@ -809,6 +816,8 @@ export function SalesReturnForm({
                   billNo={billNo}
                   id={id}
                   isHo={isHo}
+                  isUserAdmin={isUserAdmin}
+                  referenceData={referenceData}
                 />
               </fieldset>
             )}
@@ -1072,8 +1081,7 @@ export function SalesReturnForm({
               <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => saveData("new")}
-                                    disabled={readOnly}
-
+                  disabled={readOnly}
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
                   <FiSave className="w-4 h-4 mr-2" />
@@ -1081,8 +1089,7 @@ export function SalesReturnForm({
                 </button>
                 <button
                   onClick={() => saveData("close")}
-                                    disabled={readOnly}
-
+                  disabled={readOnly}
                   className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                 >
                   <HiOutlineRefresh className="w-4 h-4 mr-2" />
@@ -1093,7 +1100,7 @@ export function SalesReturnForm({
                 {readOnly && (
                   <button
                     className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                   onClick={() => {
+                    onClick={() => {
                       if (
                         !hasPermission(() => {
                           setReadOnly(false);

@@ -10,7 +10,8 @@ import {
   getSalesReport as _getSalesReport,
   getHOSalesDetail as _getHOSalesDetail,
   getHOSalesList as _getHOSalesList,
-  getSalesBarcodeDetail as _getSalesBarcodeDetail
+  getSalesBarcodeDetail as _getSalesBarcodeDetail,
+  sendSalesBillSMS as _sendSalesBillSMS
 } from "../services/salesBill.service.js";
 
 async function get(req, res, next) {
@@ -65,6 +66,16 @@ async function create(req, res, next) {
     }
   }
 }
+
+async function sendSalesBillSMS(req, res, next) {
+  try {
+    res.json(await _sendSalesBillSMS(req.body));
+  } catch (error) {
+    console.error(
+      `Error`,
+      error?.message?.match(/message: "(.*?)"/)?.[1] || error?.message,
+    );
+  }}
 
 async function update(req, res, next) {
   try {
@@ -156,5 +167,6 @@ export {
   getSalesReport,
   getHOSalesDetail,
   getHOSalesList,
-  getSalesBarcodeDetail
+  getSalesBarcodeDetail,
+  sendSalesBillSMS
 };

@@ -35,7 +35,7 @@ export default function ReadyGoods({
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
 
   const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
+    sessionStorage.getItem("sessionId") + "userCompanyId",
   );
 
   const addRow = () => {
@@ -70,7 +70,7 @@ export default function ReadyGoods({
 
   const deleteSelectedRows = () => {
     setOpeningStockItems((rows) =>
-      rows.filter((r) => !(r.selected && (r.stockQty ?? 0) === 0))
+      rows.filter((r) => !(r.selected && (r.stockQty ?? 0) === 0)),
     );
     setContextMenu(null);
   };
@@ -133,7 +133,7 @@ export default function ReadyGoods({
           styleItemId: "",
           colorId: "",
           selected: false,
-        }))
+        })),
       );
     }
   }, [openingStockItems, setOpeningStockItems]);
@@ -194,7 +194,7 @@ export default function ReadyGoods({
 
         // Find first empty slot index
         let startIndex = updated.findIndex(
-          (row) => !row.styleId && !row.sizeId && !row.styleNo && !row.fabricId
+          (row) => !row.styleId && !row.sizeId && !row.styleNo && !row.fabricId,
         );
         if (startIndex === -1) startIndex = updated.length;
 
@@ -278,8 +278,8 @@ export default function ReadyGoods({
                           prev.map((row) =>
                             (row.stockQty ?? 0) > 0
                               ? row
-                              : { ...row, selected: checked }
-                          )
+                              : { ...row, selected: checked },
+                          ),
                         );
                       }}
                       onContextMenu={(e) => {
@@ -403,14 +403,14 @@ export default function ReadyGoods({
                           handleInputChange(
                             e.target.value,
                             index,
-                            "styleItemId"
+                            "styleItemId",
                           )
                         }
                         onBlur={(e) => {
                           handleInputChange(
                             e.target.value,
                             index,
-                            "styleItemId"
+                            "styleItemId",
                           );
                         }}
                       >
@@ -524,11 +524,22 @@ export default function ReadyGoods({
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input
+                        id={`qty-input-${index}`}
                         onKeyDown={(e) => {
                           if (e.code === "Minus" || e.code === "NumpadSubtract")
                             e.preventDefault();
                           if (e.key === "Delete") {
                             handleInputChange("", index, "qty");
+                          }
+                          if (e.key === "Enter") {
+                            e.preventDefault(); // prevent form submit or line break
+                            e.stopPropagation();
+                            const nextQtyInput = document.querySelector(
+                              `#qty-input-${index + 1}`,
+                            );
+                            if (nextQtyInput) {
+                              nextQtyInput.focus();
+                            }
                           }
                         }}
                         min={"0"}
@@ -552,7 +563,7 @@ export default function ReadyGoods({
                             e.preventDefault(); // prevent form submit or line break
                             e.stopPropagation();
                             const nextQtyInput = document.querySelector(
-                              `#qty-input-${index + 1}`
+                              `#qty-input-${index + 1}`,
                             );
                             if (nextQtyInput) {
                               nextQtyInput.focus();
@@ -594,7 +605,7 @@ export default function ReadyGoods({
                       />
                     </td>
                   </tr>
-                )
+                ),
               )}
             </tbody>
             <tfoot>
@@ -608,7 +619,7 @@ export default function ReadyGoods({
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
                   {openingStockItems.reduce(
                     (sum, row) => sum + (Number(row.qty) || 0),
-                    0
+                    0,
                   )}
                 </td>
                 <td className="border border-gray-300" colSpan={2}></td>

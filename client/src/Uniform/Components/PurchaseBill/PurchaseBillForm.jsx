@@ -33,6 +33,7 @@ import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterServi
 import { useGetHOSalesListQuery, useGetSalesBillQuery, useLazyGetHOSalesDetailQuery } from "../../../redux/services/SalesBillService";
 import { useSalesEntryRefetch } from "../../../CustomHooks/salesDelivery";
 import { UserPermissions } from "../../../Utils/UserPermissions";
+import { useGetUserByIdQuery } from "../../../redux/services/UsersMasterService";
 const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     sizeList,
     styleItemList,
@@ -98,11 +99,14 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     const { data: branchData } = useGetBranchByIdQuery(branchId, {
         skip: !branchId,
     });
+    const { data: userData } = useGetUserByIdQuery(userId, {
+        skip: !userId,
+    });
     const { hasPermission } = UserPermissions();
 
     const isAdmin = branchData?.data?.company?.name === branchData?.data?.branchName;
 
-    // const isAdmin = userData?.data.isAdmin
+    const isUserAdmin = userData?.data.isAdmin
 
     const [addData] = useAddPurchaseBillMutation();
     const [updateData] = useUpdatePurchaseBillMutation();
@@ -714,6 +718,7 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
                                 dcNo={dcNo}
                                 styleList={styleList}
                                 isAdmin={isAdmin}
+                                isUserAdmin={isUserAdmin}
                             />
                         </fieldset>
 

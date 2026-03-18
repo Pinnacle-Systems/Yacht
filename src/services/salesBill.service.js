@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma.js";
+import twilio from "twilio";
 import { ErrorResponse, NoRecordFound } from "../configs/Responses.js";
 import {
   getDateFromDateTime,
@@ -1389,6 +1390,96 @@ async function getSalesBarcodeDetail(req) {
   };
 }
 
+const client = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN,
+);
+
+const formatCurrency = (amount) =>
+  Number(amount || 0).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+const buildSalesMessage = (data) => {
+  const {
+    customerName,
+    docId,
+    docDate,
+    totalAmount,
+    paymentType,
+    branchName,
+    branchPhone,
+    items = [],
+  } = data;
+
+  const date = new Date(docDate).toLocaleDateString("en-IN");
+  const billNo = docId?.split("/").pop() || docId;
+  const totalQty = items.reduce((sum, i) => sum + (Number(i.qty) || 0), 0);
+  const totalItems = [...new Set(items.map((i) => i.styleItemId))].length;
+
+  return `🛍️ *${branchName || "Our Store"}* - Sales Receipt
+
+Dear ${customerName},
+Thank you for shopping with us! 🙏
+
+📋 *Bill Details*
+━━━━━━━━━━━━━━━━
+🧾 Bill No   : ${billNo}
+📅 Date      : ${date}
+👗 Items     : ${totalItems}
+📦 Total Qty : ${totalQty}
+━━━━━━━━━━━━━━━━
+💰 *Net Amount : ₹${formatCurrency(totalAmount)}*
+💳 Payment     : ${paymentType || "Cash"}
+━━━━━━━━━━━━━━━━
+
+📌 *Terms & Conditions*
+- Exchange within 3 days with bill & tag
+- Follow wash care instructions
+- No cash refund
+
+📞 For queries: ${branchPhone || ""}
+
+_Thank you! Visit Again_ 😊`;
+};
+
+async function sendSalesBillSMS(body) {
+  try {
+     console.log("Twilio Debug:", {
+      sid: process.env.TWILIO_ACCOUNT_SID,
+      token: process.env.TWILIO_AUTH_TOKEN?.slice(0, 6) + "...",
+      from: process.env.TWILIO_PHONE_NUMBER,
+    });
+    const { messageData } = await body;
+    if (!messageData?.mobileNo) throw new Error("Mobile number is required");
+    // ✅ Format Indian mobile number
+    const formattedNumber = messageData?.mobileNo.startsWith("+")
+      ? messageData?.mobileNo
+      : `+91${messageData?.mobileNo.replace(/\D/g, "").slice(-10)}`;
+
+    const message = buildSalesMessage(messageData);
+
+    console.log(process.env.TWILIO_PHONE_NUMBER,"process.env.TWILIO_PHONE_NUMBER")
+    console.log(formattedNumber,"formattedNumber")
+    const result = await client.messages.create({
+      body: message,
+      from: `whatsapp:${process.env.TWILIO_PHONE_NUMBER}`, // your Twilio number
+      to: `whatsapp:${formattedNumber}`,
+    });
+
+    //    const result = await client.messages.create({
+    //   body: message,
+    //   from: "whatsapp:+14155238886", // your Twilio number
+    //   to:  "whatsapp:+919361404953",
+    // });
+
+    return { success: true, sid: result.sid };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
 export {
   get,
   getOne,
@@ -1400,4 +1491,5 @@ export {
   getHOSalesDetail,
   getHOSalesList,
   getSalesBarcodeDetail,
+  sendSalesBillSMS
 };

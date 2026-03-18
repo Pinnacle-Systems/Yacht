@@ -6,6 +6,7 @@ import SalesBillItemsSelection from "./SalesBillItemsSelection";
 import Swal from "sweetalert2";
 import { findFromList } from "../../../Utils/helper";
 import { useLazyGetSalesBarcodeDetailQuery } from "../../../redux/services/SalesBillService";
+import { flushSync } from "react-dom";
 
 export default function SalesReturnItems({
   salesReturnItems,
@@ -132,52 +133,61 @@ export default function SalesReturnItems({
           title: "Not Found",
           text: response?.message || "Failed to fetch barcode details",
         });
-         setSalesReturnItems((prev) => {
-          const updated = [...prev];
-          updated[index] = {
-            barcodeNo: "",
-            styleItemId: null,
-            styleId: "",
-            sizeId: null,
-            colorId: null,
-            uomId: null,
-            barcodeId: "",
-            selected: false,
-          };
-          return updated;
+        flushSync(() => {
+          setSalesReturnItems((prev) => {
+            const updated = [...prev];
+            updated[index] = {
+              barcodeNo: "",
+              styleItemId: null,
+              styleId: "",
+              sizeId: null,
+              colorId: null,
+              uomId: null,
+              barcodeId: "",
+              selected: false,
+            };
+            return updated;
+          });
         });
+        return; // ✅ stop execution after error
       }
 
       const data = response.data;
       const duplicate = salesReturnItems?.filter(
         (item) => item.barcodeId === data.barcodeId,
       );
+
       if (duplicate.length > 0) {
         Swal.fire({
           icon: "warning",
           title: "Duplicate",
-          text: "The Barcode Number is Already Exist,Cannot add!.",
+          text: "The Barcode Number is Already Exist, Cannot add!.",
         });
-        setSalesReturnItems((prev) => {
-          const updated = [...prev];
-          updated[index] = {
-            barcodeNo: "",
-            styleItemId: null,
-            styleId: "",
-            sizeId: null,
-            colorId: null,
-            uomId: null,
-            barcodeId: "",
-            selected: false,
-          };
-          return updated;
+        flushSync(() => {
+          setSalesReturnItems((prev) => {
+            const updated = [...prev];
+            updated[index] = {
+              barcodeNo: "",
+              styleItemId: null,
+              styleId: "",
+              sizeId: null,
+              colorId: null,
+              uomId: null,
+              barcodeId: "",
+              selected: false,
+            };
+            return updated;
+          });
         });
-      }else{
+        return; // ✅ stop execution after duplicate
+      }
 
+      // ✅ flushSync forces DOM update BEFORE focus
+      flushSync(() => {
         setSalesReturnItems((prev) => {
           const updated = [...prev];
           const isLastRow = index === prev.length - 1;
-  
+
           updated[index] = {
             ...updated[index],
             styleItemId: data.styleItemId,
@@ -191,8 +201,7 @@ export default function SalesReturnItems({
             billNo: data?.billNo,
             deliveryToId: data?.deliveryToId,
           };
-  
-          // Add new row if last
+
           if (isLastRow) {
             updated.push({
               styleId: "",
@@ -212,18 +221,14 @@ export default function SalesReturnItems({
               deliveryToId: "",
             });
           }
-  
+
           return updated;
         });
-        // Focus next row
-        setTimeout(() => {
-          const nextInput = document.querySelector(
-            `#barcodeNo-input-${index + 1}`,
-          );
-          nextInput?.focus();
-        }, 0);
-      }
+      });
 
+      // ✅ DOM is guaranteed updated — no setTimeout needed
+      const nextInput = document.querySelector(`#barcodeNo-input-${index + 1}`);
+      nextInput?.focus();
     } catch (error) {
       console.error("Barcode fetch failed:", error);
     }
@@ -429,8 +434,8 @@ export default function SalesReturnItems({
                               colorId: "",
                               selected: false,
                               netAmount: 0,
-                              billNo:"",
-                              deliveryToId:""
+                              billNo: "",
+                              deliveryToId: "",
                             };
                             return newBlend;
                           });
@@ -462,8 +467,8 @@ export default function SalesReturnItems({
                               colorId: "",
                               selected: false,
                               netAmount: 0,
-                              billNo:"",
-                              deliveryToId:""
+                              billNo: "",
+                              deliveryToId: "",
                             };
                             return newBlend;
                           });

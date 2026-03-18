@@ -45,10 +45,10 @@
     "react-export-table-to-excel": "^1.0.6",
     "react-fontawesome": "^1.7.1",
     "react-hot-toast": "^2.5.2",
-    "react-html-table-to-excel": "^2.0.0",
     "react-paginate": "^8.2.0",
     "react-to-print": "^2.15.1",
     "socket.io": "^4.6.1",
+    "twilio": "^5.13.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
