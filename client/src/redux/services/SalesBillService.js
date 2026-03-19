@@ -4,7 +4,7 @@ import { SALES_BILL_API } from "../../Api";
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 const salesBillApi = createApi({
-  reducerPath: "salesBill",
+  reducerPath: "SalesBill",
   baseQuery: fetchBaseQuery({
     baseUrl: BASE_URL,
   }),

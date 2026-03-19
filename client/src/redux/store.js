@@ -148,7 +148,7 @@ const commonReducers = {
   stock: stockApi.reducer,
   showroomStock: showroomStockApi.reducer,
   materialStock: materialStockApi.reducer,
-  salesBill: salesBillApi.reducer,
+  SalesBill: salesBillApi.reducer,
   purchaseReturn: purchaseReturnApi.reducer,
   purchaseReturnShowroom: purchaseReturnShowroomApi.reducer,
   salesReturn: SalesReturnApi.reducer,

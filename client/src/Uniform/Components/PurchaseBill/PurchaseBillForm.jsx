@@ -34,6 +34,7 @@ import { useGetHOSalesListQuery, useGetSalesBillQuery, useLazyGetHOSalesDetailQu
 import { useSalesEntryRefetch } from "../../../CustomHooks/salesDelivery";
 import { UserPermissions } from "../../../Utils/UserPermissions";
 import { useGetUserByIdQuery } from "../../../redux/services/UsersMasterService";
+import { useSalesBillRefetch } from "../../../CustomHooks/SalesBill";
 const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     sizeList,
     styleItemList,
@@ -71,6 +72,8 @@ const PurchaseBillForm = ({ onClose, id, setId, readOnly, setReadOnly,
     const [getSalesDCDetail] = useLazyGetSalesDCDetailQuery();
     const [getHOSalesDetail] = useLazyGetHOSalesDetailQuery();
     useSalesEntryRefetch();
+    useSalesBillRefetch();
+
     const { data: salesList } = useGetSalesEntryQuery({
         params: { companyId, branchId },
     });

@@ -1090,7 +1090,9 @@ async function remove(id) {
       id: parseInt(id),
     },
   });
-
+  io.emit("purchaseBill:updated", {
+    message: "Sales Entry Created",
+  });
   return { statusCode: 0, data };
 }
 

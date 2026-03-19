@@ -8,6 +8,8 @@ import {
   getYearShortCodeForFinYear,
   substract,
 } from "../utils/helper.js";
+import { io } from "../../server.js";
+
 import { getTableRecordWithId } from "../utils/helperQueries.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 
@@ -655,6 +657,9 @@ async function create(body) {
 
       await createSalesBillItems(tx, salesBillItems, data, userId, branchId);
     });
+    io.emit("salesBill:updated", {
+      message: "Sales Entry Created",
+    });
     return { statusCode: 0, data };
   } catch (err) {
     return {
@@ -1107,6 +1112,9 @@ async function remove(id) {
         id: parseInt(id),
       },
     });
+    io.emit("salesBill:updated", {
+      message: "Sales Entry Created",
+    });
     return { statusCode: 0, data };
   });
 }
@@ -1446,7 +1454,7 @@ _Thank you! Visit Again_ 😊`;
 
 async function sendSalesBillSMS(body) {
   try {
-     console.log("Twilio Debug:", {
+    console.log("Twilio Debug:", {
       sid: process.env.TWILIO_ACCOUNT_SID,
       token: process.env.TWILIO_AUTH_TOKEN?.slice(0, 6) + "...",
       from: process.env.TWILIO_PHONE_NUMBER,
@@ -1460,8 +1468,11 @@ async function sendSalesBillSMS(body) {
 
     const message = buildSalesMessage(messageData);
 
-    console.log(process.env.TWILIO_PHONE_NUMBER,"process.env.TWILIO_PHONE_NUMBER")
-    console.log(formattedNumber,"formattedNumber")
+    console.log(
+      process.env.TWILIO_PHONE_NUMBER,
+      "process.env.TWILIO_PHONE_NUMBER",
+    );
+    console.log(formattedNumber, "formattedNumber");
     const result = await client.messages.create({
       body: message,
       from: `whatsapp:${process.env.TWILIO_PHONE_NUMBER}`, // your Twilio number
@@ -1491,5 +1502,5 @@ export {
   getHOSalesDetail,
   getHOSalesList,
   getSalesBarcodeDetail,
-  sendSalesBillSMS
+  sendSalesBillSMS,
 };

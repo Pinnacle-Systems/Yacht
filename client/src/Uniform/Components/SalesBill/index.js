@@ -25,6 +25,7 @@ import {
 import { useGetEmployeeQuery } from "../../../redux/services/EmployeeMasterService";
 import { useGetReferenceMasterQuery } from "../../../redux/uniformService/ReferenceMasterService";
 import { UserPermissions } from "../../../Utils/UserPermissions";
+import { useSalesBillRefetch } from "../../../CustomHooks/SalesBill";
 
 export default function Form() {
   const [showForm, setShowForm] = useState(false);
@@ -36,6 +37,8 @@ export default function Form() {
     branchId,
     companyId,
   };
+  useSalesBillRefetch();
+
   const [
     trigger,
     {
@@ -51,7 +54,7 @@ export default function Form() {
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
   const { data: taxTypeList } = useGetTaxTemplateQuery({ params });
   const { data: salesPersonList } = useGetEmployeeQuery({
-   params
+    params,
   });
   const { data: referenceList } = useGetReferenceMasterQuery({
     params: {

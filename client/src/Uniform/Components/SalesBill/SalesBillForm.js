@@ -38,6 +38,7 @@ import { Button } from "@mui/material";
 import { useGetReferenceMasterByIdQuery } from "../../../redux/uniformService/ReferenceMasterService";
 import { UserPermissions } from "../../../Utils/UserPermissions";
 import { useGetUserByIdQuery } from "../../../redux/services/UsersMasterService";
+import { useSalesBillRefetch } from "../../../CustomHooks/SalesBill";
 
 export function SalesBillForm({
   onClose,
@@ -87,6 +88,7 @@ export function SalesBillForm({
   const [sendSalesBillSMS] = useSendSalesBillMsgMutation();
   const [smsSending, setSmsSending] = useState(false);
 
+  useSalesBillRefetch();
   const receiptRef = useRef();
   const handlePrint = useReactToPrint({
     contentRef: receiptRef,
