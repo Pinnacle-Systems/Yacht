@@ -560,6 +560,7 @@ export default function StockInwardItems({
                         const minQty = row.minQty || 0;
                         if (parseFloat(minQty) > parseFloat(e.target.value)) {
                           e.target.value = "";
+                          handleInputChange("", index, "qty");
                           Swal.fire({
                             icon: "warning",
                             title: "Invalid Quantity",

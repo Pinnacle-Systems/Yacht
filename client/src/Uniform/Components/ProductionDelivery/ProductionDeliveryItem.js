@@ -101,7 +101,7 @@ export default function ProductionDeliveryItem({
 
   const deleteSelectedRows = () => {
     setProductionEntryItems((rows) =>
-      rows.filter((r) => !(r.selected && (r.usedQty ?? 0) === 0))
+      rows.filter((r) => !(r.selected && (r.usedQty ?? 0) === 0)),
     );
     setContextMenu(null);
   };
@@ -237,17 +237,17 @@ export default function ProductionDeliveryItem({
           prevProcessId: "",
           styleId: "",
           stkQty: "",
-        }))
+        })),
       );
     }
   }, [productionEntryItems, setProductionEntryItems]);
 
   function imageFormatter(styleId, portionId) {
     const fabricItems = allData?.data?.flatMap(
-      (item) => item.fabricInwardItems || []
+      (item) => item.fabricInwardItems || [],
     );
     const item = fabricItems.find(
-      (f) => f.styleId === styleId && f.portionId === portionId
+      (f) => f.styleId === styleId && f.portionId === portionId,
     );
     const fileName = item?.filePath;
     if (!fileName) return "/no-image.png"; // fallback image if missing
@@ -280,8 +280,8 @@ export default function ProductionDeliveryItem({
                           prev.map((row) =>
                             (row.usedQty ?? 0) > 0
                               ? row
-                              : { ...row, selected: checked }
-                          )
+                              : { ...row, selected: checked },
+                          ),
                         );
                       }}
                       onContextMenu={(e) => {
@@ -397,14 +397,14 @@ export default function ProductionDeliveryItem({
                           handleInputChange(
                             e.target.value,
                             index,
-                            "styleItemId"
+                            "styleItemId",
                           )
                         }
                         onBlur={(e) => {
                           handleInputChange(
                             e.target.value,
                             index,
-                            "styleItemId"
+                            "styleItemId",
                           );
                         }}
                       >
@@ -454,7 +454,7 @@ export default function ProductionDeliveryItem({
                           className="text-xs"
                           onClick={() => {
                             setPreviewImage(
-                              imageFormatter(row?.styleId, row.portionId)
+                              imageFormatter(row?.styleId, row.portionId),
                             );
                           }}
                         >
@@ -648,6 +648,11 @@ export default function ProductionDeliveryItem({
                           const minQty = row.minQty || 0;
                           if (parseFloat(minQty) > parseFloat(e.target.value)) {
                             e.target.value = "";
+                            handleInputChange(
+                              "",
+                              index,
+                              "issueQty",
+                            );
                             Swal.fire({
                               icon: "warning",
                               title: "Invalid Qty",
@@ -664,6 +669,16 @@ export default function ProductionDeliveryItem({
                     <td className="py-0.5 border border-gray-300 text-[11px]">
                       <select
                         onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const nextQtyInput = document.querySelector(
+                              `#issueQty-input-${index + 1}`,
+                            );
+                            if (nextQtyInput) {
+                              nextQtyInput.focus();
+                            }
+                          }
                           if (e.key === "Delete") {
                             handleInputChange("", index, "employeeId");
                           }
@@ -679,7 +694,7 @@ export default function ProductionDeliveryItem({
                           handleInputChange(
                             e.target.value,
                             index,
-                            "employeeId"
+                            "employeeId",
                           );
                         }}
                       >
@@ -698,7 +713,7 @@ export default function ProductionDeliveryItem({
                             e.preventDefault();
                             e.stopPropagation();
                             const nextQtyInput = document.querySelector(
-                              `#issueQty-input-${index + 1}`
+                              `#issueQty-input-${index + 1}`,
                             );
                             if (nextQtyInput) {
                               nextQtyInput.focus();
@@ -735,7 +750,7 @@ export default function ProductionDeliveryItem({
                       />
                     </td>
                   </tr>
-                )
+                ),
               )}
             </tbody>
             <tfoot>
@@ -749,13 +764,13 @@ export default function ProductionDeliveryItem({
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
                   {productionEntryItems.reduce(
                     (sum, row) => sum + (Number(row.stkQty) || 0),
-                    0
+                    0,
                   )}
                 </td>
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
                   {productionEntryItems.reduce(
                     (sum, row) => sum + (Number(row.issueQty) || 0),
-                    0
+                    0,
                   )}
                 </td>
                 <td className="border border-gray-300" colSpan={3}></td>
