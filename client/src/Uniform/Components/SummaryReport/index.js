@@ -18,6 +18,7 @@ import {
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import SummaryReport from "./SummaryReport";
 import { formatCamelCase } from "../../../Utils/helper";
+import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterService";
 
 export default function Form() {
   const [parameter, setParameter] = useState(false);
@@ -25,10 +26,10 @@ export default function Form() {
   const [allData, setAllData] = useState(null);
 
   const branchId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "currentBranchId"
+    sessionStorage.getItem("sessionId") + "currentBranchId",
   );
   const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
+    sessionStorage.getItem("sessionId") + "userCompanyId",
   );
   const params = {
     branchId,
@@ -39,6 +40,7 @@ export default function Form() {
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
   const stockReportRef = useRef();
+  const { data: singleDataBranch } = useGetBranchByIdQuery(branchId);
 
   const DownloadExcel = async (allData) => {
     const dataArray = allData?.data || [];
@@ -102,7 +104,7 @@ export default function Form() {
     // Add total row
     const totalQty = dataArray.reduce(
       (sum, item) => sum + (Number(item?.qty) || 0),
-      0
+      0,
     );
     const totalRow = sheet.addRow([
       "",
@@ -186,6 +188,7 @@ export default function Form() {
             fabricList={fabricList}
             styleItemList={styleItemList}
             colorList={colorList}
+            singleDataBranch={singleDataBranch}
           />
         </PDFViewer>
       </Modal>

@@ -17,6 +17,7 @@ import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMaste
 import { findFromList } from "../../../Utils/helper";
 import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/AccessoryMasterServices";
 import { useGetAccessoryGroupMasterQuery } from "../../../redux/uniformService/AccessoryGroupMasterServices";
+import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterService";
 
 export default function Form() {
   const [parameter, setParameter] = useState(false);
@@ -25,10 +26,10 @@ export default function Form() {
   const [stockType, setStockType] = useState("");
 
   const branchId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "currentBranchId"
+    sessionStorage.getItem("sessionId") + "currentBranchId",
   );
   const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
+    sessionStorage.getItem("sessionId") + "userCompanyId",
   );
   const params = {
     branchId,
@@ -42,6 +43,9 @@ export default function Form() {
   const { data: accessoryList } = useGetAccessoryMasterQuery({ params });
   const { data: accessoryGroupList } = useGetAccessoryGroupMasterQuery({
     params,
+  });
+  const { data: singleDataBranch } = useGetBranchByIdQuery(branchId, {
+    skip: !branchId,
   });
   const stockReportRef = useRef();
 
@@ -124,7 +128,7 @@ export default function Form() {
           findFromList(
             item?.accessoryGroupId,
             accessoryGroupList?.data,
-            "name"
+            "name",
           ) || "",
           findFromList(item?.colorId, colorList?.data, "name") || "",
           findFromList(item?.sizeId, sizeList?.data, "name") || "",
@@ -226,6 +230,7 @@ export default function Form() {
             accessoryList={accessoryList}
             accessoryGroupList={accessoryGroupList}
             stockType={stockType}
+            singleDataBranch={singleDataBranch}
           />
         </PDFViewer>
       </Modal>

@@ -201,7 +201,12 @@ async function getOne(id) {
           customerId: true,
         },
       },
-      Branch: true,
+      Branch: {
+        select: {
+          branchName: true,
+          address: true,
+        },
+      },
       Store: true,
       Customer: true,
     },

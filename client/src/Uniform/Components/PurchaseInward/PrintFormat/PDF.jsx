@@ -103,15 +103,12 @@ const PDF = ({ singleData, branchList }) => {
             borderRightWidth: 0, // Remove right border for the last column
         },
     });
-    useEffect(() => {
-        console.log("Single Data Fetched", singleData)
-    }, [singleData])
 
     return (
         <Document>
             <PageWrapper heading={"Sales Delivery"} singleData={singleData} header={false}>
                 <View style={tw("")}>
-                    <Header styles={styles} />
+                    <Header styles={styles} singleData={singleData} />
                 </View>
                 <View style={styles.container}>
                     <Text style={tw("mx-auto   text-base text-black mt-1")}>Purchase Inward</Text>

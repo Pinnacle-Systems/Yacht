@@ -245,7 +245,7 @@ const AccessoryInwardItems = ({
                           handleInputChange(val, index, "accessoryId")
                         }
                         options={(accessoryList?.data || [])
-                          .filter((item) => item.active)
+                        .filter((item) => (id ? true : item.active))
                           .map((item) => ({
                             label: item.name,
                             value: item.id,
@@ -273,7 +273,7 @@ const AccessoryInwardItems = ({
                           handleInputChange(val, index, "accessoryGroupId")
                         }
                         options={(accessoryGroupList?.data || [])
-                          .filter((item) => item.active)
+                        .filter((item) => (id ? true : item.active))
                           .map((item) => ({
                             label: item.name,
                             value: item.id,
@@ -302,7 +302,7 @@ const AccessoryInwardItems = ({
                           handleInputChange(val, index, "colorId")
                         }
                         options={(colorList?.data || [])
-                          .filter((item) => item.active)
+                        .filter((item) => (id ? true : item.active))
                           .map((item) => ({
                             label: item.name,
                             value: item.id,
@@ -326,7 +326,7 @@ const AccessoryInwardItems = ({
                           handleInputChange(val, index, "sizeId")
                         }
                         options={(sizeList?.data || [])
-                          .filter((item) => item.active)
+                        .filter((item) => (id ? true : item.active))
                           .map((item) => ({
                             label: item.name,
                             value: item.id,
@@ -350,7 +350,7 @@ const AccessoryInwardItems = ({
                           handleInputChange(val, index, "uomId")
                         }
                         options={(uomList?.data || [])
-                          .filter((item) => item.active)
+                        .filter((item) => (id ? true : item.active))
                           .map((item) => ({
                             label: item.name,
                             value: item.id,

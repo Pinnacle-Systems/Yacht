@@ -15,7 +15,7 @@ async function getNextDocId(
   endTime,
   saveType,
   docId,
-  isUpdate
+  isUpdate,
 ) {
   // Case 1: Draft save
   if (saveType) {
@@ -34,7 +34,7 @@ async function getNextDocId(
     });
     const branchObj = await getTableRecordWithId(branchId, "branch");
     let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
+      new Date(),
     )}/PI/1`;
 
     if (lastObject) {
@@ -68,7 +68,7 @@ async function getNextDocId(
 
     const branchObj = await getTableRecordWithId(branchId, "branch");
     let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
+      new Date(),
     )}/PI/1`;
     if (lastObject) {
       if (lastObject.docId === "Draft Save") {
@@ -135,7 +135,7 @@ async function get(req) {
     branchId,
     shortCode,
     finYearDate?.startDateStartTime,
-    finYearDate?.endDateEndTime
+    finYearDate?.endDateEndTime,
   );
   let data;
   let totalCount;
@@ -195,7 +195,7 @@ async function get(req) {
   totalCount = data.length;
   if (searchDocDate) {
     data = data?.filter((item) =>
-      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate)
+      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate),
     );
   }
   if (searchStyleId) {
@@ -203,17 +203,17 @@ async function get(req) {
     data = data.filter((item) => {
       return item.inwardType === "Finished Goods"
         ? item.readyGoods?.some(
-            (style) => Number(style.styleId) === styleIdNumber
+            (style) => Number(style.styleId) === styleIdNumber,
           )
         : item.fabricInwardItems?.some(
-            (style) => Number(style.styleId) === styleIdNumber
+            (style) => Number(style.styleId) === styleIdNumber,
           );
     });
   }
   if (pagination) {
     data = data.slice(
       (pageNumber - 1) * parseInt(dataPerPage),
-      pageNumber * dataPerPage
+      pageNumber * dataPerPage,
     );
   }
   return {
@@ -239,6 +239,7 @@ async function getOne(id) {
       Branch: {
         select: {
           branchName: true,
+          address: true,
         },
       },
       Supplier: {
@@ -362,7 +363,7 @@ async function getOne(id) {
           (minDelivery._sum.usedMeter || 0) +
           (minReturn._sum.returnFabMeter || 0),
       };
-    })
+    }),
   );
   const goodsWithStkQty = await Promise.all(
     data.readyGoods.map(async (item) => {
@@ -438,7 +439,7 @@ async function getOne(id) {
           (minReturn._sum.returnQty || 0) +
           (minAdjust._sum.adjQty || 0),
       };
-    })
+    }),
   );
   const styleIds = data.fabricInwardItems
     .map((item) => item.styleId)
@@ -535,7 +536,7 @@ async function create(req) {
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(
         finYearDate?.startDateStartTime,
-        finYearDate?.endDateEndTime
+        finYearDate?.endDateEndTime,
       )
     : "";
   let newDocId = await getNextDocId(
@@ -543,7 +544,7 @@ async function create(req) {
     shortCode,
     finYearDate?.startDateStartTime,
     finYearDate?.endDateEndTime,
-    draftSave
+    draftSave,
   );
   let data;
   await prisma.$transaction(async (tx) => {
@@ -573,7 +574,7 @@ async function create(req) {
         branchId,
         storeId,
         invNo,
-        newDocId
+        newDocId,
       );
     } else {
       await createPurchaseInwardItems(
@@ -585,7 +586,7 @@ async function create(req) {
         storeId,
         inwardType,
         invNo,
-        newDocId
+        newDocId,
       );
     }
   });
@@ -601,7 +602,7 @@ async function createPurchaseInwardItems(
   storeId,
   inwardType,
   invNo,
-  newDocId
+  newDocId,
 ) {
   const promises = JSON.parse(fabricInwardItems).map(
     async (inwardDetails, index) => {
@@ -705,7 +706,7 @@ async function createPurchaseInwardItems(
       }
 
       return createdItem;
-    }
+    },
   );
 
   return Promise.all(promises);
@@ -719,7 +720,7 @@ async function createReadyGoods(
   branchId,
   storeId,
   invNo,
-  newDocId
+  newDocId,
 ) {
   const promises = JSON.parse(readyGoods).map(async (stockDetail, index) => {
     const qty = stockDetail?.qty
@@ -773,7 +774,7 @@ async function createReadyGoods(
 function findRemovedItems(dataFound, fabricInwardItems) {
   let removedItems = dataFound.fabricInwardItems.filter((oldItem) => {
     let result = JSON.parse(fabricInwardItems).find(
-      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id)
+      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id),
     );
     if (result) return false;
     return true;
@@ -784,7 +785,7 @@ function findRemovedItems(dataFound, fabricInwardItems) {
 function findRemovedItemsGoods(dataFound, readyGoods) {
   let removedItems = dataFound.readyGoods.filter((oldItem) => {
     let result = JSON.parse(readyGoods).find(
-      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id)
+      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id),
     );
     if (result) return false;
     return true;
@@ -808,7 +809,7 @@ async function update(id, body) {
     fabricInwardItems,
     readyGoods,
     invNo,
-    finYearId
+    finYearId,
   } = await body;
   let data;
   const dataFound = await prisma.purchaseInward.findUnique({
@@ -834,14 +835,14 @@ async function update(id, body) {
     const shortCode = finYearDate
       ? getYearShortCodeForFinYear(
           finYearDate?.startDateStartTime,
-          finYearDate?.endDateEndTime
+          finYearDate?.endDateEndTime,
         )
       : "";
     let newDocId = await getNextDocId(
       branchId,
       shortCode,
       finYearDate?.startDateStartTime,
-      finYearDate?.endDateEndTime
+      finYearDate?.endDateEndTime,
     );
     await prisma.purchaseInward.update({
       where: {
@@ -894,7 +895,7 @@ async function update(id, body) {
         userId,
         branchId,
         storeId,
-        invNo
+        invNo,
       );
     } else {
       await updateFabricInwardItems(
@@ -905,7 +906,7 @@ async function update(id, body) {
         branchId,
         storeId,
         inwardType,
-        invNo
+        invNo,
       );
     }
   });
@@ -920,7 +921,7 @@ async function updateFabricInwardItems(
   branchId,
   storeId,
   inwardType,
-  invNo
+  invNo,
 ) {
   const promises = JSON.parse(fabricInwardItems).map(async (inwardDetails) => {
     if (inwardDetails.id) {
@@ -1196,7 +1197,7 @@ async function updateReadyGoods(
   userId,
   branchId,
   storeId,
-  invNo
+  invNo,
 ) {
   const parsedReadyGoods = JSON.parse(readyGoods || "[]");
   const existingRows = await tx.readyGoods.findMany({
@@ -1458,7 +1459,7 @@ async function getPurchaseDetailStock(req) {
   } else {
     const rg =
       purchaseData.readyGoods.filter(
-        (item) => item.styleId && item.styleItemId && item.sizeId
+        (item) => item.styleId && item.styleItemId && item.sizeId,
       ) || [];
     const orConditions = rg.map((item) => ({
       styleId: item.styleId,

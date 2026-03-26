@@ -291,6 +291,12 @@ async function getOne(id) {
       Location: true,
       Store: true,
       Destination: true,
+      branch: {
+        select: {
+          branchName: true,
+          address: true,
+        },
+      },
     },
   });
   if (!data) return NoRecordFound("salesEntry");

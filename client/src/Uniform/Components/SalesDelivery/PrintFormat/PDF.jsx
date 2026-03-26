@@ -147,9 +147,6 @@ const PDF = ({ singleData, allData }) => {
             textAlign: "right",
         },
     });
-    useEffect(() => {
-        console.log("Single Data Fetched", singleData,)
-    }, [singleData])
 
     let overallGrandTotal = 0;
 
@@ -196,7 +193,8 @@ const PDF = ({ singleData, allData }) => {
         <Document>
             <PageWrapper heading={"Sales Delivery"} singleData={singleData} header={false}>
                 <View>
-                    <Header styles={styles} />
+
+                    <Header styles={styles} singleData={singleData}/>
                 </View>
 
                 <View style={styles.container}>

@@ -404,7 +404,7 @@ export default function ReturnGoods({
                         handleInputChange(val, index, "styleId")
                       }
                       options={(styleList?.data || [])
-                        .filter((item) => item.active)
+                        .filter((item) => (id ? true : item.active))
                         .map((item) => ({
                           label: item.sku,
                           value: item.id,
@@ -428,7 +428,7 @@ export default function ReturnGoods({
                         handleInputChange(val, index, "styleItemId")
                       }
                       options={(styleItemList?.data || [])
-                        .filter((item) => item.active)
+                        .filter((item) => (id ? true : item.active))
                         .map((item) => ({
                           label: item.name,
                           value: item.id,
@@ -466,7 +466,7 @@ export default function ReturnGoods({
                         handleInputChange(val, index, "fabricId")
                       }
                       options={(fabricList?.data || [])
-                        .filter((item) => item.active)
+                        .filter((item) => (id ? true : item.active))
                         .map((item) => ({
                           label: item.name,
                           value: item.id,
@@ -490,7 +490,7 @@ export default function ReturnGoods({
                         handleInputChange(val, index, "sizeId")
                       }
                       options={(sizeList?.data || [])
-                        .filter((item) => item.active)
+                        .filter((item) => (id ? true : item.active))
                         .map((item) => ({
                           label: item.name,
                           value: item.id,
@@ -514,7 +514,7 @@ export default function ReturnGoods({
                         handleInputChange(val, index, "colorId")
                       }
                       options={(colorList?.data || [])
-                        .filter((item) => item.active)
+                        .filter((item) => (id ? true : item.active))
                         .map((item) => ({
                           label: item.name,
                           value: item.id,

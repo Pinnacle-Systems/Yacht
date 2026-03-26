@@ -477,7 +477,7 @@ export default function CuttingDeliveryItem({
                                                     handleInputChange(val, index, "styleItemId")
                                                 }
                                                 options={(styleItemList?.data || [])
-                                                    .filter((item) => item.active)
+                                                    .filter((item) => (id ? true : item.active))
                                                     .map((item) => ({
                                                         label: item.name,
                                                         value: item.id,

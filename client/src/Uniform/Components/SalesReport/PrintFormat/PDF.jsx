@@ -5,7 +5,7 @@ import tw from "../../../../Utils/tailwind-react-pdf";
 import { findFromList, getDateFromDateTimeToDisplay } from "../../../../Utils/helper";
 import Header from "../../../../Utils/Header";
 
-const PDF = ({ allData, customerList }) => {
+const PDF = ({ allData, customerList, singleDataBranch }) => {
 
     const styles = StyleSheet.create({
         page: { padding: 5 },
@@ -162,7 +162,7 @@ const PDF = ({ allData, customerList }) => {
         <Document>
             <PageWrapper heading={"Sales Report"} allData={allData} header={false}>
                 <View>
-                    <Header styles={styles} />
+                    <Header styles={styles} singleData={singleDataBranch?.data}/>
                 </View>
 
                 <View style={styles.container}>

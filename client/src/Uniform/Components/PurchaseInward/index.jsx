@@ -26,7 +26,6 @@ export default function Form() {
     isLoading: isSingleLoading, }] =
     useLazyGetPurchaseInwardEntryByIdQuery();
   const { data: styleList } = useGetStyleMasterQuery({ params: { companyId } });
-
   const [removeData] = useDeletePurchaseInwardEntryMutation();
   const handleView = (orderId) => {
     trigger(orderId);

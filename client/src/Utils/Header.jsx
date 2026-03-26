@@ -15,23 +15,23 @@ const Header = ({ heading, singleData, DeliveryNo, DeliveryDate, styles }) => {
           "flex flex-row px-2 items-center justify-between w-full h-[80px] mb-2  border-b border-gray-400"
         )}
       >
-        <View style={tw("w-[25%]")}>
-          <Image style={tw("h-12")} src={logo} />
+        <View style={tw("w-[15%]")}>
+          <Image style={tw("h-8")} src={logo} />
         </View>
-        <View style={tw(" w-[50%]")}>
-          <Text style={tw(" mx-auto text-lg text-black")}>
-            YACHT 
+        <View style={[tw("w-[70%]"), { alignItems: "center" }]}>
+          <Text style={tw(" text-lg text-black")}>
+            {singleData?.Branch?.branchName || singleData?.branch?.branchName ||singleData?.branchName}
           </Text>
-          <Text style={tw("mx-auto  text-xs ")}>No.24/47, RSR Complex,</Text>
+          {/* <Text style={tw("mx-auto  text-xs ")}>No.24/47, RSR Complex,</Text>
           <Text style={tw("mx-auto  text-xs p-1 ")}>
             Bridge Way Colony, Extn Main Road,
-          </Text>
+          </Text> */}
      
-          <Text style={tw("mx-auto  text-xs")}>
-            TIRUPUR - 641 607.
+        <Text style={[tw("text-xs  w-[50%]"), { textAlign: "center" }]}>
+            {singleData?.Branch?.address || singleData?.branch?.address || singleData?.address}
           </Text>
         </View>
-        <View style={tw("flex flex-col  text-xl   item-center w-[25%]")}>
+        <View style={tw("flex flex-col  text-xl   item-center w-[15%]")}>
           {/* <Text style={tw("text-teal-500")}>{heading}</Text> */}
 
           <Text style={tw("text-xs ml-1 text-right")}>{singleData?.docId || ""}</Text>

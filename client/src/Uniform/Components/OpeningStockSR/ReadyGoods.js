@@ -393,7 +393,7 @@ export default function ReadyGoods({
                           handleInputChange(val, index, "colorId")
                         }
                         options={(colorList?.data || [])
-                          .filter((item) => item.active)
+                          .filter((item) => (id ? true : item.active))
                           .map((item) => ({
                             label: item.name,
                             value: item.id,
@@ -419,7 +419,7 @@ export default function ReadyGoods({
                           handleInputChange(val, index, "uomId")
                         }
                         options={(uomList?.data || [])
-                          .filter((item) => item.active)
+                          .filter((item) => (id ? true : item.active))
                           .map((item) => ({
                             label: item.name,
                             value: item.id,

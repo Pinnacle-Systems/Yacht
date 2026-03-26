@@ -14,6 +14,7 @@ import secureLocalStorage from "react-secure-storage";
 import ExcelJS from "exceljs";
 import { findFromList } from "../../../Utils/helper";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterService";
 
 export default function Form() {
   const [parameter, setParameter] = useState(false);
@@ -21,10 +22,10 @@ export default function Form() {
   const [allData, setAllData] = useState(null);
 
   const branchId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "currentBranchId"
+    sessionStorage.getItem("sessionId") + "currentBranchId",
   );
   const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
+    sessionStorage.getItem("sessionId") + "userCompanyId",
   );
   const params = {
     branchId,
@@ -34,6 +35,10 @@ export default function Form() {
   const { data: fabricList } = useGetFabricMasterQuery({ params });
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
+  const { data: singleDataBranch } = useGetBranchByIdQuery(
+    branchId
+  );
+
   const stockReportRef = useRef();
 
   const DownloadExcel = async (allData) => {
@@ -94,9 +99,9 @@ export default function Form() {
     // Add total row
     const totalQty = dataArray.reduce(
       (sum, item) => sum + (Number(item?.stkQty) || 0),
-      0
+      0,
     );
-    const totalRow = sheet.addRow(["", "", "","", "", "Total", totalQty]);
+    const totalRow = sheet.addRow(["", "", "", "", "", "Total", totalQty]);
     totalRow.eachCell((cell, colNumber) => {
       cell.font = { bold: true };
       cell.alignment = { horizontal: "right" };
@@ -159,6 +164,7 @@ export default function Form() {
             fabricList={fabricList}
             styleItemList={styleItemList}
             colorList={colorList}
+            singleDataBranch={singleDataBranch}
           />
         </PDFViewer>
       </Modal>

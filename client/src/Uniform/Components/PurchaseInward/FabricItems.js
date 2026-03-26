@@ -324,7 +324,7 @@ const FabricInwardItems = ({
                           handleInputChange(val, index, "styleId")
                         }
                         options={(styleList?.data || [])
-                          .filter((item) => item.active)
+                        .filter((item) => (id ? true : item.active))
                           .map((item) => ({
                             label: item.sku,
                             value: item.id,
@@ -386,7 +386,7 @@ const FabricInwardItems = ({
                           handleInputChange(val, index, "fabricId")
                         }
                         options={(fabricList?.data || [])
-                          .filter((item) => item.active)
+                        .filter((item) => (id ? true : item.active))
                           .map((item) => ({
                             label: item.name,
                             value: item.id,
@@ -465,7 +465,7 @@ const FabricInwardItems = ({
                           handleInputChange(val, index, "colorId")
                         }
                         options={(colorList?.data || [])
-                          .filter((item) => item.active)
+                        .filter((item) => (id ? true : item.active))
                           .map((item) => ({
                             label: item.name,
                             value: item.id,
@@ -489,7 +489,7 @@ const FabricInwardItems = ({
                           handleInputChange(val, index, "portionId")
                         }
                         options={(portionList?.data || [])
-                          .filter((item) => item.active)
+                        .filter((item) => (id ? true : item.active))
                           .map((item) => ({
                             label: item.name,
                             value: item.id,

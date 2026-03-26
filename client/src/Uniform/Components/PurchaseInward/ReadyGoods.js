@@ -36,7 +36,7 @@ export default function ReadyGoods({
   const { data: styleItemList } = useGetStyleItemMasterQuery({ params });
 
   const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
+    sessionStorage.getItem("sessionId") + "userCompanyId",
   );
 
   const addRow = () => {
@@ -71,7 +71,7 @@ export default function ReadyGoods({
 
   const deleteSelectedRows = () => {
     setReadyGoods((rows) =>
-      rows.filter((r) => !(r.selected && (r.stockQty ?? 0) === 0))
+      rows.filter((r) => !(r.selected && (r.stockQty ?? 0) === 0)),
     );
     setContextMenu(null);
   };
@@ -134,7 +134,7 @@ export default function ReadyGoods({
           styleItemId: "",
           colorId: "",
           selected: false,
-        }))
+        })),
       );
     }
   }, [readyGoods, setReadyGoods]);
@@ -195,7 +195,7 @@ export default function ReadyGoods({
 
         // Find first empty slot index
         let startIndex = updated.findIndex(
-          (row) => !row.styleId && !row.sizeId && !row.styleNo && !row.fabricId
+          (row) => !row.styleId && !row.sizeId && !row.styleNo && !row.fabricId,
         );
         if (startIndex === -1) startIndex = updated.length;
 
@@ -279,8 +279,8 @@ export default function ReadyGoods({
                           prev.map((row) =>
                             (row.usedQty ?? 0) > 0
                               ? row
-                              : { ...row, selected: checked }
-                          )
+                              : { ...row, selected: checked },
+                          ),
                         );
                       }}
                       onContextMenu={(e) => {
@@ -371,7 +371,7 @@ export default function ReadyGoods({
                         handleInputChange(val, index, "styleId")
                       }
                       options={(styleList?.data || [])
-                        .filter((item) => item.active)
+                        .filter((item) => (id ? true : item.active))
                         .map((item) => ({
                           label: item.sku,
                           value: item.id,
@@ -395,7 +395,7 @@ export default function ReadyGoods({
                         handleInputChange(val, index, "styleItemId")
                       }
                       options={(styleItemList?.data || [])
-                        .filter((item) => item.active)
+                        .filter((item) => (id ? true : item.active))
                         .map((item) => ({
                           label: item.name,
                           value: item.id,
@@ -433,7 +433,7 @@ export default function ReadyGoods({
                         handleInputChange(val, index, "fabricId")
                       }
                       options={(fabricList?.data || [])
-                        .filter((item) => item.active)
+                        .filter((item) => (id ? true : item.active))
                         .map((item) => ({
                           label: item.name,
                           value: item.id,
@@ -457,7 +457,7 @@ export default function ReadyGoods({
                         handleInputChange(val, index, "sizeId")
                       }
                       options={(sizeList?.data || [])
-                        .filter((item) => item.active)
+                        .filter((item) => (id ? true : item.active))
                         .map((item) => ({
                           label: item.name,
                           value: item.id,
@@ -481,7 +481,7 @@ export default function ReadyGoods({
                         handleInputChange(val, index, "colorId")
                       }
                       options={(colorList?.data || [])
-                        .filter((item) => item.active)
+                        .filter((item) => (id ? true : item.active))
                         .map((item) => ({
                           label: item.name,
                           value: item.id,
@@ -511,7 +511,7 @@ export default function ReadyGoods({
                           e.preventDefault(); // prevent form submit or line break
                           e.stopPropagation();
                           const nextQtyInput = document.querySelector(
-                            `#styleId-input-${index + 1}`
+                            `#styleId-input-${index + 1}`,
                           );
                           if (nextQtyInput) {
                             nextQtyInput.focus();
@@ -569,7 +569,7 @@ export default function ReadyGoods({
                 <td className="text-right border border-gray-300 px-1 font-medium text-[13px] py-0.5">
                   {(Array.isArray(readyGoods) ? readyGoods : []).reduce(
                     (sum, row) => sum + (Number(row.qty) || 0),
-                    0
+                    0,
                   )}
                 </td>
                 <td className="border border-gray-300" colSpan={1}></td>

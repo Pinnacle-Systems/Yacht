@@ -9,6 +9,7 @@ import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import tw from "../../../Utils/tailwind-react-pdf";
 import SalesReturnReport from "./SalesReturnReport";
 import PDF from "./PrintFormat/PDF";
+import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterService";
 
 export default function Form() {
   const [parameter, setParameter] = useState(false);
@@ -16,10 +17,10 @@ export default function Form() {
   const [allData, setAllData] = useState(null);
 
   const branchId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "currentBranchId"
+    sessionStorage.getItem("sessionId") + "currentBranchId",
   );
   const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
+    sessionStorage.getItem("sessionId") + "userCompanyId",
   );
   const params = {
     branchId,
@@ -27,7 +28,9 @@ export default function Form() {
   };
   const stockReportRef = useRef();
   const { data: customerList } = useGetPartyQuery({ params });
-
+  const { data: singleDataBranch } = useGetBranchByIdQuery(
+    branchId
+  );
   return (
     <div className="p-1 bg-[#F1F1F0] h-[85%]">
       <Modal
@@ -36,12 +39,18 @@ export default function Form() {
         widthClass={"w-[90%] h-[90%]"}
       >
         <PDFViewer style={tw("w-full h-full")}>
-          <PDF allData={allData || []} customerList={customerList} />
+          <PDF
+            allData={allData || []}
+            customerList={customerList}
+            singleDataBranch={singleDataBranch}
+          />
         </PDFViewer>
       </Modal>
       <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">Sales Return Report</h1>
+          <h1 className="text-xl font-bold text-gray-800">
+            Sales Return Report
+          </h1>
         </div>
         <div className="flex gap-x-5">
           <button

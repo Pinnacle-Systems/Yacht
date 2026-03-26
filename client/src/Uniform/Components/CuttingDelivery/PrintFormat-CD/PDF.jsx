@@ -110,7 +110,7 @@ const PDF = ({ singleData, sizeColumns }) => {
         <Document>
             <PageWrapper heading={"Sales Return"} singleData={singleData} header={false}>
                 <View>
-                    <Header styles={styles} />
+                    <Header styles={styles} singleData={singleData}/>
                 </View>
                 <View style={styles.container}>
                     <Text style={tw("mx-auto   text-base text-black mt-1")}>Cutting Production</Text>

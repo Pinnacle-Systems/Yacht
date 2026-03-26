@@ -249,6 +249,7 @@ async function getOne(id) {
       Branch: {
         select: {
           branchName: true,
+          address: true,
         },
       },
       Store: {
