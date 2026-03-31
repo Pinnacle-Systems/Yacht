@@ -478,7 +478,7 @@ export default function Form() {
                           setActive={setActive}
                           required={true}
                           readOnly={readOnly}
-                          disabled={childRecord.current > 0}
+                          // disabled={childRecord.current > 0}
                         />
                       </div>
                     </div>
