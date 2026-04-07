@@ -17,6 +17,7 @@ import { useGetPortionMasterQuery } from "../../../redux/uniformService/PortionM
 import Swal from "sweetalert2";
 import { useGetEmployeeQuery } from "../../../redux/services/EmployeeMasterService";
 import { useGetPurchaseInwardEntryQuery } from "../../../redux/uniformService/PurchaseInwardEntry";
+import FxSelect from "../../../Inputs";
 
 export default function ProductionDeliveryItem({
   productionEntryItems,
@@ -648,11 +649,7 @@ export default function ProductionDeliveryItem({
                           const minQty = row.minQty || 0;
                           if (parseFloat(minQty) > parseFloat(e.target.value)) {
                             e.target.value = "";
-                            handleInputChange(
-                              "",
-                              index,
-                              "issueQty",
-                            );
+                            handleInputChange("", index, "issueQty");
                             Swal.fire({
                               icon: "warning",
                               title: "Invalid Qty",
@@ -667,7 +664,7 @@ export default function ProductionDeliveryItem({
                       />
                     </td>
                     <td className="py-0.5 border border-gray-300 text-[11px]">
-                      <select
+                      {/* <select
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
@@ -704,7 +701,40 @@ export default function ProductionDeliveryItem({
                             {blend?.firstName}
                           </option>
                         ))}
-                      </select>
+                      </select> */}
+                      <FxSelect
+                        // inputId={`styleId-input-${index}`}
+                        value={row.employeeId}
+                        onChange={(val) =>
+                          handleInputChange(val, index, "employeeId")
+                        }
+                        options={(employeeList?.data || [])
+                          // .filter((item) => (id ? true : item.active))
+                          .map((item) => ({
+                            label: item.firstName,
+                            value: item.id,
+                          }))}
+                        readOnly={readOnly}
+                        placeholder=""
+                       onBlur={(e) => {
+                         handleInputChange(row.employeeId, index, "employeeId")
+                        }}
+                       onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            // e.preventDefault();
+                            e.stopPropagation();
+                            const nextQtyInput = document.querySelector(
+                              `#issueQty-input-${index + 1}`,
+                            );
+                            if (nextQtyInput) {
+                              nextQtyInput.focus();
+                            }
+                          }
+                          if (e.key === "Delete") {
+                            handleInputChange("", index, "employeeId");
+                          }
+                        }}
+                      />
                     </td>
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                       <input

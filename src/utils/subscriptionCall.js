@@ -4,7 +4,7 @@ export async function getSubscriptionDetails() {
     try {
         const response = await axios.get(process.env.SUBSCRIPTION_URL, {
             params: {
-                name: 'IKNITS'
+                name: 'YACHT'
             }
         })
         const result = response.data;

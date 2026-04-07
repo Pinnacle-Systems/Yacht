@@ -528,7 +528,7 @@ const StyleMaster = () => {
                               setValue={setFabricId}
                               required={true}
                               readOnly={readOnly}
-                              disabled={childRecord.current > 0}
+                              // disabled={childRecord.current > 0}
                             />
                           </div>
                           <div className="mb-5 w-48">

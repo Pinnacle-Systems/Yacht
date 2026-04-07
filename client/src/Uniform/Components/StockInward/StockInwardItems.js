@@ -537,7 +537,7 @@ export default function StockInwardItems({
                         if (e.key === "Delete") {
                           handleInputChange("", index, "qty");
                         }
-                        if (e.key === "Enter") {
+                        if (e.key === "Enter" || e.key === "ArrowDown") {
                           e.preventDefault(); // prevent form submit or line break
                           e.stopPropagation();
                           const nextQtyInput = document.querySelector(
