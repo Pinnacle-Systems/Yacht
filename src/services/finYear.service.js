@@ -9,7 +9,7 @@ async function get(req) {
             id: 'desc'
         },
         where: {
-            companyId: companyId ? parseInt(companyId) : undefined,
+            // companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
         }
     });

@@ -430,7 +430,7 @@ const Login = () => {
                   )}
                 </div>
 
-                <div className="flex items-center justify-between">
+                {/* <div className="flex items-center justify-between">
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
                       type="checkbox"
@@ -444,7 +444,7 @@ const Login = () => {
                   >
                     Forgot password?
                   </a>
-                </div>
+                </div> */}
 
                 <button
                   type="submit"
@@ -454,7 +454,7 @@ const Login = () => {
                 </button>
               </form>
 
-              <div className="mt-6 text-center">
+              {/* <div className="mt-6 text-center">
                 <p className="text-sm text-gray-600">
                   New to Pinnacle?{" "}
                   <a
@@ -464,7 +464,7 @@ const Login = () => {
                     Create Account
                   </a>
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
