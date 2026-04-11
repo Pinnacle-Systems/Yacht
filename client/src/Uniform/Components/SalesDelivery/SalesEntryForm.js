@@ -445,7 +445,7 @@ export function SalesBillForm({
                     required={true}
                     readOnly={readOnly}
                     autoFocus={true}
-                    disabled={id}
+                    // disabled={id}
                   />
                 </div>
               </div>
