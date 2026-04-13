@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Swal from "sweetalert2";
 import Modal from "../../../UiComponents/Modal";
 import PurchaseBillItemsSelection from "./PurchaseBillItemsSelection";
@@ -27,7 +27,8 @@ export default function PurchaseReturnItems({
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [fillGrid, setFillGrid] = useState(false);
-
+  const inputRefs = useRef([]);
+  const scanningRef = useRef(false);
   const [getBarcodeDetails, { data: barcodeData }] =
     useLazyGetSRBarcodeDetailQuery();
 
@@ -145,7 +146,11 @@ export default function PurchaseReturnItems({
     }
   }, [purchaseReturnItems, setPurchaseReturnItems]);
 
-  const handleBarcodeEnter = async (index, row) => {
+  const handleBarcodeEnter = async (index) => {
+      if (scanningRef.current) return; // 🚫 prevent double trigger
+    scanningRef.current = true;
+    const row = purchaseReturnItems[index];
+
     try {
       const response = await getBarcodeDetails({
         params: { barcodeNo: row.barcodeNo, branchId: branchId },
@@ -180,8 +185,8 @@ export default function PurchaseReturnItems({
       }
 
       const data = response.data;
-      const duplicate = purchaseReturnItems?.filter(
-        (item) => item.barcodeId === data.barcodeId,
+      const duplicate = purchaseReturnItems.some(
+        (item, i) => item.barcodeId === data.barcodeId && i !== index,
       );
 
       if (duplicate.length > 0) {
@@ -256,10 +261,18 @@ export default function PurchaseReturnItems({
       });
 
       // ✅ DOM is guaranteed updated — no setTimeout needed
-      const nextInput = document.querySelector(`#barcodeNo-input-${index + 1}`);
-      nextInput?.focus();
+      // const nextInput = document.querySelector(`#barcodeNo-input-${index + 1}`);
+      // nextInput?.focus();
+      setTimeout(() => {
+        const nextInput = document.getElementById(
+          `barcodeNo-input-${index + 1}`,
+        );
+        nextInput?.focus();
+      }, 0);
     } catch (error) {
       console.error("Barcode fetch failed:", error);
+    } finally {
+      scanningRef.current = false; // ✅ release lock
     }
   };
 
@@ -441,7 +454,8 @@ export default function PurchaseReturnItems({
                     <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-left">
                       <input
                         id={`barcodeNo-input-${index}`}
-                        onKeyDown={async (e) => {
+                        ref={(el) => (inputRefs.current[index] = el)}
+                        onKeyDown={(e) => {
                           if (e.code === "Minus" || e.code === "NumpadSubtract")
                             e.preventDefault();
                           if (e.key === "Delete" || e.key === "") {
@@ -467,7 +481,7 @@ export default function PurchaseReturnItems({
                           if (e.key === "Enter") {
                             e.preventDefault();
                             e.stopPropagation();
-                            handleBarcodeEnter(index, row);
+                            handleBarcodeEnter(index);
                           }
                         }}
                         className="text-left rounded py-1 px-1 w-full"
@@ -478,21 +492,13 @@ export default function PurchaseReturnItems({
                         }
                         onBlur={(e) => {
                           handleInputChange(e.target.value, index, "barcodeNo");
-                          if (e.target.value === "") {
+                          if (!e.target.value) {
+                            // only reset if user manually cleared, not scanner flow
                             setPurchaseReturnItems((prev) => {
                               const newBlend = [...prev];
                               newBlend[index] = {
-                                barcodeId: "",
-                                styleId: "",
-                                sizeId: "",
-                                returnQty: "",
+                                ...newBlend[index],
                                 barcodeNo: "",
-                                styleItemId: "",
-                                colorId: "",
-                                selected: false,
-                                stkQty: "",
-                                billNo: "",
-                                supplierId: "",
                               };
                               return newBlend;
                             });

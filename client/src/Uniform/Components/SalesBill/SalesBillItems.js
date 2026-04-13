@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
 import { ReusableInput } from "../../../Utils/CommonInput";
 import { useLazyGetStyleDetailQuery } from "../../../redux/services/StockService";
@@ -36,6 +36,8 @@ export default function SalesBillItems({
   const [colorId, setColorId] = useState("");
   const [uniqueColorIds, setUniqueColorIds] = useState([]);
   const [discPerc, setDiscPerc] = useState("");
+  const inputRefs = useRef([]);
+  const scanningRef = useRef(false);
 
   const [getBarcodeDetails, { data: barcodeData }] =
     useLazyGetSRBarcodeDetailQuery();
@@ -301,10 +303,15 @@ export default function SalesBillItems({
     }
   }, [salesBillItems]);
 
-  const handleBarcodeEnter = async (index, row) => {
+  const handleBarcodeEnter = async (index) => {
+    if (scanningRef.current) return; // 🚫 prevent double trigger
+    scanningRef.current = true;
+
+    const row = salesBillItems[index];
+
     try {
       const response = await getBarcodeDetails({
-        params: { barcodeNo: row.barcodeNo, branchId: branchId, isHo: isHo },
+        params: { barcodeNo: row.barcodeNo, branchId, isHo },
       }).unwrap();
 
       if (response.statusCode !== 0) {
@@ -313,7 +320,7 @@ export default function SalesBillItems({
           title: "Not Found",
           text: response?.message || "Failed to fetch barcode details",
         });
-        // ✅ flushSync here too
+
         flushSync(() => {
           setSalesBillItems((prev) => {
             const updated = [...prev];
@@ -336,20 +343,28 @@ export default function SalesBillItems({
             return updated;
           });
         });
-        return; // ✅ important: stop execution after error
+
+        // 🔥 keep focus in same row
+        setTimeout(() => {
+          inputRefs.current[index]?.focus();
+        }, 0);
+
+        return;
       }
 
       const data = response.data;
-      const duplicate = salesBillItems?.filter(
-        (item) => item.barcodeId === data.barcodeId,
+
+      const duplicate = salesBillItems.some(
+        (item, i) => item.barcodeId === data.barcodeId && i !== index,
       );
 
-      if (duplicate.length > 0) {
+      if (duplicate) {
         Swal.fire({
           icon: "warning",
           title: "Duplicate",
           text: "The Barcode Number is Already Exist, Cannot add!.",
         });
+
         flushSync(() => {
           setSalesBillItems((prev) => {
             const updated = [...prev];
@@ -372,10 +387,14 @@ export default function SalesBillItems({
             return updated;
           });
         });
+
+        setTimeout(() => {
+          inputRefs.current[index]?.focus();
+        }, 0);
+
         return;
       }
 
-      // ✅ flushSync forces DOM update BEFORE focus
       flushSync(() => {
         setSalesBillItems((prev) => {
           const updated = [...prev];
@@ -419,11 +438,14 @@ export default function SalesBillItems({
         });
       });
 
-      // ✅ DOM is guaranteed to be updated now — no setTimeout needed
-      const nextInput = document.querySelector(`#barcodeNo-input-${index + 1}`);
-      nextInput?.focus();
+      // ✅ stable focus
+      setTimeout(() => {
+        inputRefs.current[index + 1]?.focus();
+      }, 0);
     } catch (error) {
       console.error("Barcode fetch failed:", error);
+    } finally {
+      scanningRef.current = false; // ✅ release lock
     }
   };
 
@@ -651,6 +673,7 @@ export default function SalesBillItems({
                   <td className="border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-left">
                     <input
                       id={`barcodeNo-input-${index}`}
+                      ref={(el) => (inputRefs.current[index] = el)}
                       onKeyDown={async (e) => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract")
                           e.preventDefault();
@@ -679,7 +702,7 @@ export default function SalesBillItems({
                         if (e.key === "Enter") {
                           e.preventDefault();
                           e.stopPropagation();
-                          handleBarcodeEnter(index, row);
+                          handleBarcodeEnter(index);
                         }
                       }}
                       className="text-left rounded py-1 px-1 w-full"
@@ -690,24 +713,13 @@ export default function SalesBillItems({
                       }
                       onBlur={(e) => {
                         handleInputChange(e.target.value, index, "barcodeNo");
-                        if (e.target.value === "") {
+                        if (!e.target.value) {
+                          // only reset if user manually cleared, not scanner flow
                           setSalesBillItems((prev) => {
                             const newBlend = [...prev];
                             newBlend[index] = {
+                              ...newBlend[index],
                               barcodeNo: "",
-                              styleItemId: null,
-                              styleId: "",
-                              sizeId: null,
-                              colorId: null,
-                              uomId: null,
-                              qty: "",
-                              rate: "",
-                              amount: "",
-                              discountType: "Percentage",
-                              discountValue: "",
-                              taxPercent: "",
-                              barcodeId: "",
-                              selected: false,
                             };
                             return newBlend;
                           });
