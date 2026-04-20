@@ -860,11 +860,7 @@ export default function SalesBillItems({
                       type="number"
                       className="text-right rounded py-1 px-1 w-full table-data-input"
                       value={row?.discountValue}
-                      disabled={
-                        readOnly ||
-                        row.discountType === "" ||
-                        (!isUserAdmin && !isHo)
-                      }
+                      disabled={readOnly || row.discountType === ""}
                       onKeyDown={(e) => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract")
                           e.preventDefault();
