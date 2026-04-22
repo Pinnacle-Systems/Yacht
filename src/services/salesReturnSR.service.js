@@ -239,6 +239,7 @@ async function create(body) {
       referenceId,
       salesPersonId,
       deliveryToId,
+      transDate,
     } = await body;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate
@@ -261,6 +262,7 @@ async function create(body) {
         data: {
           docId: newDocId,
           docDate: docDate ? new Date(docDate) : null,
+          transDate: transDate ? new Date(transDate) : null,
           branchId: parseInt(branchId),
           createdById: parseInt(userId),
           billNo: billNo ? billNo : undefined,
@@ -509,6 +511,7 @@ async function update(id, body) {
     roundOffValue,
     referenceId,
     salesPersonId,
+    transDate
   } = await body;
   let data;
   validateUniqueBarcode(salesReturnItems);
@@ -615,6 +618,7 @@ async function update(id, body) {
             : Number(roundOffValue),
         salesPersonId: salesPersonId ? parseInt(salesPersonId) : undefined,
         referenceId: referenceId ? parseInt(referenceId) : undefined,
+        transDate: transDate ? new Date(transDate) : null,
       },
     });
     await updateSalesReturnItems(

@@ -24,7 +24,7 @@ import {
   useGetSalesBillQuery,
   useLazyGetSalesBillDetailQuery,
 } from "../../../redux/services/SalesBillService";
-import { CommaInput, DropdownInput, DropdownNew } from "../../../Inputs";
+import { CommaInput, DateInput, DropdownInput, DropdownNew } from "../../../Inputs";
 import salesBillApi from "../../../redux/services/SalesBillService";
 import showroomStockApi from "../../../redux/uniformService/ShowroomStockService";
 import purchaseBillApi from "../../../redux/services/PurchaseBillService";
@@ -97,6 +97,7 @@ export function SalesReturnForm({
   const [salesPersonId, setSalesPersonId] = useState("");
   const [referenceId, setReferenceId] = useState("");
   const { hasPermission } = UserPermissions();
+  const [transDate, setTransDate] = useState("");
 
   const receiptRef = useRef();
   const { data: referenceData } = useGetReferenceMasterByIdQuery(referenceId);
@@ -228,7 +229,12 @@ export function SalesReturnForm({
 
   const validateData = (data) => {
     if (!isHo) {
-      if (!data?.customerName || !data?.billNo || !salesPersonId) {
+      if (
+        !data?.docDate ||
+        !data?.customerName ||
+        !data?.billNo ||
+        !salesPersonId
+      ) {
         toast.info("Please fill all required fields...!", {
           position: "top-center",
           autoClose: 2000,
@@ -236,7 +242,7 @@ export function SalesReturnForm({
         return false;
       }
     }
-    if (!data?.salesReturnItems || data.salesReturnItems.length === 0) {
+    if ( !data?.docDate ||  !data?.salesReturnItems || data.salesReturnItems.length === 0) {
       toast.info("Please add at least one return item...!", {
         position: "top-center",
         autoClose: 2000,
@@ -365,6 +371,7 @@ export function SalesReturnForm({
     roundOffValue,
     salesPersonId,
     referenceId,
+    transDate,
   };
 
   const syncFormWithDb = useCallback(
@@ -407,6 +414,13 @@ export function SalesReturnForm({
       setRoundOffValue(data?.roundOffValue ? data?.roundOffValue : "");
       setSalesPersonId(data?.salesPersonId ? data?.salesPersonId : "");
       setReferenceId(data?.referenceId ? data?.referenceId : "");
+      setTransDate(
+        id && (data?.transDate === "" || data?.transDate === null)
+          ? ""
+          : data?.transDate
+            ? moment.utc(data.transDate).format("YYYY-MM-DD")
+            : moment.utc(today).format("YYYY-MM-DD"),
+      );
     },
     [id],
   );
@@ -652,20 +666,34 @@ export function SalesReturnForm({
                 <h2 className="font-medium text-slate-700 mb-2">
                   Basic Details
                 </h2>
-                <div className="grid grid-cols-2 gap-1">
+                <div className="grid grid-cols-3 gap-1">
                   <ReusableInput
                     label="Sales Return No"
                     readOnly
                     value={docId}
                   />
                   <ReusableInput
+                    label="Transaction Date"
+                    value={transDate}
+                    type={"date"}
+                    readOnly={true}
+                    disabled
+                  />
+                  <DateInput
+                    name="Sales Return Date"
+                    value={docDate}
+                    setValue={setDocDate}
+                    required={true}
+                    readOnly={readOnly}
+                  />
+                  {/* <ReusableInput
                     label="Sales Return Date"
                     value={docDate}
                     type={"date"}
                     required={true}
                     readOnly={true}
                     disabled
-                  />
+                  /> */}
                   {!isHo && (
                     <DropdownInput
                       name="Sales Person"

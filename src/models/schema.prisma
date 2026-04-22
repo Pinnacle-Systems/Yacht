@@ -2934,9 +2934,11 @@ model SalesBillItems {
 }
 
 model SalesReturnSR {
-  id                Int          @id @default(autoincrement())
-  docId             String
-  docDate           DateTime?
+  id        Int       @id @default(autoincrement())
+  docId     String
+  docDate   DateTime?
+  transDate DateTime?
+
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
   createdBy         User?        @relation("createdBy", fields: [createdById], references: [id])
