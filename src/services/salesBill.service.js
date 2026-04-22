@@ -591,6 +591,7 @@ async function create(body) {
       roundOffValue,
       salesPersonId,
       referenceId,
+      transDate,
     } = await body;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate
@@ -624,6 +625,7 @@ async function create(body) {
         data: {
           docId: newDocId,
           docDate: docDate ? new Date(docDate) : null,
+          transDate: transDate ? new Date(transDate) : null,
           taxTemplateId: parseInt(taxTemplateId),
           paymentValue: paymentValue ? parseFloat(paymentValue) : null,
           branchId: parseInt(branchId),
@@ -782,6 +784,7 @@ async function update(id, body) {
     roundOffValue,
     salesPersonId,
     referenceId,
+    transDate,
   } = await body;
   let data;
   validateUniqueBarcode(salesBillItems);
@@ -829,6 +832,7 @@ async function update(id, body) {
       },
       data: {
         docDate: docDate ? new Date(docDate) : null,
+        transDate: transDate ? new Date(transDate) : null,
         taxTemplateId: parseInt(taxTemplateId),
         paymentValue: paymentValue ? parseFloat(paymentValue) : null,
         branchId: parseInt(branchId),

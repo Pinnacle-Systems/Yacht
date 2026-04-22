@@ -818,10 +818,17 @@ export const DateInput = ({
 }) => {
   return (
     <div className="flex flex-col gap-1 w-full">
-      <label className="block text-xs font-bold text-slate-700 ">
-        {inputHead ?? name}
-      </label>
-
+      {
+        required ? (
+          <label className="block text-xs font-bold text-slate-700">
+            {inputHead ?? name} <span className="text-red-500">*</span>
+          </label>
+        ) : (
+          <label className="block text-xs font-bold text-slate-700">
+            {inputHead ?? name}
+          </label>
+        )
+      }
       <div className="relative">
         <input
           id={name}

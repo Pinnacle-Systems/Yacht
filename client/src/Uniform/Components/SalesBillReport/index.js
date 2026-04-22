@@ -39,10 +39,9 @@ export default function Form() {
   } = useGetSalesBillReportQuery({
     params: {
       branchId,
-      pagination: true,
+      pagination: false,
       dataPerPage,
       finyearId,
-      pageNumber: currentPageNumber,
       fromDate,
       toDate,
     },
@@ -56,7 +55,7 @@ export default function Form() {
 
   const isLoadingIndicator = isLoading || isFetching;
   const allDataDetail = allData?.data || [];
-  const totalPages = Math?.ceil(allData?.length / dataPerPage);
+  const totalPages = Math?.ceil(allData?.totalCount / dataPerPage);
   const indexOfLastItem = currentPage * dataPerPage;
   const indexOfFirstItem = indexOfLastItem - dataPerPage;
   const currentItems = (allDataDetail || []).slice(
@@ -467,14 +466,18 @@ export default function Form() {
         widthClass={"w-[90%] h-[90%]"}
       >
         <PDFViewer style={tw("w-full h-full")}>
-          <PDF allData={allData || []} singleData={singleData} viewType={viewType} isAdmin={isAdmin} totalQty={totalQty}/>
+          <PDF
+            allData={allData || []}
+            singleData={singleData}
+            viewType={viewType}
+            isAdmin={isAdmin}
+            totalQty={totalQty}
+          />
         </PDFViewer>
       </Modal>
       <div className="py-1 bg-[#F1F1F0] h-[85%]">
         <div className="flex flex-col sm:flex-row justify-between bg-white  px-1  items-center mb-2 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-          <h1 className="text-xl font-bold text-gray-800">
-            Sales Bill Report
-          </h1>
+          <h1 className="text-xl font-bold text-gray-800">Sales Bill Report</h1>
           <div className="flex gap-5 font-medium text-lg items-center mt-1">
             <div className="flex gap-3 items-center">
               <button

@@ -1,5 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { CommaInput, DropdownInput, DropdownNew } from "../../../Inputs";
+import {
+  CommaInput,
+  DateInput,
+  DropdownInput,
+  DropdownNew,
+} from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import { ReusableInput } from "../../../Utils/CommonInput";
@@ -61,6 +66,7 @@ export function SalesBillForm({
   const [pdfOpen, setPdfOpen] = useState(false);
   const [docId, setDocId] = useState("New");
   const [docDate, setDocDate] = useState("");
+  const [transDate, setTransDate] = useState("");
   const [salesBillItems, setSalesBillItems] = useState([]);
   const [customerId, setCustomerId] = useState("");
   const [customerName, setCustomerName] = useState("");
@@ -140,6 +146,7 @@ export function SalesBillForm({
   const validateData = (data) => {
     if (!isHo) {
       if (
+        !data?.docDate ||
         !data?.customerId ||
         !data?.customerName ||
         !data?.taxTemplateId ||
@@ -152,7 +159,7 @@ export function SalesBillForm({
         return false;
       }
     } else {
-      if (!data?.deliveryToId || !data?.taxTemplateId) {
+      if (!data?.docDate || !data?.deliveryToId || !data?.taxTemplateId) {
         toast.info("Please fill all required fields...!", {
           position: "top-center",
           autoClose: 2000,
@@ -228,6 +235,7 @@ export function SalesBillForm({
   const data = {
     id,
     docDate,
+    transDate,
     branchId,
     salesBillItems: salesBillItems?.filter((item) => item?.styleItemId),
     userId,
@@ -260,6 +268,13 @@ export function SalesBillForm({
         data?.docDate
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
           : moment.utc(today).format("YYYY-MM-DD"),
+      );
+      setTransDate(
+        id && (data?.transDate === "" || data?.transDate === null)
+          ? ""
+          : data?.transDate
+            ? moment.utc(data.transDate).format("YYYY-MM-DD")
+            : moment.utc(today).format("YYYY-MM-DD"),
       );
       setSalesBillItems(data?.salesBillItems ? data.salesBillItems : []);
       if (data?.docId) {
@@ -635,15 +650,21 @@ export function SalesBillForm({
                 <h2 className="font-medium text-slate-700 mb-2">
                   Basic Details
                 </h2>
-                <div className="grid grid-cols-3 gap-1">
+                <div className="grid grid-cols-4 gap-1">
                   <ReusableInput label="Sales Bill No" readOnly value={docId} />
                   <ReusableInput
-                    label="Sales Bill Date"
-                    value={docDate}
+                    label="Transaction Date"
+                    value={transDate}
                     type={"date"}
-                    required={true}
                     readOnly={true}
                     disabled
+                  />
+                  <DateInput
+                    name="Sales Bill Date"
+                    value={docDate}
+                    setValue={setDocDate}
+                    required={true}
+                    readOnly={readOnly}
                   />
                   {isHo && (
                     <DropdownInput
