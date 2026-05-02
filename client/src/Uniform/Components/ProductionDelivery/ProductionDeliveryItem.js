@@ -636,6 +636,16 @@ export default function ProductionDeliveryItem({
                           if (e.key === "Delete") {
                             handleInputChange("", index, "issueQty");
                           }
+                          if (e.key === "Enter" || e.key === "ArrowDown") {
+                            e.preventDefault(); // prevent form submit or line break
+                            e.stopPropagation();
+                            const nextQtyInput = document.querySelector(
+                              `#issueQty-input-${index + 1}`,
+                            );
+                            if (nextQtyInput) {
+                              nextQtyInput.focus();
+                            }
+                          }
                         }}
                         min={"0"}
                         type="number"
@@ -703,7 +713,7 @@ export default function ProductionDeliveryItem({
                         ))}
                       </select> */}
                       <FxSelect
-                        // inputId={`styleId-input-${index}`}
+                        inputId={`styleId-input-${index}`}
                         value={row.employeeId}
                         onChange={(val) =>
                           handleInputChange(val, index, "employeeId")
@@ -716,12 +726,16 @@ export default function ProductionDeliveryItem({
                           }))}
                         readOnly={readOnly}
                         placeholder=""
-                       onBlur={(e) => {
-                         handleInputChange(row.employeeId, index, "employeeId")
+                        onBlur={(e) => {
+                          handleInputChange(
+                            row.employeeId,
+                            index,
+                            "employeeId",
+                          );
                         }}
-                       onKeyDown={(e) => {
+                        onKeyDown={(e) => {
                           if (e.key === "Enter") {
-                            // e.preventDefault();
+                          // e.preventDefault(); // prevent form submit or line break
                             e.stopPropagation();
                             const nextQtyInput = document.querySelector(
                               `#issueQty-input-${index + 1}`,
