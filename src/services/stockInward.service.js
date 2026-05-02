@@ -15,7 +15,7 @@ async function getNextDocId(
   endTime,
   saveType,
   docId,
-  isUpdate
+  isUpdate,
 ) {
   // Case 1: Draft save
   if (saveType) {
@@ -34,7 +34,7 @@ async function getNextDocId(
     });
     const branchObj = await getTableRecordWithId(branchId, "branch");
     let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
+      new Date(),
     )}/FGI/1`;
 
     if (lastObject) {
@@ -68,7 +68,7 @@ async function getNextDocId(
 
     const branchObj = await getTableRecordWithId(branchId, "branch");
     let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
+      new Date(),
     )}/FGI/1`;
     if (lastObject) {
       newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/FGI/${
@@ -87,7 +87,7 @@ function manualFilterSearchData(searchDelDate, searchDueDate, data) {
         : true) &&
       (searchDueDate
         ? String(getDateFromDateTime(item.dueDate)).includes(searchDueDate)
-        : true)
+        : true),
   );
 }
 
@@ -112,7 +112,7 @@ async function get(req) {
     branchId,
     shortCode,
     finYearDate?.startDateStartTime,
-    finYearDate?.endDateEndTime
+    finYearDate?.endDateEndTime,
   );
   let data;
   let totalCount;
@@ -167,13 +167,13 @@ async function get(req) {
   totalCount = data.length;
   if (searchDocDate) {
     data = data?.filter((item) =>
-      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate)
+      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate),
     );
   }
   if (pagination) {
     data = data.slice(
       (pageNumber - 1) * parseInt(dataPerPage),
-      pageNumber * dataPerPage
+      pageNumber * dataPerPage,
     );
   }
   return {
@@ -216,7 +216,7 @@ async function getOne(id) {
   });
   if (!data) return NoRecordFound("stockInward");
   const styleIds = data.StockInwardItems.map((item) => item.styleId).filter(
-    Boolean
+    Boolean,
   );
   const childRecordSales = await prisma.salesEntryItems.count({
     where: {
@@ -244,6 +244,7 @@ async function getOne(id) {
           styleId: item.styleId,
           prevProcessId: lastProcessId,
           sizeId: item.sizeId,
+          portionId: item.portionId,
         },
         _sum: {
           qty: true,
@@ -290,7 +291,7 @@ async function getOne(id) {
         usedQty: childRecordSales + childRecordAdjust || 0,
         minQty: (minSales._sum.qty || 0) + (minAdjust._sum.adjQty || 0),
       };
-    })
+    }),
   );
   return {
     statusCode: 0,
@@ -338,7 +339,7 @@ async function create(body) {
     const shortCode = finYearDate
       ? getYearShortCodeForFinYear(
           finYearDate?.startDateStartTime,
-          finYearDate?.endDateEndTime
+          finYearDate?.endDateEndTime,
         )
       : "";
     let newDocId = await getNextDocId(
@@ -346,7 +347,7 @@ async function create(body) {
       shortCode,
       finYearDate?.startDateStartTime,
       finYearDate?.endDateEndTime,
-      draftSave
+      draftSave,
     );
     let data;
     await prisma.$transaction(async (tx) => {
@@ -367,7 +368,7 @@ async function create(body) {
         data,
         userId,
         branchId,
-        storeId
+        storeId,
       );
     });
     return { statusCode: 0, data };
@@ -430,7 +431,7 @@ async function update(id, body) {
       data,
       userId,
       branchId,
-      storeId
+      storeId,
     );
   });
   return { statusCode: 0, data };
@@ -442,7 +443,7 @@ async function updateStockInwardItems(
   stockInward,
   userId,
   branchId,
-  storeId
+  storeId,
 ) {
   const newItems = stockInwardItems || [];
   const processedRows = [];
@@ -571,7 +572,7 @@ async function createStockInwardItems(
   stockInward,
   userId,
   branchId,
-  storeId
+  storeId,
 ) {
   const newItems = stockInwardItems || [];
 
@@ -596,7 +597,7 @@ async function createStockInwardItems(
     });
     if (exists) {
       throw new Error(
-        `Style No - ${exists.Style?.sku}, Size - ${exists.Size?.name} already exists`
+        `Style No - ${exists.Style?.sku}, Size - ${exists.Size?.name} already exists`,
       );
     }
   }
@@ -631,7 +632,7 @@ async function createStockInwardItems(
     const [styleId, sizeId] = key.split("-").map(Number);
 
     const matchedCreated = createdStockInwardItems.filter(
-      (x) => x.styleId === styleId && x.sizeId === sizeId
+      (x) => x.styleId === styleId && x.sizeId === sizeId,
     );
 
     if (matchedCreated.length === 0) {
@@ -673,7 +674,7 @@ async function createStockInwardItems(
 function findRemovedItems(dataFound, stockInwardItems) {
   let removedItems = dataFound.StockInwardItems.filter((oldItem) => {
     let result = stockInwardItems.find(
-      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id)
+      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id),
     );
     if (result) return false;
     return true;
