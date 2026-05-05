@@ -521,16 +521,16 @@ export default function Form() {
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <div className="flex flex-col w-full h-[93%] overflow-auto">
             <div className="h-full rounded-lg bg-[#F1F1F0] shadow-sm">
-              <div className="h-[480px]">
+              <div className="h-[480px] overflow-auto">
                 {currentItems.length > 0 ? (
-                  <table className="">
+                  <table className="overflow-auto">
                     <thead className="bg-gray-200 text-gray-800 ">
                       <tr className="">
                         <th className=" px-1 py-1.5  font-medium text-[13px]  text-gray-900  text-center  w-12">
                           <div className="">S No</div>
                         </th>
 
-                        <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-36">
+                        <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-44">
                           <div>Sales No</div>
                         </th>
                         <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-28">

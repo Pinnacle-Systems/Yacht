@@ -369,7 +369,7 @@ async function getSalesReport(req) {
     };
   });
   const combinedData = [...formattedBills, ...formattedExchange].sort(
-    (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+    (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
   );
   const totalCount = combinedData.length;
   const totalCashAmount = combinedData?.reduce(
