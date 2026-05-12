@@ -636,21 +636,21 @@ export default function ProductionDeliveryItem({
                           if (e.key === "Delete") {
                             handleInputChange("", index, "issueQty");
                           }
-                          if (e.key === "Enter" || e.key === "ArrowDown") {
-                            e.preventDefault(); // prevent form submit or line break
-                            e.stopPropagation();
-                            const nextQtyInput = document.querySelector(
-                              `#issueQty-input-${index + 1}`,
-                            );
-                            if (nextQtyInput) {
-                              nextQtyInput.focus();
-                            }
-                          }
+                          // if (e.key === "Enter" || e.key === "ArrowDown") {
+                          //   e.preventDefault(); // prevent form submit or line break
+                          //   e.stopPropagation();
+                          //   const nextQtyInput = document.querySelector(
+                          //     `#issueQty-input-${index + 1}`,
+                          //   );
+                          //   if (nextQtyInput) {
+                          //     nextQtyInput.focus();
+                          //   }
+                          // }
                         }}
                         min={"0"}
                         type="number"
                         className="text-right rounded py-1 px-1 w-full table-data-input"
-                        onFocus={(e) => e.target.focus()}
+                        onFocus={(e) => e.target.select()}
                         value={row?.issueQty}
                         onChange={(e) =>
                           handleInputChange(e.target.value, index, "issueQty")
@@ -734,16 +734,16 @@ export default function ProductionDeliveryItem({
                           );
                         }}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                          // e.preventDefault(); // prevent form submit or line break
-                            e.stopPropagation();
-                            const nextQtyInput = document.querySelector(
-                              `#issueQty-input-${index + 1}`,
-                            );
-                            if (nextQtyInput) {
-                              nextQtyInput.focus();
-                            }
-                          }
+                          // if (e.key === "Enter") {
+                          // // e.preventDefault(); // prevent form submit or line break
+                          //   e.stopPropagation();
+                          //   const nextQtyInput = document.querySelector(
+                          //     `#issueQty-input-${index + 1}`,
+                          //   );
+                          //   if (nextQtyInput) {
+                          //     nextQtyInput.focus();
+                          //   }
+                          // }
                           if (e.key === "Delete") {
                             handleInputChange("", index, "employeeId");
                           }
@@ -761,6 +761,7 @@ export default function ProductionDeliveryItem({
                             );
                             if (nextQtyInput) {
                               nextQtyInput.focus();
+                              nextQtyInput.select();
                             }
                           }
                           if (e.key === "Delete") {
