@@ -143,42 +143,163 @@ export function SalesBillForm({
     return duplicates; // empty array = no duplicates
   };
 
+  // const validateData = (data) => {
+  //   if (!isHo) {
+  //     if (
+  //       !data?.docDate ||
+  //       !data?.customerId ||
+  //       !data?.customerName ||
+  //       !data?.taxTemplateId ||
+  //       !data?.salesPersonId
+  //     ) {
+  //       toast.info("Please fill all required fields...!", {
+  //         position: "top-center",
+  //         autoClose: 2000,
+  //       });
+  //       return false;
+  //     }
+  //   } else {
+  //     if (!data?.docDate || !data?.deliveryToId || !data?.taxTemplateId) {
+  //       toast.info("Please fill all required fields...!", {
+  //         position: "top-center",
+  //         autoClose: 2000,
+  //       });
+  //       return false;
+  //     }
+  //   }
+
+  //   // 2️⃣ At least one item required
+  //   if (!data?.salesBillItems || data.salesBillItems.length === 0) {
+  //     toast.info("Please add at least one item...!", {
+  //       position: "top-center",
+  //     });
+  //     return false;
+  //   }
+
+  //   const filledGoodsItems = data.salesBillItems.filter(
+  //     (item) => item?.styleItemId,
+  //   );
+  //   if (
+  //     !isGridDatasValid(filledGoodsItems, false, [
+  //       "qty",
+  //       "rate",
+  //       "barcodeId",
+  //       "sizeId",
+  //       "styleId",
+  //     ])
+  //   ) {
+  //     toast.info("Please fill all required items details...!", {
+  //       position: "top-center",
+  //       autoClose: 2000,
+  //     });
+  //     return false;
+  //   }
+
+  //   // 4️⃣ Duplicate check
+  //   // 4️⃣ Duplicate check
+  //   const duplicatesGoods = findDuplicateGoodss(filledGoodsItems);
+  //   if (duplicatesGoods.length > 0) {
+  //     const dup = duplicatesGoods[0];
+  //     Swal.fire({
+  //       icon: "warning",
+  //       title: "Duplicate Item Found",
+  //       html: `
+  //              Barcode - ${dup?.barcodeNo},
+  //              Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
+  //            `,
+  //     });
+  //     return false;
+  //   }
+  //   if (!isHo) {
+  //     if (paidAmount > totalAmount) {
+  //       Swal.fire({
+  //         icon: "error",
+  //         title: "Payment Error",
+  //         text: "Paid amount cannot be greater than Total amount",
+  //       });
+  //       return false; // stop further execution
+  //     }
+  //     if (paidAmount < totalAmount) {
+  //       Swal.fire({
+  //         icon: "error",
+  //         title: "Payment Error",
+  //         text: "Paid amount cannot be Less than Total amount",
+  //       });
+  //       return false; // stop further execution
+  //     }
+  //   }
+
+  //   return true;
+  // };
+
   const validateData = (data) => {
+    const requiredFields = [];
+
     if (!isHo) {
-      if (
-        !data?.docDate ||
-        !data?.customerId ||
-        !data?.customerName ||
-        !data?.taxTemplateId ||
-        !data?.salesPersonId
-      ) {
-        toast.info("Please fill all required fields...!", {
-          position: "top-center",
-          autoClose: 2000,
-        });
-        return false;
+      if (!data?.docDate) {
+        requiredFields.push("Bill Date");
+      }
+      if (!data?.taxTemplateId) {
+        requiredFields.push("Tax Template");
+      }
+      if (!data?.salesPersonId) {
+        requiredFields.push("Sales Person");
+      }
+      if (!data?.customerId) {
+        requiredFields.push("Customer No");
+      }
+
+      if (!data?.customerName) {
+        requiredFields.push("Customer Name");
+      }
+
+      if (!isCash && !isCard && !isUpI) {
+        requiredFields.push("Any One Payment Mode (Cash / Card / UPI)");
       }
     } else {
-      if (!data?.docDate || !data?.deliveryToId || !data?.taxTemplateId) {
-        toast.info("Please fill all required fields...!", {
-          position: "top-center",
-          autoClose: 2000,
-        });
-        return false;
+      if (!data?.docDate) {
+        requiredFields.push("Bill Date");
       }
+
+      if (!data?.deliveryToId) {
+        requiredFields.push("Delivery To");
+      }
+
+      if (!data?.taxTemplateId) {
+        requiredFields.push("Tax Template");
+      }
+    }
+
+    if (requiredFields.length > 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "Required Fields Missing",
+        html: `
+        <div style="text-align:left">
+          ${requiredFields.map((field) => `• ${field}`).join("<br/>")}
+        </div>
+      `,
+        confirmButtonColor: "#3085d6",
+      });
+
+      return false;
     }
 
     // 2️⃣ At least one item required
     if (!data?.salesBillItems || data.salesBillItems.length === 0) {
-      toast.info("Please add at least one item...!", {
-        position: "top-center",
+      Swal.fire({
+        icon: "warning",
+        title: "Items Missing",
+        text: "Please add at least one item",
       });
+
       return false;
     }
 
     const filledGoodsItems = data.salesBillItems.filter(
       (item) => item?.styleItemId,
     );
+
     if (
       !isGridDatasValid(filledGoodsItems, false, [
         "qty",
@@ -188,28 +309,33 @@ export function SalesBillForm({
         "styleId",
       ])
     ) {
-      toast.info("Please fill all required items details...!", {
-        position: "top-center",
-        autoClose: 2000,
+      Swal.fire({
+        icon: "warning",
+        title: "Item Details Missing",
+        text: "Please fill all required item details",
       });
+
       return false;
     }
 
-    // 4️⃣ Duplicate check
-    // 4️⃣ Duplicate check
+    // Duplicate check
     const duplicatesGoods = findDuplicateGoodss(filledGoodsItems);
+
     if (duplicatesGoods.length > 0) {
       const dup = duplicatesGoods[0];
+
       Swal.fire({
         icon: "warning",
         title: "Duplicate Item Found",
         html: `
-               Barcode - ${dup?.barcodeNo},
-               Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
-             `,
+        Barcode - ${dup?.barcodeNo}<br/>
+        Rows - ${dup.firstIndex + 1} & ${dup.duplicateIndex + 1}
+      `,
       });
+
       return false;
     }
+
     if (!isHo) {
       if (paidAmount > totalAmount) {
         Swal.fire({
@@ -217,15 +343,18 @@ export function SalesBillForm({
           title: "Payment Error",
           text: "Paid amount cannot be greater than Total amount",
         });
-        return false; // stop further execution
+
+        return false;
       }
+
       if (paidAmount < totalAmount) {
         Swal.fire({
           icon: "error",
           title: "Payment Error",
           text: "Paid amount cannot be Less than Total amount",
         });
-        return false; // stop further execution
+
+        return false;
       }
     }
 
@@ -650,7 +779,7 @@ export function SalesBillForm({
                 <h2 className="font-medium text-slate-700 mb-2">
                   Basic Details
                 </h2>
-                <div className="grid grid-cols-4 gap-1">
+                <div className="grid grid-cols-5 gap-1">
                   <ReusableInput label="Sales Bill No" readOnly value={docId} />
                   <ReusableInput
                     label="Transaction Date"
@@ -666,21 +795,19 @@ export function SalesBillForm({
                     required={true}
                     readOnly={readOnly}
                   />
-                  {isHo && (
-                    <DropdownInput
-                      name="Tax Type"
-                      options={dropDownListObject(
-                        taxTypeList ? taxTypeList?.data : [],
-                        "name",
-                        "id",
-                      )}
-                      value={taxTemplateId}
-                      setValue={setTaxTemplateId}
-                      required={true}
-                      readOnly={readOnly || id}
-                      // autoFocus={true}
-                    />
-                  )}
+                  <DropdownInput
+                    name="Tax Type"
+                    options={dropDownListObject(
+                      taxTypeList ? taxTypeList?.data : [],
+                      "name",
+                      "id",
+                    )}
+                    value={taxTemplateId}
+                    setValue={setTaxTemplateId}
+                    required={true}
+                    readOnly={readOnly || id}
+                    // autoFocus={true}
+                  />
                   {!isHo && (
                     <DropdownInput
                       name="Sales Person"

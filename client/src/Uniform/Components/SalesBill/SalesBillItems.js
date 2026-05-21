@@ -581,17 +581,17 @@ export default function SalesBillItems({
                 <th
                   className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
                 >
-                  Barcode
+                  Barcode<span className="text-red-500"> *</span>
                 </th>
                 <th
                   className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
                 >
-                  Style Item
+                  Style Item<span className="text-red-500"> *</span>
                 </th>
                 <th
-                  className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                 >
-                  Size
+                  Size<span className="text-red-500"> *</span>
                 </th>
                 <th
                   className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
@@ -606,12 +606,13 @@ export default function SalesBillItems({
                 <th
                   className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Qty
+                  Qty 
+                  <span className="text-red-500"> *</span>
                 </th>
                 <th
                   className={`w-20 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Rate
+                  Rate<span className="text-red-500"> *</span>
                 </th>
                 <th
                   className={`w-24 px-1 py-2 text-center font-medium text-[13px] `}

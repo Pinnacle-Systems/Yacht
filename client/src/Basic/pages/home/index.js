@@ -60,7 +60,7 @@ const Home = () => {
     navigate(LOGIN);
     window.location.reload();
   },[navigate]);
-  useIdleLogout(onLogout, isLoggedIn);
+  // useIdleLogout(onLogout, isLoggedIn);
 
   return (
     <>
