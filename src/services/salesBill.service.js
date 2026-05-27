@@ -562,6 +562,33 @@ function validateUniqueBarcode(salesBillItems) {
     seen.add(barcodeId);
   }
 }
+async function validateBarcodeExistsInBranch(tx, salesBillItems, branchId) {
+  for (let i = 0; i < salesBillItems.length; i++) {
+    const item = salesBillItems[i];
+
+    if (!item?.barcodeId) continue;
+
+    const stock = await tx.stockSummary.findFirst({
+      where: {
+        barcodeId: parseInt(item.barcodeId),
+        branchId: parseInt(branchId),
+        qty: {
+          gt: 0,
+        },
+      },
+      select: {
+        barcodeNo: true,
+        qty: true,
+      },
+    });
+
+    if (!stock) {
+      throw new Error(
+        `Barcode No ${item.barcodeNo} does not exist or already sold`,
+      );
+    }
+  }
+}
 
 async function create(body) {
   try {
@@ -609,6 +636,8 @@ async function create(body) {
     let data;
     validateUniqueBarcode(salesBillItems);
     await prisma.$transaction(async (tx) => {
+      await validateBarcodeExistsInBranch(tx, salesBillItems, branchId);
+
       let customerObj = null;
       if (customerId) {
         await tx.customer.update({
@@ -826,6 +855,17 @@ async function update(id, body) {
         where: { id: { in: removeItemsIds } },
       });
     }
+    const existingBarcodeIds = dataFound.salesBillItems
+      .map((item) => item.barcodeId)
+      .filter(Boolean);
+
+    const newItems = salesBillItems.filter(
+      (item) =>
+        item.barcodeId &&
+        !existingBarcodeIds.includes(parseInt(item.barcodeId)),
+    );
+
+    await validateBarcodeExistsInBranch(tx, newItems, branchId);
     data = await tx.salesBill.update({
       where: {
         id: parseInt(id),

@@ -1,4 +1,4 @@
-import { prisma } from "../lib/prisma.js";
+import { Prisma, prisma } from "../lib/prisma.js";
 
 import {
   get as _get,
@@ -29,7 +29,7 @@ async function create(req, res, next) {
     res.json(await _create(req.body));
   } catch (error) {
     console.error(`Error`, error.message);
-    if (error instanceof prisma.PrismaClientKnownRequestError) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         res.statusCode = 200;
         res.json({
@@ -49,7 +49,7 @@ async function update(req, res, next) {
     res.json(await _update(req.params.id, req.body));
   } catch (error) {
     console.error(`Error`, error.message);
-    if (error instanceof prisma.PrismaClientKnownRequestError) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         res.statusCode = 200;
         res.json({

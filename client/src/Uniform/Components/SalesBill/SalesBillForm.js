@@ -486,7 +486,11 @@ export function SalesBillForm({
         dispatch(showroomStockApi.util.invalidateTags(["showroomStock"]));
         dispatch(OpeningStockSRApi.util.invalidateTags(["OpeningStockSR"]));
       } else {
-        toast.error(returnData?.message);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: returnData?.message,
+        });
       }
     } catch (error) {
       console.log("handle");
