@@ -15,7 +15,7 @@ async function getNextDocId(
   endTime,
   saveType,
   docId,
-  isUpdate
+  isUpdate,
 ) {
   // Case 1: Draft save
   if (saveType) {
@@ -33,12 +33,10 @@ async function getNextDocId(
       orderBy: { id: "desc" },
     });
     const branchObj = await getTableRecordWithId(branchId, "branch");
-    let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
-    )}/PR/1`;
+    let newDocId = `${branchObj.branchCode}/${shortCode}/PR/1`;
 
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/PR/${
+      newDocId = `${branchObj.branchCode}/${shortCode}/PR/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
@@ -67,11 +65,9 @@ async function getNextDocId(
     });
 
     const branchObj = await getTableRecordWithId(branchId, "branch");
-    let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
-    )}/PR/1`;
+    let newDocId = `${branchObj.branchCode}/${shortCode}/PR/1`;
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/PR/${
+      newDocId = `${branchObj.branchCode}/${shortCode}/PR/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
@@ -102,7 +98,7 @@ async function get(req) {
     branchId,
     shortCode,
     finYearDate?.startDateStartTime,
-    finYearDate?.endDateEndTime
+    finYearDate?.endDateEndTime,
   );
   let data;
   let totalCount;
@@ -161,13 +157,13 @@ async function get(req) {
   totalCount = data.length;
   if (searchDocDate) {
     data = data?.filter((item) =>
-      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate)
+      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate),
     );
   }
   if (pagination) {
     data = data.slice(
       (pageNumber - 1) * parseInt(dataPerPage),
-      pageNumber * dataPerPage
+      pageNumber * dataPerPage,
     );
   }
   return {
@@ -251,7 +247,7 @@ async function getOne(id) {
         fabMeter: stkQty._sum.fabMeter + item.returnFabMeter,
         qty: stkQty._sum.qty + item.returnQty,
       };
-    })
+    }),
   );
   const returnGoodsStkQty = await Promise.all(
     data.returnGoods.map(async (item) => {
@@ -271,14 +267,14 @@ async function getOne(id) {
         ...item,
         stkQty: stkQty._sum.qty + item.returnQty,
       };
-    })
+    }),
   );
   return {
     statusCode: 0,
     data: {
       ...data,
       purchaseReturnItems: purchaseReturnStkQty,
-      returnGoods:returnGoodsStkQty,
+      returnGoods: returnGoodsStkQty,
       ...{ childRecord },
     },
   };
@@ -303,7 +299,7 @@ async function create(body) {
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(
         finYearDate?.startDateStartTime,
-        finYearDate?.endDateEndTime
+        finYearDate?.endDateEndTime,
       )
     : "";
   let newDocId = await getNextDocId(
@@ -311,7 +307,7 @@ async function create(body) {
     shortCode,
     finYearDate?.startDateStartTime,
     finYearDate?.endDateEndTime,
-    draftSave
+    draftSave,
   );
   let data;
   await prisma.$transaction(async (tx) => {
@@ -336,7 +332,7 @@ async function create(body) {
         userId,
         branchId,
         storeId,
-        invNo
+        invNo,
       );
     } else {
       await createPurchaseReturnItems(
@@ -347,7 +343,7 @@ async function create(body) {
         branchId,
         storeId,
         returnType,
-        invNo
+        invNo,
       );
     }
   });
@@ -362,7 +358,7 @@ async function createPurchaseReturnItems(
   branchId,
   storeId,
   returnType,
-  invNo
+  invNo,
 ) {
   const promises = purchaseReturnItems.map(async (returnDetails, index) => {
     const createdItem = await tx.purchaseReturnItems.create({
@@ -481,7 +477,7 @@ async function createReturnGoods(
   userId,
   branchId,
   storeId,
-  invNo
+  invNo,
 ) {
   const promises = returnGoods.map(async (stockDetail, index) => {
     const stkQty = stockDetail?.stkQty
@@ -538,7 +534,7 @@ async function createReturnGoods(
 function findRemovedItems(dataFound, purchaseReturnItems) {
   let removedItems = dataFound.purchaseReturnItems.filter((oldItem) => {
     let result = purchaseReturnItems.find(
-      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id)
+      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id),
     );
     if (result) return false;
     return true;
@@ -616,7 +612,7 @@ async function update(id, body) {
         userId,
         branchId,
         storeId,
-        invNo
+        invNo,
       );
     } else {
       await updatepurchaseReturnItems(
@@ -627,7 +623,7 @@ async function update(id, body) {
         branchId,
         storeId,
         returnType,
-        invNo
+        invNo,
       );
     }
   });
@@ -642,7 +638,7 @@ async function updatepurchaseReturnItems(
   branchId,
   storeId,
   returnType,
-  invNo
+  invNo,
 ) {
   const promises = purchaseReturnItems.map(async (returnDetails) => {
     if (returnDetails.id) {
@@ -932,7 +928,7 @@ async function updateReturnGoods(
   userId,
   branchId,
   storeId,
-  invNo
+  invNo,
 ) {
   const existingRows = await tx.returnGoods.findMany({
     where: { purchaseReturnId: parseInt(purchaseReturn.id) },

@@ -15,7 +15,7 @@ async function getNextDocId(
   endTime,
   saveType,
   docId,
-  isUpdate
+  isUpdate,
 ) {
   // Case 1: Draft save
   if (saveType) {
@@ -33,12 +33,10 @@ async function getNextDocId(
       orderBy: { id: "desc" },
     });
     const branchObj = await getTableRecordWithId(branchId, "branch");
-    let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
-    )}/CP/1`;
+    let newDocId = `${branchObj.branchCode}/${shortCode}/CP/1`;
 
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/CP/${
+      newDocId = `${branchObj.branchCode}/${shortCode}/CP/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
@@ -67,11 +65,9 @@ async function getNextDocId(
     });
 
     const branchObj = await getTableRecordWithId(branchId, "branch");
-    let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
-    )}/CP/1`;
+    let newDocId = `${branchObj.branchCode}/${shortCode}/CP/1`;
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/CP/${
+      newDocId = `${branchObj.branchCode}/${shortCode}/CP/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
@@ -87,7 +83,7 @@ function manualFilterSearchData(searchDelDate, searchDueDate, data) {
         : true) &&
       (searchDueDate
         ? String(getDateFromDateTime(item.dueDate)).includes(searchDueDate)
-        : true)
+        : true),
   );
 }
 
@@ -112,7 +108,7 @@ async function get(req) {
     branchId,
     shortCode,
     finYearDate?.startDateStartTime,
-    finYearDate?.endDateEndTime
+    finYearDate?.endDateEndTime,
   );
   let data;
   let totalCount;
@@ -167,13 +163,13 @@ async function get(req) {
   totalCount = data.length;
   if (searchDocDate) {
     data = data?.filter((item) =>
-      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate)
+      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate),
     );
   }
   if (pagination) {
     data = data.slice(
       (pageNumber - 1) * parseInt(dataPerPage),
-      pageNumber * dataPerPage
+      pageNumber * dataPerPage,
     );
   }
 
@@ -232,7 +228,7 @@ async function getOne(id) {
         ...item,
         stockQty: usedQty,
       };
-    })
+    }),
   );
   const styleIds = data.cuttingOrderItems
     .map((item) => item.styleId)
@@ -257,7 +253,7 @@ async function getOne(id) {
 function findRemovedItems(dataFound, cuttingOrderItems) {
   let removedItems = dataFound.cuttingOrderItems.filter((oldItem) => {
     let result = cuttingOrderItems.find(
-      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id)
+      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id),
     );
     if (result) return false;
     return true;
@@ -283,7 +279,7 @@ async function create(body) {
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(
         finYearDate?.startDateStartTime,
-        finYearDate?.endDateEndTime
+        finYearDate?.endDateEndTime,
       )
     : "";
   let newDocId = await getNextDocId(
@@ -291,7 +287,7 @@ async function create(body) {
     shortCode,
     finYearDate?.startDateStartTime,
     finYearDate?.endDateEndTime,
-    draftSave
+    draftSave,
   );
   let data;
   const exist = await prisma.cuttingOrder.findFirst({
@@ -324,7 +320,7 @@ async function create(body) {
       cuttingOrderItems,
       data,
       userId,
-      branchId
+      branchId,
       // storeId
     );
   });
@@ -336,7 +332,7 @@ async function createCuttingOrderItems(
   cuttingOrderItems,
   cuttingOrder,
   userId,
-  branchId
+  branchId,
   // storeId
 ) {
   const promises = cuttingOrderItems.map(async (orderDetail, index) => {
@@ -477,7 +473,7 @@ async function update(id, body) {
       cuttingOrderItems,
       data,
       userId,
-      branchId
+      branchId,
       // storeId
     );
   });
@@ -706,7 +702,7 @@ async function updateCuttingOrderItems(
   cuttingOrder,
   userId,
   branchId,
-  storeId
+  storeId,
 ) {
   const promises = cuttingOrderItems.map(async (orderDetail) => {
     const orderQty = orderDetail?.orderQty

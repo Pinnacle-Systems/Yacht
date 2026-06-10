@@ -1,9 +1,9 @@
 import { prisma } from "../lib/prisma.js";
 import { CustomError, NoRecordFound } from "../configs/Responses.js";
 
-
 async function getStyleDetail(req) {
   const { styleId, branchId, fromProcessId, toProcessId, storeId } = req.query;
+
   // const currentProcess = await prisma.processGroupList.findFirst({
   //   where: {
   //     processId: parseInt(fromProcessId),
@@ -18,17 +18,27 @@ async function getStyleDetail(req) {
       styleId: parseInt(styleId),
     },
   });
+  if (!processGroup) {
+    return {
+      statusCode: 400,
+      message: "Process Group not found for selected Style",
+    };
+  }
   processGroupId = processGroup.processGroupId;
-  let processGroupList;
-  if (processGroupId) {
-    processGroupList = await prisma.processGroupList.findMany({
-      where: {
-        processGroupId: processGroupId,
-      },
-    });
+  const processGroupList = await prisma.processGroupList.findMany({
+    where: {
+      processGroupId,
+    },
+  });
+
+  if (!processGroupList.length) {
+    return {
+      statusCode: 400,
+      message: "Process Group List not found",
+    };
   }
   const currentProcess = processGroupList.find(
-    (item) => item.processId === parseInt(fromProcessId)
+    (item) => item.processId === parseInt(fromProcessId),
   );
   let prevProcessId;
   let nextProcessId;
@@ -44,10 +54,10 @@ async function getStyleDetail(req) {
     //   },
     // });
     const prevProcess = processGroupList.find(
-      (item) => item.seqNo === currentProcess.seqNo - 1
+      (item) => item.seqNo === currentProcess.seqNo - 1,
     );
     const nextProcess = processGroupList.find(
-      (item) => item.seqNo === currentProcess.seqNo + 1
+      (item) => item.seqNo === currentProcess.seqNo + 1,
     );
     nextProcessId = nextProcess?.processId;
     prevProcessId = prevProcess?.processId;

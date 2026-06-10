@@ -23,9 +23,9 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
     },
   });
   const branchObj = await getTableRecordWithId(branchId, "branch");
-  let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SB/1`;
+  let newDocId = `${branchObj.branchCode}/${shortCode}/SB/1`;
   if (lastObject) {
-    newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SB/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`;
+    newDocId = `${branchObj.branchCode}/${shortCode}/SB/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`;
   }
   return newDocId;
 }

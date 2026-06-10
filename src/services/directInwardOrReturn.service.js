@@ -40,7 +40,7 @@ async function getNextDocId(
   poInwardOrDirectInward,
   shortCode,
   startTime,
-  endTime
+  endTime,
 ) {
   let lastObject = await prisma.directInwardOrReturn.findFirst({
     where: {
@@ -64,13 +64,9 @@ async function getNextDocId(
     },
   });
   const branchObj = await getTableRecordWithId(branchId, "branch");
-  let newDocId = `${branchObj.branchCode}${getYearShortCode(
-    new Date()
-  )}/${getInwardOrReturnShortCode(poInwardOrDirectInward)}/1`;
+  let newDocId = `${branchObj.branchCode}/${shortCode}/${getInwardOrReturnShortCode(poInwardOrDirectInward)}/1`;
   if (lastObject) {
-    newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
-    )}/${getInwardOrReturnShortCode(poInwardOrDirectInward)}/${
+    newDocId = `${branchObj.branchCode}/${shortCode}/${getInwardOrReturnShortCode(poInwardOrDirectInward)}/${
       parseInt(lastObject.docId.split("/").at(-1)) + 1
     }`;
   }
@@ -81,7 +77,7 @@ function manualFilterSearchData(
   searchPoDate,
   searchDueDate,
   searchPoType,
-  data
+  data,
 ) {
   return data.filter(
     (item) =>
@@ -93,7 +89,7 @@ function manualFilterSearchData(
         : true) &&
       (searchPoType
         ? item.poType.toLowerCase().includes(searchPoType.toLowerCase())
-        : true)
+        : true),
   );
 }
 
@@ -118,7 +114,7 @@ async function get(req) {
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(
         finYearDate?.startDateStartTime,
-        finYearDate?.endDateEndTime
+        finYearDate?.endDateEndTime,
       )
     : "";
   if (pagination) {
@@ -167,12 +163,12 @@ async function get(req) {
       searchPoDate,
       searchDueDate,
       searchPoType,
-      data
+      data,
     );
     totalCount = data.length;
     data = data.slice(
       (pageNumber - 1) * parseInt(dataPerPage),
-      pageNumber * dataPerPage
+      pageNumber * dataPerPage,
     );
   } else {
     data = await prisma.directInwardOrReturn.findMany({
@@ -211,7 +207,7 @@ async function get(req) {
     poInwardOrDirectInward,
     shortCode,
     finYearDate?.startDateStartTime,
-    finYearDate?.endDateEndTime
+    finYearDate?.endDateEndTime,
   );
   return { statusCode: 0, data, nextDocId: docId, totalCount };
 }
@@ -341,12 +337,12 @@ export async function getDirectItems(req) {
       searchPoDate,
       searchDueDate,
       searchPoType,
-      data
+      data,
     );
     totalCount = data.length;
     data = data.slice(
       (pageNumber - 1) * parseInt(dataPerPage),
-      pageNumber * dataPerPage
+      pageNumber * dataPerPage,
     );
     // data = await getAllDataPoItems(data)
     data = await getAllDataDirectItems(data, storeId);
@@ -355,7 +351,7 @@ export async function getDirectItems(req) {
       data = data
         ?.filter(
           (val) =>
-            val.DirectInwardOrReturn?.poInwardOrDirectInward == "DirectInward"
+            val.DirectInwardOrReturn?.poInwardOrDirectInward == "DirectInward",
         )
         ?.filter(
           (item) =>
@@ -363,8 +359,8 @@ export async function getDirectItems(req) {
               item.qty,
               0,
               item.alreadyInwardedQty,
-              item.alreadyReturnedData._sum?.qty
-            ) > 0
+              item.alreadyReturnedData._sum?.qty,
+            ) > 0,
         );
     }
 
@@ -389,7 +385,7 @@ function manualFilterSearchDataDirectItems(
   searchPoDate,
   searchDueDate,
   searchPoType,
-  data
+  data,
 ) {
   return data.filter(
     (item) =>
@@ -403,7 +399,7 @@ function manualFilterSearchDataDirectItems(
         ? item.DirectInwardOrReturn.poType
             .toLowerCase()
             .includes(searchPoType.toLowerCase())
-        : true)
+        : true),
   );
 }
 
@@ -411,7 +407,7 @@ function manualFilterSearchDataPoItems(
   searchPoDate,
   searchDueDate,
   searchPoType,
-  data
+  data,
 ) {
   return data.filter(
     (item) =>
@@ -423,7 +419,7 @@ function manualFilterSearchDataPoItems(
         : true) &&
       (searchPoType
         ? item.Po.transType.toLowerCase().includes(searchPoType.toLowerCase())
-        : true)
+        : true),
   );
 }
 
@@ -440,7 +436,7 @@ export async function getDirectItemById(
   billEntryId,
   directReturnOrPoReturnId,
   storeId,
-  stockId
+  stockId,
 ) {
   let data = await prisma.directItems.findUnique({
     where: {
@@ -553,7 +549,6 @@ export async function getDirectItemById(
     },
   });
 
-
   const alreadyReturnedLotWiseData = await prisma.directReturnItems.groupBy({
     where: {
       directItemsId: parseInt(id),
@@ -590,11 +585,10 @@ export async function getDirectItemById(
   let balanceQty = substract(alreadyInwardedQty, alreadyReturnedQty);
   let allowedReturnRolls = substract(
     alreadyInwardedRolls,
-    alreadyReturnedRolls
+    alreadyReturnedRolls,
   );
 
   let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty);
-
 
   let stockQty = parseFloat(
     (
@@ -611,9 +605,9 @@ export async function getDirectItemById(
         data?.sizeId,
         data?.fabricId,
         data?.kDiaId,
-        data?.fDiaId
+        data?.fDiaId,
       )
-    )?.stockQty || 0
+    )?.stockQty || 0,
   );
   let stockRolls = parseInt(
     (
@@ -630,9 +624,9 @@ export async function getDirectItemById(
         data?.sizeId,
         data?.fabricId,
         data?.kDiaId,
-        data?.fDiaId
+        data?.fDiaId,
       )
-    )?.stockRolls || 0
+    )?.stockRolls || 0,
   );
 
   // let inwardLotDetailsdata = `select directItemsID, lotNo, sum(inwardLotDetails.qty) as qty ,sum(inwardLotDetails.noOfRolls) as noOfRolls from directItems
@@ -657,13 +651,13 @@ export async function getDirectItemById(
       alreadyReturnedRolls: (
         await getLotWiseReturnRolls(
           inwardData?.lotNo,
-          inwardData?.directItemsID
+          inwardData?.directItemsID,
         )
       )?.lotRolls,
       alreadyReturnedQty: (
         await getLotWiseReturnRolls(
           inwardData?.lotNo,
-          inwardData?.directItemsID
+          inwardData?.directItemsID,
         )
       )?.lotQty,
       // stockQty: parseFloat(parseFloat(inwardData?.qty) - parseFloat((await getLotWiseReturnRolls(inwardData?.lotNo, inwardData?.directItemsID))?.lotQty || 0)),
@@ -683,9 +677,9 @@ export async function getDirectItemById(
             data?.sizeId,
             data?.fabricId,
             data?.kDiaId,
-            data?.fDiaId
+            data?.fDiaId,
           )
-        )?.stockQty || 0
+        )?.stockQty || 0,
       ),
       allowedReturnQty: parseFloat(
         parseFloat(inwardData?.qty) -
@@ -693,10 +687,10 @@ export async function getDirectItemById(
             (
               await getLotWiseReturnRolls(
                 inwardData?.lotNo,
-                inwardData?.directItemsID
+                inwardData?.directItemsID,
               )
-            )?.lotQty || 0
-          )
+            )?.lotQty || 0,
+          ),
       ),
     };
   }
@@ -780,7 +774,7 @@ export async function getDirectItemById(
       stockData,
 
       alreadyInwardLotWiseData: alreadyInwardLotWiseData?.filter(
-        (val) => parseFloat(val?.stockQty) !== 0
+        (val) => parseFloat(val?.stockQty) !== 0,
       ),
     },
   };
@@ -798,7 +792,7 @@ export async function getDirectItemById(
     sizeId,
     fabricId,
     kDiaId,
-    fDiaId
+    fDiaId,
   ) {
     let sql;
 
@@ -833,7 +827,7 @@ export async function getDirectItemById(
     sizeId,
     fabricId,
     kDiaId,
-    fDiaId
+    fDiaId,
   ) {
     let sql;
 
@@ -944,7 +938,7 @@ export async function getPoItemsandDirectInwardItems(req) {
       searchPoDate,
       searchDueDate,
       searchPoType,
-      directItems
+      directItems,
     );
     poItems = await prisma.poItems.findMany({
       where: {
@@ -972,7 +966,7 @@ export async function getPoItemsandDirectInwardItems(req) {
       searchPoDate,
       searchDueDate,
       searchPoType,
-      poItems
+      poItems,
     );
     poItems = await getAllDataPoItems(poItems);
     poItems = poItems.filter((item) =>
@@ -982,8 +976,8 @@ export async function getPoItemsandDirectInwardItems(req) {
           : 0,
         item?.alreadyReturnedData?._sum?.qty
           ? item.alreadyReturnedData._sum?.qty
-          : 0
-      )
+          : 0,
+      ),
     );
     poItems = poItems.map((item) => {
       return { ...item, isPoItem: true };
@@ -992,7 +986,7 @@ export async function getPoItemsandDirectInwardItems(req) {
     totalCount = data.length;
     data = data.slice(
       (pageNumber - 1) * parseInt(dataPerPage),
-      pageNumber * dataPerPage
+      pageNumber * dataPerPage,
     );
     let poItemsAfterSlice = data.filter((item) => item.isPoItem);
     let directItemsAfterSlice = data.filter((item) => !item.isPoItem);
@@ -1073,7 +1067,7 @@ async function getOne(id) {
     data.id,
     data.poInwardOrDirectInward,
     data?.poType,
-    data?.directItems
+    data?.directItems,
   );
   if (!data) return NoRecordFound("directInwardOrReturn");
   return { statusCode: 0, data: { ...data, ...{ childRecord } } };
@@ -1108,7 +1102,7 @@ async function createLotGridItems(
   poType,
   poInwardOrDirectInward,
   storeId,
-  branchId
+  branchId,
 ) {
   let promises = inwardLotDetails.map(async (temp, index) => {
     await tx.inwardLotDetails.create({
@@ -1155,7 +1149,7 @@ async function createAccessoryStock(
   poInwardOrDirectInward,
   branchId,
   storeId,
-  item
+  item,
 ) {
   await tx.stock.create({
     data: {
@@ -1185,7 +1179,7 @@ async function createYarnItemsStock(
   poInwardOrDirectInward,
   branchId,
   storeId,
-  item
+  item,
 ) {
   await tx.stock.create({
     data: {
@@ -1211,7 +1205,7 @@ async function createDirectInwardReturnItems(
   poType,
   poInwardOrDirectInward,
   storeId,
-  branchId
+  branchId,
 ) {
   let promises;
   if (poType == "GreyYarn" || poType == "DyedYarn") {
@@ -1256,7 +1250,7 @@ async function createDirectInwardReturnItems(
         poInwardOrDirectInward,
         branchId,
         storeId,
-        item
+        item,
       );
     });
   } else {
@@ -1310,7 +1304,7 @@ async function createDirectInwardReturnItems(
         poInwardOrDirectInward,
         branchId,
         storeId,
-        item
+        item,
       );
     });
   }
@@ -1347,7 +1341,7 @@ async function create(body) {
     poInwardOrDirectInward,
     shortCode,
     finYearDate?.startTime,
-    finYearDate?.endTime
+    finYearDate?.endTime,
   );
   let data;
 
@@ -1380,7 +1374,7 @@ async function create(body) {
       poType,
       poInwardOrDirectInward,
       storeId,
-      branchId
+      branchId,
     );
     // await dataIntegrityValidation(tx, processValid);
   });
@@ -1389,7 +1383,7 @@ async function create(body) {
 
 async function deletePurchaseInwardReturnItems(
   tx,
-  removeItemsPurchaseInwardReturnIds
+  removeItemsPurchaseInwardReturnIds,
 ) {
   return await tx.directItems.deleteMany({
     where: {
@@ -1407,7 +1401,7 @@ async function updateOrCreate(
   poType,
   poInwardOrDirectInward,
   storeId,
-  branchId
+  branchId,
 ) {
   if (item?.id) {
     if (poType == "GreyYarn" || poType == "DyedYarn") {
@@ -1500,7 +1494,7 @@ async function updateOrCreate(
         poInwardOrDirectInward,
         branchId,
         storeId,
-        item
+        item,
       );
     }
   } else {
@@ -1575,7 +1569,7 @@ async function updateOrCreate(
         poInwardOrDirectInward,
         branchId,
         storeId,
-        item
+        item,
       );
     }
   }
@@ -1588,7 +1582,7 @@ async function updateAllPInwardReturnItems(
   poType,
   poInwardOrDirectInward,
   storeId,
-  branchId
+  branchId,
 ) {
   let promises = directInwardReturnItems?.map(
     async (item) =>
@@ -1599,8 +1593,8 @@ async function updateAllPInwardReturnItems(
         poType,
         poInwardOrDirectInward,
         storeId,
-        branchId
-      )
+        branchId,
+      ),
   );
   return Promise.all(promises);
 }
@@ -1635,20 +1629,20 @@ async function update(id, body) {
   let piData;
 
   let oldDirectInwardReturnIds = dataFound?.DirectItems.map((item) =>
-    parseInt(item.id)
+    parseInt(item.id),
   );
   let currentDirectInwardReturnIds = directInwardReturnItems
     .filter((i) => i?.id)
     ?.map((item) => parseInt(item.id));
   let removeItemsPurchaseInwardReturnIds = getRemovedItems(
     oldDirectInwardReturnIds,
-    currentDirectInwardReturnIds
+    currentDirectInwardReturnIds,
   );
 
   await prisma.$transaction(async (tx) => {
     await deletePurchaseInwardReturnItems(
       tx,
-      removeItemsPurchaseInwardReturnIds
+      removeItemsPurchaseInwardReturnIds,
     );
     piData = await tx.directInwardOrReturn.update({
       where: {
@@ -1677,7 +1671,7 @@ async function update(id, body) {
       poType,
       poInwardOrDirectInward,
       storeId,
-      branchId
+      branchId,
     );
     // await dataIntegrityValidation(tx, processValid = false);
   });

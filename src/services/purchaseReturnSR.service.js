@@ -33,12 +33,10 @@ async function getNextDocId(
       orderBy: { id: "desc" },
     });
     const branchObj = await getTableRecordWithId(branchId, "branch");
-    let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date(),
-    )}/PR/1`;
+    let newDocId = `${branchObj.branchCode}/${shortCode}/PR/1`;
 
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/PR/${
+      newDocId = `${branchObj.branchCode}/${shortCode}/PR/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
@@ -67,11 +65,9 @@ async function getNextDocId(
     });
 
     const branchObj = await getTableRecordWithId(branchId, "branch");
-    let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date(),
-    )}/PR/1`;
+    let newDocId = `${branchObj.branchCode}/${shortCode}/PR/1`;
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/PR/${
+      newDocId = `${branchObj.branchCode}/${shortCode}/PR/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }

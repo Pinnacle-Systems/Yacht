@@ -15,7 +15,7 @@ async function getNextDocId(
   endTime,
   saveType,
   docId,
-  isUpdate
+  isUpdate,
 ) {
   // Case 1: Draft save
   if (saveType) {
@@ -33,12 +33,10 @@ async function getNextDocId(
       orderBy: { id: "desc" },
     });
     const branchObj = await getTableRecordWithId(branchId, "branch");
-    let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
-    )}/PE/1`;
+    let newDocId = `${branchObj.branchCode}/${shortCode}/PE/1`;
 
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/PE/${
+      newDocId = `${branchObj.branchCode}/${shortCode}/PE/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
@@ -67,11 +65,9 @@ async function getNextDocId(
     });
 
     const branchObj = await getTableRecordWithId(branchId, "branch");
-    let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
-    )}/PE/1`;
+    let newDocId = `${branchObj.branchCode}/${shortCode}/PE/1`;
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/PE/${
+      newDocId = `${branchObj.branchCode}/${shortCode}/PE/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
@@ -87,7 +83,7 @@ function manualFilterSearchData(searchDelDate, searchDueDate, data) {
         : true) &&
       (searchDueDate
         ? String(getDateFromDateTime(item.dueDate)).includes(searchDueDate)
-        : true)
+        : true),
   );
 }
 
@@ -112,7 +108,7 @@ async function get(req) {
     branchId,
     shortCode,
     finYearDate?.startDateStartTime,
-    finYearDate?.endDateEndTime
+    finYearDate?.endDateEndTime,
   );
   let data;
   let totalCount;
@@ -173,13 +169,13 @@ async function get(req) {
   totalCount = data.length;
   if (searchDocDate) {
     data = data?.filter((item) =>
-      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate)
+      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate),
     );
   }
   if (pagination) {
     data = data.slice(
       (pageNumber - 1) * parseInt(dataPerPage),
-      pageNumber * dataPerPage
+      pageNumber * dataPerPage,
     );
   }
 
@@ -365,7 +361,7 @@ async function getOne(id) {
             ? minQty._sum.qty
             : minQty._sum.issueQty,
       };
-    })
+    }),
   );
 
   return {
@@ -381,7 +377,7 @@ async function getOne(id) {
 function findRemovedItems(dataFound, productionEntryItems) {
   let removedItems = dataFound.productionEntryItems.filter((oldItem) => {
     let result = productionEntryItems.find(
-      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id)
+      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id),
     );
     if (result) return false;
     return true;
@@ -408,7 +404,7 @@ async function create(body) {
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(
         finYearDate?.startDateStartTime,
-        finYearDate?.endDateEndTime
+        finYearDate?.endDateEndTime,
       )
     : "";
   let newDocId = await getNextDocId(
@@ -416,7 +412,7 @@ async function create(body) {
     shortCode,
     finYearDate?.startDateStartTime,
     finYearDate?.endDateEndTime,
-    draftSave
+    draftSave,
   );
   let data;
   if (fromProcessId) {
@@ -454,7 +450,7 @@ async function create(body) {
     });
   }
   const currentProcess = processGroupList.find(
-    (item) => item.processId === parseInt(fromProcessId)
+    (item) => item.processId === parseInt(fromProcessId),
   );
   let nextProcessId;
   let prevProcessId;
@@ -466,11 +462,11 @@ async function create(body) {
     // });
     // nextProcessId = nextProcess?.processId;
     const nextProcess = processGroupList.find(
-      (item) => item.seqNo === currentProcess.seqNo + 1
+      (item) => item.seqNo === currentProcess.seqNo + 1,
     );
     nextProcessId = nextProcess?.processId;
     const prevProcess = processGroupList.find(
-      (item) => item.seqNo === currentProcess.seqNo - 1
+      (item) => item.seqNo === currentProcess.seqNo - 1,
     );
     prevProcessId = prevProcess?.processId;
   }
@@ -516,7 +512,7 @@ async function create(body) {
       branchId,
       storeId,
       processGroupList,
-      currentProcess
+      currentProcess,
     );
   });
   return { statusCode: 0, data };
@@ -530,7 +526,7 @@ async function createProductionEntryItems(
   branchId,
   storeId,
   processGroupList,
-  currentProcess
+  currentProcess,
 ) {
   const promises = productionEntryItems.map(async (entryDetail, index) => {
     const prevProcessId = productionEntry?.fromProcessId
@@ -563,7 +559,7 @@ async function createProductionEntryItems(
     // }
     if (currentProcess) {
       const previousProcess = processGroupList.find(
-        (item) => item.seqNo === currentProcess.seqNo - 1
+        (item) => item.seqNo === currentProcess.seqNo - 1,
       );
       beforeProcessId = previousProcess.processId || null;
     }
@@ -730,7 +726,7 @@ async function update(id, body) {
       branchId,
       storeId,
       styleId,
-      fromProcessId
+      fromProcessId,
     );
   });
   return { statusCode: 0, data };
@@ -997,7 +993,7 @@ async function updateProductionEntryItems(
   branchId,
   storeId,
   styleId,
-  fromProcessId
+  fromProcessId,
 ) {
   const promises = productionEntryItems.map(async (entryDetail) => {
     const prevProcessId = productionEntry?.fromProcessId
@@ -1043,12 +1039,12 @@ async function updateProductionEntryItems(
       });
     }
     const currentProcess = processGroupList.find(
-      (item) => item.processId === parseInt(fromProcessId)
+      (item) => item.processId === parseInt(fromProcessId),
     );
     let beforeProcessId;
     if (currentProcess) {
       const prevProcess = processGroupList.find(
-        (item) => item.seqNo === currentProcess.seqNo - 1
+        (item) => item.seqNo === currentProcess.seqNo - 1,
       );
       beforeProcessId = prevProcess?.processId;
     }
@@ -1089,7 +1085,7 @@ async function updateProductionEntryItems(
       });
       const addStock = existingStock.find((s) => s.inOrOut === "productionAdd");
       const minusStock = existingStock.find(
-        (s) => s.inOrOut === "productionMinus"
+        (s) => s.inOrOut === "productionMinus",
       );
       if (addStock) {
         await tx.productionStock.update({

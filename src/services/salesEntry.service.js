@@ -39,12 +39,10 @@ async function getNextDocId(
       orderBy: { id: "desc" },
     });
     const branchObj = await getTableRecordWithId(branchId, "branch");
-    let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date(),
-    )}/SBE/1`;
+    let newDocId = `${branchObj.branchCode}/${shortCode}/SBE/1`;
 
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SBE/${
+      newDocId = `${branchObj.branchCode}/${shortCode}/SBE/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
@@ -73,11 +71,9 @@ async function getNextDocId(
     });
 
     const branchObj = await getTableRecordWithId(branchId, "branch");
-    let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date(),
-    )}/SBE/1`;
+    let newDocId = `${branchObj.branchCode}/${shortCode}/SBE/1`;
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SBE/${
+      newDocId = `${branchObj.branchCode}/${shortCode}/SBE/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
@@ -462,6 +458,7 @@ async function create(body) {
         finYearDate?.endDateEndTime,
       )
     : "";
+  console.log(shortCode, "");
   let newDocId = await getNextDocId(
     branchId,
     shortCode,
@@ -1131,10 +1128,12 @@ async function getSalesInvDetail(req) {
 
 async function getSalesDcDetail(req) {
   const { dcNo } = req.query;
+  console.log(dcNo, "dcNoapihitted");
 
   let data = await prisma.salesEntry.findFirst({
     where: {
       docId: dcNo,
+      salesType: "SHOWROOM",
     },
     select: {
       SalesEntryItems: {
@@ -1218,11 +1217,13 @@ async function getSalesInvStyleDetail(req) {
       message: "Please Choose Required Fields",
     };
   }
+  const parsedStoreId = parseInt(storeId);
+  const parsedBranchId = parseInt(branchId);
   const salesEntry = await prisma.salesEntry.findFirst({
     where: {
       docId: invNo,
-      storeId: parseInt(storeId),
-      branchId: parseInt(branchId),
+      storeId: parsedStoreId,
+      branchId: parsedBranchId,
     },
     include: {
       SalesEntryItems: {
@@ -1244,7 +1245,13 @@ async function getSalesInvStyleDetail(req) {
       },
     },
   });
-
+  if (!salesEntry) {
+    return {
+      statusCode: 1,
+      message: "Invoice Not Found",
+      data: [],
+    };
+  }
   const salesReturn = await prisma.salesReturn.findMany({
     where: {
       invNo: invNo,
