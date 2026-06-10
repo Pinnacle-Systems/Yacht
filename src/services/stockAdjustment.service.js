@@ -8,7 +8,6 @@ import {
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 import { NoRecordFound } from "../configs/Responses.js";
 
-
 // async function getOneBarcode(req) {
 //   const { barcode, styleId, sizeId } = req.query;
 //   const styleNum = styleId ? parseInt(styleId, 10) : null;
@@ -207,7 +206,7 @@ async function getNextDocId(
   endTime,
   saveType,
   docId,
-  isUpdate
+  isUpdate,
 ) {
   // Case 1: Draft save
   if (saveType) {
@@ -225,12 +224,10 @@ async function getNextDocId(
       orderBy: { id: "desc" },
     });
     const branchObj = await getTableRecordWithId(branchId, "branch");
-    let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
-    )}/SA/1`;
+    let newDocId = `${branchObj.branchCode}/${shortCode}/SA/1`;
 
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SA/${
+      newDocId = `${branchObj.branchCode}/${shortCode}/SA/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
@@ -259,11 +256,9 @@ async function getNextDocId(
     });
 
     const branchObj = await getTableRecordWithId(branchId, "branch");
-    let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
-    )}/SA/1`;
+    let newDocId = `${branchObj.branchCode}/${shortCode}/SA/1`;
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SA/${
+      newDocId = `${branchObj.branchCode}/${shortCode}/SA/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
@@ -291,7 +286,7 @@ async function get(req) {
     branchId,
     shortCode,
     finYearDate?.startDateStartTime,
-    finYearDate?.endDateEndTime
+    finYearDate?.endDateEndTime,
   );
   let data;
   let totalCount;
@@ -337,13 +332,13 @@ async function get(req) {
   totalCount = data.length;
   if (searchDocDate) {
     data = data?.filter((item) =>
-      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate)
+      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate),
     );
   }
   if (pagination) {
     data = data.slice(
       (pageNumber - 1) * parseInt(dataPerPage),
-      pageNumber * dataPerPage
+      pageNumber * dataPerPage,
     );
   }
   return {
@@ -400,10 +395,10 @@ async function getOne(id) {
         ...item,
         salesQty: childRecordSales || 0,
       };
-    })
+    }),
   );
   const styleNos = data.StockAdjustmentItems.map((item) => item.styleNo).filter(
-    Boolean
+    Boolean,
   );
   const childRecordSales = await prisma.salesEntryItems.count({
     where: {
@@ -435,7 +430,7 @@ async function create(body) {
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(
         finYearDate?.startDateStartTime,
-        finYearDate?.endDateEndTime
+        finYearDate?.endDateEndTime,
       )
     : "";
   let newDocId = await getNextDocId(
@@ -443,7 +438,7 @@ async function create(body) {
     shortCode,
     finYearDate?.startDateStartTime,
     finYearDate?.endDateEndTime,
-    draftSave
+    draftSave,
   );
   let data;
   await prisma.$transaction(async (tx) => {
@@ -463,7 +458,7 @@ async function create(body) {
       data,
       userId,
       branchId,
-      storeId
+      storeId,
     );
   });
   return { statusCode: 0, data };
@@ -475,7 +470,7 @@ async function createStockAdjustmentItems(
   stockAdjustment,
   userId,
   branchId,
-  storeId
+  storeId,
 ) {
   const promises = stockAdjustmentItems.map(async (stockDetail) => {
     const createdItem = await tx.stockAdjustmentItems.create({
@@ -582,7 +577,7 @@ async function update(id, body) {
       data,
       userId,
       branchId,
-      storeId
+      storeId,
     );
   });
   return { statusCode: 0, data };
@@ -594,7 +589,7 @@ async function updateOpeningStockItems(
   stockAdjustment,
   userId,
   branchId,
-  storeId
+  storeId,
 ) {
   const promises = stockAdjustmentItems.map(async (stockDetail) => {
     if (stockDetail.id) {
@@ -715,7 +710,7 @@ async function updateOpeningStockItems(
 function findRemovedItems(dataFound, stockAdjustmentItems) {
   let removedItems = dataFound.StockAdjustmentItems.filter((oldItem) => {
     let result = stockAdjustmentItems.find(
-      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id)
+      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id),
     );
     if (result) return false;
     return true;

@@ -33,12 +33,10 @@ async function getNextDocId(
       orderBy: { id: "desc" },
     });
     const branchObj = await getTableRecordWithId(branchId, "branch");
-    let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date(),
-    )}/OS/1`;
+    let newDocId = `${branchObj.branchCode}/${shortCode}/OS/1`;
 
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/OS/${
+      newDocId = `${branchObj.branchCode}/${shortCode}/OS/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
@@ -67,11 +65,9 @@ async function getNextDocId(
     });
 
     const branchObj = await getTableRecordWithId(branchId, "branch");
-    let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date(),
-    )}/OS/1`;
+    let newDocId = `${branchObj.branchCode}/${shortCode}/OS/1`;
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/OS/${
+      newDocId = `${branchObj.branchCode}/${shortCode}/OS/${
         parseInt(lastObject.docId.split("/").at(-1)) + 1
       }`;
     }
@@ -128,7 +124,7 @@ async function get(req) {
     include: {
       openingStockItemsSRs: true,
     },
-     orderBy: {
+    orderBy: {
       createdAt: "desc", // 🔥 Descending Order
     },
   });

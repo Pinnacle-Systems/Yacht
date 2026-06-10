@@ -25,9 +25,9 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
     },
   });
   const branchObj = await getTableRecordWithId(branchId, "branch");
-  let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/PB/1`;
+  let newDocId = `${branchObj.branchCode}/${shortCode}/PB/1`;
   if (lastObject) {
-    newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/PB/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`;
+    newDocId = `${branchObj.branchCode}/${shortCode}/PB/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`;
   }
   return newDocId;
 }
@@ -947,13 +947,13 @@ function manualFilterSearchDatapurchaseBillItems(
 
 async function getAllDatapurchaseBillItems(data, branchId) {
   let promises = data?.map(async (item) => {
-    let data = await getPurchaseBillItemById(item.id,branchId);
+    let data = await getPurchaseBillItemById(item.id, branchId);
     return data.data;
   });
   return Promise.all(promises);
 }
 
-async function getPurchaseBillItemById(id,branchId) {
+async function getPurchaseBillItemById(id, branchId) {
   const data = await prisma.purchaseBillItems.findUnique({
     where: { id: parseInt(id) },
     include: {
@@ -974,7 +974,7 @@ async function getPurchaseBillItemById(id,branchId) {
       barcodeNo: data.barcodeNo,
       sizeId: data.sizeId,
       styleId: data.styleId,
-      branchId: parseInt(branchId)
+      branchId: parseInt(branchId),
     },
     _sum: { qty: true },
   });
@@ -1023,7 +1023,7 @@ async function getpurchaseBillItems(req) {
             ? parseInt(headerData.supplierId)
             : undefined,
           invNo: invNo ? invNo : undefined,
-          branchId: parseInt(branchId)
+          branchId: parseInt(branchId),
         },
       },
       include: {

@@ -20,9 +20,9 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
     },
   });
   const branchObj = await getTableRecordWithId(branchId, "branch");
-  let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SR/1`;
+  let newDocId = `${branchObj.branchCode}/${shortCode}/SR/1`;
   if (lastObject) {
-    newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SR/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`;
+    newDocId = `${branchObj.branchCode}/${shortCode}/SR/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`;
   }
   return newDocId;
 }
@@ -511,7 +511,7 @@ async function update(id, body) {
     roundOffValue,
     referenceId,
     salesPersonId,
-    transDate
+    transDate,
   } = await body;
   let data;
   validateUniqueBarcode(salesReturnItems);

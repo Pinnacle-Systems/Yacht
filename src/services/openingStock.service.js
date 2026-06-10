@@ -18,7 +18,7 @@ async function getNextDocId(
   endTime,
   saveType,
   docId,
-  isUpdate
+  isUpdate,
 ) {
   // Case 1: Draft save
   if (saveType) {
@@ -36,14 +36,10 @@ async function getNextDocId(
       orderBy: { id: "desc" },
     });
     const branchObj = await getTableRecordWithId(branchId, "branch");
-    let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
-    )}/OST/1`;
+    let newDocId = `${branchObj.branchCode}/${shortCode}/OST/1`;
 
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/OST/${
-        parseInt(lastObject.docId.split("/").at(-1)) + 1
-      }`;
+      newDocId = `${branchObj.branchCode}/${shortCode}/OST/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`;
     }
 
     return newDocId;
@@ -70,9 +66,7 @@ async function getNextDocId(
     });
 
     const branchObj = await getTableRecordWithId(branchId, "branch");
-    let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
-    )}/OST/1`;
+    let newDocId = `${branchObj.branchCode}/${shortCode}/OST/1`;
     if (lastObject) {
       if (lastObject.docId === "Draft Save") {
         const records = await prisma.openingStock.findMany({
@@ -101,13 +95,9 @@ async function getNextDocId(
 
           return currentNo > maxNo ? current.docId : max;
         }, null);
-        newDocId = `${branchObj.branchCode}${getYearShortCode(
-          new Date()
-        )}/OST/${parseInt(maxDocId.split("/").at(-1)) + 1}`;
+        newDocId = `${branchObj.branchCode}/${shortCode}/OST/${parseInt(maxDocId.split("/").at(-1)) + 1}`;
       } else {
-        newDocId = `${branchObj.branchCode}${getYearShortCode(
-          new Date()
-        )}/OST/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`;
+        newDocId = `${branchObj.branchCode}/${shortCode}/OST/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`;
       }
     }
     return newDocId;
@@ -122,7 +112,7 @@ function manualFilterSearchData(searchDelDate, searchDueDate, data) {
         : true) &&
       (searchDueDate
         ? String(getDateFromDateTime(item.dueDate)).includes(searchDueDate)
-        : true)
+        : true),
   );
 }
 
@@ -147,7 +137,7 @@ async function get(req) {
     branchId,
     shortCode,
     finYearDate?.startDateStartTime,
-    finYearDate?.endDateEndTime
+    finYearDate?.endDateEndTime,
   );
   let data;
   let totalCount;
@@ -193,20 +183,20 @@ async function get(req) {
   totalCount = data.length;
   if (searchDocDate) {
     data = data?.filter((item) =>
-      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate)
+      String(getDateFromDateTime(item.createdAt)).includes(searchDocDate),
     );
   }
   if (searchStyleNo) {
     data = data?.filter((item) =>
       item?.OpeningStockItems?.some((product) =>
-        product?.styleNo.includes(searchStyleNo)
-      )
+        product?.styleNo.includes(searchStyleNo),
+      ),
     );
   }
   if (pagination) {
     data = data.slice(
       (pageNumber - 1) * parseInt(dataPerPage),
-      pageNumber * dataPerPage
+      pageNumber * dataPerPage,
     );
   }
 
@@ -269,10 +259,10 @@ async function getOne(id) {
         ...item,
         stockQty: childRecordSales + childRecordAdjust || 0,
       };
-    })
+    }),
   );
   const styleNos = data.OpeningStockItems.map((item) => item.styleNo).filter(
-    Boolean
+    Boolean,
   );
 
   // ✅ Count how many SalesEntryItems use those styleNos
@@ -336,7 +326,7 @@ async function create(body) {
     const shortCode = finYearDate
       ? getYearShortCodeForFinYear(
           finYearDate?.startDateStartTime,
-          finYearDate?.endDateEndTime
+          finYearDate?.endDateEndTime,
         )
       : "";
     let newDocId = await getNextDocId(
@@ -344,7 +334,7 @@ async function create(body) {
       shortCode,
       finYearDate?.startDateStartTime,
       finYearDate?.endDateEndTime,
-      draftSave
+      draftSave,
     );
     let data;
     await prisma.$transaction(async (tx) => {
@@ -367,7 +357,7 @@ async function create(body) {
         userId,
         branchId,
         storeId,
-        newDocId
+        newDocId,
       );
     });
     return { statusCode: 0, data };
@@ -410,7 +400,7 @@ async function update(id, body) {
     const shortCode = finYearDate
       ? getYearShortCodeForFinYear(
           finYearDate?.startDateStartTime,
-          finYearDate?.endDateEndTime
+          finYearDate?.endDateEndTime,
         )
       : "";
     let newDocId = await getNextDocId(
@@ -457,7 +447,7 @@ async function update(id, body) {
       data,
       userId,
       branchId,
-      storeId
+      storeId,
     );
   });
   return { statusCode: 0, data };
@@ -634,7 +624,7 @@ async function updateOpeningStockItems(
   openingStock,
   userId,
   branchId,
-  storeId
+  storeId,
 ) {
   // 1️⃣ Get the last barcode number in this branch
   const lastItem = await tx.openingStockItems.findFirst({
@@ -805,7 +795,7 @@ async function createOpeningStockItems(
   userId,
   branchId,
   storeId,
-  newDocId
+  newDocId,
 ) {
   const newItems = openingStockItems || [];
   for (const item of newItems) {
@@ -824,7 +814,7 @@ async function createOpeningStockItems(
     });
     if (exists) {
       throw new Error(
-        `Style No - ${exists.Style?.sku}, Size - ${exists.Size?.name},Color - ${exists.Color?.name} is Already Exists`
+        `Style No - ${exists.Style?.sku}, Size - ${exists.Size?.name},Color - ${exists.Color?.name} is Already Exists`,
       );
     }
   }
@@ -904,7 +894,7 @@ async function createOpeningStockItems(
 function findRemovedItems(dataFound, openingStockItems) {
   let removedItems = dataFound.OpeningStockItems.filter((oldItem) => {
     let result = openingStockItems.find(
-      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id)
+      (newItem) => parseInt(newItem.id) === parseInt(oldItem.id),
     );
     if (result) return false;
     return true;
@@ -945,7 +935,7 @@ function printTSPL(tsplCommands, printerName) {
       if (err) console.error("Printing failed:", err);
       else console.log("Printed successfully");
       fs.unlinkSync(tempFile);
-    }
+    },
   );
 }
 

@@ -606,7 +606,7 @@ export default function SalesBillItems({
                 <th
                   className={`w-16 px-1 py-2 text-center font-medium text-[13px] `}
                 >
-                  Qty 
+                  Qty
                   <span className="text-red-500"> *</span>
                 </th>
                 <th
