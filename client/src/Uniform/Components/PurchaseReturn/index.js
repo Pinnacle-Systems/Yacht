@@ -75,7 +75,7 @@ export default function Form() {
         dispatch(CuttingDeliveryApi.util.invalidateTags(["CuttingDelivery"]));
         dispatch(CuttingOrderApi.util.invalidateTags(["CuttingOrder"]));
         dispatch(
-          purchaseInwardEntryApi.util.invalidateTags(["purchaseInwardEntry"])
+          purchaseInwardEntryApi.util.invalidateTags(["purchaseInwardEntry"]),
         );
       } catch (error) {
         Swal.fire({
@@ -108,7 +108,7 @@ export default function Form() {
 
           <button
             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
-           onClick={() => {
+            onClick={() => {
               if (
                 !hasPermission(() => {
                   setShowForm(true);
