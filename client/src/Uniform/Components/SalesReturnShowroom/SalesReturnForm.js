@@ -41,7 +41,7 @@ import {
 import { ExpandMore } from "@mui/icons-material";
 import { PDFViewer } from "@react-pdf/renderer";
 import PDF from "./PrintFormat/PDF";
-import { useReactToPrint } from "react-to-print";
+import { useReactToPrint } from "@etsoo/reactprint";
 import tw from "../../../Utils/tailwind-react-pdf";
 import Modal from "../../../UiComponents/Modal";
 import PosReceipt from "./PrintFormat/PosReceipt";
@@ -103,7 +103,7 @@ export function SalesReturnForm({
   const { data: referenceData } = useGetReferenceMasterByIdQuery(referenceId);
 
   const handlePrint = useReactToPrint({
-    contentRef: receiptRef,
+    content: () => receiptRef.current,
   });
   const paidAmount =
     Number(cashAmount || 0) + Number(cardAmount || 0) + Number(upiAmount || 0);

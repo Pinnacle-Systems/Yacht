@@ -36,7 +36,7 @@ import OpeningStockSRApi from "../../../redux/uniformService/OpeningStockSRServi
 import PDF from "./PrintFormat/PDF";
 import { groupBy } from "lodash";
 import PosReceipt from "./PrintFormat/PosReceipt";
-import { useReactToPrint } from "react-to-print";
+import { useReactToPrint } from "@etsoo/reactprint";
 import EditIcon from "@mui/icons-material/Edit";
 import { adjTypeData } from "../../../Utils/DropdownData";
 import { Button } from "@mui/material";
@@ -97,7 +97,7 @@ export function SalesBillForm({
   useSalesBillRefetch();
   const receiptRef = useRef();
   const handlePrint = useReactToPrint({
-    contentRef: receiptRef,
+    content: () => receiptRef.current,
   });
   const dispatch = useDispatch();
   const customerNameRef = useRef(null);
